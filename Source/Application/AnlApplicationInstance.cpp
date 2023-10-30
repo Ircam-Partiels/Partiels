@@ -131,6 +131,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::autoLoadConvertedFile:
             case AttrType::routingMatrix:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
             case AttrType::autoUpdate:
             case AttrType::recentlyOpenedFilesList:

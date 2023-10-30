@@ -51,6 +51,7 @@ Application::ExporterContent::ExporterContent()
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
             case AttrType::exportOptions:
             {

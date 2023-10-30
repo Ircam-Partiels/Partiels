@@ -30,6 +30,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
         }
     };
@@ -267,6 +268,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
             case AttrType::adaptationToSampleRate:
             {

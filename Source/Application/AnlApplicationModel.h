@@ -33,6 +33,7 @@ namespace Application
         , routingMatrix
         , autoUpdate
         , lastVersion
+        , timeZoomAnchorOnPlayhead
     };
 
     using AttrContainer = Model::Container
@@ -49,6 +50,7 @@ namespace Application
     , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Flag::basic>
     , Model::Attr<AttrType::autoUpdate, bool, Flag::basic>
     , Model::Attr<AttrType::lastVersion, juce::String, Flag::basic>
+    , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Flag::basic>
     >;
     // clang-format on
 
@@ -74,6 +76,7 @@ namespace Application
             , {{}}
             , {true}
             , {ProjectInfo::versionString}
+            , {false}
         }))
         {
         }

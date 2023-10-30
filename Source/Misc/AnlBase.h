@@ -103,6 +103,7 @@ enum ApplicationCommandIDs : int
     , viewTimeZoomOut
     , viewVerticalZoomIn
     , viewVerticalZoomOut
+    , viewTimeZoomAnchorOnPlayhead
     , viewInfoBubble
     
     , helpOpenAudioSettings

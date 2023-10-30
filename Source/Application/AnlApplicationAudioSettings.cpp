@@ -166,6 +166,7 @@ Application::AudioSettingsContent::AudioSettingsContent()
             case AttrType::autoLoadConvertedFile:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
             case AttrType::routingMatrix:
             {

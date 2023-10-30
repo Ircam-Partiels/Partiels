@@ -31,6 +31,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
+            case AttrType::timeZoomAnchorOnPlayhead:
                 break;
         }
     };
@@ -112,6 +113,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewTimeZoomOut
         , CommandIDs::viewVerticalZoomIn
         , CommandIDs::viewVerticalZoomOut
+        , CommandIDs::viewTimeZoomAnchorOnPlayhead
         , CommandIDs::viewInfoBubble
         
         , CommandIDs::helpOpenAudioSettings
@@ -360,6 +362,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Vertical Zoom Out"), juce::translate("Zooms out on the vertical range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(canZoom);
+        }
+        break;
+        case CommandIDs::viewTimeZoomAnchorOnPlayhead:
+        {
+            result.setInfo(juce::translate("Anchor Time Zoom on Playhead"), juce::translate("Anchors the time zoom on the start playhead"), "View", 0);
+            result.setActive(true);
+            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::timeZoomAnchorOnPlayhead>());
         }
         break;
         case CommandIDs::viewInfoBubble:
@@ -877,6 +886,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 Track::Tools::zoomOut(Document::Tools::getTrackAcsr(documentAcsr, trackId), 0.01, NotificationType::synchronous);
             }
+            return true;
+        }
+        case CommandIDs::viewTimeZoomAnchorOnPlayhead:
+        {
+            auto& accessor = Instance::get().getApplicationAccessor();
+            accessor.setAttr<AttrType::timeZoomAnchorOnPlayhead>(!accessor.getAttr<AttrType::timeZoomAnchorOnPlayhead>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::viewInfoBubble:
