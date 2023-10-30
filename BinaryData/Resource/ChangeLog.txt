@@ -1,4 +1,4 @@
-v1.3.0-dev6
+v1.3.0
 
 - Imp: Option to use the position of the start playhead as the anchor point for time zooming with the mouse wheel or touchpad magnification (#370)
 - Imp: Ircam Vamp Plug-ins - Update the PM2 vamp plug-in (#369)
