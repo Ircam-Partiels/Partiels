@@ -51,7 +51,7 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::backgroundColourId));
     g.fillRoundedRectangle(bounds.toFloat(), cornerSize);
 
-    auto getIcon = [&]()
+    auto const getIcon = [&]()
     {
         switch(alert.getAlertType())
         {
