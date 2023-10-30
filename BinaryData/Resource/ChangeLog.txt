@@ -19,6 +19,7 @@ v1.3.0-dev6
 - Add: Access to the plug-in settings window via the plug-in list window (#351)
 - Imp: Make the plug-in search bar more accessible in the plug-in list window (#349)
 - Add: New spectrogram plug-in available by default in Partiels (#348)
+- Fix: Zoom translation when dragging over rulers is inverted compared with standard approaches (#347)
 - Add: Add IVE v2 support with multidimensional results and graphical parsing (#346)
 - Add: Create a no value point with the shortcut 'b' on the track's graphical plot to break the continuity of the segments (#342)
 - Add: Double-click on a marker to display the results table, focusing on the selected element (#341)
