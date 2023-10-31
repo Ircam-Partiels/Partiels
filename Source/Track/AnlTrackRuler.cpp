@@ -8,7 +8,6 @@ Track::Ruler::Ruler(Accessor& accessor)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -35,7 +34,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::results:
             case AttrType::channelsLayout:
             {
-                auto const FrameType = Tools::getFrameType(mAccessor);
+                auto const FrameType = Tools::getFrameType(acsr);
                 if(mFrameType != FrameType)
                 {
                     mRulers.clear();
@@ -214,7 +213,6 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
