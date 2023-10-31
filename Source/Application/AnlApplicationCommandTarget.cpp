@@ -446,7 +446,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 
 bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::InvocationInfo const& info)
 {
-    auto getCommandDescription = [&]()
+    auto const getCommandDescription = [&]()
     {
         juce::ApplicationCommandInfo result(info.commandID);
         getCommandInfo(info.commandID, result);
