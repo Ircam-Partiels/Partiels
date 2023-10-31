@@ -293,9 +293,8 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
         }
     };
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::reader:
