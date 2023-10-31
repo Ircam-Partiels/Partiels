@@ -225,6 +225,11 @@ void Application::Interface::DocumentContainer::togglePluginListTablePanel()
     }
 }
 
+bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() const
+{
+    return mPluginListTableVisible;
+}
+
 Application::Interface::Interface()
 {
     addAndMakeVisible(mPanelManager);
@@ -350,6 +355,11 @@ void Application::Interface::hidePluginListTablePanel()
 void Application::Interface::togglePluginListTablePanel()
 {
     mDocumentContainer.togglePluginListTablePanel();
+}
+
+bool Application::Interface::isPluginListTablePanelVisible() const
+{
+    return mDocumentContainer.isPluginListTablePanelVisible();
 }
 
 juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const

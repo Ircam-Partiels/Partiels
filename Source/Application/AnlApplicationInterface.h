@@ -43,6 +43,7 @@ namespace Application
         void showPluginListTablePanel();
         void hidePluginListTablePanel();
         void togglePluginListTablePanel();
+        bool isPluginListTablePanelVisible() const;
 
     private:
         class TrackLoaderPanel
@@ -119,6 +120,7 @@ namespace Application
             void showPluginListTablePanel();
             void hidePluginListTablePanel();
             void togglePluginListTablePanel();
+            bool isPluginListTablePanelVisible() const;
 
         private:
             Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
