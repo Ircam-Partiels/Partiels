@@ -1,5 +1,9 @@
 v1.3.1-dev1
 
+- Fix: Zoom ruler anchoring does not match mouse position (#378)
+- Fix: An occasional crash occurs on macOS due to a compilation/linking problem with Xcode 15 (#377)
+- Fix: The "Add New Track" action should be renamed "Show/Hide New Track Panel" (#376)
+
 v1.3.0
 
 - Imp: Option to use the position of the start playhead as the anchor point for time zooming with the mouse wheel or touchpad magnification (#370)
