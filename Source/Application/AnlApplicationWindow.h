@@ -16,6 +16,7 @@ namespace Application
         ~Window() override;
 
         Interface& getInterface();
+        Interface const& getInterface() const;
 
         // juce::DocumentWindow
         void closeButtonPressed() override;

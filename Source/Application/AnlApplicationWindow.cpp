@@ -110,4 +110,9 @@ Application::Interface& Application::Window::getInterface()
     return mInterface;
 }
 
+Application::Interface const& Application::Window::getInterface() const
+{
+    return mInterface;
+}
+
 ANALYSE_FILE_END
