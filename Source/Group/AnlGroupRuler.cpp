@@ -12,9 +12,8 @@ Group::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
                   },
                   {Track::AttrType::channelsLayout})
 {
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
