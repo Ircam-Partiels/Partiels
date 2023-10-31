@@ -11,9 +11,8 @@ Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationComm
 , mAuthorizationProcessor(authorizationProcessor)
 , mCommandManager(commandManager)
 {
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, [[maybe_unused]] size_t index)
     {
-        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::tracks:
@@ -28,9 +27,8 @@ Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationComm
         }
     };
 
-    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, [[maybe_unused]] size_t index)
     {
-        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::tracks:
@@ -45,15 +43,13 @@ Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationComm
         }
     };
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, [[maybe_unused]] AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         mCommandManager.commandStatusChanged();
     };
 
-    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    mTransportListener.onAttrChanged = [this]([[maybe_unused]] Transport::Accessor const& acsr, [[maybe_unused]] Transport::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         mCommandManager.commandStatusChanged();
     };
 
