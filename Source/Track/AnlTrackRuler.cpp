@@ -1,5 +1,6 @@
 #include "AnlTrackRuler.h"
 #include "AnlTrackRenderer.h"
+#include <AnlCursorsData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -311,6 +312,221 @@ void Track::SelectionBar::colourChanged()
             auto const colour = focused.test(channel) ? onColour : offColour;
             bar->setColour(Transport::SelectionBar::thumbCoulourId, colour);
         }
+    }
+}
+
+Track::NavigationBar::NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor)
+: mAccessor(accessor)
+, mTimeRuler(timeZoomAccessor, Zoom::Ruler::Orientation::horizontal)
+, mSelectionBar(accessor, timeZoomAccessor, transportAccessor)
+{
+    addAndMakeVisible(mSelectionBar);
+    mSelectionBar.addMouseListener(this, true);
+    addAndMakeVisible(mTimeRuler);
+    mTimeRuler.setInterceptsMouseClicks(false, false);
+    mTimeRuler.setColour(Zoom::Ruler::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+    mTimeRuler.setColour(Zoom::Ruler::ColourIds::gridColourId, juce::Colours::transparentBlack);
+    mTimeRuler.onMouseDown = [&](juce::MouseEvent const& event)
+    {
+        return Zoom::Ruler::getNavigationMode(event.mods) != Zoom::Ruler::NavigationMode::navigate;
+    };
+    mTimeRuler.onDoubleClick = [&]([[maybe_unused]] juce::MouseEvent const& event)
+    {
+        auto const timeGlobalRange = timeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+        timeZoomAccessor.setAttr<Zoom::AttrType::visibleRange>(timeGlobalRange, NotificationType::synchronous);
+    };
+
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::file:
+            case AttrType::edit:
+            case AttrType::key:
+            case AttrType::input:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::zoomLink:
+            case AttrType::zoomAcsr:
+            case AttrType::warnings:
+            case AttrType::processing:
+            case AttrType::focused:
+            case AttrType::graphics:
+            case AttrType::colours:
+            case AttrType::font:
+            case AttrType::unit:
+            case AttrType::grid:
+            case AttrType::showInGroup:
+                break;
+            case AttrType::description:
+            case AttrType::results:
+            case AttrType::channelsLayout:
+            {
+                auto const frameType = Tools::getFrameType(acsr);
+                if(mFrameType != frameType)
+                {
+                    mRulers.clear();
+                    mFrameType = frameType;
+                }
+                if(mFrameType == Track::FrameType::label)
+                {
+                    return;
+                }
+                auto const channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
+                while(channelsLayout.size() < mRulers.size())
+                {
+                    mRulers.pop_back();
+                }
+                auto& zoomAcsr = mFrameType == Track::FrameType::value ? mAccessor.getAcsr<AcsrType::valueZoom>() : mAccessor.getAcsr<AcsrType::binZoom>();
+                while(channelsLayout.size() > mRulers.size())
+                {
+                    auto ruler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
+                    anlWeakAssert(ruler != nullptr);
+                    if(ruler != nullptr)
+                    {
+                        ruler->setInterceptsMouseClicks(false, false);
+                        ruler->setColour(Zoom::Ruler::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+                        ruler->setColour(Zoom::Ruler::ColourIds::gridColourId, juce::Colours::transparentBlack);
+                        ruler->onMouseDown = [&](juce::MouseEvent const& event)
+                        {
+                            return Zoom::Ruler::getNavigationMode(event.mods) != Zoom::Ruler::NavigationMode::navigate;
+                        };
+                        ruler->onDoubleClick = [&]([[maybe_unused]] juce::MouseEvent const& event)
+                        {
+                            auto const& valueGlobalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+                            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(valueGlobalRange, NotificationType::synchronous);
+                        };
+                        addChildComponent(ruler.get());
+                    }
+                    mRulers.push_back(std::move(ruler));
+                }
+                colourChanged();
+                resized();
+            }
+            break;
+        }
+    };
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Track::NavigationBar::~NavigationBar()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Track::NavigationBar::resized()
+{
+    auto const bounds = getLocalBounds();
+    mSelectionBar.setBounds(bounds);
+    mTimeRuler.setBounds(bounds);
+    for(auto& ruler : mRulers)
+    {
+        anlWeakAssert(ruler != nullptr);
+        if(ruler != nullptr)
+        {
+            ruler->setVisible(false);
+        }
+    }
+    auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, bounds);
+    for(auto const& verticalRange : verticalRanges)
+    {
+        anlWeakAssert(verticalRange.first < mRulers.size());
+        if(verticalRange.first < mRulers.size())
+        {
+            auto& ruler = mRulers[verticalRange.first];
+            if(ruler != nullptr)
+            {
+                ruler->setVisible(true);
+                ruler->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
+            }
+        }
+    }
+}
+
+void Track::NavigationBar::mouseMove(juce::MouseEvent const& event)
+{
+    updateInteraction(event.mods);
+    updateMouseCursor(event.mods);
+}
+
+void Track::NavigationBar::mouseDown(juce::MouseEvent const& event)
+{
+    updateInteraction(event.mods);
+}
+
+void Track::NavigationBar::mouseUp(juce::MouseEvent const& event)
+{
+    updateMouseCursor(event.mods);
+}
+
+void Track::NavigationBar::modifierKeysChanged(juce::ModifierKeys const& modifiers)
+{
+    if(!isMouseButtonDownAnywhere())
+    {
+        updateInteraction(modifiers);
+        updateMouseCursor(modifiers);
+    }
+}
+
+void Track::NavigationBar::updateInteraction(juce::ModifierKeys const& modifiers)
+{
+    using NavigationMode = Zoom::Ruler::NavigationMode;
+    if(Zoom::Ruler::getNavigationMode(modifiers) == NavigationMode::navigate)
+    {
+        removeMouseListener(std::addressof(mTimeRuler));
+        for(auto& ruler : mRulers)
+        {
+            anlWeakAssert(ruler != nullptr);
+            if(ruler != nullptr && ruler->isVisible())
+            {
+                removeMouseListener(ruler.get());
+            }
+        }
+        mSelectionBar.setInterceptsMouseClicks(true, true);
+    }
+    else
+    {
+        addMouseListener(std::addressof(mTimeRuler), true);
+        for(auto& ruler : mRulers)
+        {
+            anlWeakAssert(ruler != nullptr);
+            if(ruler != nullptr && ruler->isVisible())
+            {
+                addMouseListener(ruler.get(), true);
+            }
+        }
+        mSelectionBar.setInterceptsMouseClicks(false, false);
+    }
+}
+
+void Track::NavigationBar::updateMouseCursor(juce::ModifierKeys const& modifiers)
+{
+    using NavigationMode = Zoom::Ruler::NavigationMode;
+    switch(Zoom::Ruler::getNavigationMode(modifiers))
+    {
+        case NavigationMode::zoom:
+        {
+            static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::selectionzoom_png, AnlCursorsData::selectionzoom_pngSize);
+            static auto const cursor = juce::MouseCursor(image, 8, 8, 2.0f);
+            setMouseCursor(cursor);
+            break;
+        }
+        case NavigationMode::translate:
+        {
+            setMouseCursor({juce::MouseCursor::StandardCursorType::UpDownLeftRightResizeCursor});
+            break;
+        }
+        case NavigationMode::select:
+        {
+            static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::selectionrectangle_png, AnlCursorsData::selectionrectangle_pngSize);
+            static auto const cursor = juce::MouseCursor(image, 8, 8, 2.0f);
+            setMouseCursor(cursor);
+            break;
+        }
+        case NavigationMode::navigate:
+            break;
     }
 }
 
