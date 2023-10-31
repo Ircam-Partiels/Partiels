@@ -6,25 +6,24 @@ ANALYSE_FILE_BEGIN
 
 namespace Group
 {
-    class SelectionBar
+    class NavigationBar
     : public juce::Component
     {
     public:
-        SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
-        ~SelectionBar() override;
+        NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
+        ~NavigationBar() override = default;
 
         // juce::Component
         void resized() override;
-        void colourChanged() override;
 
     private:
-        void updateLayout();
+        void updateContent();
 
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Accessor::Listener mListener{typeid(*this).name()};
-        std::vector<std::unique_ptr<Transport::SelectionBar>> mSelectionBars;
+        std::unique_ptr<juce::Component> mTrackNavigationBar;
+        juce::String mTrackIdentifier;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group

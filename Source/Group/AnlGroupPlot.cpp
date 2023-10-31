@@ -158,12 +158,11 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mSelectionBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
+, mNavigationBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
 {
     addAndMakeVisible(mPlot);
-    addAndMakeVisible(mSelectionBar);
-    mSelectionBar.addMouseListener(this, true);
-    setInterceptsMouseClicks(true, true);
+    addAndMakeVisible(mNavigationBar);
+    mNavigationBar.addMouseListener(this, true);
 
     mTimeZoomListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
@@ -220,7 +219,7 @@ void Group::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mSelectionBar.setBounds(bounds);
+    mNavigationBar.setBounds(bounds);
 }
 
 void Group::Plot::Overlay::paint(juce::Graphics& g)
@@ -248,10 +247,10 @@ void Group::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& ev
 void Group::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
 {
     updateMode(event);
-    if(event.mods.isAltDown())
-    {
-        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
-    }
+    //    if(event.mods.isAltDown())
+    //    {
+    //        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
+    //    }
 }
 
 void Group::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
@@ -266,18 +265,18 @@ void Group::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
 
 void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
 {
-    if(event.mods.isAltDown() && !mSnapshotMode)
-    {
-        mSnapshotMode = true;
-        setMouseCursor(getCameraCursor());
-        mSelectionBar.setInterceptsMouseClicks(false, false);
-    }
-    else if(!event.mods.isAltDown() && mSnapshotMode)
-    {
-        mSnapshotMode = false;
-        setMouseCursor(juce::MouseCursor::CrosshairCursor);
-        mSelectionBar.setInterceptsMouseClicks(true, true);
-    }
+    //    if(event.mods.isAltDown() && !mSnapshotMode)
+    //    {
+    //        mSnapshotMode = true;
+    //        setMouseCursor(getCameraCursor());
+    //        mNavigationBar.setInterceptsMouseClicks(false, false);
+    //    }
+    //    else if(!event.mods.isAltDown() && mSnapshotMode)
+    //    {
+    //        mSnapshotMode = false;
+    //        setMouseCursor(juce::MouseCursor::CrosshairCursor);
+    //        mNavigationBar.setInterceptsMouseClicks(true, true);
+    //    }
 }
 
 void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
