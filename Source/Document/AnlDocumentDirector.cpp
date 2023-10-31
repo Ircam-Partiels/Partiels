@@ -87,7 +87,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 
     mAccessor.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        juce::ignoreUnused(notification);
         switch(type)
         {
             case AcsrType::tracks:
