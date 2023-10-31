@@ -226,7 +226,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::editNewTrack:
         {
-            result.setInfo(juce::translate("Add New Track"), juce::translate("Shows or hides the list of plugins to add a new track"), "Edit", 0);
+            auto const* window = Instance::get().getWindow();
+            auto const hidePanel = window != nullptr && window->getInterface().isPluginListTablePanelVisible();
+            result.setInfo(hidePanel ? juce::translate("Hide New Track Panel") : juce::translate("Show New Track Panel"), juce::translate("Shows or hides the list of plugins to add a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
