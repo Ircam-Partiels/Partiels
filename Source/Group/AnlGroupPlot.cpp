@@ -240,9 +240,8 @@ void Group::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
     updateMode(event);
 }
 
-void Group::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
+void Group::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
     setTooltip("");
 }
 
