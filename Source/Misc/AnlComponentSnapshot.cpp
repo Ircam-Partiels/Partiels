@@ -1,12 +1,12 @@
 #include "AnlComponentSnapshot.h"
-#include <AnlIconsData.h>
+#include <AnlCursorsData.h>
 
 ANALYSE_FILE_BEGIN
 
 juce::MouseCursor ComponentSnapshot::getCameraCursor()
 {
-    static auto const image = juce::ImageCache::getFromMemory(AnlIconsData::photocamera_png, AnlIconsData::photocamera_pngSize).rescaled(24, 24, juce::Graphics::ResamplingQuality::highResamplingQuality);
-    static auto const camera = juce::MouseCursor(image, 12, 12);
+    static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::photocamera_png, AnlCursorsData::photocamera_pngSize);
+    static auto const camera = juce::MouseCursor(image, 12, 12, 2.0);
     return camera;
 }
 
