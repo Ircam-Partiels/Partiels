@@ -1,10 +1,12 @@
 v1.3.1-dev1
 
+- Imp: Use the 'c' command on track or group plots to capture a snapshot and save it to the desktop, instead of click with alt (#382)
 - Fix: CSV parsing of labels starting with "inf" are considered as infinite numbers (#380)
 - Fix: The effective number of channels in a group does not take into account track visibility (#379)
 - Fix: Zoom ruler anchoring does not match mouse position (#378)
 - Fix: An occasional crash occurs on macOS due to a compilation/linking problem with Xcode 15 (#377)
 - Fix: The "Add New Track" action should be renamed "Show/Hide New Track Panel" (#376)
+- Add: Navigate using shift, zoom using option/alt, or select a visible range using cmd/ctrl, on group plots using the mouse (#371)
 
 v1.3.0
 
