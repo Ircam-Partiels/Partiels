@@ -121,6 +121,9 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 file(GLOB PartielsIconsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Icons/*.png)
 juce_add_binary_data(AnlIconsData HEADER_NAME "AnlIconsData.h" NAMESPACE AnlIconsData SOURCES ${PartielsIconsDataSources})
 
+file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
+juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
+
 target_link_libraries(Partiels PRIVATE
     ive_host_static
     sdif
@@ -130,6 +133,7 @@ target_link_libraries(Partiels PRIVATE
     ResourceData
     TestResultsData
     AnlIconsData
+    AnlCursorsData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
