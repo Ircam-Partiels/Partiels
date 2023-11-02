@@ -797,11 +797,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     {
         try
         {
-            return std::stof(v);
+            auto value = std::stof(v);
+            if(std::isnan(value) || !std::isfinite(value))
+            {
+                return {};
+            }
+            return value;
         }
         catch(...)
         {
-            return std::optional<float>();
+            return {};
         }
     };
 
