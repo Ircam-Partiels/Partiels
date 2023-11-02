@@ -58,20 +58,23 @@ std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilitySta
     auto const trackAcsrs = getTrackAcsrs(accessor);
     for(auto const& trackAcsr : trackAcsrs)
     {
-        auto const& trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
-        for(size_t i = 0; i < channelslayout.size(); ++i)
+        if(trackAcsr.get().getAttr<Track::AttrType::showInGroup>())
         {
-            if(i < trackChannelsLayout.size() && channelslayout[i] != ChannelVisibilityState::both)
+            auto const& trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
+            for(size_t i = 0; i < channelslayout.size(); ++i)
             {
-                if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
+                if(i < trackChannelsLayout.size() && channelslayout[i] != ChannelVisibilityState::both)
                 {
-                    channelslayout[i] = ChannelVisibilityState::both;
+                    if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
+                    {
+                        channelslayout[i] = ChannelVisibilityState::both;
+                    }
                 }
             }
-        }
-        for(size_t i = channelslayout.size(); i < trackChannelsLayout.size(); ++i)
-        {
-            channelslayout.push_back(trackChannelsLayout[i] ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden);
+            for(size_t i = channelslayout.size(); i < trackChannelsLayout.size(); ++i)
+            {
+                channelslayout.push_back(trackChannelsLayout[i] ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden);
+            }
         }
     }
     return channelslayout;
@@ -124,7 +127,6 @@ std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Access
     }
 
     std::map<size_t, juce::Range<int>> verticalRanges;
-
     auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
     auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
     auto remainder = 0.0f;
