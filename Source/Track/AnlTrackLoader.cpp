@@ -849,13 +849,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 auto& pointChannel = points.back();
                 auto const timevalue = std::stod(time);
                 auto const durationvalue = std::max(useEndTime ? std::stod(duration) - timevalue : std::stod(duration), 0.0);
-                auto pointvalue = getFloatValue(value);
+                auto pointvalue = mode == Mode::markers ? std::optional<float>{} : getFloatValue(value);
                 if(pointvalue.has_value())
                 {
-                    if(mode == Mode::markers)
-                    {
-                        return {juce::translate("Parsing error")};
-                    }
                     mode = Mode::points;
                     pointChannel.push_back({});
                     std::get<0_z>(pointChannel.back()) = timevalue;
