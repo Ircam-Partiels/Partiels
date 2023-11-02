@@ -74,9 +74,9 @@ namespace Document
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
+        juce::ApplicationCommandManager& mApplicationCommandManager;
         Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
-        juce::ApplicationCommandManager& mApplicationCommandManager;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         Header mHeader;
         Icon mGridButton;
