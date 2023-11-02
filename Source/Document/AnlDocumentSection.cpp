@@ -694,7 +694,7 @@ void Document::Section::updateLayout()
     {
         auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, transportAcsr, timeZoomAcsr);
+        auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, mApplicationCommandManager, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
             groupSection->addMouseListener(this, true);

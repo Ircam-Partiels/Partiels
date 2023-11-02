@@ -2,10 +2,12 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::StrechableSection::StrechableSection(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
+Group::StrechableSection::StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mApplicationCommandManager(commandManager)
+, mSection(director, commandManager, transportAcsr, timeZoomAcsr)
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -184,7 +186,7 @@ void Group::StrechableSection::updateContent()
         {
             auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
             auto& trackDirector = mDirector.getTrackDirector(identifier);
-            auto trackSection = std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
+            auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor);
             if(trackSection != nullptr)
             {
                 trackSection->setResizable(mIsResizable);

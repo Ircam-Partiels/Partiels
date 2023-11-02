@@ -20,7 +20,7 @@ namespace Track
         };
         // clang-format on
 
-        Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
 
         juce::Rectangle<int> getPlotBounds() const;

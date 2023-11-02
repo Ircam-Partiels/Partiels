@@ -38,12 +38,14 @@ namespace Track
             void mouseDoubleClick(juce::MouseEvent const& event) override;
             void modifierKeysChanged(juce::ModifierKeys const& modifiers) override;
 
+            // ComponentSnapshot
+            void takeSnapshot() override;
+
         private:
             // clang-format off
             enum class ActionMode
             {
                   none
-                , snapshot
                 , create
                 , move
             };

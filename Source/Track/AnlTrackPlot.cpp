@@ -97,6 +97,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mSelectionBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
 {
+    setWantsKeyboardFocus(true);
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mSelectionBar);
     mSelectionBar.addMouseListener(this, true);
@@ -207,9 +208,6 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
     {
         case ActionMode::none:
             break;
-        case ActionMode::snapshot:
-            takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
-            break;
         case ActionMode::create:
         {
             auto const channel = Tools::getChannelVerticalRange(mAccessor, getLocalBounds(), event.y, false);
@@ -298,8 +296,6 @@ void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
     switch(mActionMode)
     {
         case ActionMode::none:
-            break;
-        case ActionMode::snapshot:
             break;
         case ActionMode::create:
         {
@@ -420,8 +416,6 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
     {
         case ActionMode::none:
             break;
-        case ActionMode::snapshot:
-            break;
         case ActionMode::create:
         {
             switch(Tools::getFrameType(mAccessor))
@@ -526,14 +520,15 @@ void Track::Plot::Overlay::modifierKeysChanged(juce::ModifierKeys const& modifie
     updateActionMode(getMouseXYRelative(), modifiers);
 }
 
+void Track::Plot::Overlay::takeSnapshot()
+{
+    ComponentSnapshot::takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
+}
+
 void Track::Plot::Overlay::updateActionMode(juce::Point<int> const& point, juce::ModifierKeys const& modifiers)
 {
     auto const getCurrentAction = [&]()
     {
-        if(modifiers.isAltDown())
-        {
-            return ActionMode::snapshot;
-        }
         if(modifiers.isCommandDown())
         {
             return ActionMode::create;
@@ -572,10 +567,6 @@ void Track::Plot::Overlay::updateActionMode(juce::Point<int> const& point, juce:
             case ActionMode::none:
                 setMouseCursor(juce::MouseCursor::StandardCursorType::NormalCursor);
                 mSelectionBar.setInterceptsMouseClicks(true, true);
-                break;
-            case ActionMode::snapshot:
-                setMouseCursor(getCameraCursor());
-                mSelectionBar.setInterceptsMouseClicks(false, false);
                 break;
             case ActionMode::create:
                 setMouseCursor(juce::MouseCursor::StandardCursorType::CrosshairCursor);

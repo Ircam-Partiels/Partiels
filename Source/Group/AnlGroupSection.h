@@ -21,7 +21,7 @@ namespace Group
         };
         // clang-format on
 
-        Section(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
 
         std::function<void(juce::String const& identifier, bool copy)> onTrackInserted = nullptr;

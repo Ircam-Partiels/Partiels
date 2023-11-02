@@ -31,13 +31,12 @@ namespace Group
             void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
-            void mouseDown(juce::MouseEvent const& event) override;
-            void mouseDrag(juce::MouseEvent const& event) override;
-            void mouseUp(juce::MouseEvent const& event) override;
+
+            // ComponentSnapshot
+            void takeSnapshot() override;
 
         private:
             void updateTooltip(juce::Point<int> const& pt);
-            void updateMode(juce::MouseEvent const& event);
 
             Plot& mPlot;
             Accessor& mAccessor;
@@ -45,7 +44,6 @@ namespace Group
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             NavigationBar mNavigationBar;
-            bool mSnapshotMode{false};
         };
 
     private:

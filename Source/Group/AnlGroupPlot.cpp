@@ -160,6 +160,7 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mNavigationBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
 {
+    setWantsKeyboardFocus(true);
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mNavigationBar);
     mNavigationBar.addMouseListener(this, true);
@@ -230,13 +231,11 @@ void Group::Plot::Overlay::paint(juce::Graphics& g)
 void Group::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
-    updateMode(event);
 }
 
 void Group::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
     updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
-    updateMode(event);
 }
 
 void Group::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& event)
@@ -244,39 +243,9 @@ void Group::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& ev
     setTooltip("");
 }
 
-void Group::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
+void Group::Plot::Overlay::takeSnapshot()
 {
-    updateMode(event);
-    //    if(event.mods.isAltDown())
-    //    {
-    //        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
-    //    }
-}
-
-void Group::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
-{
-    updateMode(event);
-}
-
-void Group::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
-{
-    updateMode(event);
-}
-
-void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
-{
-    //    if(event.mods.isAltDown() && !mSnapshotMode)
-    //    {
-    //        mSnapshotMode = true;
-    //        setMouseCursor(getCameraCursor());
-    //        mNavigationBar.setInterceptsMouseClicks(false, false);
-    //    }
-    //    else if(!event.mods.isAltDown() && mSnapshotMode)
-    //    {
-    //        mSnapshotMode = false;
-    //        setMouseCursor(juce::MouseCursor::CrosshairCursor);
-    //        mNavigationBar.setInterceptsMouseClicks(true, true);
-    //    }
+    ComponentSnapshot::takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
 }
 
 void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)

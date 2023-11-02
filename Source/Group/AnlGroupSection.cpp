@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
+Group::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
@@ -61,6 +61,7 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
+    commandManager.registerAllCommandsForTarget(std::addressof(mPlotOverlay));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 

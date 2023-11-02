@@ -1,14 +1,6 @@
 #include "AnlComponentSnapshot.h"
-#include <AnlCursorsData.h>
 
 ANALYSE_FILE_BEGIN
-
-juce::MouseCursor ComponentSnapshot::getCameraCursor()
-{
-    static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::photocamera_png, AnlCursorsData::photocamera_pngSize);
-    static auto const camera = juce::MouseCursor(image, 12, 12, 2.0);
-    return camera;
-}
 
 void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String const& name, juce::Colour const& backgroundColour)
 {
@@ -106,6 +98,43 @@ void ComponentSnapshot::timerCallback()
     {
         stopTimer();
     }
+}
+
+juce::ApplicationCommandTarget* ComponentSnapshot::getNextCommandTarget()
+{
+    return findFirstTargetParentComponent();
+}
+
+void ComponentSnapshot::getAllCommands(juce::Array<juce::CommandID>& commands)
+{
+    commands.add(CommandIDs::performSnapshot);
+}
+
+void ComponentSnapshot::getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result)
+{
+    switch(commandID)
+    {
+        case CommandIDs::performSnapshot:
+        {
+            result.setInfo(juce::translate("Take Snapshot"), juce::translate("Take a Snapshot of the Component"), "Export", 0);
+            result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::noModifiers, 0));
+            result.setActive(true);
+            break;
+        }
+    }
+}
+
+bool ComponentSnapshot::perform(juce::ApplicationCommandTarget::InvocationInfo const& info)
+{
+    switch(info.commandID)
+    {
+        case CommandIDs::performSnapshot:
+        {
+            takeSnapshot();
+            return true;
+        }
+    }
+    return false;
 }
 
 ANALYSE_FILE_END

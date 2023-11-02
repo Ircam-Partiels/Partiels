@@ -12,7 +12,7 @@ namespace Group
     , private juce::ChangeListener
     {
     public:
-        StrechableSection(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
+        StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
 
         bool isResizing() const;
@@ -37,9 +37,10 @@ namespace Group
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        juce::ApplicationCommandManager& mApplicationCommandManager;
         Accessor::Listener mListener{typeid(*this).name()};
 
-        Section mSection{mDirector, mTransportAccessor, mTimeZoomAccessor};
+        Section mSection;
         TrackMap<std::unique_ptr<Track::Section>> mTrackSections;
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};
