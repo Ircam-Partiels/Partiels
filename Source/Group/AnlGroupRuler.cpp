@@ -10,7 +10,7 @@ Group::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
                   {
                       updateLayout();
                   },
-                  {Track::AttrType::channelsLayout})
+                  {Track::AttrType::identifier, Track::AttrType::channelsLayout, Track::AttrType::showInGroup})
 {
     mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
