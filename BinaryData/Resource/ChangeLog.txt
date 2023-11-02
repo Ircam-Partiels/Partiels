@@ -1,5 +1,6 @@
 v1.3.1-dev1
 
+- Fix: The effective number of channels in a group does not take into account track visibility (#379)
 - Fix: Zoom ruler anchoring does not match mouse position (#378)
 - Fix: An occasional crash occurs on macOS due to a compilation/linking problem with Xcode 15 (#377)
 - Fix: The "Add New Track" action should be renamed "Show/Hide New Track Panel" (#376)
