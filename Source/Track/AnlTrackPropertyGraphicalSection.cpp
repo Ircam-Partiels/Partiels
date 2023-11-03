@@ -194,12 +194,19 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                              setValueRangeMax(static_cast<double>(value));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
-, mPropertyValueRange(juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
-                      {
-                          mDirector.startAction();
-                          setValueRange(Zoom::Range(min, max));
-                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
-                      })
+, mPropertyValueRange(
+      juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&]()
+      {
+          mDirector.startAction();
+      },
+      [&](float min, float max)
+      {
+          setValueRange(Zoom::Range(min, max));
+      },
+      [&]()
+      {
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
+      })
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
