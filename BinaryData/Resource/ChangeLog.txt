@@ -1,5 +1,6 @@
 v1.3.1-dev2
 
+- Fix: Modifying the range of spectrogram values with the slider generates several undo/redo actions (#383)
 - Imp: Use the 'c' command on track or group plots to capture a snapshot and save it to the desktop, instead of click with alt (#382)
 - Imp: Force label parsing in CSV if first element is a label (#381)
 - Fix: CSV parsing of labels starting with "inf" are considered as infinite numbers (#380)
