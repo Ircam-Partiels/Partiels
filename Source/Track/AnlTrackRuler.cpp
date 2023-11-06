@@ -22,6 +22,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:
@@ -179,6 +180,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::focused:
             case AttrType::showInGroup:
@@ -228,6 +230,7 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::graphics:
@@ -354,6 +357,7 @@ Track::NavigationBar::NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoom
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:

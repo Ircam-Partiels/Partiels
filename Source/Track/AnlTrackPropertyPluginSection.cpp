@@ -36,6 +36,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::zoomValueMode:
             case AttrType::zoomAcsr:
             case AttrType::zoomLink:
+            case AttrType::extraThresholds:
                 break;
         }
     };

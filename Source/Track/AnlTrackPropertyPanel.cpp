@@ -60,6 +60,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
                 break;
         }
     };

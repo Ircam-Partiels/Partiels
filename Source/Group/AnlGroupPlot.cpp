@@ -44,6 +44,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::unit:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
+            case Track::AttrType::extraThresholds:
             {
                 repaint();
             }

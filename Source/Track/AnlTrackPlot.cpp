@@ -40,6 +40,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
+            case AttrType::extraThresholds:
             {
                 repaint();
             }
@@ -118,6 +119,7 @@ Track::Plot::Overlay::Overlay(Plot& plot, juce::ApplicationCommandManager& comma
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::graphics:
             case AttrType::font:
             case AttrType::warnings:

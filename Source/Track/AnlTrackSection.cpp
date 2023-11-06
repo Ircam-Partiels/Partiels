@@ -34,6 +34,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::grid:
                 break;
             case AttrType::height:

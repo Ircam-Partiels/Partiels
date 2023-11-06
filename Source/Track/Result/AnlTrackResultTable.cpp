@@ -41,6 +41,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::processing:
@@ -157,6 +158,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::processing:

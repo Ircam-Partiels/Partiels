@@ -207,6 +207,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::showInGroup:
             case AttrType::height:
             case AttrType::zoomAcsr:
+            case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::zoomValueMode:

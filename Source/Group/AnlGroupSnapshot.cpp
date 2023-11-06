@@ -28,6 +28,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::zoomValueMode:
             case Track::AttrType::zoomLink:
             case Track::AttrType::zoomAcsr:
+            case Track::AttrType::extraThresholds:
             case Track::AttrType::warnings:
             case Track::AttrType::processing:
             case Track::AttrType::focused:
