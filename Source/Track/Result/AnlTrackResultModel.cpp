@@ -49,6 +49,29 @@ namespace
 
         return std::accumulate(results.cbegin(), results.cend(), 0_z, accumChannel);
     }
+
+    static std::vector<Zoom::Range> getExtraRange(auto const& results)
+    {
+        std::vector<Zoom::Range> ranges;
+        for(auto const& channel : results)
+        {
+            for(auto const& frame : channel)
+            {
+                for(auto index = 0_z; index < std::get<3>(frame).size(); ++index)
+                {
+                    if(index >= ranges.size())
+                    {
+                        ranges.push_back(Zoom::Range::emptyRange(std::get<3>(frame).at(index)));
+                    }
+                    else
+                    {
+                        ranges[index] = ranges.at(index).getUnionWith(std::get<3>(frame).at(index));
+                    }
+                }
+            }
+        }
+        return ranges;
+    }
 } // namespace
 
 Track::Result::Access::Access(Data const& data, Mode mode)
@@ -322,6 +345,26 @@ public:
         return mInfo->valueRange;
     }
 
+    std::optional<Zoom::Range> getExtraRange(size_t index) const noexcept
+    {
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
+        {
+            return {};
+        }
+        if(index >= mInfo->extraRanges.size())
+        {
+            return {};
+        }
+        return mInfo->extraRanges.at(index);
+    }
+
     inline bool operator==(Impl const& rhd) const noexcept
     {
         return mInfo == rhd.mInfo;
@@ -449,6 +492,7 @@ private:
                 mInfo->numChannels = markers->size();
                 mInfo->numBins = 0_z;
                 mInfo->valueRange = Zoom::Range::emptyRange(0.0);
+                mInfo->extraRanges = ::Misc::getExtraRange(*markers);
             }
         }
         else if(auto const* pointsPtr = std::get_if<std::shared_ptr<std::vector<Points>>>(&mInfo->data))
@@ -459,6 +503,7 @@ private:
                 mInfo->numChannels = points->size();
                 mInfo->numBins = 1_z;
                 mInfo->valueRange = ::Misc::getValueRange(*points);
+                mInfo->extraRanges = ::Misc::getExtraRange(*points);
             }
         }
         else if(auto const* columnsPtr = std::get_if<std::shared_ptr<std::vector<Columns>>>(&mInfo->data))
@@ -469,6 +514,7 @@ private:
                 mInfo->numChannels = columns->size();
                 mInfo->numBins = ::Misc::getNumBins(*columns);
                 mInfo->valueRange = ::Misc::getValueRange(*columns);
+                mInfo->extraRanges = ::Misc::getExtraRange(*columns);
             }
         }
         else
@@ -488,6 +534,7 @@ private:
         std::optional<size_t> numChannels{};
         std::optional<size_t> numBins{};
         std::optional<Zoom::Range> valueRange{};
+        std::vector<Zoom::Range> extraRanges;
         std::mutex accessMutex;
         size_t accessCounter{0_z};
 
@@ -657,6 +704,16 @@ std::optional<Zoom::Range> Track::Result::Data::getValueRange() const noexcept
         return {};
     }
     return mImpl->getValueRange();
+}
+
+std::optional<Zoom::Range> Track::Result::Data::getExtraRange(size_t index) const noexcept
+{
+    MiscWeakAssert(mImpl != nullptr);
+    if(mImpl == nullptr)
+    {
+        return {};
+    }
+    return mImpl->getExtraRange(index);
 }
 
 bool Track::Result::Data::operator==(Data const& rhd) const noexcept

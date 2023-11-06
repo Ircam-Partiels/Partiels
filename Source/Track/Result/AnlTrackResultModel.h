@@ -83,6 +83,7 @@ namespace Track
             std::optional<size_t> getNumChannels() const noexcept;
             std::optional<size_t> getNumBins() const noexcept;
             std::optional<Zoom::Range> getValueRange() const noexcept;
+            std::optional<Zoom::Range> getExtraRange(size_t index) const noexcept;
 
             bool operator==(Data const& rhd) const noexcept;
             bool operator!=(Data const& rhd) const noexcept;
