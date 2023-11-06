@@ -117,6 +117,7 @@ namespace Track
         , zoomValueMode
         , zoomLink
         , zoomAcsr
+        , extraThresholds
         
         , graphics
         , warnings
@@ -157,6 +158,7 @@ namespace Track
     , Model::Attr<AttrType::zoomValueMode, ZoomValueMode, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
+    , Model::Attr<AttrType::extraThresholds, std::vector<std::optional<float>>, Model::Flag::basic>
     
     , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
@@ -198,6 +200,7 @@ namespace Track
                                  , {true}
                                  , {ZoomValueMode::undefined}
                                  , {true}
+                                 , {}
                                  , {}
                                  
                                  , {}
