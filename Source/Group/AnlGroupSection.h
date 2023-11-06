@@ -59,7 +59,7 @@ namespace Group
         Decorator mSnapshotDecoration{mSnapshotOverlay};
 
         Plot mPlot{mAccessor, mTransportAccessor, mTimeZoomAccessor};
-        Plot::Overlay mPlotOverlay{mPlot};
+        Plot::Overlay mPlotOverlay;
         Decorator mPlotDecoration{mPlotOverlay};
 
         std::unique_ptr<juce::Component> mRuler;

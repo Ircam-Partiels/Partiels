@@ -23,7 +23,7 @@ namespace Track
         , public juce::SettableTooltipClient
         {
         public:
-            Overlay(Plot& plot);
+            Overlay(Plot& plot, juce::ApplicationCommandManager& commandManager);
             ~Overlay() override;
 
             // juce::Component
@@ -59,6 +59,8 @@ namespace Track
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
+            Transport::Accessor& mTransportAccessor;
+            juce::ApplicationCommandManager& mCommandManager;
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             SelectionBar mSelectionBar;

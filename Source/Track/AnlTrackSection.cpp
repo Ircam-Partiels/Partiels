@@ -8,6 +8,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
 : mDirector(director)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
+, mPlotOverlay(mPlot, commandManager)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {

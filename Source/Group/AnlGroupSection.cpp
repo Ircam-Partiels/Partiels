@@ -8,6 +8,7 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mPlotOverlay(mPlot, commandManager)
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();

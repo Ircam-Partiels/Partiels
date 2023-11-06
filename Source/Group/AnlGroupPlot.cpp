@@ -154,11 +154,13 @@ void Group::Plot::updateContent()
     repaint();
 }
 
-Group::Plot::Overlay::Overlay(Plot& plot)
+Group::Plot::Overlay::Overlay(Plot& plot, juce::ApplicationCommandManager& commandManager)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mNavigationBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
+, mTransportAccessor(mPlot.mTransportAccessor)
+, mCommandManager(commandManager)
+, mNavigationBar(mPlot.mAccessor, mTimeZoomAccessor, mTransportAccessor)
 {
     setWantsKeyboardFocus(true);
     addAndMakeVisible(mPlot);
@@ -275,22 +277,9 @@ void Group::Plot::Overlay::mouseWheelMove(juce::MouseEvent const& event, juce::M
         }
         else
         {
-            JUCE_COMPILER_WARNING("todo")
-            //            auto const getAnchor = [&]()
-            //            {
-            //                juce::ApplicationCommandInfo commandInfo(0);
-            //                if(mCommandManager.getTargetForCommand(ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead, commandInfo) != nullptr)
-            //                {
-            //                    if(commandInfo.flags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
-            //                    {
-            //                        return mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::startPlayhead>();
-            //                    }
-            //                }
-            //                return mScrollTime;
-            //            };
-
+            auto const isTransportAnchor = Utils::isCommandTicked(mCommandManager, ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead);
+            auto const anchor = isTransportAnchor ? mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>() : Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
             auto const amount = static_cast<double>(wheel.deltaY);
-            auto const anchor = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
             Zoom::Tools::zoomIn(mTimeZoomAccessor, amount, anchor, NotificationType::synchronous);
         }
     }
