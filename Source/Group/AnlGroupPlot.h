@@ -31,6 +31,8 @@ namespace Group
             void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
+            void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
+            void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
 
             // ComponentSnapshot
             void takeSnapshot() override;
@@ -44,6 +46,9 @@ namespace Group
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             NavigationBar mNavigationBar;
+            ScrollHelper mScrollHelper;
+            juce::ModifierKeys mScrollModifiers;
+            ScrollHelper::Orientation mScrollOrientation{ScrollHelper::Orientation::horizontal};
         };
 
     private:

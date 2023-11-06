@@ -36,8 +36,6 @@ namespace Document
         void paint(juce::Graphics& g) override;
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
-        void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
-        void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
 
     private:
         // juce::DragAndDropContainer
@@ -98,7 +96,6 @@ namespace Document
         juce::TextButton mAddGroupButton;
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
-        ScrollHelper mScrollHelper;
         Selection::Item mLastSelectedItem;
 
         LayoutNotifier mLayoutNotifier;

@@ -15,7 +15,7 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 
 void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce::MouseWheelDetails const& wheel)
 {
-    juce::Component::mouseWheelMove(e, wheel);
+    useMouseWheelMoveIfNeeded(e, wheel);
 }
 
 Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
@@ -613,58 +613,6 @@ void Document::Section::updateFocus()
     {
         mViewport.setViewPosition({mViewport.getViewArea().getX(), viewRange.movedToEndAt(combinedRange.getEnd()).getStart() + 8});
     }
-}
-
-void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
-{
-    mScrollHelper.mouseWheelMove(event, wheel);
-    if(mScrollHelper.getModifierKeys().isCtrlDown())
-    {
-        return;
-    }
-    auto const viewportOffset = mTimeRulerDecoration.getX();
-    auto const viewportWidth = mTimeRulerDecoration.getWidth();
-    auto const viewportActiveBounds = mViewport.getBounds().withX(viewportOffset).withWidth(viewportWidth);
-    if(!viewportActiveBounds.contains(event.getPosition()))
-    {
-        mViewport.useMouseWheelMoveIfNeeded(event.getEventRelativeTo(&mViewport), wheel);
-        return;
-    }
-    if(mScrollHelper.getOrientation() == ScrollHelper::vertical && !mScrollHelper.getModifierKeys().isShiftDown())
-    {
-        mouseMagnify(event, 1.0f + wheel.deltaY);
-    }
-    else
-    {
-        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
-        auto const offset = delta * visibleRange.getLength();
-        timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
-    }
-}
-
-void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
-{
-    if(event.mods.isCtrlDown())
-    {
-        return;
-    }
-    auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-    auto const getAnchor = [&]()
-    {
-        juce::ApplicationCommandInfo commandInfo(0);
-        if(mCommandManager.getTargetForCommand(ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead, commandInfo) != nullptr)
-        {
-            if(commandInfo.flags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
-            {
-                return mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::startPlayhead>();
-            }
-        }
-        return Zoom::Tools::getScaledValueFromWidth(timeZoomAcsr, *this, event.getEventRelativeTo(this).x);
-    };
-
-    Zoom::Tools::zoomIn(timeZoomAcsr, (1.0 - static_cast<double>(magnifyAmount)) / -5.0, getAnchor(), NotificationType::synchronous);
 }
 
 juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const

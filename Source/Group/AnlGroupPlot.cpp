@@ -243,6 +243,74 @@ void Group::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& ev
     setTooltip("");
 }
 
+void Group::Plot::Overlay::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
+{
+    mScrollHelper.mouseWheelMove(wheel, [&](ScrollHelper::Orientation orientation)
+                                 {
+                                     mScrollOrientation = orientation;
+                                     mScrollModifiers = event.mods;
+                                 });
+    if(mScrollModifiers.isCtrlDown())
+    {
+        auto const delta = mScrollOrientation == ScrollHelper::Orientation::vertical ? wheel.deltaY : wheel.deltaX;
+        if(mScrollModifiers.isShiftDown())
+        {
+            auto const visibleRange = mAccessor.getAcsr<AcsrType::zoom>().getAttr<Zoom::AttrType::visibleRange>();
+            auto const offset = static_cast<double>(delta) * visibleRange.getLength();
+            mAccessor.getAcsr<AcsrType::zoom>().setAttr<Zoom::AttrType::visibleRange>(visibleRange + offset, NotificationType::synchronous);
+        }
+        else
+        {
+            auto const anchor = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::zoom>(), *this, event.y);
+            Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::zoom>(), -static_cast<double>(delta) / 5.0, anchor, NotificationType::synchronous);
+        }
+    }
+    else
+    {
+        if((mScrollModifiers.isShiftDown() && mScrollOrientation == ScrollHelper::vertical) || mScrollOrientation == ScrollHelper::horizontal)
+        {
+            auto const visibleRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
+            auto const delta = mScrollModifiers.isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
+            mTimeZoomAccessor.setAttr<Zoom::AttrType::visibleRange>(visibleRange - delta * visibleRange.getLength(), NotificationType::synchronous);
+        }
+        else
+        {
+            JUCE_COMPILER_WARNING("todo")
+            //            auto const getAnchor = [&]()
+            //            {
+            //                juce::ApplicationCommandInfo commandInfo(0);
+            //                if(mCommandManager.getTargetForCommand(ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead, commandInfo) != nullptr)
+            //                {
+            //                    if(commandInfo.flags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
+            //                    {
+            //                        return mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::startPlayhead>();
+            //                    }
+            //                }
+            //                return mScrollTime;
+            //            };
+
+            auto const amount = static_cast<double>(wheel.deltaY);
+            auto const anchor = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+            Zoom::Tools::zoomIn(mTimeZoomAccessor, amount, anchor, NotificationType::synchronous);
+        }
+    }
+}
+
+void Group::Plot::Overlay::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
+{
+    auto const amount = static_cast<double>(1.0f - magnifyAmount) / -5.0;
+    if(event.mods.isCtrlDown())
+    {
+        auto const anchor = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::zoom>(), *this, event.y);
+        Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::zoom>(), amount, anchor, NotificationType::synchronous);
+    }
+    else
+    {
+        auto const anchor = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+        Zoom::Tools::zoomIn(mTimeZoomAccessor, amount, anchor, NotificationType::synchronous);
+    }
+}
+
 void Group::Plot::Overlay::takeSnapshot()
 {
     ComponentSnapshot::takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);

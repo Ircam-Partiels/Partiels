@@ -33,8 +33,6 @@ namespace Group
         void resized() override;
         void paint(juce::Graphics& g) override;
         void paintOverChildren(juce::Graphics& g) override;
-        void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
-        void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
 
     private:
         // juce::DragAndDropTarget
@@ -71,7 +69,6 @@ namespace Group
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
         bool mIsItemDragged{false};
-        ScrollHelper mScrollHelper;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group

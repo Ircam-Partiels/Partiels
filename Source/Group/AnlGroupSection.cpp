@@ -193,53 +193,6 @@ void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     }
 }
 
-void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
-{
-    mScrollHelper.mouseWheelMove(event, wheel);
-    if(!mScrollHelper.getModifierKeys().isCtrlDown())
-    {
-        Component::mouseWheelMove(event, wheel);
-        return;
-    }
-    if(!mScrollHelper.getModifierKeys().isShiftDown())
-    {
-        auto const delta = mScrollHelper.getOrientation() == ScrollHelper::Orientation::vertical ? wheel.deltaY : wheel.deltaX;
-        mouseMagnify(event, 1.0f + delta);
-    }
-    else
-    {
-        auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? wheel.deltaY : wheel.deltaX;
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-        auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const offset = static_cast<double>(-delta) * visibleRange.getLength();
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
-    }
-}
-
-void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
-{
-    if(!event.mods.isCtrlDown())
-    {
-        Component::mouseMagnify(event, magnifyAmount);
-        return;
-    }
-
-    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-    auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-    auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
-    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-
-    auto const anchor = Zoom::Tools::getScaledValueFromHeight(zoomAcsr, *this, event.y);
-    auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
-    auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
-
-    auto const minDistance = zoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
-    auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
-    auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
-
-    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
-}
-
 void Group::Section::updateContent()
 {
     auto const layout = mAccessor.getAttr<AttrType::layout>();

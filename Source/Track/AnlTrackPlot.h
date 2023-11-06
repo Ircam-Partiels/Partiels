@@ -36,6 +36,8 @@ namespace Track
             void mouseDrag(juce::MouseEvent const& event) override;
             void mouseUp(juce::MouseEvent const& event) override;
             void mouseDoubleClick(juce::MouseEvent const& event) override;
+            void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
+            void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
             void modifierKeysChanged(juce::ModifierKeys const& modifiers) override;
 
             // ComponentSnapshot
@@ -64,6 +66,9 @@ namespace Track
             bool mMouseWasDragged{false};
             double mMouseDownTime{0.0};
             Edition mCurrentEdition;
+            ScrollHelper mScrollHelper;
+            juce::ModifierKeys mScrollModifiers;
+            ScrollHelper::Orientation mScrollOrientation{ScrollHelper::Orientation::horizontal};
         };
 
     private:

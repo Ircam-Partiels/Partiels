@@ -515,6 +515,120 @@ void Track::Plot::Overlay::mouseDoubleClick(juce::MouseEvent const& event)
     }
 }
 
+void Track::Plot::Overlay::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
+{
+    mScrollHelper.mouseWheelMove(wheel, [&](ScrollHelper::Orientation orientation)
+                                 {
+                                     mScrollOrientation = orientation;
+                                     mScrollModifiers = event.mods;
+                                 });
+    if(mScrollModifiers.isCtrlDown())
+    {
+        auto const delta = mScrollOrientation == ScrollHelper::Orientation::vertical ? wheel.deltaY : wheel.deltaX;
+        if(mScrollModifiers.isShiftDown())
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                    break;
+                case Track::FrameType::value:
+                {
+                    auto const visibleRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+                    auto const offset = static_cast<double>(delta) * visibleRange.getLength();
+                    mAccessor.getAcsr<AcsrType::valueZoom>().setAttr<Zoom::AttrType::visibleRange>(visibleRange + offset, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::vector:
+                {
+                    auto const visibleRange = mAccessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
+                    auto const offset = static_cast<double>(delta) * visibleRange.getLength();
+                    mAccessor.getAcsr<AcsrType::binZoom>().setAttr<Zoom::AttrType::visibleRange>(visibleRange + offset, NotificationType::synchronous);
+                }
+                break;
+            }
+        }
+        else
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                    break;
+                case Track::FrameType::value:
+                {
+                    auto const anchor = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::valueZoom>(), *this, event.y);
+                    Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::valueZoom>(), static_cast<double>(delta), anchor, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::vector:
+                {
+                    auto const anchor = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
+                    Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::binZoom>(), static_cast<double>(delta), anchor, NotificationType::synchronous);
+                }
+                break;
+            }
+        }
+    }
+    else
+    {
+        if((mScrollModifiers.isShiftDown() && mScrollOrientation == ScrollHelper::vertical) || mScrollOrientation == ScrollHelper::horizontal)
+        {
+            auto const visibleRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
+            auto const delta = mScrollModifiers.isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
+            mTimeZoomAccessor.setAttr<Zoom::AttrType::visibleRange>(visibleRange - delta * visibleRange.getLength(), NotificationType::synchronous);
+        }
+        else
+        {
+            JUCE_COMPILER_WARNING("todo")
+            //            auto const getAnchor = [&]()
+            //            {
+            //                juce::ApplicationCommandInfo commandInfo(0);
+            //                if(mCommandManager.getTargetForCommand(ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead, commandInfo) != nullptr)
+            //                {
+            //                    if(commandInfo.flags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
+            //                    {
+            //                        return mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::startPlayhead>();
+            //                    }
+            //                }
+            //                return mScrollTime;
+            //            };
+
+            auto const amount = static_cast<double>(wheel.deltaY);
+            auto const anchor = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+            Zoom::Tools::zoomIn(mTimeZoomAccessor, amount, anchor, NotificationType::synchronous);
+        }
+    }
+}
+
+void Track::Plot::Overlay::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
+{
+    auto const amount = static_cast<double>(1.0f - magnifyAmount) / -5.0;
+    if(event.mods.isCtrlDown())
+    {
+        switch(Tools::getFrameType(mAccessor))
+        {
+            case Track::FrameType::label:
+                break;
+            case Track::FrameType::value:
+            {
+                auto const anchor = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::valueZoom>(), *this, event.y);
+                Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::valueZoom>(), amount, anchor, NotificationType::synchronous);
+            }
+            break;
+            case Track::FrameType::vector:
+            {
+                auto const anchor = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
+                Zoom::Tools::zoomIn(mAccessor.getAcsr<AcsrType::binZoom>(), amount, anchor, NotificationType::synchronous);
+            }
+            break;
+        }
+    }
+    else
+    {
+        auto const anchor = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+        Zoom::Tools::zoomIn(mTimeZoomAccessor, amount, anchor, NotificationType::synchronous);
+    }
+}
+
 void Track::Plot::Overlay::modifierKeysChanged(juce::ModifierKeys const& modifiers)
 {
     updateActionMode(getMouseXYRelative(), modifiers);
