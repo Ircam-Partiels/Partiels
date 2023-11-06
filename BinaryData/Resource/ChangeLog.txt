@@ -1,4 +1,4 @@
-v1.3.1-dev3
+v1.3.1-dev4
 
 - Fix: Anchoring the temporal zoom with the mouse wheel is not consistent (#387)
 - Fix: Vertical zoom magnification on trackpad is reversed (#385)
