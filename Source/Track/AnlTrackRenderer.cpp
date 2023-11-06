@@ -167,9 +167,9 @@ namespace Track
 
         void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, juce::String const& unit);
+        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit);
+        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit);
         void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
     } // namespace Renderer
 } // namespace Track
@@ -328,13 +328,14 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
     auto const& colours = accessor.getAttr<AttrType::colours>();
     auto const& unit = Tools::getUnit(accessor);
 
+    auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
     auto const& edition = accessor.getAttr<AttrType::edit>();
     if(edition.channel == channel)
     {
         auto* data = std::get_if<std::vector<Result::Data::Marker>>(&edition.data);
         if(data != nullptr && !data->empty())
         {
-            paintMarkers(g, bounds, *data, timeRange, {}, colours, unit);
+            paintMarkers(g, bounds, *data, thesholds, timeRange, {}, colours, unit);
         }
     }
 
@@ -347,11 +348,11 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
     auto const markers = results.getMarkers();
     if(markers != nullptr && markers->size() > channel)
     {
-        paintMarkers(g, bounds, markers->at(channel), timeRange, edition.range, colours, unit);
+        paintMarkers(g, bounds, markers->at(channel), thesholds, timeRange, edition.range, colours, unit);
     }
 }
 
-void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, juce::String const& unit)
+void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, juce::String const& unit)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty())
@@ -385,7 +386,8 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
     while(it != results.cend() && std::get<0>(*it) < clipTimeEnd)
     {
         auto const position = std::get<0>(*it);
-        if(!ignoredTimeRange.contains(position))
+        auto const process = !ignoredTimeRange.contains(position) && Result::passThresholds(*it, thresholds);
+        if(process)
         {
             auto const duration = std::get<1>(*it);
             auto const x = Tools::secondsToPixel(position, timeRange, fbounds);
@@ -490,6 +492,8 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
     {
         return;
     }
+
+    auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
     auto const markers = results.getPoints();
     if(markers != nullptr && markers->size() > channel)
     {
@@ -499,15 +503,15 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
             auto* data = std::get_if<std::vector<Result::Data::Point>>(&edition.data);
             if(data != nullptr && !data->empty())
             {
-                paintPoints(g, bounds, markers->at(channel), *data, timeRange, valueRange, colours, unit);
+                paintPoints(g, bounds, markers->at(channel), thesholds, *data, timeRange, valueRange, colours, unit);
                 return;
             }
         }
-        paintPoints(g, bounds, markers->at(channel), {}, timeRange, valueRange, colours, unit);
+        paintPoints(g, bounds, markers->at(channel), thesholds, {}, timeRange, valueRange, colours, unit);
     }
 }
 
-void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit)
+void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty() || valueRange.isEmpty())
@@ -522,9 +526,9 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
 
+    auto const rangeLength = valueRange.getLength();
     auto const getNumDecimals = [&]()
     {
-        auto const rangeLength = valueRange.getLength();
         int numDecimals = 0;
         while(numDecimals < 4 && std::pow(10.0, static_cast<double>(numDecimals)) / rangeLength < 1.0)
         {
@@ -537,7 +541,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
 
     if(results.size() == 1_z)
     {
-        if(!std::get<2_z>(results.at(0)).has_value())
+        if(std::get<2_z>(results.at(0_z)).has_value() || !Result::passThresholds(results.at(0_z), thresholds))
         {
             return;
         }
@@ -688,7 +692,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
         while(iterator != results.cend() && std::get<0_z>(*iterator) < limit)
         {
-            if(std::get<2_z>(*iterator).has_value())
+            if(std::get<2_z>(*iterator).has_value() && Result::passThresholds(*iterator, thresholds))
             {
                 auto const& lvalue = std::get<2_z>(*iterator).value();
                 min = std::min(min, lvalue);
@@ -708,11 +712,11 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     while(!hasExceededEnd && it != results.cend())
     {
         MiscWeakAssert(!hasExtra || it != extra.cend());
-        if(!std::get<2_z>(*it).has_value())
+        if(!std::get<2_z>(*it).has_value() || !Result::passThresholds(*it, thresholds))
         {
             pathArr.stopLine();
             it = getNextIt(it);
-            while(it != results.cend() && !std::get<2_z>(*it).has_value() && !hasExceededEnd)
+            while(it != results.cend() && !hasExceededEnd && (!std::get<2_z>(*it).has_value() || !Result::passThresholds(*it, thresholds)))
             {
                 hasExceededEnd = std::get<0_z>(*it) >= clipTimeEnd;
                 it = getNextIt(it);
