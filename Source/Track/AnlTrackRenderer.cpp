@@ -735,12 +735,14 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
 
             if(it != next && (max - min) > std::numeric_limits<float>::epsilon())
             {
-                auto const y1 = Tools::valueToPixel(min, valueRange, fbounds);
-                auto const y2 = Tools::valueToPixel(max, valueRange, fbounds);
+                auto const y1 = Tools::valueToPixel(max, valueRange, fbounds);
+                auto const y2 = Tools::valueToPixel(min, valueRange, fbounds);
                 pathArr.addLine(x, x, y1);
                 pathArr.stopLine();
 
-                rectangles.addWithoutMerging({static_cast<int>(x), static_cast<int>(y2), std::max(static_cast<int>(x2) - static_cast<int>(x), 1), std::max(static_cast<int>(y1 - y2), 1)});
+                auto const width = std::max(static_cast<int>(std::ceil(x2)) - static_cast<int>(std::floor(x)), 1);
+                auto const height = std::max(static_cast<int>(std::ceil(y2)) - static_cast<int>(std::floor(y1)), 1);
+                rectangles.addWithoutMerging(juce::Rectangle<int>(static_cast<int>(std::floor(x)), static_cast<int>(std::floor(y1)), width, height));
                 if(showLabel)
                 {
                     labelArr.addValue(min, x, y1);
