@@ -248,6 +248,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         child->setVisible(false);
                     }
                 }
+
+                addExtraThresholdProperties();
                 auto const& channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
                 auto const numChannels = channelsLayout.size();
                 switch(Tools::getFrameType(acsr))
@@ -312,6 +314,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     break;
                 }
                 updateZoomMode();
+                updateExtraTheshold();
                 resized();
             }
             break;
@@ -355,6 +358,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::showInGroup:
             {
                 mPropertyShowInGroup.entry.setToggleState(acsr.getAttr<AttrType::showInGroup>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case AttrType::extraThresholds:
+            {
+                updateExtraTheshold();
             }
             break;
             case AttrType::edit:
@@ -429,9 +437,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
         }
     };
 
-    mZoomGridPropertyPanel.onChangeBegin = [this](Zoom::Grid::Accessor const& acsr)
+    mZoomGridPropertyPanel.onChangeBegin = [this]([[maybe_unused]] Zoom::Grid::Accessor const& acsr)
     {
-        juce::ignoreUnused(acsr);
         mDirector.startAction();
     };
 
@@ -505,6 +512,10 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
     setBounds(mPropertyValueRange);
+    for(auto& extraOutput : mPropertyExtraThresholds)
+    {
+        setBounds(*extraOutput.get());
+    }
     setBounds(mPropertyNumBins);
     setBounds(mPropertyRangeLink);
     setBounds(mPropertyShowInGroup);
@@ -516,7 +527,93 @@ void Track::PropertyGraphicalSection::resized()
 
 Zoom::Accessor& Track::PropertyGraphicalSection::getCurrentZoomAcsr()
 {
-    return Tools::getFrameType(mAccessor) == Track::FrameType::vector ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
+    return Tools::getFrameType(mAccessor) == FrameType::vector ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
+}
+
+void Track::PropertyGraphicalSection::addExtraThresholdProperties()
+{
+    if(Tools::getFrameType(mAccessor) == FrameType::vector)
+    {
+        return;
+    }
+    mPropertyExtraThresholds.clear();
+    auto const& description = mAccessor.getAttr<AttrType::description>();
+    auto const size = description.extraOutputs.size();
+    for(auto index = 0_z; index < size; ++index)
+    {
+        Plugin::OutputExtra const& output = description.extraOutputs.at(index);
+        auto const getRange = [&]() -> std::optional<Zoom::Range>
+        {
+            if(output.hasKnownExtents)
+            {
+                return Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)};
+            }
+            auto const& results = mAccessor.getAttr<AttrType::results>();
+            auto const access = results.getReadAccess();
+            return static_cast<bool>(access) ? results.getExtraRange(index) : std::optional<Zoom::Range>();
+        };
+
+        auto const range = getRange();
+        auto desc = juce::String(output.description);
+        if(range.has_value())
+        {
+            desc += " [";
+            desc += juce::String(range.value().getStart(), 2) + ":" + juce::String(range.value().getEnd(), 2);
+            if(output.isQuantized)
+            {
+                desc += "-" + juce::String(output.quantizeStep, 2);
+            }
+            desc += "]";
+        }
+
+        auto const name = juce::translate("NAME Threshold").replace("NAME", output.name);
+        auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
+        auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
+        auto const step = output.isQuantized ? output.quantizeStep : 0.0f;
+
+        juce::WeakReference<juce::Component> weakReference(this);
+        auto const startChange = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            mDirector.startAction();
+        };
+        auto const endChange = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", output.name));
+        };
+        auto const applyChange = [=, this](float newValue)
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            auto thresholds = mAccessor.getAttr<AttrType::extraThresholds>();
+            thresholds.resize(size);
+            if(newValue <= start)
+            {
+                thresholds[index].reset();
+            }
+            else
+            {
+                thresholds[index] = newValue;
+            }
+            mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
+        };
+        auto property = std::make_unique<PropertySlider>(name, desc, output.unit, juce::Range<float>{start, end}, step, startChange, applyChange, endChange, true);
+        anlWeakAssert(property != nullptr);
+        if(property != nullptr)
+        {
+            addAndMakeVisible(property.get());
+            mPropertyExtraThresholds.push_back(std::move(property));
+        }
+    }
 }
 
 void Track::PropertyGraphicalSection::setColourMap(ColourMap const& colourMap)
@@ -726,6 +823,23 @@ void Track::PropertyGraphicalSection::updateZoomMode()
         case ZoomValueMode::custom:
             mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
             break;
+    }
+}
+
+void Track::PropertyGraphicalSection::updateExtraTheshold()
+{
+    auto const& thresholds = mAccessor.getAttr<AttrType::extraThresholds>();
+    for(auto index = 0_z; index < mPropertyExtraThresholds.size(); ++index)
+    {
+        auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
+        auto& property = mPropertyExtraThresholds[index];
+        MiscWeakAssert(property != nullptr);
+        if(property != nullptr) [[likely]]
+        {
+            auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
+            property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
+            property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
+        }
     }
 }
 

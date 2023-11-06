@@ -18,6 +18,7 @@ namespace Track
 
     private:
         Zoom::Accessor& getCurrentZoomAcsr();
+        void addExtraThresholdProperties();
         void setColourMap(ColourMap const& colourMap);
         void setForegroundColour(juce::Colour const& colour);
         void setBackgroundColour(juce::Colour const& colour);
@@ -31,6 +32,7 @@ namespace Track
         void setValueRange(juce::Range<double> const& range);
         void showChannelLayout();
         void updateZoomMode();
+        void updateExtraTheshold();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -54,6 +56,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
+        std::vector<std::unique_ptr<PropertySlider>> mPropertyExtraThresholds;
         PropertyTextButton mPropertyGrid;
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
