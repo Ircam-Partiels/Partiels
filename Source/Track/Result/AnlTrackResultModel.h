@@ -122,6 +122,22 @@ namespace Track
             return time < std::get<0_z>(value);
         }
 
+        template <typename T>
+            requires is_data<T>
+        static bool passThresholds(T const& value, std::vector<std::optional<float>> const& thresholds)
+        {
+            auto const maxExtra = std::min(std::get<3>(value).size(), thresholds.size());
+            for(auto index = 0_z; index < maxExtra; ++index)
+            {
+                auto const threshold = thresholds.at(index);
+                if(threshold.has_value() && threshold.value() >= std::get<3>(value).at(index))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         struct File
         {
             juce::File file;
