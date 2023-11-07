@@ -1,4 +1,5 @@
 #include "AnlTrackTooltip.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -17,6 +18,23 @@ juce::String Track::Tools::getInfoTooltip(Accessor const& acsr)
         return name + " (Plugin): " + description.name + " - " + description.output.name;
     }
     return name;
+}
+
+juce::String Track::Tools::getExtraTooltip(Accessor const& acsr, size_t index)
+{
+    auto const& extraOutputs = acsr.getAttr<AttrType::description>().extraOutputs;
+    if(index >= extraOutputs.size())
+    {
+        return {};
+    }
+    auto const range = Tools::getExtraRange(acsr, index);
+    if(range.has_value())
+    {
+        auto const min = static_cast<float>(range.value().getStart());
+        auto const max = static_cast<float>(range.value().getEnd());
+        return juce::String(extraOutputs.at(index).description) + " " + Plugin::Tools::rangeToString(min, max, extraOutputs.at(index).isQuantized, extraOutputs.at(index).quantizeStep);
+    }
+    return juce::String(extraOutputs.at(index).description);
 }
 
 juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component const& component, int y)
