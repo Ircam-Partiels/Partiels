@@ -1,4 +1,5 @@
 #include "AnlTrackResultModifier.h"
+#include "../AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -212,18 +213,22 @@ Track::Result::ChannelData Track::Result::Modifier::createFrame(Accessor const& 
     if(auto markers = results.getMarkers())
     {
         std::vector<float> extras;
-        for(auto const& extraOutput : accessor.getAttr<AttrType::description>().extraOutputs)
+        auto const& extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+        for(auto index = 0_z; index < extraOutputs.size(); ++index)
         {
-            extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+            auto const range = Tools::getExtraRange(accessor, index);
+            extras.push_back(range.has_value() ? static_cast<float>(range->getEnd()) : 1.0f);
         }
         return std::vector<Data::Marker>{{time, 0.0, {}, extras}};
     }
     if(auto points = results.getPoints())
     {
         std::vector<float> extras;
-        for(auto const& extraOutput : accessor.getAttr<AttrType::description>().extraOutputs)
+        auto const& extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+        for(auto index = 0_z; index < extraOutputs.size(); ++index)
         {
-            extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+            auto const range = Tools::getExtraRange(accessor, index);
+            extras.push_back(range.has_value() ? static_cast<float>(range->getEnd()) : 1.0f);
         }
         return std::vector<Data::Point>{{time, 0.0, Data::getValue(points, channel, time), extras}};
     }

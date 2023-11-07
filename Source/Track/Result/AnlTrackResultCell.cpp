@@ -528,13 +528,13 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
         : public Modifier::ActionBase
         {
         public:
-            Action(std::function<Accessor&()> fn, size_t channel, size_t index, size_t extraIndex, float currentValue, float newValue, float minValue)
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, size_t extraIndex, float currentValue, float newValue, float maxValue)
             : Modifier::ActionBase(fn, channel)
             , mIndex(index)
             , mExtraIndex(extraIndex)
             , mCurrentValue(currentValue)
             , mNewValue(newValue)
-            , mMinValue(minValue)
+            , mMaxValue(maxValue)
             {
             }
 
@@ -554,11 +554,11 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
 
             bool apply(float value)
             {
-                auto const applyValue = [value, index = mExtraIndex, minValue = mMinValue](auto& frame)
+                auto const applyValue = [value, index = mExtraIndex, maxValue = mMaxValue](auto& frame)
                 {
                     if(index >= std::get<3_z>(frame).size())
                     {
-                        std::get<3_z>(frame).resize(index + 1_z, minValue);
+                        std::get<3_z>(frame).resize(index + 1_z, maxValue);
                     }
                     auto& extra = std::get<3_z>(frame)[index];
                     if(std::abs(value - extra) < std::numeric_limits<float>::epsilon())
@@ -586,12 +586,11 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
             size_t const mExtraIndex;
             float const mCurrentValue;
             float const mNewValue;
-            float const mMinValue;
+            float const mMaxValue;
         };
 
-        auto const& extraOutputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
-        auto const minValue = mExtraIndex < extraOutputs.size() && extraOutputs.at(mExtraIndex).hasKnownExtents ? extraOutputs.at(mExtraIndex).minValue : 0.0;
-        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mExtraIndex, mCurrentValue, newValue, minValue);
+        auto const maxValue = Tools::getExtraRange(mAccessor, mExtraIndex).value_or(juce::Range<double>()).getEnd();
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mExtraIndex, mCurrentValue, newValue, maxValue);
         if(action != nullptr)
         {
             undoManager.beginNewTransaction(juce::translate("Change Frame Extra Value"));
@@ -626,11 +625,10 @@ void Track::Result::CellExtra::update()
         mNumberField.setTextValueSuffix(mExtraIndex < outputs.size() ? outputs.at(mExtraIndex).unit : "");
         if(mExtraIndex < outputs.size() && outputs.at(mExtraIndex).hasKnownExtents)
         {
+            auto const range = Tools::getExtraRange(mAccessor, mExtraIndex);
             auto const& output = outputs.at(mExtraIndex);
-            auto const min = static_cast<double>(output.minValue);
-            auto const max = static_cast<double>(output.maxValue);
             auto const interval = output.isQuantized ? static_cast<double>(output.quantizeStep) : 0.0;
-            mNumberField.setRange({min, max}, interval, juce::NotificationType::dontSendNotification);
+            mNumberField.setRange(range.value_or(juce::Range<double>(0.0, 1.0)), interval, juce::NotificationType::dontSendNotification);
         }
         else
         {

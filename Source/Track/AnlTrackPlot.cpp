@@ -228,9 +228,11 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
                     mCurrentEdition.channel = std::get<0_z>(channel.value());
                     std::vector<float> extras;
-                    for(auto const& extraOutput : mAccessor.getAttr<AttrType::description>().extraOutputs)
+                    auto const& extraOutputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
+                    for(auto index = 0_z; index < extraOutputs.size(); ++index)
                     {
-                        extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+                        auto const extraRange = Tools::getExtraRange(mAccessor, index);
+                        extras.push_back(extraRange.has_value() ? static_cast<float>(extraRange->getEnd()) : 1.0f);
                     }
                     mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, 0.0, "", extras}};
                     mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
@@ -246,9 +248,11 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                     auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
                     mCurrentEdition.channel = std::get<0_z>(channel.value());
                     std::vector<float> extras;
-                    for(auto const& extraOutput : mAccessor.getAttr<AttrType::description>().extraOutputs)
+                    auto const& extraOutputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
+                    for(auto index = 0_z; index < extraOutputs.size(); ++index)
                     {
-                        extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+                        auto const extraRange = Tools::getExtraRange(mAccessor, index);
+                        extras.push_back(extraRange.has_value() ? static_cast<float>(extraRange->getEnd()) : 1.0f);
                     }
                     mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value, extras}};
                     mMouseDownTime = time;
