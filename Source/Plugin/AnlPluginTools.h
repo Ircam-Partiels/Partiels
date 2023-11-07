@@ -22,6 +22,7 @@ namespace Plugin
 
     namespace Tools
     {
+        juce::String rangeToString(float min, float max, bool quantized, float step);
         std::unique_ptr<juce::Component> createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange);
         std::vector<std::unique_ptr<Ive::PluginWrapper>> createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate);
     } // namespace Tools

@@ -12,6 +12,11 @@ Plugin::ParametersError::ParametersError(char const* message)
 {
 }
 
+juce::String Plugin::Tools::rangeToString(float min, float max, bool quantized, float step)
+{
+    return "[" + juce::String(min, 2) + ":" + juce::String(max, 2) + (quantized ? ("-" + juce::String(step, 2)) : "") + "]";
+}
+
 std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange)
 {
     auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
@@ -38,7 +43,7 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                                 });
     }
 
-    auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
+    auto const description = juce::String(parameter.description) + " " + rangeToString(parameter.minValue, parameter.maxValue, parameter.isQuantized, parameter.quantizeStep);
     return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
                                             {
                                                 if(applyChange == nullptr)
