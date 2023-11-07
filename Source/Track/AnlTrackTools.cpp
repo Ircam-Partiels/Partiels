@@ -194,6 +194,22 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& 
     return Zoom::Range(0.0, static_cast<double>(output.binCount));
 }
 
+std::optional<Zoom::Range> Track::Tools::getExtraRange(Accessor const& accessor, size_t index)
+{
+    auto const& extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+    if(index >= extraOutputs.size())
+    {
+        return {};
+    }
+    if(extraOutputs.at(index).hasKnownExtents)
+    {
+        return Zoom::Range{static_cast<double>(extraOutputs.at(index).minValue), static_cast<double>(extraOutputs.at(index).maxValue)};
+    }
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    return static_cast<bool>(access) ? results.getExtraRange(index) : std::optional<Zoom::Range>();
+}
+
 bool Track::Tools::isSelected(Accessor const& acsr)
 {
     if(acsr.getAttr<AttrType::channelsLayout>().empty())

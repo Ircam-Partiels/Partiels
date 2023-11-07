@@ -32,6 +32,7 @@ namespace Track
         std::optional<Zoom::Range> getResultRange(Accessor const& accessor);
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
+        std::optional<Zoom::Range> getExtraRange(Accessor const& accessor, size_t index);
 
         bool isSelected(Accessor const& acsr);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
