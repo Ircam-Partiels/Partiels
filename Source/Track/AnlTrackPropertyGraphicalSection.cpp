@@ -1,5 +1,6 @@
 #include "AnlTrackPropertyGraphicalSection.h"
 #include "AnlTrackTools.h"
+#include "AnlTrackTooltip.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -541,31 +542,9 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
     auto const size = description.extraOutputs.size();
     for(auto index = 0_z; index < size; ++index)
     {
-        Plugin::OutputExtra const& output = description.extraOutputs.at(index);
-        auto const getRange = [&]() -> std::optional<Zoom::Range>
-        {
-            if(output.hasKnownExtents)
-            {
-                return Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)};
-            }
-            auto const& results = mAccessor.getAttr<AttrType::results>();
-            auto const access = results.getReadAccess();
-            return static_cast<bool>(access) ? results.getExtraRange(index) : std::optional<Zoom::Range>();
-        };
-
-        auto const range = getRange();
-        auto desc = juce::String(output.description);
-        if(range.has_value())
-        {
-            desc += " [";
-            desc += juce::String(range.value().getStart(), 2) + ":" + juce::String(range.value().getEnd(), 2);
-            if(output.isQuantized)
-            {
-                desc += "-" + juce::String(output.quantizeStep, 2);
-            }
-            desc += "]";
-        }
-
+        auto const& output = description.extraOutputs.at(index);
+        auto const range = Tools::getExtraRange(mAccessor, index);
+        auto const tooltip = Tools::getExtraTooltip(mAccessor, index);
         auto const name = juce::translate("NAME Threshold").replace("NAME", output.name);
         auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
         auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
@@ -606,7 +585,7 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             }
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
-        auto property = std::make_unique<PropertySlider>(name, desc, output.unit, juce::Range<float>{start, end}, step, startChange, applyChange, endChange, true);
+        auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, end}, step, startChange, applyChange, endChange, true);
         anlWeakAssert(property != nullptr);
         if(property != nullptr)
         {
