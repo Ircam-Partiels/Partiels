@@ -91,6 +91,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::unit:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::grid:

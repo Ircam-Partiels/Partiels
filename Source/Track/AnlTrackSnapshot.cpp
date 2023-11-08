@@ -23,6 +23,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::name:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::warnings:
             case AttrType::processing:
@@ -367,6 +368,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::zoomAcsr:

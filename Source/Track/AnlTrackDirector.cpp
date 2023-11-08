@@ -220,6 +220,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::font:
             case AttrType::unit:
             case AttrType::showInGroup:
+            case AttrType::zoomValueMode:
                 break;
         }
     };

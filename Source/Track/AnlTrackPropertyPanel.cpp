@@ -55,10 +55,11 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::showInGroup:
             case AttrType::identifier:
             case AttrType::height:
-            case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
+            case AttrType::zoomAcsr:
                 break;
         }
     };

@@ -28,6 +28,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::description:
             case Track::AttrType::state:
             case Track::AttrType::height:
+            case Track::AttrType::zoomValueMode:
             case Track::AttrType::zoomLink:
             case Track::AttrType::zoomAcsr:
             case Track::AttrType::warnings:

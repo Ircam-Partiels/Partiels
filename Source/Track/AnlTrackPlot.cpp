@@ -23,6 +23,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
@@ -114,6 +115,7 @@ Track::Plot::Overlay::Overlay(Plot& plot, juce::ApplicationCommandManager& comma
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::graphics:

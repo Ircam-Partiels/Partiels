@@ -31,9 +31,10 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::showInGroup:
             case AttrType::identifier:
             case AttrType::height:
-            case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::zoomValueMode:
+            case AttrType::zoomAcsr:
             case AttrType::zoomLink:
                 break;
         }

@@ -209,6 +209,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
                 break;
         }

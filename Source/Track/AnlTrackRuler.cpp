@@ -19,6 +19,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
@@ -172,6 +173,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::warnings:
@@ -223,6 +225,7 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
@@ -348,6 +351,7 @@ Track::NavigationBar::NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoom
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
+            case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
