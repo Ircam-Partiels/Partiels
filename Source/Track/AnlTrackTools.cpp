@@ -162,6 +162,13 @@ juce::String Track::Tools::getUnit(Accessor const& acsr)
     return acsr.getAttr<AttrType::unit>().value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
 }
 
+std::optional<Zoom::Range> Track::Tools::getResultRange(Accessor const& accessor)
+{
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    return static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
+}
+
 std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)
 {
     auto const& output = description.output;
