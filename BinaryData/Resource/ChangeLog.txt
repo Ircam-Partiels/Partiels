@@ -1,5 +1,6 @@
 v1.3.1-dev4
 
+- Fix: Adapting block size and step size to the sample rate when loading a template must not be done if it is not supported by the plugin (#391)
 - Fix: Anchoring the temporal zoom with the mouse wheel is not consistent (#387)
 - Fix: Vertical zoom magnification on trackpad is reversed (#385)
 - Fix: Spectrogram value and zoom ranges are incorrectly scaled following analysis (#384)
