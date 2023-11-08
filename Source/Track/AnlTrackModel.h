@@ -18,6 +18,16 @@ namespace Track
     };
     // clang-format on
 
+    // clang-format off
+    enum class ZoomValueMode
+    {
+          undefined
+        , plugin
+        , results
+        , custom
+    };
+    // clang-format on
+
     using Results = Result::Data;
     using FileInfo = Result::File;
     using Images = std::vector<std::vector<juce::Image>>;
@@ -104,6 +114,7 @@ namespace Track
         , unit
         , channelsLayout
         , showInGroup
+        , zoomValueMode
         , zoomLink
         , zoomAcsr
         
@@ -143,6 +154,7 @@ namespace Track
     , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::showInGroup, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::zoomValueMode, ZoomValueMode, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
@@ -184,6 +196,7 @@ namespace Track
                                  , {}
                                  , {std::vector<bool>{}}
                                  , {true}
+                                 , {ZoomValueMode::undefined}
                                  , {true}
                                  , {}
                                  
