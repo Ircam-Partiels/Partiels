@@ -238,6 +238,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::results:
             case AttrType::channelsLayout:
             case AttrType::unit:
+            case AttrType::zoomValueMode:
             {
                 for(auto* child : getChildren())
                 {
@@ -594,28 +595,21 @@ void Track::PropertyGraphicalSection::setPluginValueRange()
         return;
     }
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
+    auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange.value());
+    mDirector.setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setResultValueRange()
 {
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    auto const access = results.getReadAccess();
-    if(!static_cast<bool>(access))
-    {
-        return;
-    }
-
-    auto const globalRange = results.getValueRange();
+    auto globalRange = Tools::getResultRange(mAccessor);
     if(!globalRange.has_value() || globalRange->isEmpty())
     {
         return;
     }
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
+    auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange.value());
+    mDirector.setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
 }
 
@@ -623,20 +617,19 @@ void Track::PropertyGraphicalSection::setValueRangeMin(double value)
 {
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), value);
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{value, end}, NotificationType::synchronous);
+    mDirector.setGlobalValueRange({value, end}, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setValueRangeMax(double value)
 {
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), value);
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, value}, NotificationType::synchronous);
+    mDirector.setGlobalValueRange({start, value}, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setValueRange(juce::Range<double> const& range)
 {
-    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+    mDirector.setGlobalValueRange(range, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::showChannelLayout()
@@ -718,27 +711,21 @@ void Track::PropertyGraphicalSection::showChannelLayout()
 
 void Track::PropertyGraphicalSection::updateZoomMode()
 {
-    auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
-    auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    auto const access = results.getReadAccess();
-    auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
-    mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
-    mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
+    mPropertyValueRangeMode.entry.setItemEnabled(1, Tools::getValueRange(mAccessor.getAttr<AttrType::description>()).has_value());
+    mPropertyValueRangeMode.entry.setItemEnabled(2, Tools::getResultRange(mAccessor).has_value());
     mPropertyValueRangeMode.entry.setItemEnabled(3, false);
-    if(pluginRange.has_value() && !range.isEmpty() && range == *pluginRange)
+    switch(mAccessor.getAttr<AttrType::zoomValueMode>())
     {
-        mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
-    }
-    else if(resultsRange.has_value() && !range.isEmpty() && range == *resultsRange)
-    {
-        mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
-    }
-    else
-    {
-        mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
+        case ZoomValueMode::plugin:
+            mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+            break;
+        case ZoomValueMode::results:
+            mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
+            break;
+        case ZoomValueMode::undefined:
+        case ZoomValueMode::custom:
+            mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
+            break;
     }
 }
 
