@@ -431,8 +431,14 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
         if(adaptOnSampleRate)
         {
             auto state = acsr.get().getAttr<Track::AttrType::state>();
-            state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
-            state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
+            if(acsr.get().getAttr<Track::AttrType::description>().defaultState.blockSize == 0_z)
+            {
+                state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
+            }
+            if(acsr.get().getAttr<Track::AttrType::description>().defaultState.stepSize != 0_z)
+            {
+                state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
+            }
             acsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
         }
     }
