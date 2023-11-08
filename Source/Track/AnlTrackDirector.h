@@ -39,6 +39,8 @@ namespace Track
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 
+        void setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification);
+
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
         void setBackupDirectory(juce::File const& directory);
 
@@ -79,16 +81,6 @@ namespace Track
         // juce::Timer
         void timerCallback() override;
 
-        // clang-format off
-        enum class ValueRangeMode
-        {
-              undefined
-            , plugin
-            , results
-            , custom
-        };
-        // clang-format on
-
         Accessor& mAccessor;
         juce::UndoManager& mUndoManager;
         HierarchyManager& mHierarchyManager;
@@ -101,7 +93,6 @@ namespace Track
         std::optional<std::reference_wrapper<Zoom::Accessor>> mSharedZoomAccessor;
         Zoom::Accessor::Listener mSharedZoomListener{typeid(*this).name()};
         std::mutex mSharedZoomMutex;
-        ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginList::Table* mPluginTable{nullptr};
         std::function<void(bool)> mPluginTableShowHideFn{nullptr};

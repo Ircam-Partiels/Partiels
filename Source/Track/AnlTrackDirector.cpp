@@ -266,40 +266,58 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         {
             case Zoom::AttrType::globalRange:
             {
-                auto const globalRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::globalRange>();
-                auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-                auto const& results = mAccessor.getAttr<AttrType::results>();
-                auto const access = results.getReadAccess();
-                auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
-                if(globalRange.isEmpty())
+                switch(mAccessor.getAttr<AttrType::zoomValueMode>())
                 {
-                    mValueRangeMode = ValueRangeMode::undefined;
-                }
-                else if(pluginRange.has_value() && !globalRange.isEmpty() && globalRange == *pluginRange)
-                {
-                    mValueRangeMode = ValueRangeMode::plugin;
-                }
-                else if(resultsRange.has_value() && !globalRange.isEmpty() && globalRange == *resultsRange)
-                {
-                    mValueRangeMode = ValueRangeMode::results;
-                }
-                else
-                {
-                    mValueRangeMode = ValueRangeMode::custom;
-                }
-
-                if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
-                {
-                    updateLinkedZoom(notification);
+                    case ZoomValueMode::plugin:
+                    {
+                        auto globalRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+                        if(!globalRange.has_value() || globalRange->isEmpty())
+                        {
+                            break;
+                        }
+                        setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
+                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
+                        {
+                            updateLinkedZoom(notification);
+                        }
+                        break;
+                    }
+                    case ZoomValueMode::results:
+                    {
+                        auto globalRange = Tools::getResultRange(mAccessor);
+                        if(!globalRange.has_value() || globalRange->isEmpty())
+                        {
+                            break;
+                            ;
+                        }
+                        setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
+                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
+                        {
+                            updateLinkedZoom(notification);
+                        }
+                        break;
+                    }
+                    case ZoomValueMode::undefined:
+                    case ZoomValueMode::custom:
+                    {
+                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
+                        {
+                            updateLinkedZoom(notification);
+                        }
+                        break;
+                    }
                 }
             }
             break;
             case Zoom::AttrType::visibleRange:
             {
-                runRendering();
                 if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
                 {
                     updateLinkedZoom(notification);
+                }
+                else if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
+                {
+                    runRendering();
                 }
             }
             break;
@@ -573,6 +591,29 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     mIsPerformingAction = false;
 }
 
+void Track::Director::setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification)
+{
+    auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+    auto const resultsRange = Tools::getResultRange(mAccessor);
+    if(range.isEmpty())
+    {
+        mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::undefined, notification);
+    }
+    else if(pluginRange.has_value() && range == pluginRange.value())
+    {
+        mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::plugin, notification);
+    }
+    else if(resultsRange.has_value() && resultsRange == resultsRange.value())
+    {
+        mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::results, notification);
+    }
+    else
+    {
+        mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::custom, notification);
+    }
+    mAccessor.getAcsr<AcsrType::valueZoom>().setAttr<Zoom::AttrType::globalRange>(range, notification);
+}
+
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
@@ -700,7 +741,7 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const hasZoomLink = mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>();
         auto const& zoomAcsrRef = hasZoomLink && useZoomLink ? mSharedZoomAccessor.value().get() : zoomAcsr;
         auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsrRef, newRange);
-        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(newRange, NotificationType::synchronous);
+        setGlobalValueRange(newRange, NotificationType::synchronous);
         zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
         if(visibleRange.getLength() <= Zoom::epsilon())
         {
@@ -719,7 +760,14 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
         auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.getLength() <= Zoom::epsilon()) && pluginRange.has_value() && !pluginRange->isEmpty())
+        auto const zoomValueMode = mAccessor.getAttr<AttrType::zoomValueMode>();
+
+        auto const shouldUpdate = [&](ZoomValueMode const expectedMode, std::optional<Zoom::Range> const range)
+        {
+            return (zoomValueMode == ZoomValueMode::undefined || zoomValueMode == expectedMode || globalRange.getLength() <= Zoom::epsilon()) && range.has_value() && !range->isEmpty();
+        };
+
+        if(shouldUpdate(ZoomValueMode::plugin, pluginRange))
         {
             applyZoom(zoomAcsr, *pluginRange, minimumLength, useZoomLink);
             return;
@@ -727,7 +775,7 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const& results = mAccessor.getAttr<AttrType::results>();
         auto const access = results.getReadAccess();
         auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
-        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.getLength() <= Zoom::epsilon()) && resultsRange.has_value() && !resultsRange->isEmpty())
+        if(shouldUpdate(ZoomValueMode::results, resultsRange))
         {
             applyZoom(zoomAcsr, *resultsRange, minimumLength, useZoomLink);
         }
