@@ -718,14 +718,15 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
         auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const access = results.getReadAccess();
-        auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
         if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.getLength() <= Zoom::epsilon()) && pluginRange.has_value() && !pluginRange->isEmpty())
         {
             applyZoom(zoomAcsr, *pluginRange, minimumLength, useZoomLink);
+            return;
         }
-        else if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.getLength() <= Zoom::epsilon()) && resultsRange.has_value() && !resultsRange->isEmpty())
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const access = results.getReadAccess();
+        auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
+        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.getLength() <= Zoom::epsilon()) && resultsRange.has_value() && !resultsRange->isEmpty())
         {
             applyZoom(zoomAcsr, *resultsRange, minimumLength, useZoomLink);
         }
