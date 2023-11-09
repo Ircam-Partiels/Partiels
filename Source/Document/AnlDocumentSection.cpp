@@ -300,6 +300,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             case AcsrType::tracks:
             {
                 updateExpandState();
+                updateLayout();
             }
             break;
             case AcsrType::timeZoom:
