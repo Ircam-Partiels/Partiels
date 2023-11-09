@@ -14,6 +14,7 @@ v1.3.1-dev5
 - Fix: Zoom ruler anchoring does not match mouse position (#378)
 - Fix: An occasional crash occurs on macOS due to a compilation/linking problem with Xcode 15 (#377)
 - Fix: The "Add New Track" action should be renamed "Show/Hide New Track Panel" (#376)
+- Add: Filter results using a threshold on extra output results (#373)
 - Add: Navigate using shift, zoom using option/alt, or select a visible range using cmd/ctrl, on group plots using the mouse (#371)
 
 v1.3.0
