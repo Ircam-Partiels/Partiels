@@ -1,4 +1,4 @@
-v1.3.1-dev5
+v1.3.1-dev6
 
 - Fix: The value zoom is not well defined when using a model whose value zoom is based on sampling frequency (#392)
 - Fix: Adapting block size and step size to the sample rate when loading a template must not be done if it is not supported by the plugin (#391)
