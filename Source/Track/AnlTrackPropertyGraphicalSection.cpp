@@ -705,7 +705,7 @@ void Track::PropertyGraphicalSection::setValueRangeMax(double value)
 
 void Track::PropertyGraphicalSection::setValueRange(juce::Range<double> const& range)
 {
-    mDirector.setGlobalValueRange(range, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::valueZoom>().setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::showChannelLayout()

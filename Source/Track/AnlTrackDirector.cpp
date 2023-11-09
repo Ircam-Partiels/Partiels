@@ -277,10 +277,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                             break;
                         }
                         setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
-                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
-                        {
-                            updateLinkedZoom(notification);
-                        }
                         break;
                     }
                     case ZoomValueMode::results:
@@ -289,24 +285,17 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                         if(!globalRange.has_value() || globalRange->isEmpty())
                         {
                             break;
-                            ;
                         }
                         setGlobalValueRange(globalRange.value(), NotificationType::synchronous);
-                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
-                        {
-                            updateLinkedZoom(notification);
-                        }
                         break;
                     }
                     case ZoomValueMode::undefined:
                     case ZoomValueMode::custom:
-                    {
-                        if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
-                        {
-                            updateLinkedZoom(notification);
-                        }
                         break;
-                    }
+                }
+                if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
+                {
+                    updateLinkedZoom(notification);
                 }
             }
             break;
@@ -604,7 +593,7 @@ void Track::Director::setGlobalValueRange(juce::Range<double> const& range, Noti
     {
         mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::plugin, notification);
     }
-    else if(resultsRange.has_value() && resultsRange == resultsRange.value())
+    else if(resultsRange.has_value() && range == resultsRange.value())
     {
         mAccessor.setAttr<AttrType::zoomValueMode>(ZoomValueMode::results, notification);
     }
@@ -742,7 +731,6 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const hasZoomLink = mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>();
         auto const& zoomAcsrRef = hasZoomLink && useZoomLink ? mSharedZoomAccessor.value().get() : zoomAcsr;
         auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsrRef, newRange);
-        setGlobalValueRange(newRange, NotificationType::synchronous);
         zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
         if(visibleRange.getLength() <= Zoom::epsilon())
         {
@@ -770,6 +758,7 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
         if(shouldUpdate(ZoomValueMode::plugin, pluginRange))
         {
+            setGlobalValueRange(*pluginRange, NotificationType::synchronous);
             applyZoom(zoomAcsr, *pluginRange, minimumLength, useZoomLink);
             return;
         }
@@ -778,6 +767,7 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
         if(shouldUpdate(ZoomValueMode::results, resultsRange))
         {
+            setGlobalValueRange(*resultsRange, NotificationType::synchronous);
             applyZoom(zoomAcsr, *resultsRange, minimumLength, useZoomLink);
         }
     };
@@ -791,10 +781,12 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const numBins = static_cast<bool>(access) ? results.getNumBins() : decltype(results.getNumBins()){};
         if(pluginRange.has_value() && !pluginRange->isEmpty())
         {
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*pluginRange, notification);
             applyZoom(zoomAcsr, *pluginRange, 1.0, useZoomLink);
         }
         else if(numBins.has_value() && *numBins != 0_z)
         {
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(*numBins)}, notification);
             applyZoom(zoomAcsr, {0.0, static_cast<double>(*numBins)}, 1.0, useZoomLink);
         }
     };
