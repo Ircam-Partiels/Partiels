@@ -271,9 +271,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     enum class Mode
     {
           undefined
-        , markers
-        , points
-        , columns
+        , marker
+        , point
+        , column
     };
     // clang-format on
 
@@ -299,9 +299,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
         Results::Markers markerChannel;
         Results::Points pointChannel;
         Results::Columns columnChannel;
-        markerChannel.reserve(check(Mode::markers) ? channelData.size() : 0_z);
-        pointChannel.reserve(check(Mode::points) ? channelData.size() : 0_z);
-        columnChannel.reserve(check(Mode::columns) ? channelData.size() : 0_z);
+        markerChannel.reserve(check(Mode::marker) ? channelData.size() : 0_z);
+        pointChannel.reserve(check(Mode::point) ? channelData.size() : 0_z);
+        columnChannel.reserve(check(Mode::column) ? channelData.size() : 0_z);
 
         auto const advRatio = 0.8f * static_cast<float>(channelIndex) / static_cast<float>(json.size());
         advancement.store(0.2f + advRatio);
@@ -324,7 +324,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
             auto const labelIt = frameData.find("label");
             if(labelIt != frameData.cend())
             {
-                if(!checkAndSet(Mode::markers))
+                if(!checkAndSet(Mode::marker))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -340,7 +340,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
             auto const valueIt = frameData.find("value");
             if(valueIt != frameData.cend())
             {
-                if(!checkAndSet(Mode::points))
+                if(!checkAndSet(Mode::point))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -356,7 +356,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
             auto const valuesIt = frameData.find("values");
             if(valuesIt != frameData.cend())
             {
-                if(!checkAndSet(Mode::columns))
+                if(!checkAndSet(Mode::column))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -370,15 +370,15 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
                 }
             }
         }
-        if(check(Mode::markers))
+        if(check(Mode::marker))
         {
             markers.push_back(std::move(markerChannel));
         }
-        else if(check(Mode::points))
+        else if(check(Mode::point))
         {
             points.push_back(std::move(pointChannel));
         }
-        else if(check(Mode::columns))
+        else if(check(Mode::column))
         {
             columns.push_back(std::move(columnChannel));
         }
@@ -389,15 +389,15 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     }
 
     advancement.store(1.0f);
-    if(check(Mode::markers))
+    if(check(Mode::marker))
     {
         return Track::Results(std::move(markers));
     }
-    else if(check(Mode::points))
+    else if(check(Mode::point))
     {
         return Track::Results(std::move(points));
     }
-    else if(check(Mode::columns))
+    else if(check(Mode::column))
     {
         return Track::Results(std::move(columns));
     }
@@ -782,8 +782,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     enum class Mode
     {
           undefined
-        , markers
-        , points
+        , marker
+        , point
     };
     // clang-format on
 
@@ -849,10 +849,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 auto& pointChannel = points.back();
                 auto const timevalue = std::stod(time);
                 auto const durationvalue = std::max(useEndTime ? std::stod(duration) - timevalue : std::stod(duration), 0.0);
-                auto pointvalue = mode == Mode::markers ? std::optional<float>{} : getFloatValue(value);
+                auto pointvalue = mode == Mode::marker ? std::optional<float>{} : getFloatValue(value);
                 if(pointvalue.has_value())
                 {
-                    mode = Mode::points;
+                    mode = Mode::point;
                     pointChannel.push_back({});
                     std::get<0_z>(pointChannel.back()) = timevalue;
                     std::get<1_z>(pointChannel.back()) = durationvalue;
@@ -868,11 +868,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 }
                 else
                 {
-                    if(mode == Mode::points)
+                    if(mode == Mode::point)
                     {
                         return {juce::translate("Parsing error")};
                     }
-                    mode = Mode::markers;
+                    mode = Mode::marker;
                     markerChannel.push_back({});
                     std::get<0_z>(markerChannel.back()) = timevalue;
                     std::get<1_z>(markerChannel.back()) = durationvalue;
@@ -891,11 +891,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     }
 
     advancement.store(1.0f);
-    if(check(Mode::markers))
+    if(check(Mode::marker))
     {
         return Track::Results(std::move(markers));
     }
-    else if(check(Mode::points))
+    else if(check(Mode::point))
     {
         return Track::Results(std::move(points));
     }
