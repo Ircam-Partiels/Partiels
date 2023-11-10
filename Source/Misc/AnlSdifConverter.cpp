@@ -1,11 +1,15 @@
 #include "AnlSdifConverter.h"
 #ifdef JUCE_CLANG
+#if !defined(__has_warning) || __has_warning("-Winvalid-utf8")
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-utf8"
 #endif
+#endif
 #include <sdif.h>
 #ifdef JUCE_CLANG
+#if !defined(__has_warning) || __has_warning("-Winvalid-utf8")
 #pragma clang diagnostic pop
+#endif
 #endif
 
 ANALYSE_FILE_BEGIN
