@@ -516,9 +516,9 @@ void Track::NavigationBar::updateMouseCursor(juce::ModifierKeys const& modifiers
     {
         case NavigationMode::zoom:
         {
-            static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::selectionzoom_png, AnlCursorsData::selectionzoom_pngSize);
-            static auto const cursor = juce::MouseCursor(image, 8, 8, 2.0f);
-            setMouseCursor(cursor);
+            static auto const zoomImage = juce::ImageCache::getFromMemory(AnlCursorsData::selectionzoom_png, AnlCursorsData::selectionzoom_pngSize);
+            static auto const zoomCursor = juce::MouseCursor(zoomImage, 8, 8, 2.0f);
+            setMouseCursor(zoomCursor);
             break;
         }
         case NavigationMode::translate:
@@ -528,9 +528,9 @@ void Track::NavigationBar::updateMouseCursor(juce::ModifierKeys const& modifiers
         }
         case NavigationMode::select:
         {
-            static auto const image = juce::ImageCache::getFromMemory(AnlCursorsData::selectionrectangle_png, AnlCursorsData::selectionrectangle_pngSize);
-            static auto const cursor = juce::MouseCursor(image, 8, 8, 2.0f);
-            setMouseCursor(cursor);
+            static auto const selectImage = juce::ImageCache::getFromMemory(AnlCursorsData::selectionrectangle_png, AnlCursorsData::selectionrectangle_pngSize);
+            static auto const selectCursor = juce::MouseCursor(selectImage, 8, 8, 2.0f);
+            setMouseCursor(selectCursor);
             break;
         }
         case NavigationMode::navigate:
