@@ -634,7 +634,7 @@ void Track::PropertyProcessorSection::updateState()
         {
             if(auto* propertyList = dynamic_cast<PropertyList*>(it->second.get()))
             {
-                propertyList->entry.setSelectedItemIndex(static_cast<int>(parameter.second), silent);
+                propertyList->entry.setSelectedItemIndex(static_cast<int>(std::floor(parameter.second)), silent);
             }
             else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(it->second.get()))
             {
@@ -642,7 +642,7 @@ void Track::PropertyProcessorSection::updateState()
             }
             else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(it->second.get()))
             {
-                propertyToggle->entry.setToggleState(static_cast<bool>(parameter.second), silent);
+                propertyToggle->entry.setToggleState(parameter.second > 0.5f, silent);
             }
             else
             {
