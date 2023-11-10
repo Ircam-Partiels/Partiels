@@ -640,7 +640,7 @@ void Group::PropertyProcessorsSection::updateState()
             }
             else if(values.size() == 1_z)
             {
-                propertyList->entry.setSelectedItemIndex(static_cast<int>(*values.cbegin()), juce::NotificationType::dontSendNotification);
+                propertyList->entry.setSelectedItemIndex(static_cast<int>(std::floor(*values.cbegin())), juce::NotificationType::dontSendNotification);
             }
             else
             {
@@ -656,7 +656,7 @@ void Group::PropertyProcessorsSection::updateState()
             }
             if(values.size() == 1_z)
             {
-                propertyNumber->entry.setValue(static_cast<float>(*values.cbegin()), juce::NotificationType::dontSendNotification);
+                propertyNumber->entry.setValue(static_cast<double>(*values.cbegin()), juce::NotificationType::dontSendNotification);
             }
             else
             {
@@ -673,7 +673,7 @@ void Group::PropertyProcessorsSection::updateState()
             else if(values.size() == 1_z)
             {
                 propertyToggle->entry.getProperties().remove("Multiple Values");
-                propertyToggle->entry.setToggleState(static_cast<bool>(*values.cbegin()), juce::NotificationType::dontSendNotification);
+                propertyToggle->entry.setToggleState(*values.cbegin() > 0.5f, juce::NotificationType::dontSendNotification);
             }
             else
             {
