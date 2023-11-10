@@ -86,18 +86,18 @@ namespace Application
         void checkPluginsQuarantine();
         static Misc::Version parseVersion(juce::String const& content);
 
-        class AuthorizationProcessor
+        class AuthorizationProcessorImp
         : public Misc::AuthorizationProcessor
         {
         public:
             using Misc::AuthorizationProcessor::AuthorizationProcessor;
-            ~AuthorizationProcessor() override = default;
+            ~AuthorizationProcessorImp() override = default;
 
             // Misc::AuthorizationProcessor
             void showAuthorizationPanel() override;
         };
 
-        AuthorizationProcessor mAuthorizationProcessor;
+        AuthorizationProcessorImp mAuthorizationProcessor;
 
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
         std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;

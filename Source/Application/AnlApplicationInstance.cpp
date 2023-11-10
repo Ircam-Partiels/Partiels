@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-void Application::Instance::AuthorizationProcessor::showAuthorizationPanel()
+void Application::Instance::AuthorizationProcessorImp::showAuthorizationPanel()
 {
     if(auto* window = Instance::get().mAuthorizationWindow.get())
     {
