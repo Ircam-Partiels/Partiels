@@ -2,6 +2,20 @@
 
 APP_NAME="Partiels"
 
+if [ -z $1 ]; then
+	echo '\033[0;31m' "Error: Partiels build tag is undefined"
+  exit -1
+else
+  PARTIELS_BUILD_TAG=$1
+fi
+
+if [ -z $2 ]; then
+	echo '\033[0;31m' "Error: Partiels build ID is undefined"
+  exit -1
+else
+  PARTIELS_BUILD_ID=$2
+fi
+
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_PATH="$ThisPath/.."
 BUILD_PATH="$REPO_PATH/release"
@@ -12,7 +26,7 @@ rm -rf *
 
 echo '\033[0;34m' "Preparing project..."
 echo '\033[0m'
-cmake .. -G Xcode
+cmake .. -G Xcode -DPARTIELS_BUILD_TAG=$PARTIELS_BUILD_TAG -DPARTIELS_BUILD_ID=$PARTIELS_BUILD_ID
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'

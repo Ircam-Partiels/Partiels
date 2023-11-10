@@ -4,6 +4,15 @@
 
 ANALYSE_FILE_BEGIN
 
+static bool isDevelopmentVersion()
+{
+#if defined(PARTIELS_BUILD_TAG)
+    return juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
+#else
+    return false;
+#endif
+}
+
 void Application::Instance::AuthorizationProcessorImp::showAuthorizationPanel()
 {
     if(auto* window = Instance::get().mAuthorizationWindow.get())
@@ -28,11 +37,7 @@ juce::String const Application::Instance::getApplicationName()
 
 juce::String const Application::Instance::getApplicationVersion()
 {
-#if PARTIELS_DEV_VERSION > 0
-    return ProjectInfo::versionString + juce::String("-dev") + juce::String(PARTIELS_DEV_VERSION);
-#else
-    return ProjectInfo::versionString;
-#endif
+    return juce::String(PARTIELS_BUILD_TAG).isEmpty() ? juce::String(ProjectInfo::versionString) : juce::String(PARTIELS_BUILD_TAG);
 }
 
 bool Application::Instance::moreThanOneInstanceAllowed()
@@ -874,7 +879,7 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
                             auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
                             auto const upstreamVersion = parseVersion(content);
-                            if(upstreamVersion > usedVersion || (PARTIELS_DEV_VERSION > 0 && upstreamVersion.tie() >= usedVersion.tie()))
+                            if(upstreamVersion > usedVersion || (isDevelopmentVersion() && upstreamVersion.tie() >= usedVersion.tie()))
                             {
                                 auto options = juce::MessageBoxOptions()
                                                    .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)

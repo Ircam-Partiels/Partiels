@@ -12,9 +12,20 @@ set(IFP_TEST OFF CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
-set(PARTIELS_DEV_VERSION 6)
 project(Partiels VERSION 1.3.1 LANGUAGES C CXX)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
+
+set(PARTIELS_BUILD_ID "" CACHE STRING "The build number")
+set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION} CACHE STRING "The current tag build")
+if(PARTIELS_BUILD_TAG STREQUAL "")
+    set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION})
+endif()
+message(STATUS "Partiels: " ${PARTIELS_BUILD_TAG} " (" ${PARTIELS_BUILD_ID} ")")
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt ${PARTIELS_BUILD_TAG})
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt "\n\n")
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt PARTIELS_CHANGE_LOG)
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt ${PARTIELS_CHANGE_LOG})
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/ircam-vamp-extension)
@@ -90,8 +101,10 @@ target_compile_definitions(Partiels PRIVATE
     JUCE_ASIO
     JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
     MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
-    PARTIELS_DEV_VERSION=${PARTIELS_DEV_VERSION}
+    PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
+    PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
     )
+
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 if(WIN32)
   target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
