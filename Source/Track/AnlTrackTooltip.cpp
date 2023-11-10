@@ -58,6 +58,7 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 return juce::translate("Bin INDEX").replace("INDEX", juce::String(bin)) + " - " + output.binNames.at(bin);
             }
     }
+    return {};
 }
 
 juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time)
