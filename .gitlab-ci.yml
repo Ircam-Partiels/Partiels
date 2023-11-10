@@ -40,9 +40,7 @@ Test::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - export CC=/usr/bin/clang
-    - export CXX=/usr/bin/clang++
-    - cmake . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
     - ctest -C Debug -V --test-dir build 
 
@@ -77,9 +75,7 @@ Build::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - export CC=/usr/bin/clang
-    - export CXX=/usr/bin/clang++
-    - cmake . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
     - ctest -C Release -V --test-dir build 
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
