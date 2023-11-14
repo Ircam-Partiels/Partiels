@@ -16,6 +16,12 @@ else
   PARTIELS_BUILD_ID=$2
 fi
 
+if [ -z $3 ]; then
+  PARTIELS_BUILD_MODE="Release"
+else
+  PARTIELS_BUILD_MODE=$3
+fi
+
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_PATH="$ThisPath/.."
 BUILD_PATH="$REPO_PATH/release"
@@ -32,9 +38,9 @@ echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'
 if ! command -v xcbeautify &> /dev/null; then
   echo "Install xcbeautify \`brew install xcbeautify\` to generates clean xcodebuild output"
-  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS
+  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration $PARTIELS_BUILD_MODE -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS
 else
-  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS | xcbeautify
+  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration $PARTIELS_BUILD_MODE -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS | xcbeautify
 fi
 
 echo '\033[0;34m' "Exporting archive..."
