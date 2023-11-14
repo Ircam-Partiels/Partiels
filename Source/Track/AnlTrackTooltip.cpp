@@ -199,15 +199,16 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             lines.add(name + ": -");
             return lines;
         }
-        auto const it = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>);
+        auto it = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>);
         if(it == channelResults.cbegin())
         {
             lines.add(name + ": -");
             return lines;
         }
+        it = std::prev(it);
         auto const value = Zoom::Tools::getScaledValueFromHeight(accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>(), component, y);
         auto const binIndex = static_cast<size_t>(std::floor(value));
-        auto const& column = std::get<2_z>(*std::prev(it));
+        auto const& column = std::get<2_z>(*it);
         if(binIndex >= column.size())
         {
             lines.add(name + ": -");
