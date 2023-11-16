@@ -14,7 +14,6 @@ set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The pa
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
 project(Partiels VERSION 1.3.1 LANGUAGES C CXX)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 set(PARTIELS_BUILD_ID "" CACHE STRING "The build number")
 set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION} CACHE STRING "The current tag build")
@@ -22,6 +21,8 @@ if(PARTIELS_BUILD_TAG STREQUAL "")
     set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION})
 endif()
 message(STATUS "Partiels: " ${PARTIELS_BUILD_TAG} " (" ${PARTIELS_BUILD_ID} ")")
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${PARTIELS_BUILD_TAG})
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt ${PARTIELS_BUILD_TAG})
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt "\n\n")
@@ -175,7 +176,7 @@ elseif(APPLE)
 endif()
 
 file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE_BINARY_DIR}/Install.txt)
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt CHANGELOG_CONTENT)
+file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
