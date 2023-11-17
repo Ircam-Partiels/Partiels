@@ -240,7 +240,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         auto& sharedZoom = mSharedZoomAccessor->get();
         auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
         {
-            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
+            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty() && zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
             {
                 return;
             }
