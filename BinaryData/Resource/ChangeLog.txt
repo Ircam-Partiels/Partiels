@@ -1,3 +1,5 @@
+v1.3.1
+
 - Fix: Spectrogram tooltip generation can generate a crash (#399)
 - Fix: A crash can occur when a document is opened after it has already been loaded (#393)
 - Fix: The value zoom is not well defined when using a model whose value zoom is based on sampling frequency (#392)
