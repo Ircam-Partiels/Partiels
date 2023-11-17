@@ -4,15 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-static bool isDevelopmentVersion()
-{
-#if defined(PARTIELS_BUILD_TAG)
-    return juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
-#else
-    return false;
-#endif
-}
-
 void Application::Instance::AuthorizationProcessorImp::showAuthorizationPanel()
 {
     if(auto* window = Instance::get().mAuthorizationWindow.get())
@@ -872,6 +863,7 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
         return;
     }
 
+    static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
     auto constexpr urlAddress = "https://forum.ircam.fr/api/projects/401/?format=json";
     mDownloader->launch({urlAddress}, {}, [=, this](juce::String content)
                         {
@@ -879,7 +871,7 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
                             auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
                             auto const upstreamVersion = parseVersion(content);
-                            if(upstreamVersion > usedVersion || (isDevelopmentVersion() && upstreamVersion.tie() >= usedVersion.tie()))
+                            if(upstreamVersion > usedVersion || (isDevelopmentVersion && upstreamVersion.tie() >= usedVersion.tie()))
                             {
                                 auto options = juce::MessageBoxOptions()
                                                    .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
