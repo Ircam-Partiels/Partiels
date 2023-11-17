@@ -1,6 +1,7 @@
 #include "AnlVampPlugins.h"
 #include <IvePluginAdapter.hpp>
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <random>
 #include <sstream>
@@ -38,6 +39,11 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Base::getRemainingFeatures()
 AnlVampPlugin::Waveform::Waveform(float sampleRate)
 : Base(sampleRate)
 {
+}
+
+size_t AnlVampPlugin::Waveform::getPreferredBlockSize() const
+{
+    return 1024_z;
 }
 
 bool AnlVampPlugin::Waveform::initialise(size_t channels, size_t stepSize, size_t blockSize)
@@ -89,6 +95,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
 {
+    assert(false && "The process should be managed by Partiels directly. The method is here for legacy reason.");
     if(mBlockSize == 0 || mStepSize == 0)
     {
         std::cerr << "AnlVampPlugin::Waveform::process invalid parameters.\n";

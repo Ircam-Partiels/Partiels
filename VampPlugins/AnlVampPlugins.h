@@ -30,6 +30,7 @@ namespace AnlVampPlugin
 
         bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
 
+        size_t getPreferredBlockSize() const override;
         InputDomain getInputDomain() const override;
         std::string getIdentifier() const override;
         std::string getName() const override;
