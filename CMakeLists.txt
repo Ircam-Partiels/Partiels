@@ -29,6 +29,11 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt "\n\n")
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt PARTIELS_CHANGE_LOG)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt ${PARTIELS_CHANGE_LOG})
 
+file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE_CURRENT_BINARY_DIR}/Install.txt)
+file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
+
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/ircam-vamp-extension)
 add_subdirectory(Dependencies/sdif)
@@ -174,11 +179,6 @@ elseif(APPLE)
         target_link_options(Partiels PUBLIC "-Wl,-weak_reference_mismatches,weak")
     endif()
 endif()
-
-file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE_BINARY_DIR}/Install.txt)
-file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
-file(APPEND ${CMAKE_BINARY_DIR}/Install.txt "\n")
-file(APPEND ${CMAKE_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
 add_dependencies(Partiels partiels-vamp-plugins)
 if(APPLE)
