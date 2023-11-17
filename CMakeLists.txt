@@ -13,7 +13,7 @@ set(IFP_TEST OFF CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
-project(Partiels VERSION 1.3.1 LANGUAGES C CXX)
+project(Partiels VERSION 1.3.2 LANGUAGES C CXX)
 
 set(PARTIELS_BUILD_ID "" CACHE STRING "The build number")
 set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION} CACHE STRING "The current tag build")
