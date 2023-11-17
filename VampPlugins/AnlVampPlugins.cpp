@@ -13,7 +13,7 @@ AnlVampPlugin::Base::Base(float sampleRate)
 
 std::string AnlVampPlugin::Base::getMaker() const
 {
-    return "Ircam";
+    return "Factory";
 }
 
 int AnlVampPlugin::Base::getPluginVersion() const
