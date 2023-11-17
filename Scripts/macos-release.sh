@@ -57,7 +57,7 @@ xcrun stapler validate $APP_NAME.app
 
 echo '\033[0;34m' "Creating apple disk image..."
 echo '\033[0m'
-APP_VERSION=$(defaults read $BUILD_PATH/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
+APP_VERSION=$(<$BUILD_PATH/version.txt)
 DMG_NAME="$BUILD_PATH/$APP_NAME-v$APP_VERSION"
 
 test -f "$DMG_NAME.dmg" && rm "$DMG_NAME.dmg"
