@@ -12,7 +12,7 @@ cd $BUILD_PATH
 PROJECT_URL="https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts"
 PRIVATE_TOKEN=$(security find-generic-password -s 'Forge2 Ircam Token' -w)
 
-if [ -z $PRIVATE_TOKEN == ""]; then
+if [ $PRIVATE_TOKEN == ""]; then
   echo '\033[0;31m' "Error: no private token defined"
   exit -1
 fi
