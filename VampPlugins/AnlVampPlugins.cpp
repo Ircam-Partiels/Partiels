@@ -23,7 +23,7 @@ int AnlVampPlugin::Base::getPluginVersion() const
 
 std::string AnlVampPlugin::Base::getCopyright() const
 {
-    return "Copyright 2023 Ircam. All rights reserved. Plugin by Pierre Guillot.";
+    return "Partiels factory plugin.";
 }
 
 void AnlVampPlugin::Base::reset()
