@@ -33,7 +33,7 @@ void Application::AboutContent::resized()
 }
 
 Application::AboutPanel::AboutPanel()
-: HideablePanelTyped<AboutContent>(juce::translate("About ") + Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion() + juce::String(" (BUILD_ID)").replace("BUILD_ID", PARTIELS_BUILD_ID))
+: HideablePanelTyped<AboutContent>(juce::translate("About NAME vVERSION (BUILD_ID)").replace("NAME", Instance::get().getApplicationName()).replace("VERSION", Instance::get().getApplicationVersion()).replace("BUILD_ID", PARTIELS_BUILD_ID))
 {
 }
 
