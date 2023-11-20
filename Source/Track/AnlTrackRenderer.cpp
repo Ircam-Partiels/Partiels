@@ -522,9 +522,14 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     auto const fbounds = bounds.toFloat();
     auto const font = g.getCurrentFont();
 
-    auto constexpr epsilonPixel = 1.0f;
+    auto const epsilonPixel = 1.0f / juce::Desktop::getInstance().getGlobalScaleFactor();
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
+
+    auto const itShowsValues = [&](auto const& it)
+    {
+        return std::get<2_z>(*it).has_value() && Result::passThresholds(*it, thresholds);
+    };
 
     auto const rangeLength = valueRange.getLength();
     auto const getNumDecimals = [&]()
@@ -537,15 +542,9 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         return 4 - numDecimals;
     };
     auto const numDecimals = getNumDecimals();
-    LabelArrangement labelArr(font, unit, numDecimals);
 
-    if(results.size() == 1_z)
+    if(results.size() == 1_z && itShowsValues(results.cbegin()))
     {
-        if(std::get<2_z>(results.at(0_z)).has_value() || !Result::passThresholds(results.at(0_z), thresholds))
-        {
-            return;
-        }
-
         auto const value = std::get<2_z>(results.at(0)).value();
         auto const y = Tools::valueToPixel(value, valueRange, fbounds);
         auto const fullLine = std::get<0_z>(results.at(0)) + std::get<1_z>(results.at(0)) < std::numeric_limits<double>::epsilon() * 2.0;
@@ -606,12 +605,10 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     }
     auto const sourceOutIt = std::lower_bound(results.cbegin(), results.cend(), startExtraTime, Result::lower_cmp<Results::Point>);
     auto const sourceInIt = std::upper_bound(sourceOutIt, results.cend(), endExtraTime, Result::upper_cmp<Results::Point>);
-    auto const extraLastIt = hasExtra ? extra.cbegin() + static_cast<long>(extra.size() - 1_z) : extra.cbegin();
-    // Time distance corresponding to epsilon pixels
-    auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
 
-    juce::RectangleList<int> rectangles;
-    PathArrangement pathArr;
+    // Zoom distances corresponding to epsilon pixels
+    auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
+    auto const valueEpsilon = static_cast<double>(epsilonPixel) * valueRange.getLength() / static_cast<double>(bounds.getHeight());
 
     auto const getNextIt = [&](it_wrap const iterator) -> it_wrap
     {
@@ -638,32 +635,6 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         return {next, true};
     };
 
-    auto const getPreviousIt = [&](it_wrap const iterator) -> it_wrap
-    {
-        if(!hasExtra)
-        {
-            return {std::prev(iterator.it), false};
-        }
-        MiscWeakAssert(iterator != extra.cend());
-        if(!iterator.extra)
-        {
-            if(iterator.it == sourceInIt)
-            {
-                MiscWeakAssert(extraLastIt != extra.cend());
-                return {extraLastIt, true};
-            }
-            MiscWeakAssert(iterator != results.cbegin());
-            MiscWeakAssert(std::prev(iterator.it) != extra.cend());
-            return {std::prev(iterator.it), false};
-        }
-        if(iterator.it == extra.cbegin())
-        {
-            return {std::prev(sourceOutIt), false};
-        }
-        MiscWeakAssert(std::prev(iterator.it) != extra.cend());
-        return {std::prev(iterator.it), true};
-    };
-
     auto const getEndTime = [&](it_wrap const iterator)
     {
         auto const start = std::get<0_z>(*iterator.it);
@@ -688,35 +659,39 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         auto const limit = getEndTime(start) + timeEpsilon;
         auto min = std::get<2_z>(*start).value();
         auto max = min;
-        auto iterator = getNextIt(start);
+        auto previous = start;
+        auto iterator = getNextIt(previous);
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
         while(iterator != results.cend() && std::get<0_z>(*iterator) < limit)
         {
-            if(std::get<2_z>(*iterator).has_value() && Result::passThresholds(*iterator, thresholds))
+            if(itShowsValues(iterator))
             {
                 auto const& lvalue = std::get<2_z>(*iterator).value();
                 min = std::min(min, lvalue);
                 max = std::max(max, lvalue);
+                previous = iterator;
             }
             iterator = getNextIt(iterator);
-            MiscWeakAssert(!hasExtra || iterator != extra.cend());
         }
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
-        iterator = getPreviousIt(iterator);
-        MiscWeakAssert(!hasExtra || iterator != extra.cend());
-        return std::make_tuple(iterator, min, max);
+        MiscWeakAssert(!hasExtra || previous != extra.cend());
+        MiscWeakAssert(!hasExtra || previous != results.cend());
+        return std::make_tuple(previous, min, max);
     };
 
+    juce::RectangleList<float> rectangles;
+    PathArrangement pathArr;
+    LabelArrangement labelArr(font, unit, numDecimals);
     auto const showLabel = !colours.text.isTransparent();
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
     {
         MiscWeakAssert(!hasExtra || it != extra.cend());
-        if(!std::get<2_z>(*it).has_value() || !Result::passThresholds(*it, thresholds))
+        if(!itShowsValues(it))
         {
             pathArr.stopLine();
             it = getNextIt(it);
-            while(it != results.cend() && !hasExceededEnd && (!std::get<2_z>(*it).has_value() || !Result::passThresholds(*it, thresholds)))
+            while(it != results.cend() && !hasExceededEnd && !itShowsValues(it))
             {
                 hasExceededEnd = std::get<0_z>(*it) >= clipTimeEnd;
                 it = getNextIt(it);
@@ -727,8 +702,6 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             auto const nextResult = getNextItBeforeTime(it);
             auto const start = std::get<0_z>(*it);
             auto const next = std::get<0_z>(nextResult);
-            MiscWeakAssert(!hasExtra || next != results.cend());
-            MiscWeakAssert(!hasExtra || next != extra.cend());
             auto const end = getEndTime(next);
 
             auto const min = std::get<1_z>(nextResult);
@@ -737,16 +710,14 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
             auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
 
-            if(it != next && (max - min) > std::numeric_limits<float>::epsilon())
+            if(it != next && (max - min) >= valueEpsilon)
             {
                 auto const y1 = Tools::valueToPixel(max, valueRange, fbounds);
                 auto const y2 = Tools::valueToPixel(min, valueRange, fbounds);
                 pathArr.addLine(x, x, y1);
                 pathArr.stopLine();
 
-                auto const width = std::max(static_cast<int>(std::ceil(x2)) - static_cast<int>(std::floor(x)), 1);
-                auto const height = std::max(static_cast<int>(std::ceil(y2)) - static_cast<int>(std::floor(y1)), 1);
-                rectangles.addWithoutMerging(juce::Rectangle<int>(static_cast<int>(std::floor(x)), static_cast<int>(std::floor(y1)), width, height));
+                rectangles.addWithoutMerging(juce::Rectangle<float>(x, y1, x2 - x, y2 - y1));
                 if(showLabel)
                 {
                     labelArr.addValue(min, x, y1);
@@ -766,7 +737,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
                 }
                 pathArr.addLine(x, x2, y);
 
-                it = getNextIt(it);
+                it = it != next ? next : getNextIt(it);
                 hasExceededEnd = end >= clipTimeEnd;
             }
         }
