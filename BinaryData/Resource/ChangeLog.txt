@@ -1,3 +1,4 @@
+- Imp: Make the representation of points and segments more accurate (#401)
 - Imp: Change maker and copyright of Partiels factory plug-ins (#397)
 - Imp: Use internal implementation for the waveform analysis to optimize the processing and improve the user experience (#395)
 
