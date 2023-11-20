@@ -1,11 +1,11 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationInstance.h"
-#include <ResourceData.h>
+#include <AnlResourceData.h>
 
 ANALYSE_FILE_BEGIN
 
 Application::AboutContent::AboutContent()
-: mImage(juce::ImageCache::getFromMemory(ResourceData::Ircamlogo_png, ResourceData::Ircamlogo_pngSize))
+: mImage(juce::ImageCache::getFromMemory(AnlResourceData::Ircamlogo_png, AnlResourceData::Ircamlogo_pngSize))
 {
     mImage.onClick = []()
     {
@@ -18,7 +18,7 @@ Application::AboutContent::AboutContent()
 void Application::AboutContent::paint(juce::Graphics& g)
 {
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
-    juce::String const text(ResourceData::About_txt, ResourceData::About_txtSize);
+    juce::String const text(AnlResourceData::About_txt, AnlResourceData::About_txtSize);
     g.drawFittedText(text, getLocalBounds().reduced(4), juce::Justification::left, 40);
 }
 

@@ -123,11 +123,18 @@ file(GLOB TranslationsDataSources
     )
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
-file(GLOB ResourceDataSources
+file(GLOB PartielsResourceDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo.png
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo-noir-RS.png
     )
-juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE ResourceData SOURCES ${ResourceDataSources})
+juce_add_binary_data(AnlResourceData HEADER_NAME "AnlResourceData.h" NAMESPACE AnlResourceData SOURCES ${PartielsResourceDataSources})
+
+file(GLOB PartielsIconsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Icons/*.png)
+juce_add_binary_data(AnlIconsData HEADER_NAME "AnlIconsData.h" NAMESPACE AnlIconsData SOURCES ${PartielsIconsDataSources})
+
+file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
+juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
 file(GLOB TestResultsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
@@ -138,20 +145,14 @@ file(GLOB TestResultsDataSources
     )
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
-file(GLOB PartielsIconsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Icons/*.png)
-juce_add_binary_data(AnlIconsData HEADER_NAME "AnlIconsData.h" NAMESPACE AnlIconsData SOURCES ${PartielsIconsDataSources})
-
-file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
-juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
-
 target_link_libraries(Partiels PRIVATE
     ive_host_static
     sdif
     ifp_static
     MiscData
     TranslationsData
-    ResourceData
     TestResultsData
+    AnlResourceData
     AnlIconsData
     AnlCursorsData
     juce::juce_gui_extra
