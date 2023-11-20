@@ -1,6 +1,7 @@
 - Fix: The visible value range is modified when the global value range changes (#402)
 - Imp: Make the representation of points and segments more accurate (#401)
 - Imp: Change maker and copyright of Partiels factory plug-ins (#397)
+- Add: A button for filtering plugins developed by Ircam (#396)
 - Imp: Use internal implementation for the waveform analysis to optimize the processing and improve the user experience (#395)
 
 v1.3.1
