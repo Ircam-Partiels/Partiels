@@ -127,6 +127,7 @@ file(GLOB PartielsResourceDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo.png
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo-noir-RS.png
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Pompidou-logo-noir-RS.png
     )
 juce_add_binary_data(AnlResourceData HEADER_NAME "AnlResourceData.h" NAMESPACE AnlResourceData SOURCES ${PartielsResourceDataSources})
 
