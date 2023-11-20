@@ -49,6 +49,7 @@ namespace PluginList
 
         Misc::Icon mSearchIcon;
         juce::TextEditor mSearchField;
+        Misc::Icon mIrcamIcon;
         ColouredPanel mSeparator1;
         juce::ListBox mPluginTable;
         ColouredPanel mSeparator2;

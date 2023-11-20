@@ -1,5 +1,6 @@
 #include "AnlPluginListTable.h"
 #include <AnlIconsData.h>
+#include <AnlResourceData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -7,9 +8,11 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
 , mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
+, mIrcamIcon(juce::ImageCache::getFromMemory(AnlResourceData::PompidoulogonoirRS_png, AnlResourceData::PompidoulogonoirRS_pngSize))
 {
     addAndMakeVisible(mSearchIcon);
     addAndMakeVisible(mSearchField);
+    addAndMakeVisible(mIrcamIcon);
     addAndMakeVisible(mSeparator1);
     addAndMakeVisible(mPluginTable);
     addAndMakeVisible(mSeparator2);
@@ -24,11 +27,18 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mPluginTable.setMultipleSelectionEnabled(true);
     mPluginTable.setModel(this);
 
+    mIrcamIcon.setTooltip(juce::translate("Show Ircam plugins"));
+    mIrcamIcon.onClick = [&]()
+    {
+        mSearchField.setText("Ircam", true);
+    };
+
     mSearchIcon.setTooltip(juce::translate("Search for a plugin by name, feature, description or maker"));
     mSearchIcon.onClick = [this]()
     {
         mSearchField.grabKeyboardFocus();
     };
+
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
     mSearchField.setCaretVisible(true);
@@ -118,7 +128,8 @@ void PluginList::Table::resized()
     auto bounds = getLocalBounds();
     auto headerBar = bounds.removeFromTop(20);
     mSearchIcon.setBounds(headerBar.removeFromLeft(20).reduced(2));
-    mSearchField.setBounds(headerBar.removeFromLeft(202).reduced(1));
+    mIrcamIcon.setBounds(headerBar.removeFromRight(22).reduced(2));
+    mSearchField.setBounds(headerBar);
     mSeparator1.setBounds(bounds.removeFromTop(1));
     mDescriptionPanel.setBounds(bounds.removeFromBottom(Plugin::DescriptionPanel::optimalHeight).withTrimmedRight(2));
     mSeparator2.setBounds(bounds.removeFromBottom(1));
