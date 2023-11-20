@@ -51,7 +51,7 @@ std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const&
                                           }
                                           expected = ProcessState::running;
 
-                                          static size_t constexpr maxSize = 20 * 48000; // 20 seconds at 48000
+                                          static size_t constexpr maxSize = 10 * 48000; // 10 seconds at 48000
                                           static size_t constexpr expectedBlock = 8192;
 
                                           auto const lengthInSamples = static_cast<size_t>(reader.lengthInSamples);
