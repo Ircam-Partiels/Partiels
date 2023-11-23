@@ -1,4 +1,5 @@
 #include "AnlTrackGraphics.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -15,7 +16,7 @@ void Track::Graphics::stopRendering()
     abortRendering();
 }
 
-void Track::Graphics::runRendering(Accessor const& accessor)
+void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin)
 {
     std::unique_lock<std::mutex> lock(mRenderingMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
@@ -46,21 +47,9 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
-    auto const maxNumColumns = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
-                                               {
-                                                   return std::max(val, channel.size());
-                                               });
-
-    auto const maxNumBins = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
-                                            {
-                                                return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
-                                                                       {
-                                                                           return std::max(rval, std::get<2>(column).size());
-                                                                       });
-                                            });
-
-    auto const width = static_cast<int>(maxNumColumns);
-    auto const height = static_cast<int>(maxNumBins);
+    auto const& output = accessor.getAttr<AttrType::description>().output;
+    auto const height = static_cast<int>(output.hasFixedBinCount ? output.binCount : results.getNumBins().value_or(0_z));
+    auto const width = static_cast<int>(results.getNumColumns().value_or(0_z));
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
@@ -82,11 +71,26 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
+    auto featureIndex = 0;
+    if(plugin != nullptr)
+    {
+        auto const feature = Plugin::Tools::getFeatureIndex(*plugin.get(), accessor.getAttr<AttrType::key>().feature);
+        if(!feature.has_value())
+        {
+            plugin.reset();
+        }
+        featureIndex = static_cast<int>(feature.value());
+        if(!plugin->supportColorMap(featureIndex))
+        {
+            plugin.reset();
+        }
+    }
+
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
     auto const valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-
+    auto const hasDuration = output.hasDuration;
     mChrono.start();
-    mRenderingProcess = std::thread([=, this]()
+    mRenderingProcess = std::thread([=, this, plugin = std::move(plugin)]()
                                     {
                                         mAdvancement.store(0.0f);
                                         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
@@ -158,21 +162,49 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                 }
                                                 else
                                                 {
-                                                    auto const& values = std::get<2>(channel.at(columnIndex));
-                                                    for(int j = 0; j < imageHeight; ++j)
+                                                    auto const& result = channel.at(columnIndex);
+                                                    if(plugin != nullptr)
                                                     {
-                                                        auto const rowIndex = static_cast<size_t>(std::round(j * hd));
-                                                        if(rowIndex >= values.size())
+                                                        Vamp::Plugin::Feature feature;
+                                                        feature.hasTimestamp = true;
+                                                        feature.timestamp = Vamp::RealTime::fromSeconds(std::get<0>(result));
+                                                        feature.hasDuration = hasDuration;
+                                                        feature.duration = Vamp::RealTime::fromSeconds(std::get<1>(result));
+                                                        feature.values = std::get<2>(result);
+                                                        auto const colorMap = plugin->getColorMap(featureIndex, feature);
+                                                        for(int j = 0; j < imageHeight; ++j)
                                                         {
-                                                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
+                                                            auto const rowIndex = static_cast<size_t>(std::round(j * hd));
+                                                            if(rowIndex >= colorMap.size())
+                                                            {
+                                                                reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
+                                                            }
+                                                            else
+                                                            {
+                                                                auto const colour = juce::Colour(colorMap.at(rowIndex));
+                                                                reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
+                                                            }
+                                                            pixel -= lineStride;
                                                         }
-                                                        else
+                                                    }
+                                                    else
+                                                    {
+                                                        auto const& values = std::get<2>(result);
+                                                        for(int j = 0; j < imageHeight; ++j)
                                                         {
-                                                            auto const value = std::round((values.at(rowIndex) - valueStart) * valueScale);
-                                                            auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
-                                                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
+                                                            auto const rowIndex = static_cast<size_t>(std::round(j * hd));
+                                                            if(rowIndex >= values.size())
+                                                            {
+                                                                reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
+                                                            }
+                                                            else
+                                                            {
+                                                                auto const value = std::round((values.at(rowIndex) - valueStart) * valueScale);
+                                                                auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
+                                                                reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
+                                                            }
+                                                            pixel -= lineStride;
                                                         }
-                                                        pixel -= lineStride;
                                                     }
                                                 }
 

@@ -13,7 +13,7 @@ namespace Track
         Graphics() = default;
         ~Graphics() override;
 
-        void runRendering(Accessor const& accessor);
+        void runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin);
         void stopRendering();
         bool isRunning() const;
         float getAdvancement() const;

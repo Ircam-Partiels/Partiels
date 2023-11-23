@@ -719,7 +719,29 @@ void Track::Director::runLoading()
 
 void Track::Director::runRendering()
 {
-    mGraphics.runRendering(mAccessor);
+    auto const createPlugin = [this]() -> std::unique_ptr<Ive::PluginWrapper>
+    {
+        auto const& key = mAccessor.getAttr<AttrType::key>();
+        if(key.identifier.empty() || key.feature.empty())
+        {
+            return nullptr;
+        }
+        if(mAudioFormatReader == nullptr)
+        {
+            return nullptr;
+        }
+        auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0;
+        try
+        {
+            return Plugin::Tools::createPluginWrapper(key, sampleRate);
+        }
+        catch(...)
+        {
+        }
+        return nullptr;
+    };
+
+    mGraphics.runRendering(mAccessor, createPlugin());
     startTimer(50);
     timerCallback();
 }
