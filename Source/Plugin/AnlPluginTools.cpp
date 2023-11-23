@@ -54,6 +54,30 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                             });
 }
 
+std::unique_ptr<Ive::PluginWrapper> Plugin::Tools::createPluginWrapper(Key const& key, double readerSampleRate)
+{
+    using namespace Vamp::HostExt;
+    auto* pluginLoader = PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        throw std::runtime_error("plugin loader is not available");
+    }
+
+    anlStrongAssert(!key.identifier.empty());
+    if(key.identifier.empty())
+    {
+        throw LoadingError("plugin key is not defined.");
+    }
+
+    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(readerSampleRate), PluginLoader::ADAPT_INPUT_DOMAIN));
+    if(instance == nullptr)
+    {
+        throw LoadingError("plugin library couldn't be loaded");
+    }
+    return std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
+}
+
 std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
 {
     using namespace Vamp::HostExt;
