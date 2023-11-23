@@ -10,6 +10,7 @@ set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 set(IFP_CLI ON CACHE STRING "" FORCE)
 set(IFP_TEST OFF CACHE STRING "" FORCE)
+set(IVE_PLUGIN_EXAMPLE ON CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
@@ -183,6 +184,7 @@ elseif(APPLE)
 endif()
 
 add_dependencies(Partiels partiels-vamp-plugins)
+add_dependencies(Partiels ive_plugin_example)
 if(APPLE)
     set_target_properties(Partiels PROPERTIES 
         XCODE_EMBED_PLUGINS partiels-vamp-plugins
