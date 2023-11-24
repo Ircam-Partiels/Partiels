@@ -81,6 +81,7 @@ namespace Track
             std::shared_ptr<std::vector<Columns>> getColumns() noexcept;
 
             std::optional<size_t> getNumChannels() const noexcept;
+            std::optional<size_t> getNumColumns() const noexcept;
             std::optional<size_t> getNumBins() const noexcept;
             std::optional<Zoom::Range> getValueRange() const noexcept;
             std::optional<Zoom::Range> getExtraRange(size_t index) const noexcept;

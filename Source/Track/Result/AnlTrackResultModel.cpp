@@ -46,7 +46,15 @@ namespace
                                        return std::max(rval, std::get<2>(column).size());
                                    });
         };
+        return std::accumulate(results.cbegin(), results.cend(), 0_z, accumChannel);
+    }
 
+    static size_t getNumColumns(auto const& results)
+    {
+        auto const accumChannel = [](auto const& val, auto const& channel)
+        {
+            return std::max(val, channel.size());
+        };
         return std::accumulate(results.cbegin(), results.cend(), 0_z, accumChannel);
     }
 
@@ -313,6 +321,22 @@ public:
         return mInfo->numChannels;
     }
 
+    std::optional<size_t> getNumColumns() const noexcept
+    {
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
+        {
+            return {};
+        }
+        return mInfo->numColumns;
+    }
+
     std::optional<size_t> getNumBins() const noexcept
     {
         MiscWeakAssert(mInfo != nullptr);
@@ -490,6 +514,7 @@ private:
             if(markers != nullptr)
             {
                 mInfo->numChannels = markers->size();
+                mInfo->numColumns = ::Misc::getNumColumns(*markers);
                 mInfo->numBins = 0_z;
                 mInfo->valueRange = Zoom::Range::emptyRange(0.0);
                 mInfo->extraRanges = ::Misc::getExtraRange(*markers);
@@ -501,6 +526,7 @@ private:
             if(points != nullptr)
             {
                 mInfo->numChannels = points->size();
+                mInfo->numColumns = ::Misc::getNumColumns(*points);
                 mInfo->numBins = 1_z;
                 mInfo->valueRange = ::Misc::getValueRange(*points);
                 mInfo->extraRanges = ::Misc::getExtraRange(*points);
@@ -512,6 +538,7 @@ private:
             if(columns != nullptr)
             {
                 mInfo->numChannels = columns->size();
+                mInfo->numColumns = ::Misc::getNumColumns(*columns);
                 mInfo->numBins = ::Misc::getNumBins(*columns);
                 mInfo->valueRange = ::Misc::getValueRange(*columns);
                 mInfo->extraRanges = ::Misc::getExtraRange(*columns);
@@ -520,6 +547,7 @@ private:
         else
         {
             mInfo->numChannels.reset();
+            mInfo->numColumns.reset();
             mInfo->numBins.reset();
             mInfo->valueRange.reset();
         }
@@ -532,6 +560,7 @@ private:
     {
         DataType data{};
         std::optional<size_t> numChannels{};
+        std::optional<size_t> numColumns{};
         std::optional<size_t> numBins{};
         std::optional<Zoom::Range> valueRange{};
         std::vector<Zoom::Range> extraRanges;
@@ -684,6 +713,16 @@ std::optional<size_t> Track::Result::Data::getNumChannels() const noexcept
         return {};
     }
     return mImpl->getNumChannels();
+}
+
+std::optional<size_t> Track::Result::Data::getNumColumns() const noexcept
+{
+    MiscWeakAssert(mImpl != nullptr);
+    if(mImpl == nullptr)
+    {
+        return {};
+    }
+    return mImpl->getNumColumns();
 }
 
 std::optional<size_t> Track::Result::Data::getNumBins() const noexcept
