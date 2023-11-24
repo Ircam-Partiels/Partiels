@@ -94,37 +94,4 @@ namespace AnlVampPlugin
     private:
         size_t mNumChannels{0_z};
     };
-
-    class Dummy
-    : public Base
-    , public Ive::PluginExtension
-    {
-    public:
-        Dummy(float sampleRate);
-        ~Dummy() override = default;
-
-        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
-
-        InputDomain getInputDomain() const override;
-        std::string getIdentifier() const override;
-        std::string getName() const override;
-        std::string getDescription() const override;
-
-        size_t getPreferredBlockSize() const override;
-
-        OutputList getOutputDescriptors() const override;
-        // Ive::PluginExtension
-        OutputExtraList getOutputExtraDescriptors(size_t outputDescriptorIndex) const override;
-
-        void reset() override;
-        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
-        FeatureSet getRemainingFeatures() override;
-
-        // Ive::PluginExtension
-        InputList getInputDescriptors() const override;
-        void setPreComputingFeatures(FeatureSet const& fs) override;
-
-    private:
-        FeatureSet mFeatureSet;
-    };
 } // namespace AnlVampPlugin

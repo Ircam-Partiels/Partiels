@@ -303,152 +303,6 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
     return featureSet;
 }
 
-AnlVampPlugin::Dummy::Dummy(float sampleRate)
-: Base(sampleRate)
-{
-}
-
-bool AnlVampPlugin::Dummy::initialise(size_t, size_t, size_t)
-{
-    return true;
-}
-
-Vamp::Plugin::InputDomain AnlVampPlugin::Dummy::getInputDomain() const
-{
-    return TimeDomain;
-}
-
-std::string AnlVampPlugin::Dummy::getIdentifier() const
-{
-    return "partielsdummy";
-}
-
-std::string AnlVampPlugin::Dummy::getName() const
-{
-    return "Dummy";
-}
-
-std::string AnlVampPlugin::Dummy::getDescription() const
-{
-    return "Copy an analysis.";
-}
-
-size_t AnlVampPlugin::Dummy::getPreferredBlockSize() const
-{
-    return 256_z;
-}
-
-Vamp::Plugin::OutputList AnlVampPlugin::Dummy::getOutputDescriptors() const
-{
-    OutputList list;
-    {
-        OutputDescriptor d;
-        d.identifier = "markers";
-        d.name = "Marker";
-        d.description = "Marker";
-        d.unit = "m";
-        d.hasFixedBinCount = true;
-        d.binCount = 0;
-        d.hasKnownExtents = false;
-        d.isQuantized = false;
-        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
-        d.hasDuration = false;
-        list.push_back(std::move(d));
-    }
-    {
-        OutputDescriptor d;
-        d.identifier = "points";
-        d.name = "Point";
-        d.description = "Point";
-        d.unit = "p";
-        d.hasFixedBinCount = true;
-        d.binCount = 1;
-        d.hasKnownExtents = false;
-        d.isQuantized = false;
-        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
-        d.hasDuration = false;
-        list.push_back(std::move(d));
-    }
-    return list;
-}
-
-AnlVampPlugin::Dummy::OutputExtraList AnlVampPlugin::Dummy::getOutputExtraDescriptors(size_t outputDescriptorIndex) const
-{
-    OutputExtraList list;
-    if(outputDescriptorIndex == 0)
-    {
-        OutputExtraDescriptor d;
-        d.identifier = "random";
-        d.name = "Random";
-        d.description = "Random values";
-        d.unit = "r";
-        d.hasKnownExtents = false;
-        d.minValue = 0.0f;
-        d.maxValue = 1.0f;
-        d.isQuantized = false;
-        d.quantizeStep = 0.0f;
-        list.push_back(std::move(d));
-    }
-    else if(outputDescriptorIndex == 1)
-    {
-        OutputExtraDescriptor d;
-        d.identifier = "copy";
-        d.name = "Copy";
-        d.description = "Copy of the points";
-        d.unit = "c";
-        d.hasKnownExtents = false;
-        d.minValue = 0.0f;
-        d.maxValue = 1.0f;
-        d.isQuantized = false;
-        d.quantizeStep = 0.0f;
-        list.push_back(std::move(d));
-    }
-    return list;
-}
-
-Ive::PluginExtension::InputList AnlVampPlugin::Dummy::getInputDescriptors() const
-{
-    return getOutputDescriptors();
-}
-
-void AnlVampPlugin::Dummy::reset()
-{
-    mFeatureSet.clear();
-}
-
-Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::process(const float* const*, Vamp::RealTime timeStamp)
-{
-    return {};
-}
-
-Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::getRemainingFeatures()
-{
-    auto copy = mFeatureSet;
-    if(copy.count(0) > 0)
-    {
-        for(auto& channel : copy[0])
-        {
-            channel.values = {static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX)};
-        }
-    }
-    if(copy.count(1) > 0)
-    {
-        for(auto& channel : copy[1])
-        {
-            if(!channel.values.empty())
-            {
-                channel.values.push_back(channel.values.front());
-            }
-        }
-    }
-    return copy;
-}
-
-void AnlVampPlugin::Dummy::setPreComputingFeatures(FeatureSet const& fs)
-{
-    mFeatureSet = fs;
-}
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -476,13 +330,6 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
             }
-#ifndef NDEBUG
-            case 3:
-            {
-                static Vamp::PluginAdapter<AnlVampPlugin::Dummy> adaptater;
-                return adaptater.getDescriptor();
-            }
-#endif
             default:
             {
                 return nullptr;
@@ -492,19 +339,12 @@ extern "C"
 
     IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int index)
     {
-#if NDEBUG
-        return nullptr;
-#endif
         if(version < 2)
         {
             return nullptr;
         }
         switch(index)
         {
-            case 0:
-            {
-                return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::Dummy>();
-            }
             default:
             {
                 return nullptr;
