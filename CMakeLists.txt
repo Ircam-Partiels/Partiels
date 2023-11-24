@@ -184,7 +184,7 @@ elseif(APPLE)
 endif()
 
 add_dependencies(Partiels partiels-vamp-plugins)
-add_dependencies(Partiels ive_plugin_example)
+
 if(APPLE)
     set_target_properties(Partiels PROPERTIES 
         XCODE_EMBED_PLUGINS partiels-vamp-plugins
