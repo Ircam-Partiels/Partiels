@@ -1,3 +1,5 @@
+- Fix: New point plugin is not working due to invalid range (#404)
+- Add: Support for plug-in-specific color map management in IVE (#403)
 - Fix: The visible value range is modified when the global value range changes (#402)
 - Imp: Make the representation of points and segments more accurate (#401)
 - Imp: Change maker and copyright of Partiels factory plug-ins (#397)
