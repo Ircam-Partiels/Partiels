@@ -240,6 +240,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::channelsLayout:
             case AttrType::unit:
             case AttrType::zoomValueMode:
+            case AttrType::hasPluginColourMap:
             {
                 for(auto* child : getChildren())
                 {
@@ -270,7 +271,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     break;
                     case Track::FrameType::value:
                     {
-                        auto const& unit = Tools::getUnit(acsr);
+                        auto const unit = Tools::getUnit(acsr);
                         mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
                         mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
                         mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
@@ -294,17 +295,17 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     break;
                     case Track::FrameType::vector:
                     {
-                        auto const& unit = Tools::getUnit(acsr);
+                        auto const unit = Tools::getUnit(acsr);
                         mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
                         mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
                         mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
                         mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
-                        mPropertyColourMap.setVisible(true);
+                        mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                         mPropertyUnit.setVisible(true);
-                        mPropertyValueRangeMode.setVisible(true);
-                        mPropertyValueRangeMin.setVisible(true);
-                        mPropertyValueRangeMax.setVisible(true);
-                        mPropertyValueRange.setVisible(true);
+                        mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                        mPropertyValueRangeMin.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                        mPropertyValueRangeMax.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                        mPropertyValueRange.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                         mPropertyNumBins.setVisible(true);
                         mPropertyRangeLink.setVisible(true);
                         mPropertyGrid.setVisible(true);
@@ -380,7 +381,6 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
-            case AttrType::hasPluginColourMap:
                 break;
         }
     };

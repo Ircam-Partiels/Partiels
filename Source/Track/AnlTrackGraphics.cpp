@@ -16,13 +16,14 @@ void Track::Graphics::stopRendering()
     abortRendering();
 }
 
-void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin)
+bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin)
 {
+    auto hasPluginColorMap = accessor.getAttr<AttrType::hasPluginColourMap>();
     std::unique_lock<std::mutex> lock(mRenderingMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return;
+        return hasPluginColorMap;
     }
     abortRendering();
 
@@ -34,7 +35,7 @@ void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return;
+        return hasPluginColorMap;
     }
 
     auto const columns = results.getColumns();
@@ -44,7 +45,7 @@ void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return;
+        return hasPluginColorMap;
     }
 
     auto const& output = accessor.getAttr<AttrType::description>().output;
@@ -57,7 +58,7 @@ void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return;
+        return hasPluginColorMap;
     }
 
     mData = results;
@@ -68,21 +69,21 @@ void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return;
+        return hasPluginColorMap;
     }
 
     auto featureIndex = 0;
     if(plugin != nullptr)
     {
         auto const feature = Plugin::Tools::getFeatureIndex(*plugin.get(), accessor.getAttr<AttrType::key>().feature);
-        if(!feature.has_value())
+        hasPluginColorMap = feature.has_value() && plugin->supportColorMap(static_cast<int>(feature.value()));
+        if(!hasPluginColorMap)
         {
             plugin.reset();
         }
-        featureIndex = static_cast<int>(feature.value());
-        if(!plugin->supportColorMap(featureIndex))
+        else
         {
-            plugin.reset();
+            featureIndex = static_cast<int>(feature.value());
         }
     }
 
@@ -305,6 +306,7 @@ void Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
                                         mRenderingState.compare_exchange_weak(expected, ProcessState::ended);
                                         triggerAsyncUpdate();
                                     });
+    return hasPluginColorMap;
 }
 
 bool Track::Graphics::isRunning() const

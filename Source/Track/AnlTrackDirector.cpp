@@ -742,7 +742,8 @@ void Track::Director::runRendering()
         return nullptr;
     };
 
-    mGraphics.runRendering(mAccessor, createPlugin());
+    auto const result = mGraphics.runRendering(mAccessor, createPlugin());
+    mAccessor.setAttr<AttrType::hasPluginColourMap>(result, NotificationType::synchronous);
     startTimer(50);
     timerCallback();
 }
