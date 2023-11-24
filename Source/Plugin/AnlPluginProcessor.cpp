@@ -316,17 +316,12 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     {
         return nullptr;
     }
-    auto const outputs = plugins.at(0_z)->getOutputDescriptors();
-    auto const feature = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
-                                      {
-                                          return output.identifier == key.feature;
-                                      });
-    if(feature == outputs.cend())
+    auto const feature = Tools::getFeatureIndex(*plugins.at(0_z).get(), key.feature);
+    if(!feature.has_value())
     {
         throw LoadingError("plugin feature is invalid");
     }
-    auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
-    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), key, featureIndex, state));
+    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), key, feature.value(), state));
 }
 
 class Plugin::Processor::CircularReaderUnitTest
