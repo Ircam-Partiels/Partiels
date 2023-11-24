@@ -187,7 +187,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 break;
             case AttrType::colours:
             {
-                runRendering();
+                if(!mAccessor.getAttr<AttrType::hasPluginColourMap>())
+                {
+                    runRendering();
+                }
             }
             break;
             case AttrType::channelsLayout:
