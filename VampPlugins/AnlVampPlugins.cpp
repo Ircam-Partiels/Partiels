@@ -254,7 +254,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
         d.identifier = "markers";
         d.name = "Marker";
         d.description = "Marker";
-        d.unit = "m";
+        d.unit = "";
         d.hasFixedBinCount = true;
         d.binCount = 0;
         d.hasKnownExtents = false;
@@ -268,10 +268,12 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
         d.identifier = "points";
         d.name = "Point";
         d.description = "Point";
-        d.unit = "p";
+        d.unit = "";
         d.hasFixedBinCount = true;
         d.binCount = 1;
-        d.hasKnownExtents = false;
+        d.hasKnownExtents = true;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
         d.isQuantized = false;
         d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
         d.hasDuration = false;
