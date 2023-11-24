@@ -161,7 +161,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -208,7 +208,7 @@ void Group::PropertyGraphicalsSection::setColourMap(Track::ColourMap const& colo
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector || trackAcsr.get().template getAttr<Track::AttrType::hasPluginColourMap>();
                                                 });
     if(trackAcsrs.empty())
     {
@@ -587,7 +587,7 @@ void Group::PropertyGraphicalsSection::updateColourMap()
     std::set<Track::ColourMap> colourMaps;
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector && !trackAcsr.get().getAttr<Track::AttrType::hasPluginColourMap>())
         {
             auto const colourMap = trackAcsr.get().getAttr<Track::AttrType::colours>().map;
             colourMaps.insert(colourMap);
