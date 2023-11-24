@@ -78,7 +78,7 @@ std::unique_ptr<Ive::PluginWrapper> Plugin::Tools::createPluginWrapper(Key const
     return std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
 }
 
-std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
+std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitializePluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
 {
     using namespace Vamp::HostExt;
     auto* pluginLoader = PluginLoader::getInstance();

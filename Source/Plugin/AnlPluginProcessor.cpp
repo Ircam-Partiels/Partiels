@@ -311,7 +311,7 @@ Plugin::Output Plugin::Processor::getOutput() const
 
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
 {
-    auto plugins = Tools::createPluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
+    auto plugins = Tools::createAndInitializePluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
     if(plugins.empty())
     {
         return nullptr;
