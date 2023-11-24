@@ -176,4 +176,18 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitial
     return plugins;
 }
 
+std::optional<size_t> Plugin::Tools::getFeatureIndex(Vamp::Plugin const& plugin, std::string const& feature)
+{
+    auto const outputs = plugin.getOutputDescriptors();
+    auto const it = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
+                                 {
+                                     return output.identifier == feature;
+                                 });
+    if(it == outputs.cend())
+    {
+        return {};
+    }
+    return static_cast<size_t>(std::distance(outputs.cbegin(), it));
+}
+
 ANALYSE_FILE_END
