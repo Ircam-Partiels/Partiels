@@ -380,6 +380,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::hasPluginColourMap:
                 break;
         }
     };

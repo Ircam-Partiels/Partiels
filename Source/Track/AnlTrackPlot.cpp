@@ -30,6 +30,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::processing:
             case AttrType::focused:
             case AttrType::showInGroup:
+            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::description:
             case AttrType::grid:
@@ -129,6 +130,7 @@ Track::Plot::Overlay::Overlay(Plot& plot, juce::ApplicationCommandManager& comma
             case AttrType::edit:
             case AttrType::focused:
             case AttrType::showInGroup:
+            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::colours:
             {

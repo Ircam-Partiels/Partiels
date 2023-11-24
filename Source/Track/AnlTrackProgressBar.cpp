@@ -104,6 +104,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::hasPluginColourMap:
                 break;
         }
     };

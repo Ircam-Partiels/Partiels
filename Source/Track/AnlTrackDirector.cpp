@@ -222,6 +222,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::showInGroup:
             case AttrType::zoomValueMode:
             case AttrType::extraThresholds:
+            case AttrType::hasPluginColourMap:
                 break;
         }
     };

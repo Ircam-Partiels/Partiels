@@ -36,6 +36,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
             case AttrType::grid:
+            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::height:
             {

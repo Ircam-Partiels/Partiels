@@ -31,6 +31,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::showInGroup:
+            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::description:
             case AttrType::grid:
@@ -381,6 +382,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::results:
             case AttrType::edit:
             case AttrType::showInGroup:
+            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::colours:
             case AttrType::font:

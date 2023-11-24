@@ -47,6 +47,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::processing:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::hasPluginColourMap:
                 break;
         }
     };
@@ -181,6 +182,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             }
             break;
             case AttrType::grid:
+            case AttrType::hasPluginColourMap:
                 break;
         }
     };
