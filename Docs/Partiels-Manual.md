@@ -1,11 +1,11 @@
 <h1 align="center">Partiels Manual</h1>
 
 <p align="center">
-<i>Version 1.2.0 for Windows, Mac & Linux</i><br>
+<i>Version 1.3.2 for Windows, Mac & Linux</i><br>
 <i>Manual by Pierre Guillot</i><br>
 <a href="www.ircam.fr">www.ircam.fr</a><br><br>
 
-<img src="Images/overview.png" alt="Example" width="1840"/>
+<img src="Images/overview-v1.3.2.png" alt="Example" width="1840"/>
 </p>
 
 <div style="page-break-after: always;"></div>
@@ -135,7 +135,7 @@ You can manually check for a new version release on the Ircam Forum via the main
 
 Partiels has a main graphical interface to view, navigate and edit the different analyses of a document. The actions and interaction modes are presented in detail in the different sections of this manual.  
 
-<p align="center"><img src="Images/section-overview.1-v1.0.6.png" alt="Example" width="1250"/></p>
+<p align="center"><img src="Images/section-overview.1-v1.3.2.png" alt="Example" width="1250"/></p>
 
 To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
 
@@ -149,15 +149,17 @@ A document is the main item you work on in Partiels. It contains a set of analys
 
 When you open Partiels for the first time or create a new document via the main menu `File → New...` or with the keyboard shortcut `⌘ Cmd + N` (Mac) or `Ctrl + N` (Linux/Windows), the application presents the interface for starting a new document. 
 
-<p align="center"><img src="Images/section-manage-documents.1-v1.0.6.png" alt="Example" width="412"/></p>
+<p align="center"><img src="Images/section-manage-documents.1-v1.3.2.png" alt="Example" width="412"/></p>
 
 You are prompted to load one or more audio files or pre-existing Partiels document file. The application supports audio file extensions *.aac*, *.aiff*, *.aif*, *.flac*, *.m4a*, *.mp3*, *.ogg*, *.wav* and *.wma*. A Partiels document file has the extension *.ptldoc*. You can use the file browser window by clicking on the `Load` button (**A1**) or drag the files directly into the interface (**A1**). You can also load a Partiels document file via the main menu `File → Open...` or with the keyboard shortcut `⌘ Cmd + O` (Mac) or `Ctrl + O` (Linux/Windows). And you can select one of the recently used Partiels documents from the list on the right (**A2**) or via the main menu `File → Open Recent`.
 
-If you have loaded one or more audio files, a second interface prompts you to add a new analysis track by clicking on the `Add Track` button (**A3**) to display the analysis plugin loading window. Alternatively, you can also use a pre-existing Partiels document as a template. Click on the `Load Template` button (**A4**) to display the file browser window or select one of the recently used Partiels documents from the list on the right (**A2**).
+If you have loaded one or more audio files, a second interface prompts you to add a new analysis track by clicking on the `Add Track` button (**A4**) to display the analysis plugin loading window. Alternatively, you can also use a pre-existing Partiels document as a template. Click on the `Load Template` button (**A5**) to display the file browser window or select one of the recently used Partiels documents from the list on the right (**A6**).
 
-<p align="center"><img src="Images/section-manage-documents.2-v1.0.6.png" alt="Example" width="412"/></p>
+<p align="center"><img src="Images/section-manage-documents.2-v1.3.2.png" alt="Example" width="412"/></p>
 
-If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A6**) if the sample rate used in the initial document differs from that of your audio files.
+You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the main menu `Partiels -> Default Template` (Mac) or `Help -> Default Template`.
+
+If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
 If you add a new track with an analysis plugin, you can refer to the [corresponding section](#add-new-plugin-tracks) of this manual.
 
@@ -193,17 +195,21 @@ Tracks can be created in two ways, from the analysis of a Vamp plug-in or from a
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the window for adding analysis plugins is displayed. If you are already working on a document, you can bring up this window to add new tracks via the main menu `Edit → Add New Track`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or by using the drop-down menu of the `+` button ([Overview](#2-overview) - **K1**) on the main interface. 
-
-All plug-ins installed on your computer are listed in the interface. You can organize the plug-ins by name, feature, maker, category or version in ascending or descending alphabetical order by clicking on the corresponding entry in the interface header (**P1**).
+When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plug-ins installed on your computer are listed in the interface. 
 
 > For further information about the plug-in management, please refer to the [Plug-in settings](#12-plug-ins-settings) section.
 
-<p align="center"><img src="Images/section-add-new-plugin-tracks.1-v1.0.6.png" alt="Example" width="416"/></p>
+<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="100" align="left" style="border-right: 4px solid transparent;"></p> 
 
-You can also search for specific plug-ins by clicking on the text filter entry (**P2**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer).
+You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
+
+**Tip**: Click on the Ircam icon to filter only Ircam plug-ins.
+
+Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P2**). 
 
 You can select one or more plug-ins and then press the `Return ⏎` key (or you can simply double click on a plug-in) to add a new track for each plug-in in your document (**P3**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+
+<br clear="left"/>
 
 If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#track-properties) section.
 
@@ -225,6 +231,8 @@ If you are importing a file in SDIF format, , the `Load File...` window appears 
 <p align="center">
 <img src="images/selection-import-new-result tracks.2-v1.0.7.png" width="232"/>
 </p>
+
+**Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
 
 If you are importing a file in JSON  format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
@@ -477,7 +485,7 @@ The interface of each point or matrix track contains a vertical ruler for each c
 Partiels provides basic audio playback capabilities to allow listening to audio files while viewing analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) in the center of the main interface header.
 
 <p align="center">
-<img src="images/section-navigation-zoom-and-transport.1-v1.0.6.png" alt="AudioTransport" width="280"/>
+<img src="images/section-navigation-zoom-and-transport.1-v1.3.2.png" alt="AudioTransport" width="280"/>
 </p>
 
 The actions to move the start position of the playback head and control the playback loop depend on the magnetize option that sticks the positions to the markers of the analysis tracks.
