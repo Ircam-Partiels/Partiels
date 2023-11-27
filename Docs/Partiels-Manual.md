@@ -199,7 +199,7 @@ When you click on the button to add analysis tracks via the interface for starti
 
 > For further information about the plug-in management, please refer to the [Plug-in settings](#12-plug-ins-settings) section.
 
-<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="100" align="left" style="border-right: 4px solid transparent;"></p> 
+<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="110" align="right" style="border-left: 4px solid transparent;"></p> 
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
@@ -441,11 +441,11 @@ Each track and group offers two representations of the analysis results. The mai
 
 ### 8.2. Navigation
 
-Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axis corresponding to the value or frequency ranges.
+Partiels offers the possibility of navigating and zooming on the horizontal axis corresponding to the time range, and on the vertical axis corresponding to the value (or frequency) range.
 
-Click and drag on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
+Click and drag without modifier on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
 
-#### 8.2.1 Horizontal axis  
+#### 8.2.1 Horizontal  
 
 The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -463,9 +463,11 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 - Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-#### 8.2.2 Vertical axis
+Tip: When zooming in time, the anchor may correspond to the position of the mouse or the position of the start playhead. You can change the mode via the menu `View → Anchor Time Zoom on Playhead`.
 
-The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
+#### 8.2.2 Vertical
+
+The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value (or frequency) zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
 -- Click and drag on the vertical ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to shift the value or frequency range backwards and forwards.
 - Click with `⇧ Shift` and drag up and down on the vertical ruler ([Overview](#2-overview) **Z3**) to shift the value or frequency range backwards and forwards.
@@ -479,6 +481,15 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Use the pitch-zoom with `Ctrl` to zoom in and out of the value or frequency range.
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
+
+#### 8.2.3 Group
+
+Groups allow you to navigate and zoom horizontally and vertically directly on the graphical plot. 
+
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag to select the time and value ranges to zoom to.
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag from top-left to bottom-right to zoom in on time and value ranges, and conversely, from bottom-right to top-left to zoom out on time and value ranges.
+- Click with `⇧ Shift` and drag to shift the time and value ranges backwards and forwards.
+- Double-click with `⇧ Shift`, `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) or `⎇ Option` (Mac) or `Alt` (Linux/Windows) to zoom on the entire time and value ranges.
 
 ### 8.3. Transport
 
