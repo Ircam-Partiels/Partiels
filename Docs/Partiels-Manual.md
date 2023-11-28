@@ -16,9 +16,8 @@
   * [1.1. Features](#12-system-requirements)
   * [1.2. System requirements](#12-system-requirements)
   * [1.3. Third-party](#13-third-party)
-  * [1.4. Authorization](#14-authorization)
-  * [1.5. Updates](#15-updates)
-  * [1.6. Credits](#16-credits)
+  * [1.4. Updates](#14-updates)
+  * [1.5. Credits](#15-credits)
 * [2. Overview](#2-overview)
 * [3. Manage documents](#3-manage-documents)
   * [3.1. Create and open](#31-create-and-open)
@@ -59,11 +58,11 @@
 
 ## 1. Introduction
 
-**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is an application for the **analysis of digital audio files** intended for *researchers* in signal processing, *musicologists*, *composers*, and *sound designers*. It offers a dynamic and ergonomic interface in order to **explore the content and the characteristics of sounds**.
+**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is a **digital audio file analysis application** for signal processing *researchers*, *musicologists*, *composers*, *sound designers*, etc., offering a dynamic interface for **exploring the content and characteristics of sounds**.
 
 ### 1.1. Features
 
-Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files (in order to be used in other applications such as *Max*, *Pure Data*, *Open Music*, etc.).
+Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files.
 
 - Versions for *Windows*, *Mac* & *Linux*  
 - Multiformat & multichannel support  
@@ -92,39 +91,13 @@ Alongside Partiels, a set of analyses present based on the audio engines develop
 
 You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
 
-### 1.4. Authorization
-
-Partiels and the Ircam Vamp plug-ins are part of the [IRCAM Forum Premium](https://forum.ircam.fr/about/offres-dabonnement/) technologies bundle offering many tools, plug-ins, and applications to analyze, synthesize, and transform the sound. The free membership allows you to use the demo version Partiels with the Ircam Vamp plug-ins. 
-
-To use the Partiels and the Ircam Vamp plug-ins without limitation, you must subscribe to the [IRCAM Forum Premium](https://forum.ircam.fr/about/offres-dabonnement/), download an authorization key from the [IRCAM Shop]("https://1.shop.ircam.fr/fr/index.php?controller=subscription"), and authorize the plugins using this authorization key.
-
-</n>
-<p align="center">
-<img src="images/section-introduction.1-v1.0.7.png" alt="Example" width="197"/>
-</p>
-</n>
-
-Open the authorization window from the interface by clicking on the `Authorize` entry via the main menu `Partiels → Authorize` (Mac) or `Help → Authorize` (Linux/Windows) or the `Demo` warning button. Click on the authorize button and select the file *Ircam_Authorization_Key.txt* downloaded from the IRCAM Shop (or drop directly the file into the window).
-
-<p align="center">
-<img src="images/section-introduction.2-v1.0.7.png" alt="Example" width="312"/>
-</p>
-
-Once the authorization key is validated (the process might take a few seconds), Partiels and the Ircam Vamp plug-ins can be used without limitation, the `Demo` buttons disappear, and `Authorize` entry of the the main menu is disabled.
-
-If the Partiels and the Ircam Vamp are not authorized, the application runs in demo mode. There is no time limitation for the demo but you cannot export analysis results.
-
-**Tip**: The IRCAM Forum Premium webpage to subscribe to the IRCAM Forum Premium membership and the IRCAM Shop webpage to download an authorization key can be accessed via the corresponding buttons in the authorization window. 
-
-### 1.5. Updates
+### 1.4. Updates
 
 At startup, Partiels checks for the release of a new version on the Ircam forum. If a new version has been released, you can either go to the Partiels website to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
 
-If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. 
+If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`
 
-You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`
-
-### 1.6. Credits
+### 1.5. Credits
 
 **Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
 **Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
@@ -199,7 +172,7 @@ When you click on the button to add analysis tracks via the interface for starti
 
 > For further information about the plug-in management, please refer to the [Plug-in settings](#12-plug-ins-settings) section.
 
-<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="110" align="right" style="border-left: 4px solid transparent;"></p> 
+<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
