@@ -498,7 +498,7 @@ The actions to move the start position of the playback head and control the play
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**).
 
 <p align="center">
-<img src="images/section-track-properties.1-v1.0.8.png" width="242"/>
+<img src="images/section-track-properties.1-v1.3.2.png" width="242"/>
 </p>
 
 The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
@@ -578,6 +578,8 @@ A color can be modified using the color selector that is prompted by clicking on
 - Text Color: The color used to render the labels of the markers or the points values.
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 
+**Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
+
 #### 9.2.2. Font
 
 The font properties are only available for marker or point type analyses. By default, the font *Nunito Sans* with a size of 14 and a regular style is used. You can change the font according to the ones available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if some characters are not supported.
@@ -595,21 +597,34 @@ The font properties are only available for marker or point type analyses. By def
 The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axis for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
 
 <p align="center">
-<img src="images/section-track-properties.7-v1.0.5.png" width="196"/>
+<img src="images/section-track-properties.7-v1.3.2.png" width="196"/>
 </p>
 
 - Value Range Mode: Select the value range mode: default (if available), results, manual (selected automatically when the range doesn't match one of the two other mode)
-- Value Range Min.: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
-- Value Range Max.: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
+- Minimum Range Value: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
+- Maximum Range Value: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
 - Value Range Link: If the visible value range of the points corresponding to the vertical axis is linked to the the vertical axis of the group containing the track.  
 - Value Range: The visible value range for the column rendering (the range controls the color mapping).
 - Num. Bins: The maximum number of bins (of values) by column (the value is fixed). 
 - Bin Range Link: If the visible bin range of the columns corresponding to the vertical axis is linked to the the vertical axis of the group containing the track. 
+  
+</br>
+<p align="center">
+<img src="images/section-track-properties.8-v1.3.2.png" width="196"/>
+</p>
+
 - Grid: Prompt a dialog window to control the grid properties of the track
   - Tick Reference Value: The reference value from which the ticks are distributed.
   - Main Tick Interval: The number of small ticks between main ticks. 
   - Power Base: The power base used to compute the tick distribution.
-  - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.
+  - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.  
+
+</br>
+<p align="center">
+<img src="images/section-track-properties.9-v1.3.2.png" width="196"/>
+</p>
+
+- Extra Output Threshold: Some plug-ins support additional outputs. For these plug-ins, it is possible to define a threshold below which results are not displayed.
 
 #### 9.2.4. Visibility 
 
