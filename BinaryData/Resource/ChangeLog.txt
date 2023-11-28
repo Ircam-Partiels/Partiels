@@ -5,6 +5,7 @@
 - Imp: Change maker and copyright of Partiels factory plug-ins (#397)
 - Add: A button for filtering plugins developed by Ircam (#396)
 - Imp: Use internal implementation for the waveform analysis to optimize the processing and improve the user experience (#395)
+- Add: Add numeric fields to modify the range of spectrogram values in the track properties window (#388)
 - Imp: Software becomes free and protection is removed (#374)
 
 v1.3.1
