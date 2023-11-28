@@ -10,7 +10,12 @@ namespace Track
         class PathArrangement
         {
         public:
-            void stopLine()
+            inline bool isLineStarted() const
+            {
+                return !mShouldStartNewPath;
+            }
+
+            inline void stopLine()
             {
                 if(!std::exchange(mShouldStartNewPath, true))
                 {
@@ -714,7 +719,10 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             {
                 auto const y1 = Tools::valueToPixel(max, valueRange, fbounds);
                 auto const y2 = Tools::valueToPixel(min, valueRange, fbounds);
-                pathArr.addLine(x, x, y1);
+                if(pathArr.isLineStarted())
+                {
+                    pathArr.addLine(x, x, y1);
+                }
                 pathArr.stopLine();
 
                 rectangles.addWithoutMerging(juce::Rectangle<float>(x, y1, x2 - x, y2 - y1));
