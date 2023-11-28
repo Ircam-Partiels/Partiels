@@ -95,11 +95,13 @@ void Application::Window::handleAsyncUpdate()
 void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(Instance::get().getDocumentFileBased()));
-    auto const appName = Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion();
     auto const file = Instance::get().getDocumentFileBased().getFile();
     auto const fileName = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
-    auto const fileExtension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
-    setName(appName + " - " + fileName + fileExtension);
+    auto const hasChanged = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved();
+    setName(juce::String("APPNAME -vAPPVERSION - FILENAME")
+                .replace("APPNAME", Instance::get().getApplicationName())
+                .replace("APPVERSION", Instance::get().getApplicationVersion())
+                .replace("FILENAME", fileName + (hasChanged ? "*" : "")));
 }
 
 Application::Interface& Application::Window::getInterface()
