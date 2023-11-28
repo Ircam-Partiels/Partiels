@@ -183,13 +183,13 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                                       break;
                               }
                           })
-, mPropertyValueRangeMin(juce::translate("Value Range Min."), juce::translate("The minimum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
+, mPropertyValueRangeMin(juce::translate("Minimum Range Value"), juce::translate("The minimum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
                          {
                              mDirector.startAction();
                              setValueRangeMin(static_cast<double>(value));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
-, mPropertyValueRangeMax(juce::translate("Value Range Max."), juce::translate("The maximum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
+, mPropertyValueRangeMax(juce::translate("Maximum Range Value"), juce::translate("The maximum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
                          {
                              mDirector.startAction();
                              setValueRangeMax(static_cast<double>(value));
