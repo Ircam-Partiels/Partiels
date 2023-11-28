@@ -727,40 +727,36 @@ void Application::Instance::checkPluginsQuarantine()
     {
         return;
     }
-    auto const files = PluginList::findLibrariesInQuarantine(pluginListAcsr);
-    if(!files.empty())
+    auto files = PluginList::findLibrariesInQuarantine(pluginListAcsr);
+    if(files.empty())
     {
-        juce::String pluginNames;
-        for(auto const& file : files)
-        {
-            pluginNames += file.getFullPathName() + "\n";
-        }
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Some plugins may not be loaded due to macOS quarantine!"))
-                                 .withMessage(juce::translate("Partiels can attemp to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
-                                 .withButton(juce::translate("Proceed"))
-                                 .withButton(juce::translate("Ignore"));
-        mIsPluginListReady = false;
-        juce::WeakReference<Instance> weakReference(this);
-        juce::AlertWindow::showAsync(options, [=, this](int result)
-                                     {
-                                         if(weakReference.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         if(result == 0)
-                                         {
-                                             mIsPluginListReady = true;
-                                             return;
-                                         }
-                                         if(PluginList::removeLibrariesFromQuarantine(files))
-                                         {
-                                             Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {}, NotificationType::synchronous);
-                                         }
-                                         mIsPluginListReady = true;
-                                     });
+        return;
     }
+    juce::String pluginNames;
+    for(auto const& file : files)
+    {
+        pluginNames += file.getFullPathName() + "\n";
+    }
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Some plugins may not be loaded due to macOS quarantine!"))
+                             .withMessage(juce::translate("Partiels can attemp to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
+                             .withButton(juce::translate("Proceed"))
+                             .withButton(juce::translate("Ignore"));
+    mIsPluginListReady = false;
+    juce::WeakReference<Instance> weakReference(this);
+    juce::AlertWindow::showAsync(options, [this, weakReference, files](int result)
+                                 {
+                                     if(weakReference.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(result != 0 && PluginList::removeLibrariesFromQuarantine(files))
+                                     {
+                                         Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {}, NotificationType::synchronous);
+                                     }
+                                     mIsPluginListReady = true;
+                                 });
 #endif
 }
 
