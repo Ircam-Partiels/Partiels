@@ -26,7 +26,7 @@ namespace Document
         };
         // clang-format on
 
-        CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor);
+        CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager);
         ~CommandTarget() override;
 
         // juce::ApplicationCommandTarget
@@ -40,7 +40,6 @@ namespace Document
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        AuthorizationProcessor& mAuthorizationProcessor;
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         std::map<juce::String, MultiChannelData> mClipboardData;

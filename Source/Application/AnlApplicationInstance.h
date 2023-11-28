@@ -52,8 +52,6 @@ namespace Application
         void openFiles(std::vector<juce::File> const& files);
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
-        AuthorizationProcessor& getAuthorizationProcessor();
-
         Accessor& getApplicationAccessor();
         Window* getWindow();
 
@@ -86,19 +84,6 @@ namespace Application
         void checkPluginsQuarantine();
         static Misc::Version parseVersion(juce::String const& content);
 
-        class AuthorizationProcessorImp
-        : public Misc::AuthorizationProcessor
-        {
-        public:
-            using Misc::AuthorizationProcessor::AuthorizationProcessor;
-            ~AuthorizationProcessorImp() override = default;
-
-            // Misc::AuthorizationProcessor
-            void showAuthorizationPanel() override;
-        };
-
-        AuthorizationProcessorImp mAuthorizationProcessor;
-
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
         std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;
         std::unique_ptr<juce::AudioDeviceManager> mAudioDeviceManager;
@@ -116,9 +101,6 @@ namespace Application
         std::unique_ptr<LookAndFeel> mLookAndFeel;
         std::unique_ptr<Properties> mProperties;
         std::unique_ptr<Document::FileBased> mDocumentFileBased;
-
-        std::unique_ptr<AuthorizationPanel> mAuthorizationPanel;
-        std::unique_ptr<FloatingWindowContainer> mAuthorizationWindow;
         std::unique_ptr<Track::Loader::ArgumentSelector> mFileArgumentSelector;
 
         std::unique_ptr<Window> mWindow;

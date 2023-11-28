@@ -24,7 +24,7 @@ namespace Document
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager);
         ~Section() override;
 
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;

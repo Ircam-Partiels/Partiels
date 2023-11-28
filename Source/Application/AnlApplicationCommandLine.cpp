@@ -72,10 +72,6 @@ Application::CommandLine::CommandLine()
          "",
          [this](juce::ArgumentList const& args)
          {
-             if(!Instance::get().getAuthorizationProcessor().isAuthorized())
-             {
-                 fail("Partiels is not authorized!");
-             }
              anlDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
 

@@ -18,11 +18,11 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
     useMouseWheelMoveIfNeeded(e, wheel);
 }
 
-Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
-: CommandTarget(director, commandManager, authorizationProcessor)
+Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
+: CommandTarget(director, commandManager)
 , mDirector(director)
 , mApplicationCommandManager(commandManager)
-, mHeader(director, commandManager, authorizationProcessor)
+, mHeader(director, commandManager)
 , mGridButton(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize))
 , mExpandLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize))
 , mResizeLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::unlocksize_png, AnlIconsData::unlocksize_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::locksize_png, AnlIconsData::locksize_pngSize))

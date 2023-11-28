@@ -38,14 +38,8 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/ircam-vamp-extension)
 add_subdirectory(Dependencies/sdif)
-add_subdirectory(Dependencies/ifp)
 include(Dependencies/Misc/Misc.cmake)
 add_subdirectory(VampPlugins)
-
-set_target_properties(ifp_static PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-if(MSVC)
-  target_link_options(ifp_static PRIVATE "/NODEFAULTLIB:MSVCRT$<$<CONFIG:Debug>:D>")
-endif()
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -92,7 +86,6 @@ target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources})
 
 target_compile_definitions(Partiels PRIVATE
     APP_DOC_PREFIX="ptl"
-    MISC_IFP_SUPPORT=1
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
@@ -150,7 +143,6 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 target_link_libraries(Partiels PRIVATE
     ive_host_static
     sdif
-    ifp_static
     MiscData
     TranslationsData
     TestResultsData
@@ -171,7 +163,6 @@ if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
 endif()
 set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
-set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
 target_enable_xcode_full_warnings(Partiels)
 
 if(WIN32)
@@ -245,50 +236,26 @@ add_test(NAME Version COMMAND Partiels --version)
 
 add_test(NAME Help COMMAND Partiels --help)
 
-add_test(NAME RemoveIfpDirectory COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/ifp")
-
-add_test(NAME ExportFailed COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
-set_tests_properties(ExportFailed PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportFailed PROPERTIES DEPENDS "RemoveIfpDirectory")
-set_tests_properties(ExportFailed PROPERTIES WILL_FAIL TRUE)
-
-add_test(NAME CreateIfpDirectory COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(CreateIfpDirectory PROPERTIES DEPENDS "ExportFailed")
-
-add_test(NAME EncryptAuthorization COMMAND ifpEncrypt -n "MrSmith" -p "AudioSculpt, regular, 00/00/0000" -o "${CMAKE_CURRENT_BINARY_DIR}/ifp/TestKeyFile.txt")
-set_tests_properties(EncryptAuthorization PROPERTIES DEPENDS "CreateIfpDirectory")
-
-add_test(NAME UpdateAuthorization COMMAND ifpCheckOrUpdate -p "AudioSculpt" -d "31/12/2012" -i "${CMAKE_CURRENT_BINARY_DIR}/ifp/TestKeyFile.txt")
-set_tests_properties(UpdateAuthorization PROPERTIES ENVIRONMENT "IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(UpdateAuthorization PROPERTIES DEPENDS "EncryptAuthorization")
-
 add_test(NAME ExportOptions COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
-set_tests_properties(ExportOptions PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportOptions PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportOptions PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportJpeg COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JPEG/ --format=jpeg --width=800 --height=600)
-set_tests_properties(ExportJpeg PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportJpeg PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportJpeg PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportPng COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/PNG/ --format=png --width=1200 --height=900 --groups)
-set_tests_properties(ExportPng PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportPng PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportPng PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportCsv COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
-set_tests_properties(ExportCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportCsv PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/ --format=json)
-set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportJson PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportCue COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CUE/ --format=cue)
-set_tests_properties(ExportCue PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportCue PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportCue PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME ExportSdif COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/ --format=sdif --frame=1TST --matrix=1TST --colname=Column)
-set_tests_properties(ExportSdif PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>;IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
-set_tests_properties(ExportSdif PROPERTIES DEPENDS "UpdateAuthorization")
+set_tests_properties(ExportSdif PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
 add_test(NAME NewDocument COMMAND Partiels --new --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Document/new.ptldoc)
 set_tests_properties(NewDocument PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")

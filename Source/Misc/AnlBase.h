@@ -111,7 +111,6 @@ enum ApplicationCommandIDs : int
     , helpOpenPluginSettings
     , helpOpenAbout
     , helpOpenProjectPage
-    , helpAuthorize
     , helpSdifConverter
     , helpAutoUpdate
     , helpCheckForUpdate

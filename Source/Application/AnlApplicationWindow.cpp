@@ -27,7 +27,6 @@ Application::Window::Window()
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     Instance::get().getDocumentFileBased().addChangeListener(this);
-    Instance::get().getAuthorizationProcessor().addChangeListener(this);
     auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>();
 #ifdef JUCE_MAC
     // This is a fix to properly restore fullscreen window state on macOS
@@ -55,7 +54,6 @@ Application::Window::Window()
 Application::Window::~Window()
 {
     handleAsyncUpdate();
-    Instance::get().getAuthorizationProcessor().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
 }
@@ -96,13 +94,12 @@ void Application::Window::handleAsyncUpdate()
 
 void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
-    MiscWeakAssert(source == std::addressof(Instance::get().getDocumentFileBased()) || source == std::addressof(Instance::get().getAuthorizationProcessor()));
+    MiscWeakAssert(source == std::addressof(Instance::get().getDocumentFileBased()));
     auto const appName = Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion();
-    auto const separator = Instance::get().getAuthorizationProcessor().isAuthorized() ? " - " : " [DEMO] - ";
     auto const file = Instance::get().getDocumentFileBased().getFile();
     auto const fileName = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
     auto const fileExtension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
-    setName(appName + separator + fileName + fileExtension);
+    setName(appName + " - " + fileName + fileExtension);
 }
 
 Application::Interface& Application::Window::getInterface()

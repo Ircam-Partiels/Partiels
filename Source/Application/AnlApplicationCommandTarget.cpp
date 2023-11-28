@@ -120,7 +120,6 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenPluginSettings
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
-        , CommandIDs::helpAuthorize
         , CommandIDs::helpSdifConverter
         , CommandIDs::helpAutoUpdate
         , CommandIDs::helpCheckForUpdate
@@ -413,13 +412,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(true);
         }
         break;
-        case CommandIDs::helpAuthorize:
-        {
-            auto const isAuthorized = Instance::get().getAuthorizationProcessor().isAuthorized();
-            result.setInfo(isAuthorized ? juce::translate("Authorized") : juce::translate("Authorize"), juce::translate("Authorize the application"), "Help", 0);
-            result.setActive(!isAuthorized);
-        }
-        break;
         case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
@@ -533,12 +525,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::documentExport:
         {
-            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
-            {
-                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
-                juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
-                return true;
-            }
             if(auto* window = Instance::get().getWindow())
             {
                 window->getInterface().showExporterPanel();
@@ -567,12 +553,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentBatch:
         {
-            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
-            {
-                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
-                juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
-                return true;
-            }
             if(auto* window = Instance::get().getWindow())
             {
                 window->getInterface().showBatcherPanel();
@@ -951,14 +931,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(url.isWellFormed())
             {
                 url.launchInDefaultBrowser();
-            }
-            return true;
-        }
-        case CommandIDs::helpAuthorize:
-        {
-            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
-            {
-                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
             }
             return true;
         }

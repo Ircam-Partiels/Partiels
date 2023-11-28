@@ -4,19 +4,17 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Header::Header(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
+Document::Header::Header(Director& director, juce::ApplicationCommandManager& commandManager)
 : mDirector(director)
 , mApplicationCommandManager(commandManager)
 , mReaderLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize))
 , mNameButton(juce::translate("Untitled"), juce::translate("Document not saved"))
-, mAuthorizationButton(authorizationProcessor)
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>(), commandManager)
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mBubbleTooltipButton(juce::ImageCache::getFromMemory(AnlIconsData::bubble_png, AnlIconsData::bubble_pngSize))
 {
     addAndMakeVisible(mReaderLayoutButton);
     addAndMakeVisible(mNameButton);
-    addChildComponent(mAuthorizationButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
     addAndMakeVisible(mBubbleTooltipButton);
@@ -45,12 +43,6 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::viewInfoBubble, true);
     };
-
-    mComponentListener.onComponentVisibilityChanged = [this](juce::Component&)
-    {
-        resized();
-    };
-    mComponentListener.attachTo(mAuthorizationButton);
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -101,7 +93,6 @@ Document::Header::~Header()
 {
     mAccessor.removeListener(mListener);
     mApplicationCommandManager.removeListener(this);
-    mComponentListener.detachFrom(mAuthorizationButton);
 }
 
 void Document::Header::resized()
@@ -113,16 +104,6 @@ void Document::Header::resized()
     auto const sideWidth = std::max((bounds.getWidth() - transportDisplayWidth) / 2, 0);
 
     auto leftPart = bounds.removeFromLeft(sideWidth).withSizeKeepingCentre(sideWidth - spaceWidth * 2, buttonHeight);
-    if(mAuthorizationButton.isVisible() && leftPart.getWidth() >= 52)
-    {
-        mAuthorizationButton.setBounds(leftPart.removeFromLeft(52));
-        leftPart = leftPart.withTrimmedLeft(spaceWidth);
-    }
-    else // Hide the button
-    {
-        mAuthorizationButton.setBounds(-52, 0, 52, getHeight());
-    }
-
     mReaderLayoutButton.setVisible(leftPart.getWidth() >= 24);
     if(mReaderLayoutButton.isVisible())
     {

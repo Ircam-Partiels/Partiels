@@ -13,7 +13,7 @@ namespace Document
     , private juce::ApplicationCommandManagerListener
     {
     public:
-        Header(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor);
+        Header(Director& director, juce::ApplicationCommandManager& commandManager);
         ~Header() override;
 
         // juce::Component
@@ -31,11 +31,9 @@ namespace Document
 
         Icon mReaderLayoutButton;
         juce::TextButton mNameButton;
-        AuthorizationButton mAuthorizationButton;
         TransportDisplay mTransportDisplay;
         TransportSelectionInfo mTransportSelectionInfo;
         Icon mBubbleTooltipButton;
-        ComponentListener mComponentListener;
     };
 } // namespace Document
 

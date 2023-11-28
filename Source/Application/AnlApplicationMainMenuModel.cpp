@@ -147,7 +147,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 #endif
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenProjectPage);
 #ifndef JUCE_MAC
-        menu.addCommandItem(&commandManager, CommandIDs::helpAuthorize);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
@@ -205,7 +204,6 @@ void Application::MainMenuModel::updateAppleMenuItems()
     using CommandIDs = CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpAuthorize);
     extraAppleMenuItems.addSeparator();
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);

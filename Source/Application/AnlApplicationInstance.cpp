@@ -4,14 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-void Application::Instance::AuthorizationProcessorImp::showAuthorizationPanel()
-{
-    if(auto* window = Instance::get().mAuthorizationWindow.get())
-    {
-        window->show();
-    }
-}
-
 #define AppQuitIfInvalidPointer(ptr)                    \
     if(ptr == nullptr)                                  \
     {                                                   \
@@ -40,8 +32,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 {
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
-
-    mAuthorizationProcessor.addChangeListener(this);
 
     mCommandLine = CommandLine::createAndRun(commandLine);
     if(mCommandLine != nullptr)
@@ -98,12 +88,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
-
-    mAuthorizationPanel = std::make_unique<AuthorizationPanel>(mAuthorizationProcessor, juce::translate("the results cannot be exported"));
-    AppQuitIfInvalidPointer(mDocumentFileBased);
-
-    mAuthorizationWindow = std::make_unique<FloatingWindowContainer>(juce::translate("Authorize PRODUCT").replace("PRODUCT", ProjectInfo::projectName), *mAuthorizationPanel.get());
-    AppQuitIfInvalidPointer(mAuthorizationWindow);
 
     mWindow = std::make_unique<Window>();
     AppQuitIfInvalidPointer(mWindow);
@@ -298,7 +282,6 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
-    mAuthorizationProcessor.removeChangeListener(this);
     juce::Desktop::getInstance().removeDarkModeSettingListener(this);
 
     anlDebug("Application", "Begin...");
@@ -337,8 +320,6 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
-    mAuthorizationWindow.reset();
-    mAuthorizationPanel.reset();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
@@ -573,11 +554,6 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
     }
 }
 
-AuthorizationProcessor& Application::Instance::getAuthorizationProcessor()
-{
-    return mAuthorizationProcessor;
-}
-
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
     return *mApplicationAccessor.get();
@@ -642,25 +618,6 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
         {
             MiscDebug("Application::Instance", result.getErrorMessage());
             MiscWeakAssert(false);
-        }
-    }
-    else if(source == std::addressof(mAuthorizationProcessor))
-    {
-        if(mAuthorizationProcessor.isAuthorized() && mAuthorizationWindow != nullptr)
-        {
-            mAuthorizationWindow->hide();
-        }
-        if(mApplicationCommandManager != nullptr)
-        {
-            mApplicationCommandManager->commandStatusChanged();
-        }
-        if(mMainMenuModel != nullptr)
-        {
-#ifdef JUCE_MAC
-            mMainMenuModel->updateAppleMenuItems();
-#else
-            mMainMenuModel->menuItemsChanged();
-#endif
         }
     }
     else

@@ -6,9 +6,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
+Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager)
 : mDirector(director)
-, mAuthorizationProcessor(authorizationProcessor)
 , mCommandManager(commandManager)
 {
     mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, [[maybe_unused]] size_t index)
@@ -473,12 +472,6 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         }
         case CommandIDs::editSystemCopy:
         {
-            if(!mAuthorizationProcessor.isAuthorized())
-            {
-                mAuthorizationProcessor.showAuthorizationPanel();
-                juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
-                return true;
-            }
             auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)
             {

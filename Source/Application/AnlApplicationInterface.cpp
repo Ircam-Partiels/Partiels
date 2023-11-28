@@ -98,7 +98,7 @@ void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
 }
 
 Application::Interface::DocumentContainer::DocumentContainer()
-: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getAuthorizationProcessor())
+: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 {
     addAndMakeVisible(mDocumentSection);
