@@ -298,6 +298,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         auto const unit = Tools::getUnit(acsr);
                         mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
                         mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                        mPropertyValueRange.numberFieldLow.setTextValueSuffix(unit);
+                        mPropertyValueRange.numberFieldHigh.setTextValueSuffix(unit);
                         mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
                         mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
                         mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
@@ -405,6 +407,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
                     mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
                     mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
+                    mPropertyValueRange.numberFieldLow.setRange(range, interval, juce::NotificationType::dontSendNotification);
+                    mPropertyValueRange.numberFieldHigh.setRange(range, interval, juce::NotificationType::dontSendNotification);
                 }
 
                 updateZoomMode();
@@ -415,6 +419,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
                 mPropertyValueRange.entry.setMinAndMaxValues(range.getStart(), range.getEnd(), juce::NotificationType::dontSendNotification);
+                mPropertyValueRange.numberFieldLow.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
+                mPropertyValueRange.numberFieldHigh.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
             }
             break;
             case Zoom::AttrType::anchor:
