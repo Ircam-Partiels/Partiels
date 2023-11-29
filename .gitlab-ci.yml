@@ -104,8 +104,10 @@ Doc:
   before_script:
     - npm install mdpdf -g
   script:
-    - mdpdf Docs/Partiels-Manual.md
-    - mv Docs/Partiels-Manual.pdf ./Partiels-Manual.pdf
+    - cd $CI_PROJECT_DIR
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsManual -- -quiet
+    - mv build/Partiels-Manual.pdf ./Partiels-Manual.pdf
   artifacts:
     paths:
       - $CI_PROJECT_DIR/Partiels-Manual.pdf
