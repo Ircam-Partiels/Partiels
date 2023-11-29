@@ -233,6 +233,28 @@ if(APPLE)
     endif()
 endif()
 
+if(NOT WIN32)
+    find_program(CLANG_FORMAT_EXE "clang-format")
+    if(CLANG_FORMAT_EXE)
+        file(GLOB_RECURSE ClangFormatSources
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/VampPlugins/*.cpp 
+            ${CMAKE_CURRENT_SOURCE_DIR}/VampPlugins/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Misc/Source/*.cpp 
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Misc/Source/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/ircam-vamp-extension/Source/*.cpp 
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/ircam-vamp-extension/Source/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/ircam-vamp-extension/Example/*.cpp 
+            ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/ircam-vamp-extension/Example/*.h
+        )
+        add_custom_target(PartielsCheckFormat ${CLANG_FORMAT_EXE} --Werror --dry-run --verbose -style=file ${ClangFormatSources})
+        add_custom_target(PartielsApplyFormat ${CLANG_FORMAT_EXE} -i -style=file ${ClangFormatSources})
+    else()
+        message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
+    endif()
+endif()
+
 enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
