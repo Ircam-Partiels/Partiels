@@ -87,14 +87,12 @@ Build::Linux:
 Format:
   stage: format
   tags:
-    - osx
+    - linux
   needs: []
-  before_script:
-    - brew install clang-format
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
-    - cmake --build build --target PartielsCheckFormat -- -quiet
+    - cmake . -B build -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- --quiet
 
 Doc:
   stage: doc
