@@ -92,9 +92,9 @@ Format:
   before_script:
     - brew install clang-format
   script:
-    - find Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
-    - find Dependencies/Misc/Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
-    - find VampPlugins -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
+    - cd $CI_PROJECT_DIR
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- -quiet
 
 Doc:
   stage: doc
