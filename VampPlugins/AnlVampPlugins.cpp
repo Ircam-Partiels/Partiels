@@ -345,13 +345,7 @@ extern "C"
         {
             return nullptr;
         }
-        switch(index)
-        {
-            default:
-            {
-                return nullptr;
-            }
-        }
+        return nullptr;
     }
 #ifdef __cplusplus
 }
