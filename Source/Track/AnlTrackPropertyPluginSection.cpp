@@ -13,6 +13,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             {
                 mDescriptionPanel.setDescription(acsr.getAttr<AttrType::description>());
                 resized();
+                break;
             }
             case AttrType::name:
             case AttrType::key:

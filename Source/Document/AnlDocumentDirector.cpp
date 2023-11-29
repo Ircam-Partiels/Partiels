@@ -67,6 +67,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::layout:
             {
                 mHierarchyManager.notifyHierarchyChanged(notification);
+                [[fallthrough]];
             }
             case AttrType::autoresize:
             {
@@ -198,6 +199,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
                 mHierarchyManager.notifyHierarchyChanged(notification);
+                break;
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
@@ -244,6 +246,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
                 mHierarchyManager.notifyHierarchyChanged(notification);
                 mGroups.erase(mGroups.begin() + static_cast<long>(index));
+                break;
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:

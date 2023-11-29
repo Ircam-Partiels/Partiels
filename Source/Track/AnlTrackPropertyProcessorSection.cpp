@@ -188,6 +188,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 mPropertyPreset.entry.addItem("Load...", items.size() + 3);
                 mPropertyPreset.entry.addItem("Save...", items.size() + 4);
                 resized();
+                [[fallthrough]];
             }
             case AttrType::state:
             {
