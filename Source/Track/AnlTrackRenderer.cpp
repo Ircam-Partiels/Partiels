@@ -52,13 +52,13 @@ namespace Track
 
                 juce::PathStrokeType const pathStrokeType(1.0f);
                 pathStrokeType.createStrokedPath(mPath, mPath);
-
                 if(!shadow.isTransparent())
                 {
-                    g.setColour(shadow.withMultipliedAlpha(0.5f));
-                    g.fillPath(mPath, juce::AffineTransform::translation(0.0f, 2.0f));
-                    g.setColour(shadow.withMultipliedAlpha(0.75f));
-                    g.fillPath(mPath, juce::AffineTransform::translation(1.0f, 1.0f));
+                    for(auto i = 0; i < 4; ++i)
+                    {
+                        g.setColour(shadow.withMultipliedAlpha(static_cast<float>(i + 1) / 4.0f));
+                        g.fillPath(mPath, juce::AffineTransform::translation(0.0f, 2.0f - static_cast<float>(i) / 2.0f));
+                    }
                 }
 
                 if(!foreground.isTransparent())
