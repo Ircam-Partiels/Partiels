@@ -770,18 +770,6 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
 
     if(!rectangles.isEmpty())
     {
-        if(!colours.shadow.isTransparent())
-        {
-            rectangles.offsetAll(0.0f, 2.0f);
-
-            g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
-            g.fillRectList(rectangles);
-            rectangles.offsetAll(0.0f, -1.0f);
-
-            g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
-            g.fillRectList(rectangles);
-            rectangles.offsetAll(0.0f, -1.0f);
-        }
         g.setColour(colours.foreground);
         g.fillRectList(rectangles);
     }
