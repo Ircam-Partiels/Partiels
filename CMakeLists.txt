@@ -222,12 +222,16 @@ endif()
 
 if(APPLE)
     find_program(MDPDF_EXE "mdpdf")
+    find_program(SED_EXE "sed")
     if(MDPDF_EXE)
         set(PARTIELS_MANUAL_PATH ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md)
-        file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md ${PARTIELS_MANUAL_PATH})
-        execute_process(COMMAND sed -i "" "s/APPVERSION/${PARTIELS_BUILD_TAG}/g" "${PARTIELS_MANUAL_PATH}")
-        execute_process(COMMAND sed -i "" -e "s|src=\"Images|src=\"${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images|g" "${PARTIELS_MANUAL_PATH}")
-        add_custom_target(PartielsManual ALL ${MDPDF_EXE} ${PARTIELS_MANUAL_PATH})
+        add_custom_target(PartielsManual ALL 
+            COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md ${PARTIELS_MANUAL_PATH}
+            COMMAND ${SED_EXE} -i "" "s/APPVERSION/${PARTIELS_BUILD_TAG}/g" "${PARTIELS_MANUAL_PATH}"
+            COMMAND ${SED_EXE} -i "" -e "s|src=\"Images|src=\"${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images|g" "${PARTIELS_MANUAL_PATH}"
+            COMMAND ${MDPDF_EXE} ${PARTIELS_MANUAL_PATH}
+            VERBATIM
+            )
     else()
         message(WARNING "Partiels Manual target cannot be generated because mdpdf is not found")
     endif()
