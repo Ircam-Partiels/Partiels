@@ -5,7 +5,7 @@
 <i>Manual by Pierre Guillot</i><br>
 <a href="www.ircam.fr">www.ircam.fr</a><br><br>
 
-<img src="Images/overview-v1.3.2.png" alt="Example" width="1840"/>
+<img src="Images/overview-v2.0.0.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
 </p>
 
 <div style="page-break-after: always;"></div>
