@@ -1,6 +1,6 @@
 - Imp: Refine shading of points and curves on the graphical plot (#409)
 - Imp: Avoid drawing shadows of points and curves at low zoom levels to optimize rendering calculations (#408)
-- Imp: Use transparent text color and default shadow on new tracks (#407)
+- Imp: Use transparent text and shadow color by default on new tracks (#407)
 - Fix: New point plugin is not working due to invalid range (#404)
 - Add: Support for plug-in-specific color map management in IVE (#403)
 - Fix: The visible value range is modified when the global value range changes (#402)
