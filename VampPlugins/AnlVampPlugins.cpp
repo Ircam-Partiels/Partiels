@@ -161,7 +161,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
     d.description = "Energy from the input signal";
     d.unit = "dB";
     d.hasFixedBinCount = true;
-    d.binCount = mBlockSize / 2_z + 1_z;
+    d.binCount = mBlockSize == 0_z ? 513_z : mBlockSize / 2_z + 1_z;
     d.hasKnownExtents = true;
     d.minValue = -120.0f;
     d.maxValue = 12.0f;
