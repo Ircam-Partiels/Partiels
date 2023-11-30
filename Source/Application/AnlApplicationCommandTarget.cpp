@@ -985,22 +985,22 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
 void Application::CommandTarget::selectDefaultTemplateFile()
 {
     auto const wildcard = Instance::getWildCardForDocumentFile();
-    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a template..."), Instance::get().getDocumentFileBased().getFile(), wildcard);
+    auto const file = Instance::get().getDocumentFileBased().getFile();
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a template..."), file, wildcard);
     if(mFileChooser == nullptr)
     {
-        Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
         return;
     }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
-    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [](juce::FileChooser const& fileChooser)
                               {
                                   auto const results = fileChooser.getResults();
                                   if(results.isEmpty())
                                   {
-                                      Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
                                       return;
                                   }
-                                  Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(results.getFirst(), NotificationType::synchronous);
+                                  auto& appAccessor = Instance::get().getApplicationAccessor();
+                                  appAccessor.setAttr<AttrType::defaultTemplateFile>(results.getFirst(), NotificationType::synchronous);
                               });
 }
 
