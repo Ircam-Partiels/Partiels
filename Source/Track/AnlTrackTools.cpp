@@ -54,6 +54,19 @@ Track::FrameType Track::Tools::getFrameType(Plugin::Output const& output)
 
 Track::FrameType Track::Tools::getFrameType(Accessor const& acsr)
 {
+    auto const& output = acsr.getAttr<AttrType::description>().output;
+    if(output.hasFixedBinCount)
+    {
+        switch(output.binCount)
+        {
+            case 0_z:
+                return FrameType::label;
+            case 1_z:
+                return FrameType::value;
+            default:
+                return FrameType::vector;
+        }
+    }
     auto const& results = acsr.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(static_cast<bool>(access))
@@ -71,7 +84,7 @@ Track::FrameType Track::Tools::getFrameType(Accessor const& acsr)
             return FrameType::vector;
         }
     }
-    return getFrameType(acsr.getAttr<AttrType::description>().output);
+    return FrameType::value;
 }
 
 bool Track::Tools::canZoomIn(Accessor const& accessor)
