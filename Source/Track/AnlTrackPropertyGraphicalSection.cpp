@@ -254,68 +254,72 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 addExtraThresholdProperties();
                 auto const& channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
                 auto const numChannels = channelsLayout.size();
-                switch(Tools::getFrameType(acsr))
+                auto const frameType = Tools::getFrameType(acsr);
+                if(frameType.has_value())
                 {
-                    case Track::FrameType::label:
+                    switch(frameType.value())
                     {
-                        mPropertyForegroundColour.setVisible(true);
-                        mPropertyTextColour.setVisible(true);
-                        mPropertyBackgroundColour.setVisible(true);
-                        mPropertyShadowColour.setVisible(true);
-                        mPropertyFontName.setVisible(true);
-                        mPropertyFontStyle.setVisible(true);
-                        mPropertyFontSize.setVisible(true);
-                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                        mPropertyShowInGroup.setVisible(true);
+                        case Track::FrameType::label:
+                        {
+                            mPropertyForegroundColour.setVisible(true);
+                            mPropertyTextColour.setVisible(true);
+                            mPropertyBackgroundColour.setVisible(true);
+                            mPropertyShadowColour.setVisible(true);
+                            mPropertyFontName.setVisible(true);
+                            mPropertyFontStyle.setVisible(true);
+                            mPropertyFontSize.setVisible(true);
+                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
+                            mPropertyShowInGroup.setVisible(true);
+                            break;
+                        }
+                        case Track::FrameType::value:
+                        {
+                            auto const unit = Tools::getUnit(acsr);
+                            mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
+                            mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                            mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
+                            mPropertyRangeLink.title.setText(juce::translate("Value Range Link"), juce::NotificationType::dontSendNotification);
+                            mPropertyForegroundColour.setVisible(true);
+                            mPropertyTextColour.setVisible(true);
+                            mPropertyBackgroundColour.setVisible(true);
+                            mPropertyShadowColour.setVisible(true);
+                            mPropertyFontName.setVisible(true);
+                            mPropertyFontStyle.setVisible(true);
+                            mPropertyFontSize.setVisible(true);
+                            mPropertyUnit.setVisible(true);
+                            mPropertyValueRangeMode.setVisible(true);
+                            mPropertyValueRangeMin.setVisible(true);
+                            mPropertyValueRangeMax.setVisible(true);
+                            mPropertyRangeLink.setVisible(true);
+                            mPropertyGrid.setVisible(true);
+                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
+                            mPropertyShowInGroup.setVisible(true);
+                            break;
+                        }
+                        case Track::FrameType::vector:
+                        {
+                            auto const unit = Tools::getUnit(acsr);
+                            mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
+                            mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                            mPropertyValueRange.numberFieldLow.setTextValueSuffix(unit);
+                            mPropertyValueRange.numberFieldHigh.setTextValueSuffix(unit);
+                            mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
+                            mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
+                            mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyUnit.setVisible(true);
+                            mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyValueRangeMin.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyValueRangeMax.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyValueRange.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyNumBins.setVisible(true);
+                            mPropertyRangeLink.setVisible(true);
+                            mPropertyGrid.setVisible(true);
+                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
+                            mProgressBarRendering.setVisible(true);
+                            mPropertyShowInGroup.setVisible(true);
+                            break;
+                        }
                     }
-                    break;
-                    case Track::FrameType::value:
-                    {
-                        auto const unit = Tools::getUnit(acsr);
-                        mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
-                        mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
-                        mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
-                        mPropertyRangeLink.title.setText(juce::translate("Value Range Link"), juce::NotificationType::dontSendNotification);
-                        mPropertyForegroundColour.setVisible(true);
-                        mPropertyTextColour.setVisible(true);
-                        mPropertyBackgroundColour.setVisible(true);
-                        mPropertyShadowColour.setVisible(true);
-                        mPropertyFontName.setVisible(true);
-                        mPropertyFontStyle.setVisible(true);
-                        mPropertyFontSize.setVisible(true);
-                        mPropertyUnit.setVisible(true);
-                        mPropertyValueRangeMode.setVisible(true);
-                        mPropertyValueRangeMin.setVisible(true);
-                        mPropertyValueRangeMax.setVisible(true);
-                        mPropertyRangeLink.setVisible(true);
-                        mPropertyGrid.setVisible(true);
-                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                        mPropertyShowInGroup.setVisible(true);
-                    }
-                    break;
-                    case Track::FrameType::vector:
-                    {
-                        auto const unit = Tools::getUnit(acsr);
-                        mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
-                        mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
-                        mPropertyValueRange.numberFieldLow.setTextValueSuffix(unit);
-                        mPropertyValueRange.numberFieldHigh.setTextValueSuffix(unit);
-                        mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
-                        mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
-                        mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                        mPropertyUnit.setVisible(true);
-                        mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                        mPropertyValueRangeMin.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                        mPropertyValueRangeMax.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                        mPropertyValueRange.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                        mPropertyNumBins.setVisible(true);
-                        mPropertyRangeLink.setVisible(true);
-                        mPropertyGrid.setVisible(true);
-                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                        mProgressBarRendering.setVisible(true);
-                        mPropertyShowInGroup.setVisible(true);
-                    }
-                    break;
                 }
                 updateZoomMode();
                 updateExtraTheshold();

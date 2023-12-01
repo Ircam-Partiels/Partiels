@@ -44,7 +44,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                     mRulers.clear();
                     mFrameType = FrameType;
                 }
-                if(mFrameType == Track::FrameType::label)
+                if(mFrameType.value_or(FrameType::label) == FrameType::label)
                 {
                     return;
                 }
@@ -53,7 +53,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                 {
                     mRulers.pop_back();
                 }
-                auto& zoomAcsr = mFrameType == Track::FrameType::value ? mAccessor.getAcsr<AcsrType::valueZoom>() : mAccessor.getAcsr<AcsrType::binZoom>();
+                auto& zoomAcsr = mFrameType.value() == Track::FrameType::value ? mAccessor.getAcsr<AcsrType::valueZoom>() : mAccessor.getAcsr<AcsrType::binZoom>();
                 while(channelsLayout.size() > mRulers.size())
                 {
                     auto ruler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
@@ -376,7 +376,7 @@ Track::NavigationBar::NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoom
             case AttrType::results:
             case AttrType::channelsLayout:
             {
-                auto const frameType = Tools::getFrameType(acsr);
+                auto const frameType = Tools::getFrameType(acsr).value_or(Track::FrameType::label);
                 if(mFrameType != frameType)
                 {
                     mRulers.clear();

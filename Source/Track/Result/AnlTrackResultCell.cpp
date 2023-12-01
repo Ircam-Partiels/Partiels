@@ -568,17 +568,20 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
                     extra = value;
                     return true;
                 };
-                switch(Tools::getFrameType(mGetAccessorFn()))
+                auto const frameType = Tools::getFrameType(mGetAccessorFn());
+                if(frameType.has_value())
                 {
-                    case FrameType::label:
-                        return Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
-                    case FrameType::value:
-                        return Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
-                    case FrameType::vector:
-                        return Modifier::updateFrame<Data::Type::column>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
-                    default:
-                        return false;
+                    switch(frameType.value())
+                    {
+                        case FrameType::label:
+                            return Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                        case FrameType::value:
+                            return Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                        case FrameType::vector:
+                            return Modifier::updateFrame<Data::Type::column>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                    }
                 }
+                return false;
             }
 
         private:

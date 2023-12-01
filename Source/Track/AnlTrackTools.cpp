@@ -35,7 +35,7 @@ bool Track::Tools::supportsInputTrack(Accessor const& acsr)
     return hasPluginKey(acsr) && !acsr.getAttr<AttrType::description>().input.identifier.empty();
 }
 
-Track::FrameType Track::Tools::getFrameType(Plugin::Output const& output)
+std::optional<Track::FrameType> Track::Tools::getFrameType(Plugin::Output const& output)
 {
     if(output.hasFixedBinCount)
     {
@@ -49,23 +49,15 @@ Track::FrameType Track::Tools::getFrameType(Plugin::Output const& output)
                 return FrameType::vector;
         }
     }
-    return FrameType::value;
+    return {};
 }
 
-Track::FrameType Track::Tools::getFrameType(Accessor const& acsr)
+std::optional<Track::FrameType> Track::Tools::getFrameType(Accessor const& acsr)
 {
-    auto const& output = acsr.getAttr<AttrType::description>().output;
-    if(output.hasFixedBinCount)
+    auto frameType = getFrameType(acsr.getAttr<AttrType::description>().output);
+    if(frameType.has_value())
     {
-        switch(output.binCount)
-        {
-            case 0_z:
-                return FrameType::label;
-            case 1_z:
-                return FrameType::value;
-            default:
-                return FrameType::vector;
-        }
+        return frameType;
     }
     auto const& results = acsr.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
@@ -84,61 +76,81 @@ Track::FrameType Track::Tools::getFrameType(Accessor const& acsr)
             return FrameType::vector;
         }
     }
-    return FrameType::value;
+    return {};
 }
 
 bool Track::Tools::canZoomIn(Accessor const& accessor)
 {
-    switch(getFrameType(accessor))
+    auto const frameType = getFrameType(accessor);
+    if(frameType.has_value())
     {
-        case FrameType::label:
-            return false;
-        case FrameType::value:
-            return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::valueZoom>());
-        case Track::FrameType::vector:
-            return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::binZoom>());
-    };
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                return false;
+            case FrameType::value:
+                return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::valueZoom>());
+            case Track::FrameType::vector:
+                return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::binZoom>());
+        };
+    }
     return false;
 }
 
 bool Track::Tools::canZoomOut(Accessor const& accessor)
 {
-    switch(getFrameType(accessor))
+    auto const frameType = getFrameType(accessor);
+    if(frameType.has_value())
     {
-        case FrameType::label:
-            return false;
-        case FrameType::value:
-            return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::valueZoom>());
-        case Track::FrameType::vector:
-            return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::binZoom>());
-    };
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                return false;
+            case FrameType::value:
+                return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::valueZoom>());
+            case Track::FrameType::vector:
+                return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::binZoom>());
+        };
+    }
     return false;
 }
 
 void Track::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    switch(getFrameType(accessor))
+    auto const frameType = getFrameType(accessor);
+    if(frameType.has_value())
     {
-        case FrameType::label:
-            break;
-        case FrameType::value:
-            return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-        case Track::FrameType::vector:
-            return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
-    };
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                break;
+            case FrameType::value:
+                Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
+                break;
+            case Track::FrameType::vector:
+                Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
+                break;
+        };
+    }
 }
 
 void Track::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    switch(getFrameType(accessor))
+    auto const frameType = getFrameType(accessor);
+    if(frameType.has_value())
     {
-        case FrameType::label:
-            break;
-        case FrameType::value:
-            return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-        case Track::FrameType::vector:
-            return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
-    };
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                break;
+            case FrameType::value:
+                Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
+                break;
+            case Track::FrameType::vector:
+                Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
+                break;
+        };
+    }
 }
 
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
@@ -164,6 +176,13 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
 juce::String Track::Tools::getUnit(Accessor const& acsr)
 {
     return acsr.getAttr<AttrType::unit>().value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
+}
+
+juce::String Track::Tools::getBinName(Accessor const& acsr, size_t index, bool prependIndex)
+{
+    auto const& output = acsr.getAttr<AttrType::description>().output;
+    auto const name = juce::String(index < output.binNames.size() ? output.binNames.at(index) : "");
+    return prependIndex && !name.isEmpty() ? juce::String(index) + " - " + name : name;
 }
 
 std::optional<Zoom::Range> Track::Tools::getResultRange(Accessor const& accessor)
@@ -434,100 +453,103 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
         return {};
     }
     auto const frameType = getFrameType(input);
-    switch(frameType)
+    if(frameType.has_value())
     {
-        case FrameType::label:
+        switch(frameType.value())
         {
-            auto const sourceResults = results.getMarkers();
-            if(sourceResults == nullptr)
+            case FrameType::label:
             {
-                return {};
-            }
-            std::vector<std::vector<Plugin::Result>> pluginResults;
-            pluginResults.resize(sourceResults->size());
-            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-            {
-                auto& pluginChannel = pluginResults[channelIndex];
-                auto const& sourceChannel = sourceResults->at(channelIndex);
-                pluginChannel.resize(sourceChannel.size());
-                for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                auto const sourceResults = results.getMarkers();
+                if(sourceResults == nullptr)
                 {
-                    auto const& sourceMarker = sourceChannel.at(markerIndex);
-                    auto& pluginMaker = pluginChannel[markerIndex];
-                    pluginMaker.hasTimestamp = true;
-                    pluginMaker.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceMarker));
-                    pluginMaker.hasDuration = input.hasDuration;
-                    if(input.hasDuration)
-                    {
-                        pluginMaker.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceMarker));
-                    }
-                    pluginMaker.label = std::get<2_z>(sourceMarker);
+                    return {};
                 }
-            }
-            return pluginResults;
-        }
-        case FrameType::value:
-        {
-            auto const sourceResults = results.getPoints();
-            if(sourceResults == nullptr)
-            {
-                return {};
-            }
-            std::vector<std::vector<Plugin::Result>> pluginResults;
-            pluginResults.resize(sourceResults->size());
-            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-            {
-                auto& pluginChannel = pluginResults[channelIndex];
-                auto const& sourceChannel = sourceResults->at(channelIndex);
-                pluginChannel.resize(sourceChannel.size());
-                for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                std::vector<std::vector<Plugin::Result>> pluginResults;
+                pluginResults.resize(sourceResults->size());
+                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
                 {
-                    auto const& sourcePoint = sourceChannel.at(markerIndex);
-                    auto& pluginPoint = pluginChannel[markerIndex];
-                    pluginPoint.hasTimestamp = true;
-                    pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
-                    pluginPoint.hasDuration = input.hasDuration;
-                    if(input.hasDuration)
+                    auto& pluginChannel = pluginResults[channelIndex];
+                    auto const& sourceChannel = sourceResults->at(channelIndex);
+                    pluginChannel.resize(sourceChannel.size());
+                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
                     {
-                        pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
-                    }
-                    if(std::get<2_z>(sourcePoint).has_value())
-                    {
-                        pluginPoint.values = {std::get<2_z>(sourcePoint).value()};
+                        auto const& sourceMarker = sourceChannel.at(markerIndex);
+                        auto& pluginMaker = pluginChannel[markerIndex];
+                        pluginMaker.hasTimestamp = true;
+                        pluginMaker.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceMarker));
+                        pluginMaker.hasDuration = input.hasDuration;
+                        if(input.hasDuration)
+                        {
+                            pluginMaker.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceMarker));
+                        }
+                        pluginMaker.label = std::get<2_z>(sourceMarker);
                     }
                 }
+                return pluginResults;
             }
-            return pluginResults;
-        }
-        case FrameType::vector:
-        {
-            auto const sourceResults = results.getColumns();
-            if(sourceResults == nullptr)
+            case FrameType::value:
             {
-                return {};
-            }
-            std::vector<std::vector<Plugin::Result>> pluginResults;
-            pluginResults.resize(sourceResults->size());
-            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-            {
-                auto& pluginChannel = pluginResults[channelIndex];
-                auto const& sourceChannel = sourceResults->at(channelIndex);
-                pluginChannel.resize(sourceChannel.size());
-                for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                auto const sourceResults = results.getPoints();
+                if(sourceResults == nullptr)
                 {
-                    auto const& sourceColumn = sourceChannel.at(markerIndex);
-                    auto& pluginColumn = pluginChannel[markerIndex];
-                    pluginColumn.hasTimestamp = true;
-                    pluginColumn.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceColumn));
-                    pluginColumn.hasDuration = input.hasDuration;
-                    if(input.hasDuration)
-                    {
-                        pluginColumn.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceColumn));
-                    }
-                    pluginColumn.values = std::get<2_z>(sourceColumn);
+                    return {};
                 }
+                std::vector<std::vector<Plugin::Result>> pluginResults;
+                pluginResults.resize(sourceResults->size());
+                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
+                {
+                    auto& pluginChannel = pluginResults[channelIndex];
+                    auto const& sourceChannel = sourceResults->at(channelIndex);
+                    pluginChannel.resize(sourceChannel.size());
+                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                    {
+                        auto const& sourcePoint = sourceChannel.at(markerIndex);
+                        auto& pluginPoint = pluginChannel[markerIndex];
+                        pluginPoint.hasTimestamp = true;
+                        pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
+                        pluginPoint.hasDuration = input.hasDuration;
+                        if(input.hasDuration)
+                        {
+                            pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
+                        }
+                        if(std::get<2_z>(sourcePoint).has_value())
+                        {
+                            pluginPoint.values = {std::get<2_z>(sourcePoint).value()};
+                        }
+                    }
+                }
+                return pluginResults;
             }
-            return pluginResults;
+            case FrameType::vector:
+            {
+                auto const sourceResults = results.getColumns();
+                if(sourceResults == nullptr)
+                {
+                    return {};
+                }
+                std::vector<std::vector<Plugin::Result>> pluginResults;
+                pluginResults.resize(sourceResults->size());
+                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
+                {
+                    auto& pluginChannel = pluginResults[channelIndex];
+                    auto const& sourceChannel = sourceResults->at(channelIndex);
+                    pluginChannel.resize(sourceChannel.size());
+                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                    {
+                        auto const& sourceColumn = sourceChannel.at(markerIndex);
+                        auto& pluginColumn = pluginChannel[markerIndex];
+                        pluginColumn.hasTimestamp = true;
+                        pluginColumn.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceColumn));
+                        pluginColumn.hasDuration = input.hasDuration;
+                        if(input.hasDuration)
+                        {
+                            pluginColumn.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceColumn));
+                        }
+                        pluginColumn.values = std::get<2_z>(sourceColumn);
+                    }
+                }
+                return pluginResults;
+            }
         }
     }
     return {};

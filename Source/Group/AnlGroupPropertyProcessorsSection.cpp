@@ -320,7 +320,12 @@ void Group::PropertyProcessorsSection::setInputTrack(juce::String const& identif
         }
         auto const& hierarchyManager = mDirector.getHierarchyManager();
         auto const& input = acsr.getAttr<Track::AttrType::description>().input;
-        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), Track::Tools::getFrameType(input), identifier);
+        auto const frameType = Track::Tools::getFrameType(input);
+        if(!frameType.has_value())
+        {
+            return false;
+        }
+        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), frameType.value(), identifier);
     };
 
     askToModifyProcessors([this](bool result)
@@ -496,20 +501,24 @@ void Group::PropertyProcessorsSection::updateInputTrack()
             inputs.insert(trackAcsr.get().getAttr<Track::AttrType::input>());
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
             auto const& input = trackAcsr.get().getAttr<Track::AttrType::description>().input;
-            auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier, Track::Tools::getFrameType(input));
-            if(otherTracks.empty())
+            auto const frameType = Track::Tools::getFrameType(input);
+            if(frameType.has_value())
             {
-                otherTracks = inputTracks;
-            }
-            else
-            {
-                std::erase_if(otherTracks, [&](Track::HierarchyManager::TrackInfo const& info)
-                              {
-                                  return std::none_of(inputTracks.cbegin(), inputTracks.cend(), [&](Track::HierarchyManager::TrackInfo const& itrack)
-                                                      {
-                                                          return itrack.identifier == info.identifier;
-                                                      });
-                              });
+                auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier, frameType.value());
+                if(otherTracks.empty())
+                {
+                    otherTracks = inputTracks;
+                }
+                else
+                {
+                    std::erase_if(otherTracks, [&](Track::HierarchyManager::TrackInfo const& info)
+                                  {
+                                      return std::none_of(inputTracks.cbegin(), inputTracks.cend(), [&](Track::HierarchyManager::TrackInfo const& itrack)
+                                                          {
+                                                              return itrack.identifier == info.identifier;
+                                                          });
+                                  });
+                }
             }
         }
     }

@@ -22,7 +22,7 @@ namespace Track
         Accessor& mAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
         std::vector<std::unique_ptr<Zoom::Ruler>> mRulers;
-        FrameType mFrameType{Track::FrameType::value};
+        std::optional<FrameType> mFrameType;
     };
 
     class ScrollBar

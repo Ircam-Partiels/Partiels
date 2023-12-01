@@ -112,32 +112,41 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 auto const access = results.getReadAccess();
                 if(static_cast<bool>(access))
                 {
-                    switch(Tools::getFrameType(acsr))
+                    auto const frameType = Tools::getFrameType(acsr);
+                    if(frameType.has_value())
                     {
-                        case Track::FrameType::label:
+                        switch(frameType.value_or(Track::FrameType::vector))
                         {
-                            header.setColumnName(static_cast<int>(ColumnType::value), "Label");
-                            setNumChannels(results.getMarkers());
+                            case Track::FrameType::label:
+                            {
+                                header.setColumnName(static_cast<int>(ColumnType::value), "Label");
+                                setNumChannels(results.getMarkers());
+                                break;
+                            }
+                            case Track::FrameType::value:
+                            {
+                                header.setColumnName(static_cast<int>(ColumnType::value), "Value");
+                                setNumChannels(results.getPoints());
+                                break;
+                            }
+                            case Track::FrameType::vector:
+                            {
+                                header.setColumnName(static_cast<int>(ColumnType::value), "Values");
+                                setNumChannels(results.getColumns());
+                                break;
+                            }
+                            default:
+                            {
+                                mTabbedButtonBar.setCurrentTabIndex(-1, false);
+                                mTabbedButtonBar.clearTabs();
+                                break;
+                            }
                         }
-                        break;
-                        case Track::FrameType::value:
-                        {
-                            header.setColumnName(static_cast<int>(ColumnType::value), "Value");
-                            setNumChannels(results.getPoints());
-                        }
-                        break;
-                        case Track::FrameType::vector:
-                        {
-                            header.setColumnName(static_cast<int>(ColumnType::value), "Values");
-                            setNumChannels(results.getColumns());
-                        }
-                        break;
-                        default:
-                        {
-                            mTabbedButtonBar.setCurrentTabIndex(-1, false);
-                            mTabbedButtonBar.clearTabs();
-                        }
-                        break;
+                    }
+                    else
+                    {
+                        mTabbedButtonBar.setCurrentTabIndex(-1, false);
+                        mTabbedButtonBar.clearTabs();
                     }
                 }
                 mTable.repaint();
@@ -322,21 +331,25 @@ int Track::Result::Table::getNumRows()
         auto const size = *channel < resultPtr->size() ? resultPtr->at(*channel).size() : 0_z;
         return size < maxSize ? static_cast<int>(size) : maxSize;
     };
-    switch(Tools::getFrameType(mAccessor))
+    auto const frameType = Tools::getFrameType(mAccessor);
+    if(frameType.has_value())
     {
-        case Track::FrameType::label:
+        switch(frameType.value())
         {
-            return getNumRows(results.getMarkers());
-        }
-        case Track::FrameType::value:
-        {
-            return getNumRows(results.getPoints());
-        }
-        case Track::FrameType::vector:
-        {
-            return getNumRows(results.getColumns());
-        }
-    };
+            case Track::FrameType::label:
+            {
+                return getNumRows(results.getMarkers());
+            }
+            case Track::FrameType::value:
+            {
+                return getNumRows(results.getPoints());
+            }
+            case Track::FrameType::vector:
+            {
+                return getNumRows(results.getColumns());
+            }
+        };
+    }
     return 0;
 }
 

@@ -14,8 +14,8 @@ namespace Track
         bool supportsBlockSize(Accessor const& acsr);
         bool supportsStepSize(Accessor const& acsr);
         bool supportsInputTrack(Accessor const& acsr);
-        FrameType getFrameType(Plugin::Output const& output);
-        FrameType getFrameType(Accessor const& acsr);
+        std::optional<FrameType> getFrameType(Plugin::Output const& output);
+        std::optional<FrameType> getFrameType(Accessor const& acsr);
 
         bool canZoomIn(Accessor const& accessor);
         bool canZoomOut(Accessor const& accessor);
@@ -28,6 +28,7 @@ namespace Track
         double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
 
         juce::String getUnit(Accessor const& acsr);
+        juce::String getBinName(Accessor const& acsr, size_t index, bool prependIndex);
 
         std::optional<Zoom::Range> getResultRange(Accessor const& accessor);
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);

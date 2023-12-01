@@ -34,15 +34,20 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                switch(Tools::getFrameType(mAccessor))
+                auto const frameType = Tools::getFrameType(mAccessor);
+                if(frameType.has_value())
                 {
-                    case Track::FrameType::label:
-                        break;
-                    case Track::FrameType::value:
-                        updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
-                        break;
-                    case Track::FrameType::vector:
-                        updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
+                    switch(frameType.value())
+                    {
+                        case FrameType::label:
+                            break;
+                        case FrameType::value:
+                            updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
+                            break;
+                        case FrameType::vector:
+                            updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
+                            break;
+                    }
                 }
             }
             break;
@@ -251,16 +256,20 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
             sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
         };
-        switch(Tools::getFrameType(mAccessor))
+        auto const frameType = Tools::getFrameType(mAccessor);
+        if(frameType.has_value())
         {
-            case Track::FrameType::label:
-                break;
-            case Track::FrameType::value:
-                updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
-                break;
-            case Track::FrameType::vector:
-                updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
-                break;
+            switch(frameType.value())
+            {
+                case Track::FrameType::label:
+                    break;
+                case Track::FrameType::value:
+                    updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
+                    break;
+                case Track::FrameType::vector:
+                    updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
+                    break;
+            }
         }
     };
 
@@ -821,21 +830,25 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         }
     };
 
-    switch(Tools::getFrameType(mAccessor))
+    auto const frameType = Tools::getFrameType(mAccessor);
+    if(frameType.has_value())
     {
-        case FrameType::label:
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                break;
+            case FrameType::value:
+            {
+                applyValueZoom(true);
+            }
             break;
-        case FrameType::value:
-        {
-            applyValueZoom(true);
+            case FrameType::vector:
+            {
+                applyValueZoom(false);
+                applyBinZoom(true);
+            }
+            break;
         }
-        break;
-        case FrameType::vector:
-        {
-            applyValueZoom(false);
-            applyBinZoom(true);
-        }
-        break;
     }
 }
 

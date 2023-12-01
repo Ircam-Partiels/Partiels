@@ -39,24 +39,25 @@ juce::String Track::Tools::getExtraTooltip(Accessor const& acsr, size_t index)
 
 juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component const& component, int y)
 {
-    switch(getFrameType(acsr))
+    auto const frameType = getFrameType(acsr);
+    if(frameType.has_value())
     {
-        case FrameType::label:
-            return {};
-        case FrameType::value:
-            return Format::valueToString(Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::valueZoom>(), component, y), 4) + getUnit(acsr);
-        case FrameType::vector:
-            auto const value = Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>(), component, y);
-            auto const bin = static_cast<size_t>(std::floor(value));
-            auto const& output = acsr.getAttr<AttrType::description>().output;
-            if(bin >= output.binNames.size() || output.binNames.at(bin).empty())
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                return {};
+            case FrameType::value:
             {
-                return juce::translate("Bin INDEX").replace("INDEX", juce::String(bin));
+                auto const value = Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::valueZoom>(), component, y);
+                return Format::valueToString(value, 4) + getUnit(acsr);
             }
-            else
+            case FrameType::vector:
             {
-                return juce::translate("Bin INDEX").replace("INDEX", juce::String(bin)) + " - " + output.binNames.at(bin);
+                auto const value = Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::binZoom>(), component, y);
+                auto const index = static_cast<size_t>(std::floor(value));
+                return juce::translate("Bin INDEX").replace("INDEX", getBinName(acsr, index, true));
             }
+        }
     }
     return {};
 }

@@ -222,72 +222,68 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
     auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
     auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
 
-    auto const getStringify = [&]() -> std::function<juce::String(double)>
+    auto const frameType = Tools::getFrameType(accessor);
+    if(frameType.has_value())
     {
-        switch(Tools::getFrameType(accessor))
+        auto const getStringify = [&]() -> std::function<juce::String(double)>
+        {
+            switch(frameType.value())
+            {
+                case Track::FrameType::label:
+                {
+                    return nullptr;
+                }
+                case Track::FrameType::value:
+                {
+                    return [unit = Tools::getUnit(accessor)](double value)
+                    {
+                        return Format::valueToString(value, 4) + unit;
+                    };
+                }
+                case Track::FrameType::vector:
+                {
+                    return [&](double value)
+                    {
+                        return Tools::getBinName(accessor, static_cast<size_t>(std::round(value)), false);
+                    };
+                }
+            }
+            return nullptr;
+        };
+
+        auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
+        {
+            g.setColour(colour);
+            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, getStringify(), justificationHorizontal);
+        };
+
+        switch(frameType.value())
         {
             case Track::FrameType::label:
             {
-                return nullptr;
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                              {
+                              });
             }
+            break;
             case Track::FrameType::value:
             {
-                return [unit = Tools::getUnit(accessor)](double value)
-                {
-                    return Format::valueToString(value, 4) + unit;
-                };
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                              {
+                                  paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
+                              });
             }
+            break;
             case Track::FrameType::vector:
             {
-                return [&](double value)
-                {
-                    auto const& output = accessor.getAttr<AttrType::description>().output;
-                    auto const binIndex = value >= 0.0 ? static_cast<size_t>(std::round(value)) : 0_z;
-                    if(binIndex >= output.binNames.size() || output.binNames[binIndex].empty())
-                    {
-                        return juce::String(binIndex);
-                    }
-                    return juce::String(output.binNames[binIndex]);
-                };
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                              {
+                                  paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
+                              });
             }
+            break;
         }
-        return nullptr;
-    };
-
-    auto const stringify = getStringify();
-    auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
-    {
-        g.setColour(colour);
-        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
-    };
-
-    switch(Tools::getFrameType(accessor))
-    {
-        case Track::FrameType::label:
-        {
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
-                          {
-                          });
-        }
-        break;
-        case Track::FrameType::value:
-        {
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
-                          {
-                              paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
-                          });
-        }
-        break;
-        case Track::FrameType::vector:
-        {
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
-                          {
-                              paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
-                          });
-        }
-        break;
     }
-
     g.setColour(colour);
     Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
 }
@@ -295,35 +291,39 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
 void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour)
 {
     g.setFont(accessor.getAttr<AttrType::font>());
-    switch(Tools::getFrameType(accessor))
+    auto const frameType = Tools::getFrameType(accessor);
+    if(frameType.has_value())
     {
-        case Track::FrameType::label:
+        switch(frameType.value())
         {
-            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
-                          {
-                              paintMarkers(accessor, channel, g, region, timeZoomAcsr);
-                          });
+            case Track::FrameType::label:
+            {
+                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintMarkers(accessor, channel, g, region, timeZoomAcsr);
+                              });
+            }
+            break;
+            case Track::FrameType::value:
+            {
+                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintPoints(accessor, channel, g, region, timeZoomAcsr);
+                              });
+            }
+            break;
+            case Track::FrameType::vector:
+            {
+                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintColumns(accessor, channel, g, region, timeZoomAcsr);
+                              });
+                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+            }
+            break;
         }
-        break;
-        case Track::FrameType::value:
-        {
-            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
-                          {
-                              paintPoints(accessor, channel, g, region, timeZoomAcsr);
-                          });
-        }
-        break;
-        case Track::FrameType::vector:
-        {
-            paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
-                          {
-                              paintColumns(accessor, channel, g, region, timeZoomAcsr);
-                          });
-            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
-        }
-        break;
     }
 }
 
