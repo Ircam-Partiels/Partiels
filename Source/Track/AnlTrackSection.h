@@ -4,6 +4,7 @@
 #include "AnlTrackRuler.h"
 #include "AnlTrackSnapshot.h"
 #include "AnlTrackThumbnail.h"
+#include "Editor/AnlTrackEditor.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -45,9 +46,9 @@ namespace Track
         Snapshot::Overlay mSnapshotOverlay{mSnapshot};
         Decorator mSnapshotDecoration{mSnapshotOverlay};
 
-        Plot mPlot{mDirector, mTimeZoomAccessor, mTransportAccessor};
-        Plot::Overlay mPlotOverlay;
-        Decorator mPlotDecoration{mPlotOverlay};
+        Plot mPlot;
+        Editor mEditor;
+        Decorator mPlotDecoration{mEditor};
 
         Ruler mRuler{mAccessor};
         Decorator mRulerDecoration{mRuler};

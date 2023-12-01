@@ -8,14 +8,14 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
 : mDirector(director)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
-, mPlotOverlay(mPlot, commandManager)
+, mPlot(mDirector.getAccessor(), mTimeZoomAccessor)
+, mEditor(mDirector, mTimeZoomAccessor, mTransportAccessor, commandManager, mPlot, nullptr, true)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         switch(type)
         {
             case AttrType::identifier:
-            case AttrType::name:
             case AttrType::file:
             case AttrType::key:
             case AttrType::input:
@@ -23,7 +23,6 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:
-            case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
@@ -38,16 +37,22 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
                 break;
+            case AttrType::name:
+            case AttrType::colours:
+            {
+                mEditor.setSnapshotNameAndColour(acsr.getAttr<AttrType::name>(), acsr.getAttr<AttrType::colours>().background);
+                break;
+            }
             case AttrType::height:
             {
                 setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
+                break;
             }
-            break;
             case AttrType::focused:
             {
                 mThumbnailDecoration.setHighlighted(Tools::isSelected(acsr));
+                break;
             }
-            break;
         }
     };
 
@@ -71,7 +76,6 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    commandManager.registerAllCommandsForTarget(std::addressof(mPlotOverlay));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
