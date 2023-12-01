@@ -41,21 +41,12 @@ Track::FrameType Track::Tools::getFrameType(Plugin::Output const& output)
     {
         switch(output.binCount)
         {
-            case 0:
-            {
+            case 0_z:
                 return FrameType::label;
-            }
-            break;
-            case 1:
-            {
+            case 1_z:
                 return FrameType::value;
-            }
-            break;
             default:
-            {
                 return FrameType::vector;
-            }
-            break;
         }
     }
     return FrameType::value;
