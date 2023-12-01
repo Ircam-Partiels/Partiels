@@ -1,3 +1,5 @@
+v2.0.0
+
 - Fix: The number of bins in the factory spectrogram defaults to 1, which distorts the value range initialization (#411)
 - Imp: Refine shading of points and curves on the graphical plot (#409)
 - Imp: Avoid drawing shadows of points and curves at low zoom levels to optimize rendering calculations (#408)
