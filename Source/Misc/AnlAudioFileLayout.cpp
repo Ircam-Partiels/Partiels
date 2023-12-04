@@ -292,7 +292,12 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
             return;
         }
         using Flags = juce::FileBrowserComponent::FileChooserFlags;
-        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectDirectories | Flags::canSelectMultipleItems, [this](juce::FileChooser const& fileChooser)
+#ifdef JUCE_WINDOWS
+        auto const openFlags = Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems;
+#else
+        auto const openFlags = Flags::openMode | Flags::canSelectFiles | Flags::canSelectDirectories | Flags::canSelectMultipleItems;
+#endif
+        mFileChooser->launchAsync(openFlags, [this](juce::FileChooser const& fileChooser)
                                   {
                                       auto const results = fileChooser.getResults();
                                       if(results.isEmpty())
