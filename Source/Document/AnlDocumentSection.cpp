@@ -289,6 +289,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             case AttrType::samplerate:
             case AttrType::channels:
             case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
         }
     };

@@ -101,6 +101,7 @@ enum ApplicationCommandIDs : int
     , frameInsert
     , frameBreak
     , frameSystemCopy
+    , frameToggleDrawing
     
     , transportTogglePlayback
     , transportToggleLooping

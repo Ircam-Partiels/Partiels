@@ -77,6 +77,7 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
         , CommandIDs::frameInsert
         , CommandIDs::frameBreak
         , CommandIDs::frameSystemCopy
+        , CommandIDs::frameToggleDrawing
     });
     // clang-format on
 }
@@ -240,6 +241,14 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy frame(s) to system clipboard"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
             result.setActive(isModeActive && !isSelectionEmpty(selection));
+            break;
+        }
+        case CommandIDs::frameToggleDrawing:
+        {
+            result.setInfo(juce::translate("Toggle Drawing Mode"), juce::translate("Switch between drawing mode and navigation mode"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier, 0));
+            result.setTicked(mAccessor.getAttr<AttrType::drawingState>());
+            result.setActive(true);
             break;
         }
     }
@@ -488,6 +497,11 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                     }
                 }
             }
+            return true;
+        }
+        case CommandIDs::frameToggleDrawing:
+        {
+            mAccessor.setAttr<AttrType::drawingState>(!mAccessor.getAttr<AttrType::drawingState>(), NotificationType::synchronous);
             return true;
         }
     }

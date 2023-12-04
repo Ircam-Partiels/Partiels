@@ -204,6 +204,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             case AttrType::samplerate:
             case AttrType::channels:
             case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
         }
     };

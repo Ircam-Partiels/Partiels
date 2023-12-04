@@ -79,9 +79,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             break;
             case AttrType::viewport:
             case AttrType::path:
-            case AttrType::editMode:
             case AttrType::samplerate:
             case AttrType::channels:
+            case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
         }
     };

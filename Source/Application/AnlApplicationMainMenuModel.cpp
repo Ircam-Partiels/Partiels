@@ -92,6 +92,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::frameBreak);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameSystemCopy);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::frameToggleDrawing);
     }
     else if(menuName == "Transport")
     {

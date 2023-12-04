@@ -305,6 +305,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::samplerate:
             case AttrType::channels:
             case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
             case AttrType::layout:
             {

@@ -28,6 +28,7 @@ namespace Document
         , samplerate
         , channels
         , editMode
+        , drawingState
     };
     
     enum class AcsrType : size_t
@@ -55,6 +56,7 @@ namespace Document
     , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::channels, size_t, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::editMode, EditMode, Model::Flag::notifying>
+    , Model::Attr<AttrType::drawingState, bool, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -83,6 +85,7 @@ namespace Document
                                  , {0.0}
                                  , {0_z}
                                  , {EditMode::items}
+                                 , {false}
                                  ))
         {
         }

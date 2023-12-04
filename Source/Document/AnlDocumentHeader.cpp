@@ -79,6 +79,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
             case AttrType::samplerate:
             case AttrType::channels:
             case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
         }
     };

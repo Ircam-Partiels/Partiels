@@ -26,6 +26,7 @@ Document::ReaderLayoutContent::ReaderLayoutContent(Director& director)
             case AttrType::samplerate:
             case AttrType::channels:
             case AttrType::editMode:
+            case AttrType::drawingState:
                 break;
         }
     };
