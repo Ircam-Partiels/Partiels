@@ -37,7 +37,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::ignoreUnused(topLevelMenuIndex);
 
     using CommandIDs = CommandTarget::CommandIDs;
-    using DocumentCommandIDs = Document::CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
     if(menuName == "File")
@@ -83,16 +82,16 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     }
     else if(menuName == "Frame")
     {
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::selectAll);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editDelete);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editCopy);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editCut);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editPaste);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editDuplicate);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editInsert);
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editBreak);
+        menu.addCommandItem(&commandManager, CommandIDs::frameSelectAll);
+        menu.addCommandItem(&commandManager, CommandIDs::frameDelete);
+        menu.addCommandItem(&commandManager, CommandIDs::frameCopy);
+        menu.addCommandItem(&commandManager, CommandIDs::frameCut);
+        menu.addCommandItem(&commandManager, CommandIDs::framePaste);
+        menu.addCommandItem(&commandManager, CommandIDs::frameDuplicate);
+        menu.addCommandItem(&commandManager, CommandIDs::frameInsert);
+        menu.addCommandItem(&commandManager, CommandIDs::frameBreak);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, DocumentCommandIDs::editSystemCopy);
+        menu.addCommandItem(&commandManager, CommandIDs::frameSystemCopy);
     }
     else if(menuName == "Transport")
     {

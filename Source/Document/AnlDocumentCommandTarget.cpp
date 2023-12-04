@@ -68,15 +68,15 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
     // clang-format off
     commands.addArray
     ({
-          CommandIDs::selectAll
-        , CommandIDs::editDelete
-        , CommandIDs::editCopy
-        , CommandIDs::editCut
-        , CommandIDs::editPaste
-        , CommandIDs::editDuplicate
-        , CommandIDs::editInsert
-        , CommandIDs::editBreak
-        , CommandIDs::editSystemCopy
+          CommandIDs::frameSelectAll
+        , CommandIDs::frameDelete
+        , CommandIDs::frameCopy
+        , CommandIDs::frameCut
+        , CommandIDs::framePaste
+        , CommandIDs::frameDuplicate
+        , CommandIDs::frameInsert
+        , CommandIDs::frameBreak
+        , CommandIDs::frameSystemCopy
     });
     // clang-format on
 }
@@ -175,14 +175,14 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
     auto const isModeActive = mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
     switch(commandID)
     {
-        case CommandIDs::selectAll:
+        case CommandIDs::frameSelectAll:
         {
             result.setInfo(juce::translate("Select All"), juce::translate("Select All"), "Select", 0);
             result.defaultKeypresses.add(juce::KeyPress('a', juce::ModifierKeys::commandModifier, 0));
             result.setActive(isModeActive && timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() != selection);
         }
         break;
-        case CommandIDs::editDelete:
+        case CommandIDs::frameDelete:
         {
             result.setInfo(juce::translate("Delete Frame(s)"), juce::translate("Delete Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
@@ -191,14 +191,14 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
-        case CommandIDs::editCopy:
+        case CommandIDs::frameCopy:
         {
             result.setInfo(juce::translate("Copy Frame(s)"), juce::translate("Copy Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier, 0));
             result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
-        case CommandIDs::editCut:
+        case CommandIDs::frameCut:
         {
             result.setInfo(juce::translate("Cut Frame(s)"), juce::translate("Cut Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('x', juce::ModifierKeys::commandModifier, 0));
@@ -206,7 +206,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
-        case CommandIDs::editPaste:
+        case CommandIDs::framePaste:
         {
             result.setInfo(juce::translate("Paste Frame(s)"), juce::translate("Paste Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('v', juce::ModifierKeys::commandModifier, 0));
@@ -214,28 +214,28 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setActive(isModeActive && !isClipboardEmpty());
         }
         break;
-        case CommandIDs::editDuplicate:
+        case CommandIDs::frameDuplicate:
         {
             result.setInfo(juce::translate("Duplicate Frame(s)"), juce::translate("Duplicate Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('d', juce::ModifierKeys::commandModifier, 0));
             result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
-        case CommandIDs::editInsert:
+        case CommandIDs::frameInsert:
         {
             result.setInfo(juce::translate("Insert Frame(s)"), juce::translate("Insert Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::noModifiers, 0));
             result.setActive(isModeActive && (!matchTime(selection.getStart()) || !matchTime(selection.getEnd())));
         }
         break;
-        case CommandIDs::editBreak:
+        case CommandIDs::frameBreak:
         {
             result.setInfo(juce::translate("Break Frame(s)"), juce::translate("Break Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::noModifiers, 0));
             result.setActive(isModeActive && canBreak(selection.getStart()));
         }
         break;
-        case CommandIDs::editSystemCopy:
+        case CommandIDs::frameSystemCopy:
         {
             result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy Frame(s) to System Clipboard"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
@@ -321,13 +321,13 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
 
     switch(info.commandID)
     {
-        case CommandIDs::selectAll:
+        case CommandIDs::frameSelectAll:
         {
             transportAcsr.setAttr<Transport::AttrType::selection>(timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
             return true;
         }
 
-        case CommandIDs::editDelete:
+        case CommandIDs::frameDelete:
         {
             undoManager.beginNewTransaction(juce::translate("Delete Frame(s)"));
             performForAllTracks([&](Track::Accessor& trackAcsr)
@@ -343,7 +343,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
             return true;
         }
-        case CommandIDs::editCopy:
+        case CommandIDs::frameCopy:
         {
             mClipboardData.clear();
             mClipboardRange = selection;
@@ -359,14 +359,14 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                 });
             return true;
         }
-        case CommandIDs::editCut:
+        case CommandIDs::frameCut:
         {
             undoManager.beginNewTransaction(juce::translate("Cut Frame(s)"));
-            perform({CommandIDs::editCopy});
-            perform({CommandIDs::editDelete});
+            perform({CommandIDs::frameCopy});
+            perform({CommandIDs::frameDelete});
             return true;
         }
-        case CommandIDs::editPaste:
+        case CommandIDs::framePaste:
         {
             undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
             performForAllTracks([&](Track::Accessor& trackAcsr)
@@ -388,14 +388,14 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
             return true;
         }
-        case CommandIDs::editDuplicate:
+        case CommandIDs::frameDuplicate:
         {
-            perform({CommandIDs::editCopy});
+            perform({CommandIDs::frameCopy});
             transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboardRange.getEnd(), NotificationType::synchronous);
-            perform({CommandIDs::editPaste});
+            perform({CommandIDs::framePaste});
             return true;
         }
-        case CommandIDs::editInsert:
+        case CommandIDs::frameInsert:
         {
             auto const insertFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
             {
@@ -433,7 +433,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
             return true;
         }
-        case CommandIDs::editBreak:
+        case CommandIDs::frameBreak:
         {
             auto const breakFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
             {
@@ -470,7 +470,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
             return true;
         }
-        case CommandIDs::editSystemCopy:
+        case CommandIDs::frameSystemCopy:
         {
             auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)

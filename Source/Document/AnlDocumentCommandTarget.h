@@ -11,21 +11,6 @@ namespace Document
     : public juce::ApplicationCommandTarget
     {
     public:
-        // clang-format off
-        enum CommandIDs : int
-        {
-              selectAll = 0x2001
-            , editDelete
-            , editCopy
-            , editCut
-            , editPaste
-            , editDuplicate
-            , editInsert
-            , editBreak
-            , editSystemCopy
-        };
-        // clang-format on
-
         CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager);
         ~CommandTarget() override;
 
@@ -35,6 +20,7 @@ namespace Document
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
+        using CommandIDs = ApplicationCommandIDs;
         using ChannelData = Track::Result::ChannelData;
         using MultiChannelData = std::map<size_t, ChannelData>;
 

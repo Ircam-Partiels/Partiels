@@ -92,6 +92,16 @@ enum ApplicationCommandIDs : int
     , editRemoveItem
     , editLoadTemplate
     
+    , frameSelectAll
+    , frameDelete
+    , frameCopy
+    , frameCut
+    , framePaste
+    , frameDuplicate
+    , frameInsert
+    , frameBreak
+    , frameSystemCopy
+    
     , transportTogglePlayback
     , transportToggleLooping
     , transportToggleStopAtLoopEnd
