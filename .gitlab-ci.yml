@@ -2,7 +2,6 @@
 stages:
   - test
   - build
-  - format
   - doc
 
 variables:
@@ -17,6 +16,7 @@ Test::MacOS:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- -quiet
     - ./Scripts/macos-build.sh Debug
     - ctest -C Debug -VV --test-dir build 
 
@@ -29,6 +29,7 @@ Test::Windows:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG" -DPARTIELS_BUILD_ID="$CI_PIPELINE_ID"
+    - cmake --build build --target PartielsCheckFormat -- /nologo /verbosity:minimal
     - cmake --build build --config Debug
     - ctest -C Debug -VV --test-dir build 
 
@@ -41,6 +42,7 @@ Test::Linux:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- --quiet
     - cmake --build build
     - ctest -C Debug -V --test-dir build 
 
@@ -51,6 +53,7 @@ Build::MacOS:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- -quiet
     - ./Scripts/macos-build.sh Release
     - ctest -C Release -VV --test-dir build 
 
@@ -61,6 +64,7 @@ Build::Windows:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG" -DPARTIELS_BUILD_ID="$CI_PIPELINE_ID"
+    - cmake --build build --target PartielsCheckFormat -- /nologo /verbosity:minimal
     - cmake --build build --config Release
     - move-item -path ".\build\Partiels-install.exe" -destination ".\"
     - ctest -C Release -VV --test-dir build 
@@ -76,6 +80,7 @@ Build::Linux:
   script:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake --build build --target PartielsCheckFormat -- --quiet
     - cmake --build build
     - ctest -C Release -V --test-dir build 
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
@@ -83,16 +88,6 @@ Build::Linux:
     paths:
       - $CI_PROJECT_DIR/Partiels/
     expire_in: 1 week
-
-Format:
-  stage: format
-  tags:
-    - linux
-  needs: []
-  script:
-    - cd $CI_PROJECT_DIR
-    - cmake . -B build -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
-    - cmake --build build --target PartielsCheckFormat -- --quiet
 
 Doc:
   stage: doc
