@@ -237,8 +237,7 @@ if(APPLE)
     endif()
 endif()
 
-if(NOT WIN32)
-    find_program(CLANG_FORMAT_EXE "clang-format")
+find_program(CLANG_FORMAT_EXE "clang-format" HINTS "C:/Program Files/LLVM/bin")
     if(CLANG_FORMAT_EXE)
         file(GLOB_RECURSE ClangFormatSources
             ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
@@ -257,7 +256,6 @@ if(NOT WIN32)
     else()
         message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
     endif()
-endif()
 
 enable_testing()
 
