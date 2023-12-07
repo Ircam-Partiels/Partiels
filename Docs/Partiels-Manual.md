@@ -87,7 +87,7 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 
 ### 1.3. Third-party
 
-Alongside Partiels, a set of analyses present based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plug-ins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, PM2 and FCN.
+Alongside Partiels, a set of analyses based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plug-ins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, PM2 and FCN.
 
 You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
 
