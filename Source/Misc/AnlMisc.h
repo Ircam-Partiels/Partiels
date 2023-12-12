@@ -6,4 +6,5 @@
 #include "AnlFileSearchPathTable.h"
 #include "AnlHideablePanel.h"
 #include "AnlLoadingIcon.h"
+#include "AnlMouseScroller.h"
 #include "AnlSdifConverter.h"

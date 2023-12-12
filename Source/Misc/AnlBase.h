@@ -72,6 +72,9 @@ private:
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
 };
 
+template <typename T>
+using optional_ref = std::optional<std::reference_wrapper<T>>;
+
 // clang-format off
 enum ApplicationCommandIDs : int
 {
