@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document MiscModelVersion="66306" viewport_x="0" viewport_y="0" path="/Users/guillot/Gitlab/IVP/partiels/Docs/Project/J'attendrai.ptldoc"
+<document MiscModelVersion="131073" viewport_x="0" viewport_y="0" path="/Users/guillot/Gitlab/IVP/partiels/Docs/Project/J'attendrai.ptldoc"
           grid="1" autoresize="1" samplerate="44100.0" channels="2">
   <reader>
     <value file="/Users/guillot/Documents/Partiels/Projects/J'attendrai_ConsolidatedFiles/Audio/JAttendrai... Rina Ketty.wav"
@@ -12,42 +12,42 @@
   </reader>
   <layout value="daaaa5e9ca9440919fee0457c301a5ae"/>
   <layout value="66cf756a43824c299a0256f18b5df652"/>
-  <timeZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="57.12369614512472"
-            minimumLength="0.01160997732426304" visibleRange_start="25.11772251659897"
-            visibleRange_end="38.14319146027498">
-    <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="0"
+  <timeZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="57.12369614512472"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="57.12369614512472">
+    <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="66306" startPlayhead="3.760939000859143" looping="0"
+  <transport MiscModelVersion="131073" startPlayhead="25.26215630765764" looping="0"
              loopRange_start="55.674250339" loopRange_end="56.208309296" stopAtLoopEnd="0"
              autoScroll="1" gain="0.06478693864793536" magnetize="0"/>
-  <groups MiscModelVersion="66306" identifier="66cf756a43824c299a0256f18b5df652"
-          name="Group 2" height="435" colour="0" expanded="0" zoomid="">
+  <groups MiscModelVersion="131073" identifier="66cf756a43824c299a0256f18b5df652"
+          name="Group 2" height="438" colour="0" expanded="0" zoomid="">
     <layout value="03570fdcd3f14391a13d069fcabdf7ef"/>
     <layout value="2476c2bd12534fc48f5612a755917925"/>
-    <zoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.3239440764960294">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <groups MiscModelVersion="66306" identifier="daaaa5e9ca9440919fee0457c301a5ae"
-          name="Group 1" height="435" colour="0" expanded="0" zoomid="">
+  <groups MiscModelVersion="131073" identifier="daaaa5e9ca9440919fee0457c301a5ae"
+          name="Group 1" height="438" colour="0" expanded="0" zoomid="">
     <layout value="d9dc8ffb44944467a7099d1f9877f1ac"/>
     <layout value="4012ed3f6d2a4d5d8b2c0bd4e771088e"/>
-    <zoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <tracks MiscModelVersion="66306" identifier="2476c2bd12534fc48f5612a755917925"
+  <tracks MiscModelVersion="131073" identifier="2476c2bd12534fc48f5612a755917925"
           name="Fast Fourier Transform" input="" height="217" font="Nunito Sans; 14.0 Regular"
           showInGroup="1" zoomValueMode="1" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
-    <description name="Fast Fourier Transform" inputDomain="0" maker="Ircam" version="4"
+    <description name="Fast Fourier Transform" inputDomain="0" maker="Ircam" version="6"
                  category="Visualisation" details="The Fast Fourier transform analysis performed by SuperVP&#10;Copyright 2022 Ircam. All rights reserved. Plugin by Pierre Guillot and Matthew Harris. SuperVP by Axel R&#246;bel and Fr&#233;d&#233;ric Cornu.">
       <defaultState blockSize="64" stepSize="0" windowType="3">
         <parameters key="fftoversampling" value="0.0"/>
@@ -620,23 +620,23 @@
       <parameters key="windowsize" value="23.21995544433594"/>
       <parameters key="windowtype" value="1.0"/>
     </state>
-    <colours map="0" background="0" foreground="ff7e7a7d" text="ff000000"
+    <colours map="4" background="0" foreground="ff7e7a7d" text="ff000000"
              shadow="ff000000"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="66306" globalRange_start="-120.0" globalRange_end="0.0"
+    <valueZoom MiscModelVersion="131073" globalRange_start="-120.0" globalRange_end="0.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
                visibleRange_end="0.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="513.0"
-             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="166.1833112424631">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+    <binZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="513.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="166.183311242463">
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="66306" identifier="03570fdcd3f14391a13d069fcabdf7ef"
+  <tracks MiscModelVersion="131073" identifier="03570fdcd3f14391a13d069fcabdf7ef"
           name="Spectral Centroid" input="" height="217" font="Nunito Sans; 14.0 Regular"
           showInGroup="1" zoomValueMode="1" zoomLink="1">
     <file path="" commit="">
@@ -711,19 +711,19 @@
     <unit unit="Hertz"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="22050.0"
+    <valueZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="22050.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
                visibleRange_end="7142.966886737448">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="0"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="0"
             tickPowerBase="10.0" tickDivisionFactor="4.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="66306" identifier="4012ed3f6d2a4d5d8b2c0bd4e771088e"
+  <tracks MiscModelVersion="131073" identifier="4012ed3f6d2a4d5d8b2c0bd4e771088e"
           name="Waveform" input="" height="217" font="Nunito Sans; 14.0 Regular"
           showInGroup="1" zoomValueMode="1" zoomLink="1">
     <file path="" commit="">
@@ -746,19 +746,19 @@
     <colours map="7" background="0" foreground="ff005dff" text="0" shadow="ff000000"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="66306" globalRange_start="-1.0" globalRange_end="1.0"
+    <valueZoom MiscModelVersion="131073" globalRange_start="-1.0" globalRange_end="1.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="-1.0"
                visibleRange_end="1.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="66306" identifier="d9dc8ffb44944467a7099d1f9877f1ac"
+  <tracks MiscModelVersion="131073" identifier="d9dc8ffb44944467a7099d1f9877f1ac"
           name="Beat Detection" input="" height="217" font="Nunito Sans; 14.0 Regular"
           showInGroup="1" zoomValueMode="0" zoomLink="1">
     <file path="" commit="">
@@ -816,14 +816,14 @@
     </state>
     <colours map="7" background="0" foreground="ff26d7ff" text="296b7" shadow="ff004d5e"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="0.0"
+    <valueZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="0.0"
                minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="66306" globalRange_start="0.0" globalRange_end="0.0"
+    <binZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="0.0"
              minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid MiscModelVersion="66306" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
