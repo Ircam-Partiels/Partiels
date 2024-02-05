@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Window::Window()
 // clang-format off
-: juce::DocumentWindow(  Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion()
+: juce::DocumentWindow(  Instance::get().getApplicationName()
                        , juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId)
                        , juce::DocumentWindow::allButtons
 #ifdef JUCE_MAC
@@ -27,6 +27,7 @@ Application::Window::Window()
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     Instance::get().getDocumentFileBased().addChangeListener(this);
+    changeListenerCallback(std::addressof(Instance::get().getDocumentFileBased()));
     auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>();
 #ifdef JUCE_MAC
     // This is a fix to properly restore fullscreen window state on macOS
@@ -98,7 +99,7 @@ void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBr
     auto const file = Instance::get().getDocumentFileBased().getFile();
     auto const fileName = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
     auto const hasChanged = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved();
-    setName(juce::String("APPNAME -vAPPVERSION - FILENAME")
+    setName(juce::String("APPNAME vAPPVERSION - FILENAME")
                 .replace("APPNAME", Instance::get().getApplicationName())
                 .replace("APPVERSION", Instance::get().getApplicationVersion())
                 .replace("FILENAME", fileName + (hasChanged ? "*" : "")));
