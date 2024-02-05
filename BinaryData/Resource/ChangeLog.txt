@@ -1,3 +1,5 @@
+- Imp: Right-click on zoom ruler to display pop-up window for textual editing of value range (#427)
+
 v2.0.0
 
 - Fix: The number of bins in the factory spectrogram defaults to 1, which distorts the value range initialization (#411)
