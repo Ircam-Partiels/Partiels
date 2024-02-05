@@ -1,6 +1,7 @@
 - Imp: Right-click on zoom ruler to display pop-up window for textual editing of value range (#427)
 - Fix: Factory plug-ins cannot be found when Partiels runs for the very first time (#425)
 - Fix: There is an unnecessary dash before the version on the main application window (#420)
+- Fix: On Windows, the native file browser doesn't support file and directory selection, so the application shouldn't support both possibilities on Windows (#414)
 
 v2.0.0
 
