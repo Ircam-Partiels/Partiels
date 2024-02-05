@@ -62,7 +62,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                     {
                         ruler->onMouseDown = [&, rulerPtr = ruler.get()](juce::MouseEvent const& event)
                         {
-                            if(event.mods.isCtrlDown())
+                            if(event.mods.isPopupMenu())
                             {
                                 auto rangeEditor = mFrameType == Track::FrameType::value ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
                                 if(rangeEditor == nullptr)
@@ -73,7 +73,9 @@ Track::Ruler::Ruler(Accessor& accessor)
                                 auto const rulerBounds = rulerPtr->getScreenBounds();
                                 auto const width = rulerBounds.getWidth();
                                 auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
-                                juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr).setArrowSize(0.0f);
+                                auto& box = juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr);
+                                box.setLookAndFeel(std::addressof(getLookAndFeel()));
+                                box.setArrowSize(0.0f);
                                 return false;
                             }
                             return true;
