@@ -117,37 +117,37 @@ void Application::Properties::loadFromFile(PropertyType type)
         break;
         case PropertyType::PluginList:
         {
+            std::vector<juce::File> searchPath;
+            PluginList::Accessor copy;
             auto xml = juce::parseXML(getFile("plugin.settings"));
             if(xml != nullptr)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
-                PluginList::Accessor copy;
                 copy.copyFrom(acsr, NotificationType::synchronous);
-                auto const getPluginPackageDirectory = []()
-                {
-                    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
-#if JUCE_MAC
-                    auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
-                    auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
-                    PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
-                    return pluginPackage;
-#else
-                    return exeFile.getSiblingFile("PlugIns");
-#endif
-                };
-                auto searchPath = acsr.getAttr<PluginList::AttrType::searchPath>();
-                searchPath.insert(searchPath.begin(), getPluginPackageDirectory());
-                copy.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
-                PluginList::setEnvironment(copy);
+                searchPath = acsr.getAttr<PluginList::AttrType::searchPath>();
             }
+            auto const getPluginPackageDirectory = []()
+            {
+                auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+                auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
+                auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
+                PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
+                return pluginPackage;
+#else
+                return exeFile.getSiblingFile("PlugIns");
+#endif
+            };
+            searchPath.insert(searchPath.begin(), getPluginPackageDirectory());
+            copy.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
+            PluginList::setEnvironment(copy);
         }
         break;
         case PropertyType::AudioSetup:
         {
             auto xml = juce::parseXML(getFile("audio.settings"));
-            auto& manager = Instance::get().getAudioDeviceManager();
-            auto const error = manager.initialise(0, sMaxIONumber, xml.get(), true);
+            auto const error = Instance::get().getAudioDeviceManager().initialise(0, sMaxIONumber, xml.get(), true);
             if(error.isNotEmpty())
             {
                 askToRestoreDefaultAudioSettings(error);
