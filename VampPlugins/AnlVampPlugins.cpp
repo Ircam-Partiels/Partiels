@@ -95,29 +95,30 @@ Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
 {
-    assert(false && "The process should be managed by Partiels directly. The method is here for legacy reason.");
-    if(mBlockSize == 0 || mStepSize == 0)
-    {
-        std::cerr << "AnlVampPlugin::Waveform::process invalid parameters.\n";
-        return {};
-    }
-
-    FeatureSet featureSet;
-    auto& featureList = featureSet[0];
-    featureList.resize(mNumChannels);
-    for(auto channel = 0_z; channel < mNumChannels; ++channel)
-    {
-        auto& feature = featureList[channel];
-        feature.timestamp = timeStamp;
-        feature.hasTimestamp = true;
-        auto it = std::max_element(inputBuffers[channel], inputBuffers[channel] + mBlockSize, [](auto const& lhs, auto const& rhs)
-                                   {
-                                       return std::abs(lhs) < std::abs(rhs);
-                                   });
-        feature.values.push_back(it != inputBuffers[channel] + mBlockSize ? std::clamp(*it, -1.0f, 1.0f) : 0.0f);
-    }
-
-    return featureSet;
+    // The process should be managed by Partiels directly. The method is here for legacy reason.
+    return {};
+    //    if(mBlockSize == 0 || mStepSize == 0)
+    //    {
+    //        std::cerr << "AnlVampPlugin::Waveform::process invalid parameters.\n";
+    //        return {};
+    //    }
+    //
+    //    FeatureSet featureSet;
+    //    auto& featureList = featureSet[0];
+    //    featureList.resize(mNumChannels);
+    //    for(auto channel = 0_z; channel < mNumChannels; ++channel)
+    //    {
+    //        auto& feature = featureList[channel];
+    //        feature.timestamp = timeStamp;
+    //        feature.hasTimestamp = true;
+    //        auto it = std::max_element(inputBuffers[channel], inputBuffers[channel] + mBlockSize, [](auto const& lhs, auto const& rhs)
+    //                                   {
+    //                                       return std::abs(lhs) < std::abs(rhs);
+    //                                   });
+    //        feature.values.push_back(it != inputBuffers[channel] + mBlockSize ? std::clamp(*it, -1.0f, 1.0f) : 0.0f);
+    //    }
+    //
+    //    return featureSet;
 }
 
 AnlVampPlugin::Spectrogram::Spectrogram(float sampleRate)
