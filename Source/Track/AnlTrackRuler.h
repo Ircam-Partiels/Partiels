@@ -60,32 +60,6 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         std::vector<std::unique_ptr<Transport::SelectionBar>> mSelectionBars;
     };
-
-    class NavigationBar
-    : public juce::Component
-    {
-    public:
-        NavigationBar(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
-        ~NavigationBar() override;
-
-        // juce::Component
-        void resized() override;
-        void mouseMove(juce::MouseEvent const& event) override;
-        void mouseDown(juce::MouseEvent const& event) override;
-        void mouseUp(juce::MouseEvent const& event) override;
-        void modifierKeysChanged(juce::ModifierKeys const& modifiers) override;
-
-    private:
-        void updateInteraction(juce::ModifierKeys const& modifiers);
-        void updateMouseCursor(juce::ModifierKeys const& modifiers);
-
-        Accessor& mAccessor;
-        Accessor::Listener mListener{typeid(*this).name()};
-        std::vector<std::unique_ptr<Zoom::Ruler>> mRulers;
-        FrameType mFrameType{Track::FrameType::value};
-        Zoom::Ruler mTimeRuler;
-        SelectionBar mSelectionBar;
-    };
 } // namespace Track
 
 ANALYSE_FILE_END
