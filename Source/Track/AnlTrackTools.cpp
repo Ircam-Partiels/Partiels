@@ -79,77 +79,77 @@ std::optional<Track::FrameType> Track::Tools::getFrameType(Accessor const& acsr)
     return {};
 }
 
-bool Track::Tools::canZoomIn(Accessor const& accessor)
+optional_ref<Zoom::Accessor const> Track::Tools::getVerticalZoomAccessor(Accessor const& accessor, bool useLinkedZoom)
 {
-    auto const frameType = getFrameType(accessor);
+    if(useLinkedZoom && accessor.getAttr<AttrType::zoomLink>())
+    {
+        return accessor.getAttr<AttrType::zoomAcsr>();
+    }
+    auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
     {
         switch(frameType.value())
         {
             case FrameType::label:
-                return false;
+                return {};
             case FrameType::value:
-                return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::valueZoom>());
-            case Track::FrameType::vector:
-                return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::binZoom>());
-        };
+                return std::ref(accessor.getAcsr<AcsrType::valueZoom>());
+            case FrameType::vector:
+                return std::ref(accessor.getAcsr<AcsrType::binZoom>());
+        }
     }
-    return false;
+    return {};
+}
+
+optional_ref<Zoom::Accessor> Track::Tools::getVerticalZoomAccessor(Accessor& accessor, bool useLinkedZoom)
+{
+    if(useLinkedZoom && accessor.getAttr<AttrType::zoomLink>())
+    {
+        return accessor.getAttr<AttrType::zoomAcsr>();
+    }
+    auto const frameType = Tools::getFrameType(accessor);
+    if(frameType.has_value())
+    {
+        switch(frameType.value())
+        {
+            case FrameType::label:
+                return {};
+            case FrameType::value:
+                return std::ref(accessor.getAcsr<AcsrType::valueZoom>());
+            case FrameType::vector:
+                return std::ref(accessor.getAcsr<AcsrType::binZoom>());
+        }
+    }
+    return {};
+}
+
+bool Track::Tools::canZoomIn(Accessor const& accessor)
+{
+    auto const zoomAcsr = getVerticalZoomAccessor(accessor, false);
+    return zoomAcsr.has_value() && Zoom::Tools::canZoomIn(zoomAcsr.value());
 }
 
 bool Track::Tools::canZoomOut(Accessor const& accessor)
 {
-    auto const frameType = getFrameType(accessor);
-    if(frameType.has_value())
-    {
-        switch(frameType.value())
-        {
-            case FrameType::label:
-                return false;
-            case FrameType::value:
-                return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::valueZoom>());
-            case Track::FrameType::vector:
-                return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::binZoom>());
-        };
-    }
-    return false;
+    auto const zoomAcsr = getVerticalZoomAccessor(accessor, false);
+    return zoomAcsr.has_value() && Zoom::Tools::canZoomOut(zoomAcsr.value());
 }
 
 void Track::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const frameType = getFrameType(accessor);
-    if(frameType.has_value())
+    auto const zoomAcsr = getVerticalZoomAccessor(accessor, false);
+    if(zoomAcsr.has_value())
     {
-        switch(frameType.value())
-        {
-            case FrameType::label:
-                break;
-            case FrameType::value:
-                Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-                break;
-            case Track::FrameType::vector:
-                Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
-                break;
-        };
+        Zoom::Tools::zoomIn(zoomAcsr.value(), ratio, notification);
     }
 }
 
 void Track::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const frameType = getFrameType(accessor);
-    if(frameType.has_value())
+    auto const zoomAcsr = getVerticalZoomAccessor(accessor, false);
+    if(zoomAcsr.has_value())
     {
-        switch(frameType.value())
-        {
-            case FrameType::label:
-                break;
-            case FrameType::value:
-                Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-                break;
-            case Track::FrameType::vector:
-                Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
-                break;
-        };
+        Zoom::Tools::zoomOut(zoomAcsr.value(), ratio, notification);
     }
 }
 

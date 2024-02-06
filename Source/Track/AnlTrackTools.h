@@ -17,6 +17,8 @@ namespace Track
         std::optional<FrameType> getFrameType(Plugin::Output const& output);
         std::optional<FrameType> getFrameType(Accessor const& acsr);
 
+        optional_ref<Zoom::Accessor const> getVerticalZoomAccessor(Accessor const& accessor, bool useLinkedZoom);
+        optional_ref<Zoom::Accessor> getVerticalZoomAccessor(Accessor& accessor, bool useLinkedZoom);
         bool canZoomIn(Accessor const& accessor);
         bool canZoomOut(Accessor const& accessor);
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
