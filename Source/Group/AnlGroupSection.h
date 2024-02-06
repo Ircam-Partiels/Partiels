@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlGroupEditor.h"
 #include "AnlGroupPlot.h"
 #include "AnlGroupSnapshot.h"
 #include "AnlGroupThumbnail.h"
@@ -58,9 +59,9 @@ namespace Group
         Snapshot::Overlay mSnapshotOverlay{mSnapshot};
         Decorator mSnapshotDecoration{mSnapshotOverlay};
 
-        Plot mPlot{mAccessor, mTransportAccessor, mTimeZoomAccessor};
-        Plot::Overlay mPlotOverlay;
-        Decorator mPlotDecoration{mPlotOverlay};
+        Plot mPlot;
+        Editor mEditor;
+        Decorator mPlotDecoration{mEditor};
 
         std::unique_ptr<juce::Component> mRuler;
         std::unique_ptr<Decorator> mDecoratorRuler;

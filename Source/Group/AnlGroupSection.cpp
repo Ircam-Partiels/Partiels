@@ -8,7 +8,8 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
-, mPlotOverlay(mPlot, commandManager)
+, mPlot(mAccessor, mTimeZoomAccessor)
+, mEditor(mDirector, mTimeZoomAccessor, mTransportAccessor, commandManager, mPlot)
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -62,7 +63,6 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    commandManager.registerAllCommandsForTarget(std::addressof(mPlotOverlay));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
