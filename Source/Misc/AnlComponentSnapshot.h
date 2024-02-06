@@ -17,7 +17,7 @@ public:
     };
     // clang-format on
 
-    ComponentSnapshot() = default;
+    ComponentSnapshot();
     ~ComponentSnapshot() override = default;
 
     virtual void takeSnapshot() = 0;

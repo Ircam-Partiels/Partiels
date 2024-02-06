@@ -2,6 +2,11 @@
 
 ANALYSE_FILE_BEGIN
 
+ComponentSnapshot::ComponentSnapshot()
+{
+    setWantsKeyboardFocus(true);
+}
+
 void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String const& name, juce::Colour const& backgroundColour)
 {
     auto const createSnapshot = [&](juce::Rectangle<int> areaToGrab, float scaleFactor) -> juce::Image
