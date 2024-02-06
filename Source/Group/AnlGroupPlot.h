@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlGroupDirector.h"
-#include "AnlGroupRuler.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
