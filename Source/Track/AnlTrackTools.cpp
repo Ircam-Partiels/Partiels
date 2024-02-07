@@ -123,6 +123,11 @@ optional_ref<Zoom::Accessor> Track::Tools::getVerticalZoomAccessor(Accessor& acc
     return {};
 }
 
+bool Track::Tools::hasVerticalZoom(Accessor const& accessor)
+{
+    return Tools::getFrameType(accessor) != FrameType::label;
+}
+
 bool Track::Tools::canZoomIn(Accessor const& accessor)
 {
     auto const zoomAcsr = getVerticalZoomAccessor(accessor, false);
