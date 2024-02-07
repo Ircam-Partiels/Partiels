@@ -83,7 +83,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case AttrType::tracks:
             case AttrType::focused:
                 break;
-            case AttrType::zoomid:
+            case AttrType::referenceid:
             {
                 repaint();
             }

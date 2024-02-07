@@ -28,7 +28,7 @@ Group::StrechableSection::StrechableSection(Director& director, juce::Applicatio
             case AttrType::focused:
             case AttrType::layout:
             case AttrType::tracks:
-            case AttrType::zoomid:
+            case AttrType::referenceid:
                 break;
             case AttrType::expanded:
             {

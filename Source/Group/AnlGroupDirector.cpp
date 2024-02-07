@@ -33,7 +33,7 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             case AttrType::colour:
             case AttrType::expanded:
             case AttrType::focused:
-            case AttrType::zoomid:
+            case AttrType::referenceid:
                 break;
             case AttrType::layout:
             {

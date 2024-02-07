@@ -80,7 +80,7 @@ Group::StateButton::StateButton(Director& director)
             case AttrType::focused:
             case AttrType::layout:
             case AttrType::tracks:
-            case AttrType::zoomid:
+            case AttrType::referenceid:
                 break;
         }
     };

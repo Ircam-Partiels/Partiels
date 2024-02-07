@@ -41,7 +41,7 @@ namespace Group
 
         PropertyText mPropertyName;
         PropertyColourButton mPropertyBackgroundColour;
-        PropertyList mPropertyZoomTrack;
+        PropertyList mPropertyReferenceTrack;
 
         PropertyProcessorsSection mPropertyProcessorsSection{mDirector};
         ConcertinaTable mProcessorsSection{juce::translate("PROCESSORS"), true,

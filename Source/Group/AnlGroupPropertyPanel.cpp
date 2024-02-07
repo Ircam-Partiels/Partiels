@@ -49,20 +49,20 @@ Group::PropertyPanel::PropertyPanel(Director& director)
       {
           mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
       })
-, mPropertyZoomTrack(juce::translate("Group Zoom Reference"), juce::translate("The selected track used for the zoom"), "", std::vector<std::string>{""}, [this](size_t index)
-                     {
-                         mDirector.startAction(false);
-                         auto const layout = mAccessor.getAttr<AttrType::layout>();
-                         if(index == 0_z || index - 1_z >= layout.size())
-                         {
-                             mAccessor.setAttr<AttrType::zoomid>("", NotificationType::synchronous);
-                         }
-                         else
-                         {
-                             mAccessor.setAttr<AttrType::zoomid>(layout[index - 1_z], NotificationType::synchronous);
-                         }
-                         mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group zoom"));
-                     })
+, mPropertyReferenceTrack(juce::translate("Group Track Reference"), juce::translate("The track used for the edition and the navigation"), "", std::vector<std::string>{""}, [this](size_t index)
+                          {
+                              mDirector.startAction(false);
+                              auto const layout = mAccessor.getAttr<AttrType::layout>();
+                              if(index == 0_z || index - 1_z >= layout.size())
+                              {
+                                  mAccessor.setAttr<AttrType::referenceid>("", NotificationType::synchronous);
+                              }
+                              else
+                              {
+                                  mAccessor.setAttr<AttrType::referenceid>(layout[index - 1_z], NotificationType::synchronous);
+                              }
+                              mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                          })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -85,7 +85,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyBackgroundColour.entry.setCurrentColour(acsr.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
             }
             break;
-            case AttrType::zoomid:
+            case AttrType::referenceid:
             {
                 updateContent();
             }
@@ -101,7 +101,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyBackgroundColour);
-    addAndMakeVisible(mPropertyZoomTrack);
+    addAndMakeVisible(mPropertyReferenceTrack);
     addAndMakeVisible(mProcessorsSection);
     addAndMakeVisible(mGraphicalsSection);
 
@@ -141,7 +141,7 @@ void Group::PropertyPanel::resized()
     };
     setBounds(mPropertyName);
     setBounds(mPropertyBackgroundColour);
-    setBounds(mPropertyZoomTrack);
+    setBounds(mPropertyReferenceTrack);
     setBounds(mProcessorsSection);
     setBounds(mGraphicalsSection);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
@@ -149,8 +149,8 @@ void Group::PropertyPanel::resized()
 
 void Group::PropertyPanel::updateContent()
 {
-    auto const zoomId = mAccessor.getAttr<AttrType::zoomid>();
-    auto& entry = mPropertyZoomTrack.entry;
+    auto const zoomId = mAccessor.getAttr<AttrType::referenceid>();
+    auto& entry = mPropertyReferenceTrack.entry;
     entry.clear(juce::NotificationType::dontSendNotification);
     entry.addItem(juce::translate("Front"), 1);
     entry.addSeparator();
@@ -178,7 +178,7 @@ void Group::PropertyPanel::updateContent()
         entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyZoomTrack.setEnabled(!layout.empty());
+    mPropertyReferenceTrack.setEnabled(!layout.empty());
 
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const hasNoColumns = std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcrs)

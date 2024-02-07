@@ -37,7 +37,7 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
                 mThumbnailDecoration.setHighlighted(Tools::isSelected(acsr));
             }
             break;
-            case AttrType::zoomid:
+            case AttrType::referenceid:
             {
                 updateContent();
             }

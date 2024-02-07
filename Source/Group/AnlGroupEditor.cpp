@@ -27,7 +27,7 @@ Group::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::layout:
             case AttrType::tracks:
                 break;
-            case AttrType::zoomid:
+            case AttrType::referenceid:
             {
                 updateContent();
                 break;

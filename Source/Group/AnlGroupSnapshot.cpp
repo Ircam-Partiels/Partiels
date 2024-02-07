@@ -117,7 +117,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case AttrType::tracks:
             case AttrType::focused:
                 break;
-            case AttrType::zoomid:
+            case AttrType::referenceid:
             {
                 repaint();
             }
@@ -243,7 +243,7 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::layout:
             case AttrType::tracks:
             case AttrType::focused:
-            case AttrType::zoomid:
+            case AttrType::referenceid:
                 break;
             case AttrType::colour:
             {

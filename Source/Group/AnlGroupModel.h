@@ -31,7 +31,7 @@ namespace Group
         , layout
         , tracks
         , focused
-        , zoomid
+        , referenceid
     };
 
     enum class AcsrType : size_t
@@ -53,7 +53,7 @@ namespace Group
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, FocusInfo, Model::Flag::notifying>
-    , Model::Attr<AttrType::zoomid, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::referenceid, juce::String, Model::Flag::basic>
     >;
 
     using AcsrContainer = Model::Container
@@ -91,6 +91,8 @@ namespace Group
                 return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAcsr<AcsrType::zoom>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}), notification);
             }
         }
+
+        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
     };
 } // namespace Group
 

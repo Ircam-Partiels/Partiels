@@ -153,7 +153,7 @@ std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Access
 
 std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrackAcsr(Accessor const& accessor)
 {
-    auto const selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::zoomid>());
+    auto const selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::referenceid>());
     if(selectedTrack.has_value())
     {
         return selectedTrack;
@@ -222,7 +222,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
             case AttrType::colour:
             case AttrType::focused:
             case AttrType::expanded:
-            case AttrType::zoomid:
+            case AttrType::referenceid:
                 break;
             case AttrType::layout:
             {
