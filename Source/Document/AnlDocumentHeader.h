@@ -34,6 +34,7 @@ namespace Document
         TransportDisplay mTransportDisplay;
         TransportSelectionInfo mTransportSelectionInfo;
         Icon mBubbleTooltipButton;
+        Icon mEditModeButton;
     };
 } // namespace Document
 

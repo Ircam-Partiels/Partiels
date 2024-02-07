@@ -12,12 +12,14 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>(), commandManager)
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mBubbleTooltipButton(juce::ImageCache::getFromMemory(AnlIconsData::bubble_png, AnlIconsData::bubble_pngSize))
+, mEditModeButton(juce::ImageCache::getFromMemory(AnlIconsData::edit_png, AnlIconsData::edit_pngSize))
 {
     addAndMakeVisible(mReaderLayoutButton);
     addAndMakeVisible(mNameButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
     addAndMakeVisible(mBubbleTooltipButton);
+    addAndMakeVisible(mEditModeButton);
 
     mReaderLayoutButton.setWantsKeyboardFocus(false);
     mReaderLayoutButton.onClick = [this]()
@@ -42,6 +44,12 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     mBubbleTooltipButton.onClick = [this]()
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::viewInfoBubble, true);
+    };
+
+    mEditModeButton.setClickingTogglesState(true);
+    mEditModeButton.onClick = [this]()
+    {
+        mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::frameToggleDrawing, true);
     };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -123,10 +131,14 @@ void Document::Header::resized()
 
     auto rightPart = bounds.removeFromRight(sideWidth).reduced(spaceWidth, 0);
     auto const scrollbarWidth = getLookAndFeel().getDefaultScrollbarWidth();
-    mBubbleTooltipButton.setVisible(rightPart.getWidth() >= 24 + scrollbarWidth);
-    if(mBubbleTooltipButton.isVisible())
+    auto const hasRightButtons = rightPart.getWidth() >= 24 + scrollbarWidth;
+    mBubbleTooltipButton.setVisible(hasRightButtons);
+    mEditModeButton.setVisible(hasRightButtons);
+    if(hasRightButtons)
     {
-        mBubbleTooltipButton.setBounds(rightPart.removeFromRight(24 + scrollbarWidth).withTrimmedTop(4).removeFromTop(24).withSizeKeepingCentre(20, 20));
+        auto rightButtonBounds = rightPart.removeFromRight(24 + scrollbarWidth).reduced((2 + scrollbarWidth) / 2, 4);
+        mBubbleTooltipButton.setBounds(rightButtonBounds.removeFromTop(rightButtonBounds.getHeight() / 2).withSizeKeepingCentre(20, 20));
+        mEditModeButton.setBounds(rightButtonBounds.withSizeKeepingCentre(20, 20));
     }
     mTransportSelectionInfo.setVisible(rightPart.getWidth() >= 164);
     if(mTransportSelectionInfo.isVisible())
@@ -145,6 +157,9 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
         case ApplicationCommandIDs::viewInfoBubble:
             mBubbleTooltipButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
             break;
+        case ApplicationCommandIDs::frameToggleDrawing:
+            mEditModeButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
+            break;
         default:
             break;
     }
@@ -153,7 +168,7 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
 void Document::Header::applicationCommandListChanged()
 {
     mBubbleTooltipButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::viewInfoBubble));
-    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble});
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble, ApplicationCommandIDs::frameToggleDrawing});
 }
 
 ANALYSE_FILE_END
