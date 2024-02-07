@@ -149,33 +149,35 @@ void Group::PropertyPanel::resized()
 
 void Group::PropertyPanel::updateContent()
 {
-    auto const zoomTrack = Tools::getTrackAcsr(mAccessor, mAccessor.getAttr<AttrType::zoomid>());
+    auto const zoomId = mAccessor.getAttr<AttrType::zoomid>();
     auto& entry = mPropertyZoomTrack.entry;
     entry.clear(juce::NotificationType::dontSendNotification);
     entry.addItem(juce::translate("Front"), 1);
-    if(!zoomTrack.has_value())
-    {
-        entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
-    }
+    entry.addSeparator();
 
     auto const layout = mAccessor.getAttr<AttrType::layout>();
     for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
     {
-        auto const trackId = layout[layoutIndex];
+        auto const trackId = layout.at(layoutIndex);
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
         if(trackAcsr.has_value())
         {
             auto const& trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-            if(!trackName.isEmpty())
-            {
-                entry.addItem(trackName, static_cast<int>(layoutIndex) + 2);
-                if(zoomTrack.has_value() && std::addressof(trackAcsr.value()) == std::addressof(zoomTrack.value()))
-                {
-                    entry.setSelectedId(static_cast<int>(layoutIndex) + 2, juce::NotificationType::dontSendNotification);
-                }
-            }
+            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+            entry.addItem(itemLabel, static_cast<int>(layoutIndex) + 2);
         }
     }
+
+    auto const it = std::find(layout.cbegin(), layout.cend(), zoomId);
+    if(!zoomId.isEmpty() && it != layout.cend())
+    {
+        entry.setSelectedId(static_cast<int>(std::distance(layout.cbegin(), it)) + 2, juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+    }
+
     mPropertyZoomTrack.setEnabled(!layout.empty());
 
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
