@@ -173,7 +173,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
     };
 
     auto const& selection = transportAcsr.getAttr<Transport::AttrType::selection>();
-    auto const isModeActive = mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
+    auto const isModeActive = mAccessor.getAttr<AttrType::drawingState>() && mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
     switch(commandID)
     {
         case CommandIDs::frameSelectAll:
