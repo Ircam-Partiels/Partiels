@@ -116,13 +116,13 @@ void Group::Plot::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const zoomTrack = Tools::getZoomTrackAcsr(mAccessor);
+    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
-            auto const isSelected = (!zoomTrack.has_value() && it == std::prev(layout.crend())) || std::addressof(trackAcsr.value()) == std::addressof(zoomTrack.value());
+            auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Renderer::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, colour);
         }

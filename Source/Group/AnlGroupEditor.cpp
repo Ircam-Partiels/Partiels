@@ -74,12 +74,12 @@ void Group::Editor::paint(juce::Graphics& g)
 
 void Group::Editor::updateContent()
 {
-    auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
-    if(!zoomTrackAcsr.has_value())
+    auto const trackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
+    if(!trackAcsr.has_value())
     {
         mTrackEditor.reset();
     }
-    else if(mTrackIdentifier != zoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
+    else if(mTrackIdentifier != trackAcsr.value().get().getAttr<Track::AttrType::identifier>())
     {
         mTrackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         mTrackEditor = std::make_unique<Track::Editor>(
@@ -88,9 +88,20 @@ void Group::Editor::updateContent()
                 return getBubbleTooltip(pt);
             },
             false);
-        updateEditorNameAndColour();
+        if(mTrackEditor != nullptr)
+        {
+            mTrackEditor->onMouseDown = [this](juce::MouseEvent const& event)
+            {
+                if(!event.mods.isPopupMenu())
+                {
+                    return;
+                }
+                showPopupMenu();
+            };
+        }
         addAndMakeVisible(mTrackEditor.get());
     }
+    updateEditorNameAndColour();
     resized();
 }
 
@@ -102,6 +113,34 @@ void Group::Editor::updateEditorNameAndColour()
     }
 }
 
+void Group::Editor::showPopupMenu()
+{
+    juce::PopupMenu trackRefenceMenu;
+    auto const referenceId = mAccessor.getAttr<AttrType::referenceid>();
+    trackRefenceMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [this]()
+                             {
+                                 mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
+                             });
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    {
+        auto const trackId = layout.at(layoutIndex);
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+            trackRefenceMenu.addItem(itemLabel, trackId != referenceId, trackId == referenceId, [=, this]()
+                                     {
+                                         mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
+                                     });
+        }
+    }
+    juce::PopupMenu menu;
+    menu.addSubMenu(juce::translate("Track Reference"), trackRefenceMenu);
+    menu.showMenuAsync(juce::PopupMenu::Options().withDeletionCheck(*this).withMousePosition());
+}
+
 juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
 {
     if(!getLocalBounds().contains(pt))
@@ -111,10 +150,10 @@ juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
     juce::StringArray lines;
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
-    auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
-    if(zoomTrackAcsr.has_value())
+    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
+    if(referenceTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
     {
-        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(zoomTrackAcsr->get(), *this, pt.y)));
+        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
     }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

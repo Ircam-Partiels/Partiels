@@ -22,6 +22,7 @@ namespace Group
     private:
         void updateContent();
         void updateEditorNameAndColour();
+        void showPopupMenu();
         juce::String getBubbleTooltip(juce::Point<int> const& pt);
 
         juce::Component& mContent;

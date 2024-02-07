@@ -151,7 +151,7 @@ std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Access
     return verticalRanges;
 }
 
-std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrackAcsr(Accessor const& accessor)
+std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getReferenceTrackAcsr(Accessor const& accessor)
 {
     auto const selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::referenceid>());
     if(selectedTrack.has_value())
@@ -161,7 +161,7 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrac
     for(auto const& trackIdentifier : accessor.getAttr<AttrType::layout>())
     {
         auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>() && Track::Tools::getFrameType(trackAcsr.value()) != Track::FrameType::label)
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
             return trackAcsr;
         }
@@ -171,7 +171,7 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrac
 
 bool Group::Tools::canZoomIn(Accessor const& accessor)
 {
-    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    auto const trackAcsr = getReferenceTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         return Track::Tools::canZoomIn(trackAcsr.value().get());
@@ -181,7 +181,7 @@ bool Group::Tools::canZoomIn(Accessor const& accessor)
 
 bool Group::Tools::canZoomOut(Accessor const& accessor)
 {
-    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    auto const trackAcsr = getReferenceTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         return Track::Tools::canZoomOut(trackAcsr.value().get());
@@ -191,7 +191,7 @@ bool Group::Tools::canZoomOut(Accessor const& accessor)
 
 void Group::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    auto const trackAcsr = getReferenceTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         Track::Tools::zoomIn(trackAcsr.value().get(), ratio, notification);
@@ -200,7 +200,7 @@ void Group::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType not
 
 void Group::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    auto const trackAcsr = getReferenceTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         Track::Tools::zoomOut(trackAcsr.value().get(), ratio, notification);
