@@ -36,10 +36,9 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& 
         {
             return juce::Image{};
         }
-        Transport::Accessor transportAccessor;
         Zoom::Accessor tempTimeZoomAcsr;
         tempTimeZoomAcsr.copyFrom(timeZoomAccessor, NotificationType::synchronous);
-        Plot plot(accessor, transportAccessor, tempTimeZoomAcsr);
+        Plot plot(accessor, tempTimeZoomAcsr);
         plot.setSize(width, height);
         return plot.createComponentSnapshot({0, 0, width, height});
     };
