@@ -210,7 +210,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::zoomAcsr:
             {
                 auto sharedZoomAcsr = mAccessor.getAttr<AttrType::zoomAcsr>();
-                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(mSharedZoomAccessor.value()) != std::addressof(*sharedZoomAcsr)))
+                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(mSharedZoomAccessor.value().get()) != std::addressof(sharedZoomAcsr.value().get())))
                 {
                     mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
                 }
