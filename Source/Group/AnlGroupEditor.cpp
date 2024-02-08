@@ -113,17 +113,50 @@ void Group::Editor::updateEditorNameAndColour()
     }
 }
 
-void Group::Editor::showPopupMenu()
+void Group::Editor::showPopupMenu(juce::Point<int> const position)
 {
+    auto const switchAction = [this](PopupMenuAction const nextAction)
+    {
+        auto const action = std::exchange(mPopupMenuAction, nextAction);
+        if(action != nextAction)
+        {
+            switch(action)
+            {
+                case PopupMenuAction::none:
+                    break;
+                case PopupMenuAction::referenceTrack:
+                    mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                    break;
+                case PopupMenuAction::trackLayout:
+                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                    break;
+                case PopupMenuAction::channelLayout:
+                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the channels of the group"));
+                    break;
+            }
+            switch(nextAction)
+            {
+                case PopupMenuAction::none:
+                    break;
+                case PopupMenuAction::referenceTrack:
+                    mDirector.startAction(false);
+                    break;
+                case PopupMenuAction::trackLayout:
+                case PopupMenuAction::channelLayout:
+                    mDirector.startAction(true);
+                    break;
+            }
+        }
+    };
     juce::PopupMenu mainMenu;
     {
         juce::PopupMenu subMenu;
         auto const referenceId = mAccessor.getAttr<AttrType::referenceid>();
-        subMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [this]()
+        subMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [=, this]()
                         {
-                            mDirector.startAction(false);
+                            switchAction(PopupMenuAction::referenceTrack);
                             mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
-                            mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                            showPopupMenu(position);
                         });
         subMenu.addSeparator();
         auto const layout = mAccessor.getAttr<AttrType::layout>();
@@ -137,9 +170,9 @@ void Group::Editor::showPopupMenu()
                 auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
                 subMenu.addItem(itemLabel, trackId != referenceId, trackId == referenceId, [=, this]()
                                 {
-                                    mDirector.startAction(false);
+                                    switchAction(PopupMenuAction::referenceTrack);
                                     mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
-                                    mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                                    showPopupMenu(position);
                                 });
             }
         }
@@ -147,33 +180,38 @@ void Group::Editor::showPopupMenu()
     }
     {
         juce::PopupMenu subMenu;
-        auto const layout = mAccessor.getAttr<AttrType::layout>();
-        for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
-        {
-            auto const trackId = layout.at(layoutIndex);
-            auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
-            if(trackAcsr.has_value())
+        Tools::fillMenuForTrackVisibility(
+            mAccessor, subMenu, [=]()
             {
-                auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
-                auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
-                auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
-                auto const trackVisible = trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>();
-                subMenu.addItem(itemLabel, true, trackVisible, [=, this]()
-                                {
-                                    auto localTrackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifier);
-                                    if(localTrackAcsr.has_value())
-                                    {
-                                        mDirector.startAction(true);
-                                        localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!trackVisible, NotificationType::synchronous);
-                                        mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks in the group overlay view"));
-                                    }
-                                });
-            }
-        }
+                switchAction(PopupMenuAction::trackLayout);
+            },
+            [=, this]()
+            {
+                showPopupMenu(position);
+            });
         mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
     }
-
-    mainMenu.showMenuAsync(juce::PopupMenu::Options().withDeletionCheck(*this).withMousePosition());
+    {
+        juce::PopupMenu subMenu;
+        Tools::fillMenuForChannelVisibility(
+            mAccessor, subMenu, [=]()
+            {
+                switchAction(PopupMenuAction::channelLayout);
+            },
+            [=, this]()
+            {
+                showPopupMenu(position);
+            });
+        mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
+    }
+    auto options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position));
+    mainMenu.showMenuAsync(options, [=](int result)
+                           {
+                               if(result == 0)
+                               {
+                                   switchAction(PopupMenuAction::none);
+                               }
+                           });
 }
 
 juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)

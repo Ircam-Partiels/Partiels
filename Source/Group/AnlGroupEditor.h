@@ -22,8 +22,18 @@ namespace Group
     private:
         void updateContent();
         void updateEditorNameAndColour();
-        void showPopupMenu();
+        void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition());
         juce::String getBubbleTooltip(juce::Point<int> const& pt);
+
+        // clang-format off
+        enum class PopupMenuAction
+        {
+              none
+            , referenceTrack
+            , trackLayout
+            , channelLayout
+        };
+        // clang-format on
 
         juce::Component& mContent;
         Director& mDirector;
@@ -36,6 +46,7 @@ namespace Group
         std::unique_ptr<Track::Editor> mTrackEditor;
         juce::String mTrackIdentifier;
         LayoutNotifier mLayoutNotifier;
+        PopupMenuAction mPopupMenuAction = PopupMenuAction::none;
     };
 } // namespace Group
 
