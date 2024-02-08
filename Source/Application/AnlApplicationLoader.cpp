@@ -364,9 +364,9 @@ void Application::LoaderContent::applicationCommandListChanged()
 {
     using CommandIDs = CommandTarget::CommandIDs;
     auto const& commandManager = Instance::get().getApplicationCommandManager();
-    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::documentOpen));
-    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editNewTrack));
-    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
+    mLoadFileButton.setTooltip(Utils::getCommandDescriptionWithKey(commandManager, CommandIDs::documentOpen));
+    mAddTrackButton.setTooltip(Utils::getCommandDescriptionWithKey(commandManager, CommandIDs::editNewTrack));
+    mLoadTemplateButton.setTooltip(Utils::getCommandDescriptionWithKey(commandManager, CommandIDs::editLoadTemplate));
 }
 
 void Application::DragAndDropTarget::paintOverChildren(juce::Graphics& g)
