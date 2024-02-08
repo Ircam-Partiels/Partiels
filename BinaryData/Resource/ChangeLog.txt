@@ -8,6 +8,7 @@
 - Add: An interaction mode that allow switching between navigating and editing tracks and groups (#413)
 - Imp: Allow navigating on the graphic plot of the tracks (#412)
 - Imp: Allow editing on the graphical plot of groups (#398)
+- Add: Add a right-click pop-up menu on the group graphical plot for quick access to properties of the reference track, track layout and channel layout (#389)
 
 v2.0.0
 
