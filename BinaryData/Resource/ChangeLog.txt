@@ -1,3 +1,4 @@
+- Imp: Display keyboard shortcuts in button tooltips when available (430)
 - Fix: The delimitation between channels on the group display is not visible (#429)
 - Fix: The zoom reference track in the group property window is not updated correctly (#428)
 - Imp: Right-click on zoom ruler to display pop-up window for textual editing of value range (#427)
