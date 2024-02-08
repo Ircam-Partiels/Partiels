@@ -200,10 +200,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAddGroupButton.setButtonText("+");
     mAddGroupButton.setWantsKeyboardFocus(false);
     mAddGroupButton.setMouseClickGrabsKeyboardFocus(false);
-    mAddGroupButton.onClick = [this]()
-    {
-        mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::editNewGroup, true);
-    };
+    mAddGroupButton.setCommandToTrigger(std::addressof(mApplicationCommandManager), ApplicationCommandIDs::editNewGroup, true);
 
     addAndMakeVisible(pluginListButton);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -831,6 +828,7 @@ void Document::Section::applicationCommandInvoked(juce::ApplicationCommandTarget
 
 void Document::Section::applicationCommandListChanged()
 {
+    pluginListButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::editNewTrack));
     Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble});
 }
 

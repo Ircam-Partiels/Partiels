@@ -109,7 +109,6 @@ Application::Interface::DocumentContainer::DocumentContainer()
 
     mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font("Arial", 8.0, juce::Font::plain).toString());
     mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
-    mDocumentSection.pluginListButton.setTooltip(juce::translate("Show plugins list table"));
     mDocumentSection.pluginListButton.onClick = []()
     {
         if(auto* window = Instance::get().getWindow())
@@ -200,7 +199,6 @@ void Application::Interface::DocumentContainer::showPluginListTablePanel()
     animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
     animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
     mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x92"));
-    mDocumentSection.pluginListButton.setTooltip(juce::translate("Hide plugins list table"));
 }
 
 void Application::Interface::DocumentContainer::hidePluginListTablePanel()
@@ -211,7 +209,6 @@ void Application::Interface::DocumentContainer::hidePluginListTablePanel()
     animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
     animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
     mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
-    mDocumentSection.pluginListButton.setTooltip(juce::translate("Show plugins list table"));
 }
 
 void Application::Interface::DocumentContainer::togglePluginListTablePanel()
