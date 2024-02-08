@@ -10,7 +10,7 @@ namespace Group
     using FocusInfo = Track::FocusInfo;
 
     // clang-format off
-    enum ChannelVisibilityState
+    enum class ChannelVisibilityState
     {
           hidden
         , visible
