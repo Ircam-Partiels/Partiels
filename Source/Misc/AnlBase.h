@@ -34,6 +34,7 @@ namespace Utils
 
     void notifyListener(juce::ApplicationCommandManager& commandManager, juce::ApplicationCommandManagerListener& listener, std::vector<int> const& commandIds);
     bool isCommandTicked(juce::ApplicationCommandManager& commandManager, int command);
+    juce::String getCommandDescriptionWithKey(juce::ApplicationCommandManager const& commandManager, int command);
 } // namespace Utils
 
 // https://timur.audio/using-locks-in-real-time-audio-processing-safely

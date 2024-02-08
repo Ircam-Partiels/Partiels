@@ -26,4 +26,27 @@ bool Utils::isCommandTicked(juce::ApplicationCommandManager& commandManager, int
     return false;
 }
 
+juce::String Utils::getCommandDescriptionWithKey(juce::ApplicationCommandManager const& commandManager, int command)
+{
+    if(auto const* ci = commandManager.getCommandForID(command))
+    {
+        auto description = ci->description.isNotEmpty() ? ci->description : ci->shortName;
+        for(auto& eypresses : ci->defaultKeypresses)
+        {
+            auto const key = eypresses.getTextDescription();
+            description << " [";
+            if(key.length() == 1)
+            {
+                description << juce::translate("shortcut") << ": '" << key << "']";
+            }
+            else
+            {
+                description << key << ']';
+            }
+        }
+        return description;
+    }
+    return {};
+}
+
 ANALYSE_FILE_END
