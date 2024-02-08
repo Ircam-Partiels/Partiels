@@ -22,6 +22,9 @@ namespace Group
         bool canZoomOut(Accessor const& accessor);
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
         void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
+
+        void fillMenuForTrackVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn);
+        void fillMenuForChannelVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn);
     } // namespace Tools
 
     class LayoutNotifier

@@ -207,6 +207,156 @@ void Group::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType no
     }
 }
 
+void Group::Tools::fillMenuForTrackVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn)
+{
+    auto const layout = accessor.getAttr<AttrType::layout>();
+    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    {
+        auto const trackId = layout.at(layoutIndex);
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackId);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
+            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+            auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+            auto const trackVisible = trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>();
+            menu.addItem(itemLabel, true, trackVisible, [=, &accessor]()
+                         {
+                             auto localTrackAcsr = Group::Tools::getTrackAcsr(accessor, trackIdentifier);
+                             if(startFn != nullptr)
+                             {
+                                 startFn();
+                             }
+                             if(localTrackAcsr.has_value())
+                             {
+                                 localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!trackVisible, NotificationType::synchronous);
+                             }
+                             if(endFn != nullptr)
+                             {
+                                 endFn();
+                             }
+                         });
+        }
+    }
+}
+
+void Group::Tools::fillMenuForChannelVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn)
+{
+    auto const channelslayout = getChannelVisibilityStates(accessor);
+    auto const numChannels = channelslayout.size();
+    if(numChannels > 2_z)
+    {
+        auto const oneHidden = std::any_of(channelslayout.cbegin(), channelslayout.cend(), [](auto const state)
+                                           {
+                                               return state != ChannelVisibilityState::visible;
+                                           });
+        menu.addItem(juce::translate("All Channels"), oneHidden, !oneHidden, [=, &accessor]()
+                     {
+                         if(startFn != nullptr)
+                         {
+                             startFn();
+                         }
+                         for(auto const& trackIdentifer : accessor.getAttr<AttrType::layout>())
+                         {
+                             auto trackAcsr = getTrackAcsr(accessor, trackIdentifer);
+                             if(trackAcsr.has_value())
+                             {
+                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
+                                 std::fill(copy.begin(), copy.end(), true);
+                                 trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                             }
+                         }
+                         if(endFn != nullptr)
+                         {
+                             endFn();
+                         }
+                     });
+
+        auto const firstHidden = channelslayout[0_z] != ChannelVisibilityState::visible || std::any_of(std::next(channelslayout.cbegin()), channelslayout.cend(), [](auto const state)
+                                                                                                       {
+                                                                                                           return state == ChannelVisibilityState::visible;
+                                                                                                       });
+        menu.addItem(juce::translate("Channel 1 Only"), firstHidden, !firstHidden, [=, &accessor]()
+                     {
+                         if(startFn != nullptr)
+                         {
+                             startFn();
+                         }
+                         for(auto const& trackIdentifer : accessor.getAttr<AttrType::layout>())
+                         {
+                             auto trackAcsr = getTrackAcsr(accessor, trackIdentifer);
+                             if(trackAcsr.has_value())
+                             {
+                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
+                                 if(!copy.empty())
+                                 {
+                                     copy[0_z] = true;
+                                     std::fill(std::next(copy.begin()), copy.end(), false);
+                                     trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                                 }
+                             }
+                         }
+                         if(endFn != nullptr)
+                         {
+                             endFn();
+                         }
+                     });
+    }
+
+    auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const colour = juce::Colour::contrasting(lookAndFeel.findColour(juce::PopupMenu::ColourIds::backgroundColourId), lookAndFeel.findColour(juce::PopupMenu::ColourIds::textColourId));
+    for(size_t channel = 0_z; channel < channelslayout.size(); ++channel)
+    {
+        juce::PopupMenu::Item item(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)));
+        item.isEnabled = !channelslayout.empty();
+        item.isTicked = channelslayout[channel] != ChannelVisibilityState::hidden;
+        if(channelslayout[channel] == ChannelVisibilityState::both)
+        {
+            item.colour = colour;
+        }
+        auto const newState = channelslayout[channel] != ChannelVisibilityState::visible ? true : false;
+        item.action = [=, &accessor]()
+        {
+            if(startFn != nullptr)
+            {
+                startFn();
+            }
+            for(auto const& trackIdentifer : accessor.getAttr<AttrType::layout>())
+            {
+                auto trackAcsr = getTrackAcsr(accessor, trackIdentifer);
+                if(trackAcsr.has_value())
+                {
+                    auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
+                    if(channel < copy.size())
+                    {
+                        copy[channel] = newState;
+                        if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
+                                        {
+                                            return state;
+                                        }))
+                        {
+                            if(channel + 1_z < copy.size())
+                            {
+                                copy[channel + 1_z] = true;
+                            }
+                            else if(channel > 0_z)
+                            {
+                                copy[channel - 1_z] = true;
+                            }
+                        }
+                        trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                    }
+                }
+            }
+            if(endFn != nullptr)
+            {
+                endFn();
+            }
+        };
+        menu.addItem(std::move(item));
+    }
+}
+
 Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn, std::set<Track::AttrType> attributes)
 : mAccessor(accessor)
 , mAttributes(std::move(attributes))
