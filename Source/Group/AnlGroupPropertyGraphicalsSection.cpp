@@ -477,7 +477,7 @@ void Group::PropertyGraphicalsSection::showChannelLayout()
         {
             item.colour = colour;
         }
-        auto const newState = channelslayout[channel] != ChannelVisibilityState::visible ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden;
+        auto const newState = channelslayout[channel] != ChannelVisibilityState::visible ? true : false;
         item.action = [this, channel, newState]()
         {
             for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
@@ -491,16 +491,16 @@ void Group::PropertyGraphicalsSection::showChannelLayout()
                         copy[channel] = newState;
                         if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
                                         {
-                                            return state == ChannelVisibilityState::visible;
+                                            return state;
                                         }))
                         {
                             if(channel + 1_z < copy.size())
                             {
-                                copy[channel + 1_z] = ChannelVisibilityState::visible;
+                                copy[channel + 1_z] = true;
                             }
                             else if(channel > 0_z)
                             {
-                                copy[channel - 1_z] = ChannelVisibilityState::visible;
+                                copy[channel - 1_z] = true;
                             }
                         }
                         trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
@@ -530,35 +530,35 @@ void Group::PropertyGraphicalsSection::showChannelLayout()
 void Group::PropertyGraphicalsSection::showVisibilityInGroup()
 {
     juce::PopupMenu menu;
-    juce::WeakReference<juce::Component> weakReference(this);
-    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
-    for(auto const& trackAcsr : trackAcsrs)
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
     {
-        auto const name = trackAcsr.get().getAttr<Track::AttrType::name>();
-        auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-        auto const visible = trackAcsr.get().getAttr<Track::AttrType::showInGroup>();
-        menu.addItem(juce::translate("Show \"TRACKNAME\"").replace("TRACKNAME", name), true, visible, [=, this]()
-                     {
-                         if(weakReference.get() == nullptr)
+        auto const trackId = layout.at(layoutIndex);
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
+            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+            auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+            auto const trackVisible = trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>();
+            menu.addItem(itemLabel, true, trackVisible, [=, this]()
                          {
-                             return;
-                         }
-                         auto localTrackAcsr = Group::Tools::getTrackAcsr(mAccessor, identifier);
-                         if(localTrackAcsr.has_value())
-                         {
-                             localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!visible, NotificationType::synchronous);
-                         }
-                         showVisibilityInGroup();
-                     });
+                             auto localTrackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifier);
+                             if(localTrackAcsr.has_value())
+                             {
+                                 localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!trackVisible, NotificationType::synchronous);
+                             }
+                             showVisibilityInGroup();
+                         });
+        }
     }
-
     if(!std::exchange(mShowInGroupActionStarted, true))
     {
         mDirector.startAction(true);
     }
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyShowInGroup.entry), [=, this](int menuResult)
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyShowInGroup.entry).withDeletionCheck(*this), [=, this](int menuResult)
                        {
-                           if(weakReference.get() != nullptr && menuResult == 0 && std::exchange(mShowInGroupActionStarted, false))
+                           if(menuResult == 0 && std::exchange(mShowInGroupActionStarted, false))
                            {
                                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks in the group overlay view"));
                            }
