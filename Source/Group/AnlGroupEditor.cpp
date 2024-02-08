@@ -115,30 +115,65 @@ void Group::Editor::updateEditorNameAndColour()
 
 void Group::Editor::showPopupMenu()
 {
-    juce::PopupMenu trackRefenceMenu;
-    auto const referenceId = mAccessor.getAttr<AttrType::referenceid>();
-    trackRefenceMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [this]()
-                             {
-                                 mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
-                             });
-    auto const layout = mAccessor.getAttr<AttrType::layout>();
-    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    juce::PopupMenu mainMenu;
     {
-        auto const trackId = layout.at(layoutIndex);
-        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
-        if(trackAcsr.has_value())
+        juce::PopupMenu subMenu;
+        auto const referenceId = mAccessor.getAttr<AttrType::referenceid>();
+        subMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [this]()
+                        {
+                            mDirector.startAction(false);
+                            mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
+                            mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                        });
+        subMenu.addSeparator();
+        auto const layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
         {
-            auto const& trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
-            trackRefenceMenu.addItem(itemLabel, trackId != referenceId, trackId == referenceId, [=, this]()
-                                     {
-                                         mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
-                                     });
+            auto const trackId = layout.at(layoutIndex);
+            auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
+            if(trackAcsr.has_value())
+            {
+                auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
+                auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+                subMenu.addItem(itemLabel, trackId != referenceId, trackId == referenceId, [=, this]()
+                                {
+                                    mDirector.startAction(false);
+                                    mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
+                                    mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                                });
+            }
         }
+        mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu);
     }
-    juce::PopupMenu menu;
-    menu.addSubMenu(juce::translate("Track Reference"), trackRefenceMenu);
-    menu.showMenuAsync(juce::PopupMenu::Options().withDeletionCheck(*this).withMousePosition());
+    {
+        juce::PopupMenu subMenu;
+        auto const layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+        {
+            auto const trackId = layout.at(layoutIndex);
+            auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
+            if(trackAcsr.has_value())
+            {
+                auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
+                auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+                auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+                auto const trackVisible = trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>();
+                subMenu.addItem(itemLabel, true, trackVisible, [=, this]()
+                                {
+                                    auto localTrackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifier);
+                                    if(localTrackAcsr.has_value())
+                                    {
+                                        mDirector.startAction(true);
+                                        localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!trackVisible, NotificationType::synchronous);
+                                        mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks in the group overlay view"));
+                                    }
+                                });
+            }
+        }
+        mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
+    }
+
+    mainMenu.showMenuAsync(juce::PopupMenu::Options().withDeletionCheck(*this).withMousePosition());
 }
 
 juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
@@ -159,10 +194,10 @@ juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
     for(auto const& identifier : layout)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-        if(trackAcsr.has_value() && trackAcsr->get().getAttr<Track::AttrType::showInGroup>())
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
-            lines.add(trackAcsr->get().getAttr<Track::AttrType::name>() + ":");
-            for(auto const& line : Track::Tools::getValueTootip(trackAcsr->get(), mTimeZoomAccessor, *this, pt.y, time))
+            lines.add(trackAcsr.value().get().getAttr<Track::AttrType::name>() + ":");
+            for(auto const& line : Track::Tools::getValueTootip(trackAcsr.value().get(), mTimeZoomAccessor, *this, pt.y, time))
             {
                 lines.addArray("\t" + line);
             }
