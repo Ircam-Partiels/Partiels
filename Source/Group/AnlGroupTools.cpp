@@ -65,7 +65,7 @@ std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilitySta
             {
                 if(i < trackChannelsLayout.size() && channelslayout[i] != ChannelVisibilityState::both)
                 {
-                    if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
+                    if(static_cast<int>(channelslayout[i]) != static_cast<int>(trackChannelsLayout[i]))
                     {
                         channelslayout[i] = ChannelVisibilityState::both;
                     }
