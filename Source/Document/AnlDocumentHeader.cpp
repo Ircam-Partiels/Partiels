@@ -167,7 +167,8 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
 
 void Document::Header::applicationCommandListChanged()
 {
-    mBubbleTooltipButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::viewInfoBubble));
+    mBubbleTooltipButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::viewInfoBubble));
+    mEditModeButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::frameToggleDrawing));
     Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble, ApplicationCommandIDs::frameToggleDrawing});
 }
 
