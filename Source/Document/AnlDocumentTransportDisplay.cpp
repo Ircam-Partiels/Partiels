@@ -165,8 +165,8 @@ void Document::TransportDisplay::applicationCommandInvoked(juce::ApplicationComm
 
 void Document::TransportDisplay::applicationCommandListChanged()
 {
-    mPlaybackButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportTogglePlayback));
-    mLoopButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportToggleLooping));
+    mPlaybackButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::transportTogglePlayback));
+    mLoopButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::transportToggleLooping));
     Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::transportTogglePlayback, ApplicationCommandIDs::transportToggleLooping});
 }
 
