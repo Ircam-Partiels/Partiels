@@ -245,7 +245,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         }
         case CommandIDs::frameToggleDrawing:
         {
-            result.setInfo(juce::translate("Toggle Drawing Mode"), juce::translate("Switch between drawing mode and navigation mode"), "Edit", 0);
+            result.setInfo(juce::translate("Toggle Edit Mode"), juce::translate("Switch between edition mode and navigation mode"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier, 0));
             result.setTicked(mAccessor.getAttr<AttrType::drawingState>());
             result.setActive(true);
