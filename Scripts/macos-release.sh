@@ -10,13 +10,6 @@ else
 fi
 
 if [ -z $2 ]; then
-	echo '\033[0;31m' "Error: Partiels build ID is undefined"
-  exit -1
-else
-  PARTIELS_BUILD_ID=$2
-fi
-
-if [ -z $3 ]; then
   PARTIELS_BUILD_MODE="Release"
 else
   PARTIELS_BUILD_MODE=$3
@@ -32,7 +25,7 @@ rm -rf *
 
 echo '\033[0;34m' "Preparing project..."
 echo '\033[0m'
-cmake .. -G Xcode -DPARTIELS_BUILD_TAG=$PARTIELS_BUILD_TAG -DPARTIELS_BUILD_ID=$PARTIELS_BUILD_ID
+cmake .. -G Xcode -DPARTIELS_BUILD_TAG=$PARTIELS_BUILD_TAG
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'

@@ -15,7 +15,7 @@ Test::MacOS:
     - osx
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
     - cmake --build build --target PartielsCheckFormat -- -quiet
     - ./Scripts/macos-build.sh Debug
     - ctest -C Debug -VV --test-dir build 
@@ -28,7 +28,7 @@ Test::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG" -DPARTIELS_BUILD_ID="$CI_PIPELINE_ID"
+    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG"
     - cmake --build build --target PartielsCheckFormat -- /nologo /verbosity:minimal
     - cmake --build build --config Debug
     - ctest -C Debug -VV --test-dir build 
@@ -41,7 +41,7 @@ Test::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
     - cmake --build build --target PartielsCheckFormat -- --quiet
     - cmake --build build
     - ctest -C Debug -V --test-dir build 
@@ -52,7 +52,7 @@ Build::MacOS:
     - osx
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
     - cmake --build build --target PartielsCheckFormat -- -quiet
     - ./Scripts/macos-build.sh Release
     - ctest -C Release -VV --test-dir build 
@@ -63,7 +63,7 @@ Build::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG" -DPARTIELS_BUILD_ID="$CI_PIPELINE_ID"
+    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com" -DPARTIELS_BUILD_TAG="$CI_COMMIT_TAG"
     - cmake --build build --target PartielsCheckFormat -- /nologo /verbosity:minimal
     - cmake --build build --config Release
     - move-item -path ".\build\Partiels-install.exe" -destination ".\"
@@ -79,7 +79,7 @@ Build::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
     - cmake --build build --target PartielsCheckFormat -- --quiet
     - cmake --build build
     - ctest -C Release -V --test-dir build 
@@ -98,7 +98,7 @@ Doc:
     - npm install mdpdf -g
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_BUILD_ID=$CI_PIPELINE_ID
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
     - cmake --build build --target PartielsManual -- -quiet
     - mv build/Partiels-Manual.pdf ./Partiels-Manual.pdf
   artifacts:
