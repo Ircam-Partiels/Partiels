@@ -108,7 +108,7 @@ If you don't want Partiels to check for a new release on startup, you can toggle
 
 Partiels has a main graphical interface to view, navigate and edit the different analyses of a document. The actions and interaction modes are presented in detail in the different sections of this manual.  
 
-<p align="center"><img src="Images/section-overview.1-v1.3.2.png" alt="Example" width="1250"/></p>
+<p align="center"><img src="Images/section-overview.1-v2.0.1.png" alt="Example" width="1250"/></p>
 
 To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
 
@@ -263,13 +263,17 @@ Use the `⇥ Tab` key to move the selection to the next visible track or group.
 
 ## 6. Visualize and edit track results
 
-Track results can be manually visualized and edited directly on the graphical plot or in the result table to correct values and improve representation. Only marker or point tracks can be edited. 
+Track results can be manually edited directly on the graphical plot of the track or the group or using the result table to correct values and improve representation. Only marker or point tracks can be edited. 
 
 Following editing, you can use the keyboard shortcuts `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states, and `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes to both the graphical plot and the results table.
 
 ### 6.1. Plot
 
 On the graphical plot, markers are represented by vertical lines on the timeline, points by a succession of segments - which can be interrupted - and vectors by a sonogram-like matrix.  Markers and points can be created, deleted, copied, pasted, and duplicated. Markers can also be moved over time.
+
+> Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+
+Interactions on a group's graphical plot modify the results of the group's reference track. The reference track can be accessed via the group's properties window or via the popup menu displayed by right-clicking on the graphical plot.
 
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker track to create a new marker at the corresponding time.  
 - Click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a point track to create new points at the corresponding times and values.  
@@ -455,9 +459,11 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
-#### 8.2.3 Group
+#### 8.2.3 Plot
 
-Groups allow you to navigate and zoom horizontally and vertically directly on the graphical plot. 
+When the navigation mode is enabled, the graphical plots of the groups and the tracks  allow you to navigate and zoom horizontally and vertically. 
+
+> Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
 
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag to select the time and value ranges to zoom to.
 - Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag from top-left to bottom-right to zoom in on time and value ranges, and conversely, from bottom-right to top-left to zoom out on time and value ranges.
@@ -643,15 +649,17 @@ The graphical section displays information about the plugin such as the name, th
 The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel via the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**).
 
 <p align="center">
-<img src="Images/section-group-properties.1-v1.0.8.png" width="242"/>
+<img src="Images/section-group-properties.1-v2.0.1.png" width="242"/>
 </p>
 
 The first entries correpond to exclusive properties of the group :
 - Name: The property defined the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
 - Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent.
-- Zoom Reference: This property defines which track is used as a reference for the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay.  By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
+- Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay.  By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
 
 The following sections Processor and Graphical contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
+
+> The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
 
 ## 11. Audio files layout
 
