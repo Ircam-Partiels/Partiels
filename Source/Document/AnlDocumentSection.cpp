@@ -442,6 +442,12 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
             return {};
         }
         auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
+        auto const point = groupSection == component ? event.position.toInt() : event.getEventRelativeTo(groupSection).position.toInt();
+        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), point.y, true);
+        if(!channel.has_value())
+        {
+            return {identifier, channel};
+        }
         auto const trackAcsrRef = Group::Tools::getReferenceTrackAcsr(groupAcsr);
         if(!trackAcsrRef.has_value())
         {
