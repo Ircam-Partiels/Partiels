@@ -13,16 +13,16 @@
   <layout value="daaaa5e9ca9440919fee0457c301a5ae"/>
   <layout value="66cf756a43824c299a0256f18b5df652"/>
   <timeZoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="57.12369614512472"
-            minimumLength="0.01160997732426304" visibleRange_start="0.0"
-            visibleRange_end="57.12369614512472">
+            minimumLength="0.01160997732426304" visibleRange_start="3.760939000859143"
+            visibleRange_end="16.78640794453515">
     <grid MiscModelVersion="131073" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131073" startPlayhead="12.6665587104407" looping="0"
+  <transport MiscModelVersion="131073" startPlayhead="6.349852082832014" looping="0"
              loopRange_start="55.674250339" loopRange_end="56.208309296" stopAtLoopEnd="0"
              autoScroll="1" gain="0.06478693864793536" magnetize="0"/>
   <groups MiscModelVersion="131073" identifier="66cf756a43824c299a0256f18b5df652"
-          name="Group 2" height="219" colour="0" expanded="0" zoomid="">
+          name="Group 2" height="438" colour="0" expanded="0" referenceid="">
     <layout value="03570fdcd3f14391a13d069fcabdf7ef"/>
     <layout value="2476c2bd12534fc48f5612a755917925"/>
     <zoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
@@ -32,7 +32,7 @@
     </zoom>
   </groups>
   <groups MiscModelVersion="131073" identifier="daaaa5e9ca9440919fee0457c301a5ae"
-          name="Group 1" height="219" colour="0" expanded="1" zoomid="">
+          name="Group 1" height="438" colour="0" expanded="0" referenceid="">
     <layout value="d9dc8ffb44944467a7099d1f9877f1ac"/>
     <layout value="4012ed3f6d2a4d5d8b2c0bd4e771088e"/>
     <zoom MiscModelVersion="131073" globalRange_start="0.0" globalRange_end="1.0"
@@ -620,7 +620,7 @@
       <parameters key="windowsize" value="23.21995544433594"/>
       <parameters key="windowtype" value="1.0"/>
     </state>
-    <colours map="4" background="0" foreground="ff7e7a7d" text="ff000000"
+    <colours map="0" background="0" foreground="ff7e7a7d" text="ff000000"
              shadow="ff000000"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
@@ -759,7 +759,7 @@
     </binZoom>
   </tracks>
   <tracks MiscModelVersion="131073" identifier="d9dc8ffb44944467a7099d1f9877f1ac"
-          name="Beat Detection" input="" height="219" font="Nunito Sans; 14.0 Regular"
+          name="Beat Detection" input="" height="217" font="Nunito Sans; 14.0 Regular"
           showInGroup="1" zoomValueMode="0" zoomLink="1">
     <file path="" commit="">
       <args/>
