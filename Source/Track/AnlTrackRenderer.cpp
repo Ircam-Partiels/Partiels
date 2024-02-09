@@ -667,15 +667,12 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         auto previous = start;
         auto iterator = getNextIt(previous);
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
-        while(iterator != results.cend() && std::get<0_z>(*iterator) < limit)
+        while(iterator != results.cend() && std::get<0_z>(*iterator) < limit && itShowsValues(iterator))
         {
-            if(itShowsValues(iterator))
-            {
-                auto const& lvalue = std::get<2_z>(*iterator).value();
-                min = std::min(min, lvalue);
-                max = std::max(max, lvalue);
-                previous = iterator;
-            }
+            auto const& lvalue = std::get<2_z>(*iterator).value();
+            min = std::min(min, lvalue);
+            max = std::max(max, lvalue);
+            previous = iterator;
             iterator = getNextIt(iterator);
         }
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
