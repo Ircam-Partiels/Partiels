@@ -15,11 +15,11 @@ Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationComm
         switch(type)
         {
             case AcsrType::tracks:
+            case AcsrType::groups:
             {
                 mCommandManager.commandStatusChanged();
             }
             break;
-            case AcsrType::groups:
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
@@ -31,11 +31,11 @@ Document::CommandTarget::CommandTarget(Director& director, juce::ApplicationComm
         switch(type)
         {
             case AcsrType::tracks:
+            case AcsrType::groups:
             {
                 mCommandManager.commandStatusChanged();
             }
             break;
-            case AcsrType::groups:
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
@@ -88,8 +88,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
     auto const& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     auto const isSelectionEmpty = [&](juce::Range<double> const& selection)
     {
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto const& trackAcsr : trackAcsrs)
+        for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
@@ -103,13 +102,27 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 }
             }
         }
+        for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+        {
+            auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+            if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+            {
+                auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    if(Track::Result::Modifier::containFrames(referenceTrack.value().get(), channel, selection))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     };
 
     auto const matchTime = [&](double time)
     {
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto const& trackAcsr : trackAcsrs)
+        for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
@@ -123,13 +136,27 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 }
             }
         }
+        for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+        {
+            auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+            if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+            {
+                auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    if(Track::Result::Modifier::matchFrame(referenceTrack.value().get(), channel, time))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     };
 
     auto const canBreak = [&](double time)
     {
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto const& trackAcsr : trackAcsrs)
+        for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::value)
             {
@@ -143,13 +170,27 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 }
             }
         }
+        for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+        {
+            auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+            if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+            {
+                auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    if(Track::Result::Modifier::canBreak(referenceTrack.value().get(), channel, time))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     };
 
     auto const isClipboardEmpty = [&]()
     {
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto const& trackAcsr : trackAcsrs)
+        for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
@@ -158,6 +199,27 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 if(trackIt != mClipboardData.cend())
                 {
                     auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+                    for(auto const& channel : selectedChannels)
+                    {
+                        auto const channelIt = trackIt->second.find(channel);
+                        if(channelIt != trackIt->second.cend() && !Track::Result::Modifier::isEmpty(channelIt->second))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+        {
+            auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+            if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+            {
+                auto const trackId = referenceTrack.value().get().getAttr<Track::AttrType::identifier>();
+                auto const trackIt = mClipboardData.find(trackId);
+                if(trackIt != mClipboardData.cend())
+                {
+                    auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
                     for(auto const& channel : selectedChannels)
                     {
                         auto const channelIt = trackIt->second.find(channel);
@@ -309,14 +371,28 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
     };
 
     using namespace Track::Result::Modifier;
-    auto const performForAllTracks = [&](std::function<void(Track::Accessor & trackAcsr)> fn)
+
+    auto const getEffectiveSelectedChannels = [this](Track::Accessor const& trackAcsr)
     {
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto const& trackAcsr : trackAcsrs)
+        auto trackSelectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
+        for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+        {
+            auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+            if(referenceTrack.has_value() && std::addressof(trackAcsr) == std::addressof(referenceTrack.value().get()))
+            {
+                auto const groupSelectedChannels = Group::Tools::getSelectedChannels(groupAcsr);
+                trackSelectedChannels.insert(groupSelectedChannels.cbegin(), groupSelectedChannels.cend());
+            }
+        }
+        return trackSelectedChannels;
+    };
+    auto const performForAllTracks = [&](std::function<void(Track::Accessor&, std::set<size_t>)> fn)
+    {
+        for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
-                fn(trackAcsr.get());
+                fn(trackAcsr.get(), getEffectiveSelectedChannels(trackAcsr.get()));
             }
         }
     };
@@ -339,11 +415,11 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         case CommandIDs::frameDelete:
         {
             undoManager.beginNewTransaction(juce::translate("Delete Frame(s)"));
-            performForAllTracks([&](Track::Accessor& trackAcsr)
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                                     auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
-                                    for(auto const& index : Track::Tools::getSelectedChannels(trackAcsr))
+                                    for(auto const& index : selectedChannels)
                                     {
                                         undoManager.perform(std::make_unique<ActionErase>(fn, index, selection).release());
                                     }
@@ -356,10 +432,9 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         {
             mClipboardData.clear();
             mClipboardRange = selection;
-            performForAllTracks([&](Track::Accessor& trackAcsr)
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
-                                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
                                     auto& trackData = mClipboardData[trackId];
                                     for(auto const& index : selectedChannels)
                                     {
@@ -378,7 +453,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         case CommandIDs::framePaste:
         {
             undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
-            performForAllTracks([&](Track::Accessor& trackAcsr)
+            performForAllTracks([&](Track::Accessor& trackAcsr, [[maybe_unused]] std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                                     auto const trackIt = mClipboardData.find(trackId);
@@ -419,9 +494,8 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
             auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
             undoManager.beginNewTransaction(juce::translate("Insert Frame(s)"));
-            performForAllTracks([&](Track::Accessor& trackAcsr)
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
-                                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
                                     for(auto const& channel : selectedChannels)
                                     {
                                         if(isPlaying)
@@ -457,11 +531,10 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
             auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
             undoManager.beginNewTransaction(juce::translate("Break Frame(s)"));
-            performForAllTracks([&](Track::Accessor& trackAcsr)
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
                                     if(Track::Tools::getFrameType(trackAcsr) == Track::FrameType::value)
                                     {
-                                        auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
                                         for(auto const& channel : selectedChannels)
                                         {
                                             if(isPlaying)
@@ -487,7 +560,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                 if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
                 {
                     std::atomic<bool> shouldAbort{false};
-                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
+                    auto const selectedChannels = getEffectiveSelectedChannels(trackAcsr);
                     if(!selectedChannels.empty())
                     {
                         juce::String clipboardResults;
