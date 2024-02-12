@@ -32,6 +32,12 @@ namespace Track
         void resized() override;
         void paint(juce::Graphics& g) override;
 
+        static constexpr int getThumbnailOffset() { return 24; }
+        static constexpr int getThumbnailWidth() { return 24; }
+        static constexpr int getSnapshotWidth() { return 36; }
+        static constexpr int getScrollBarWidth() { return 8; }
+        static constexpr int getRulerWidth() { return 16; }
+
     private:
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};

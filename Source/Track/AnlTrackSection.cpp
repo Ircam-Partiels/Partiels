@@ -102,13 +102,11 @@ void Track::Section::setResizable(bool state)
 void Track::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));
-
-    auto bounds = getLocalBounds();
-    bounds.removeFromLeft(24);
-    mThumbnailDecoration.setBounds(bounds.removeFromLeft(24));
-    mSnapshotDecoration.setBounds(bounds.removeFromLeft(36));
-    mScrollBar.setBounds(bounds.removeFromRight(8));
-    mRulerDecoration.setBounds(bounds.removeFromRight(16));
+    auto bounds = getLocalBounds().withTrimmedLeft(getThumbnailOffset());
+    mThumbnailDecoration.setBounds(bounds.removeFromLeft(getThumbnailWidth()));
+    mSnapshotDecoration.setBounds(bounds.removeFromLeft(getSnapshotWidth()));
+    mScrollBar.setBounds(bounds.removeFromRight(getScrollBarWidth()));
+    mRulerDecoration.setBounds(bounds.removeFromRight(getRulerWidth()));
     mPlotDecoration.setBounds(bounds);
 }
 
