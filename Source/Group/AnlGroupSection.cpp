@@ -91,15 +91,15 @@ void Group::Section::resized()
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));
 
     auto bounds = getLocalBounds();
-    mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
-    mSnapshotDecoration.setBounds(bounds.removeFromLeft(36));
+    mThumbnailDecoration.setBounds(bounds.removeFromLeft(Track::Section::getThumbnailOffset() + Track::Section::getThumbnailWidth()));
+    mSnapshotDecoration.setBounds(bounds.removeFromLeft(Track::Section::getSnapshotWidth()));
 
-    auto const scrollBarBounds = bounds.removeFromRight(8);
+    auto const scrollBarBounds = bounds.removeFromRight(Track::Section::getScrollBarWidth());
     if(mScrollBar != nullptr)
     {
         mScrollBar->setBounds(scrollBarBounds);
     }
-    auto const rulerBounds = bounds.removeFromRight(16);
+    auto const rulerBounds = bounds.removeFromRight(Track::Section::getRulerWidth());
     if(mDecoratorRuler != nullptr)
     {
         mDecoratorRuler->setBounds(rulerBounds);
