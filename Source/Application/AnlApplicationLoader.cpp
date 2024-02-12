@@ -330,24 +330,21 @@ void Application::LoaderContent::resized()
         mSeparatorVertical.setBounds(bounds.removeFromRight(1));
     }
     {
-        auto centerBounds = bounds.withSizeKeepingCentre(160, 82);
+        auto centerBounds = bounds.withSizeKeepingCentre(std::min(160, bounds.getWidth()), std::min(82, bounds.getHeight()));
         mLoadFileButton.setBounds(centerBounds.removeFromTop(32));
         mLoadFileInfo.setBounds(centerBounds);
         auto bottomBounds = bounds;
         mLoadFileWildcard.setBounds(bottomBounds.removeFromBottom(64));
     }
     {
-        auto centerBounds = bounds.withSizeKeepingCentre(402, 82);
-        {
-            auto centerLeftBounds = centerBounds.removeFromLeft(200);
-            mAddTrackButton.setBounds(centerLeftBounds.removeFromTop(32));
-            mAddTrackInfo.setBounds(centerLeftBounds);
-        }
-        {
-            auto centerRightBounds = centerBounds.withTrimmedLeft(2);
-            mLoadTemplateButton.setBounds(centerRightBounds.removeFromTop(32));
-            mLoadTemplateInfo.setBounds(centerRightBounds);
-        }
+        auto centerBounds = bounds.withSizeKeepingCentre(std::min(402, bounds.getWidth()), std::min(82, bounds.getHeight()));
+        auto const buttonWidth = (centerBounds.getWidth() - 2) / 2;
+        auto centerLeftBounds = centerBounds.removeFromLeft(buttonWidth);
+        mAddTrackButton.setBounds(centerLeftBounds.removeFromTop(32));
+        mAddTrackInfo.setBounds(centerLeftBounds);
+        auto centerRightBounds = centerBounds.withTrimmedLeft(2);
+        mLoadTemplateButton.setBounds(centerRightBounds.removeFromTop(32));
+        mLoadTemplateInfo.setBounds(centerRightBounds);
     }
 }
 
