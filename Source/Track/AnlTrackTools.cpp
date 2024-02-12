@@ -240,10 +240,6 @@ std::optional<Zoom::Range> Track::Tools::getExtraRange(Accessor const& accessor,
 
 bool Track::Tools::isSelected(Accessor const& acsr)
 {
-    if(acsr.getAttr<AttrType::channelsLayout>().empty())
-    {
-        return acsr.getAttr<AttrType::focused>().any();
-    }
     return !getSelectedChannels(acsr).empty();
 }
 
