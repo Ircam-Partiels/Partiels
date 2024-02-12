@@ -12,6 +12,7 @@
 - Fix: On Windows, the native file browser doesn't support file and directory selection, so the application shouldn't support both possibilities on Windows (#414)
 - Add: An interaction mode that allow switching between navigating and editing tracks and groups (#413)
 - Imp: Allow navigating on the graphic plot of the tracks (#412)
+- Fix: The layout of the loading panel does not allow for a small window with an overall scale greater than 100% (#405)
 - Imp: Allow editing on the graphical plot of groups (#398)
 - Add: Add a right-click pop-up menu on the group graphical plot for quick access to properties of the reference track, track layout and channel layout (#389)
 
