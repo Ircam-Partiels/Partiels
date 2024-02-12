@@ -87,8 +87,13 @@ bool Group::Tools::isSelected(Accessor const& accessor)
 
 std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
 {
+    auto const referenceTrack = Tools::getReferenceTrackAcsr(accessor);
+    if(!referenceTrack.has_value())
+    {
+        return {};
+    }
     auto const& states = accessor.getAttr<AttrType::focused>();
-    auto const maxChannels = std::min(getChannelVisibilityStates(accessor).size(), states.size());
+    auto const maxChannels = std::min(referenceTrack.value().get().getAttr<Track::AttrType::channelsLayout>().size(), states.size());
     std::set<size_t> channels;
     for(auto index = 0_z; index < maxChannels; ++index)
     {
