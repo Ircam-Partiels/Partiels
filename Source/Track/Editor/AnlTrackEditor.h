@@ -20,6 +20,7 @@ namespace Track
         ~Editor() override;
 
         void setSnapshotNameAndColour(juce::String const& name, juce::Colour const& colour);
+        void setFocusInfo(FocusInfo const& info);
         std::function<void(juce::MouseEvent const& event)> onMouseDown = nullptr;
 
         // juce::Component

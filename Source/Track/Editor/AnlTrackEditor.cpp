@@ -134,6 +134,11 @@ void Track::Editor::setSnapshotNameAndColour(juce::String const& name, juce::Col
     mSnapshotColour = colour;
 }
 
+void Track::Editor::setFocusInfo(FocusInfo const& info)
+{
+    mSelector.setFocusInfo(info);
+}
+
 void Track::Editor::resized()
 {
     auto const bounds = getLocalBounds();
