@@ -178,7 +178,9 @@ void Application::Interface::DocumentContainer::resized()
         mPluginListTablePanel.setBounds(bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth));
     }
     mDocumentSection.setBounds(bounds);
-    mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(800, 600));
+    Document::Section::getMainSectionBorderSize().subtractFrom(bounds);
+    bounds.reduce(4, 4);
+    mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(std::min(800, bounds.getWidth()), std::min(600, bounds.getHeight())));
 }
 
 Document::Section const& Application::Interface::DocumentContainer::getDocumentSection() const
