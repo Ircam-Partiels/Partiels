@@ -21,7 +21,7 @@ namespace Group
 
     private:
         void updateContent();
-        void updateEditorNameAndColour();
+        void updateTrackEditor();
         void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition());
         juce::String getBubbleTooltip(juce::Point<int> const& pt);
 

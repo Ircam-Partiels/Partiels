@@ -33,19 +33,11 @@ Group::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
                 break;
             }
             case AttrType::focused:
-            {
-                colourChanged();
-                break;
-            }
             case AttrType::colour:
-            {
-                repaint();
-                updateEditorNameAndColour();
-                break;
-            }
             case AttrType::name:
             {
-                updateEditorNameAndColour();
+                repaint();
+                updateTrackEditor();
                 break;
             }
         }
@@ -101,15 +93,16 @@ void Group::Editor::updateContent()
         }
         addAndMakeVisible(mTrackEditor.get());
     }
-    updateEditorNameAndColour();
+    updateTrackEditor();
     resized();
 }
 
-void Group::Editor::updateEditorNameAndColour()
+void Group::Editor::updateTrackEditor()
 {
     if(mTrackEditor != nullptr)
     {
         mTrackEditor->setSnapshotNameAndColour(mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colour>());
+        mTrackEditor->setFocusInfo(mAccessor.getAttr<AttrType::focused>());
     }
 }
 
