@@ -9,6 +9,7 @@
 - Imp: IVP - Use an invisible color for the shadow of curves in template documents (#422)
 - Fix: There is an unnecessary dash before the version on the main application window (#420)
 - Imp: IVP - Linux scripts for installing and uninstalling plugins require execution rights (#418)
+- Fix: The color of the time selection on the graphical plot of groups is not consistent with the component that owns the focus (#415)
 - Fix: On Windows, the native file browser doesn't support file and directory selection, so the application shouldn't support both possibilities on Windows (#414)
 - Add: An interaction mode that allow switching between navigating and editing tracks and groups (#413)
 - Imp: Allow navigating on the graphic plot of the tracks (#412)
