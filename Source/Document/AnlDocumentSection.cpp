@@ -418,16 +418,6 @@ void Document::Section::paint(juce::Graphics& g)
 
 Document::Selection::Item Document::Section::getSelectionItem(juce::Component* component, juce::MouseEvent const& event) const
 {
-    auto const getTrackSelection = [&](Track::Accessor const& trackAcsr, juce::Component* source) -> Document::Selection::Item
-    {
-        auto const point = source == component ? event.position.toInt() : event.getEventRelativeTo(source).position.toInt();
-        if(point.x <= 48)
-        {
-            return {trackAcsr.getAttr<Track::AttrType::identifier>(), {}};
-        }
-        auto const channel = Track::Tools::getChannel(trackAcsr, source->getLocalBounds(), point.y, true);
-        return {trackAcsr.getAttr<Track::AttrType::identifier>(), channel};
-    };
     if(auto* trackSection = Utils::findComponentOfClass<Track::Section>(component))
     {
         auto const identifier = trackSection->getIdentifier();
@@ -436,7 +426,14 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         {
             return {};
         }
-        return getTrackSelection(Tools::getTrackAcsr(mAccessor, identifier), trackSection);
+        auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        auto const point = trackSection == component ? event.position.toInt() : event.getEventRelativeTo(trackSection).position.toInt();
+        if(point.x <= (Track::Section::getThumbnailOffset() + Track::Section::getThumbnailWidth()))
+        {
+            return {identifier, {}};
+        }
+        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), point.y, true);
+        return {identifier, channel};
     }
     if(auto* groupSection = Utils::findComponentOfClass<Group::Section>(component))
     {
@@ -448,17 +445,12 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         }
         auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
         auto const point = groupSection == component ? event.position.toInt() : event.getEventRelativeTo(groupSection).position.toInt();
+        if(point.x <= (Track::Section::getThumbnailOffset() + Track::Section::getThumbnailWidth()))
+        {
+            return {identifier, {}};
+        }
         auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), point.y, true);
-        if(!channel.has_value())
-        {
-            return {identifier, channel};
-        }
-        auto const trackAcsrRef = Group::Tools::getReferenceTrackAcsr(groupAcsr);
-        if(!trackAcsrRef.has_value())
-        {
-            return {};
-        }
-        return getTrackSelection(trackAcsrRef.value(), groupSection);
+        return {identifier, channel};
     }
     return {};
 }
