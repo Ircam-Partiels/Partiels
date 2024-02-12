@@ -107,49 +107,8 @@ std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
 
 std::optional<size_t> Group::Tools::getChannel(Accessor const& accessor, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator)
 {
-    auto const verticalRanges = getChannelVerticalRanges(accessor, bounds);
-    auto const it = std::find_if(verticalRanges.cbegin(), verticalRanges.cend(), [&](auto const& pair)
-                                 {
-                                     return ignoreSeparator ? y < pair.second.getEnd() : pair.second.contains(y);
-                                 });
-    return it != verticalRanges.cend() ? it->first : std::optional<size_t>{};
-}
-
-std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds)
-{
-    auto const channelsLayout = getChannelVisibilityStates(accessor);
-    auto const numVisibleChannels = static_cast<int>(std::count_if(channelsLayout.cbegin(), channelsLayout.cend(), [](auto const state)
-                                                                   {
-                                                                       return state != ChannelVisibilityState::hidden;
-                                                                   }));
-    if(numVisibleChannels == 0)
-    {
-        return {};
-    }
-
-    std::map<size_t, juce::Range<int>> verticalRanges;
-    auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
-    auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
-    auto remainder = 0.0f;
-
-    auto channelCounter = 0;
-    for(auto channel = 0_z; channel < channelsLayout.size(); ++channel)
-    {
-        if(channelsLayout[channel] != ChannelVisibilityState::hidden)
-        {
-            ++channelCounter;
-            auto const currentHeight = std::min(channelHeight, fullHeight) + remainder;
-            remainder = channelHeight - std::round(currentHeight);
-            fullHeight -= std::round(currentHeight);
-            auto region = bounds.removeFromTop(static_cast<int>(std::round(currentHeight)));
-            if(channelCounter != numVisibleChannels)
-            {
-                region.removeFromBottom(1);
-            }
-            verticalRanges[channel] = region.getVerticalRange();
-        }
-    }
-    return verticalRanges;
+    auto const referenceTrack = Tools::getReferenceTrackAcsr(accessor);
+    return referenceTrack.has_value() ? Track::Tools::getChannel(referenceTrack.value().get(), bounds, y, ignoreSeparator) : std::optional<size_t>{};
 }
 
 std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getReferenceTrackAcsr(Accessor const& accessor)

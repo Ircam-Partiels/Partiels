@@ -15,7 +15,6 @@ namespace Group
         bool isSelected(Accessor const& accessor);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
         std::optional<size_t> getChannel(Accessor const& accessor, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator);
-        std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds);
 
         std::optional<std::reference_wrapper<Track::Accessor>> getReferenceTrackAcsr(Accessor const& accessor);
         bool canZoomIn(Accessor const& accessor);
