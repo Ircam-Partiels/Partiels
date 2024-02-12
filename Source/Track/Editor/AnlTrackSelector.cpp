@@ -36,12 +36,8 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::edit:
             case AttrType::showInGroup:
             case AttrType::hasPluginColourMap:
-                break;
             case AttrType::focused:
-            {
-                colourChanged();
-            }
-            break;
+                break;
             case AttrType::channelsLayout:
             {
                 auto const channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
@@ -105,14 +101,13 @@ void Track::Selector::colourChanged()
 {
     auto const onColour = getLookAndFeel().findColour(Transport::SelectionBar::thumbCoulourId);
     auto const offColour = onColour.withAlpha(onColour.getFloatAlpha() * 0.5f);
-    auto const& focused = mAccessor.getAttr<AttrType::focused>();
-    for(auto channel = 0_z; channel < mSelectionBars.size() && channel < focused.size(); ++channel)
+    for(auto channel = 0_z; channel < mSelectionBars.size() && channel < mFocusInfo.size(); ++channel)
     {
         auto& bar = mSelectionBars[channel];
         MiscWeakAssert(bar != nullptr);
         if(bar != nullptr)
         {
-            auto const colour = focused.test(channel) ? onColour : offColour;
+            auto const colour = mFocusInfo.test(channel) ? onColour : offColour;
             bar->setColour(Transport::SelectionBar::thumbCoulourId, colour);
         }
     }
@@ -143,6 +138,12 @@ void Track::Selector::applicationCommandInvoked(juce::ApplicationCommandTarget::
 void Track::Selector::applicationCommandListChanged()
 {
     Utils::notifyListener(mCommandManager, *this, {ApplicationCommandIDs::frameToggleDrawing});
+}
+
+void Track::Selector::setFocusInfo(FocusInfo const& info)
+{
+    mFocusInfo = info;
+    colourChanged();
 }
 
 ANALYSE_FILE_END

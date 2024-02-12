@@ -18,6 +18,8 @@ namespace Track
         void resized() override;
         void colourChanged() override;
 
+        void setFocusInfo(FocusInfo const& info);
+
     private:
         // juce::ApplicationCommandManagerListener
         void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
@@ -29,6 +31,7 @@ namespace Track
         juce::ApplicationCommandManager& mCommandManager;
         Accessor::Listener mListener{typeid(*this).name()};
         std::vector<std::unique_ptr<Transport::SelectionBar>> mSelectionBars;
+        FocusInfo mFocusInfo;
     };
 } // namespace Track
 
