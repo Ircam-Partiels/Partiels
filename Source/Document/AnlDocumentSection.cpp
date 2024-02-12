@@ -372,6 +372,11 @@ Document::Section::~Section()
     mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
 }
 
+juce::BorderSize<int> Document::Section::getMainSectionBorderSize()
+{
+    return {48 + 28 + 1, 0, 14 + 1, 0};
+}
+
 void Document::Section::resized()
 {
     auto const scrollbarWidth = mViewport.getScrollBarThickness();

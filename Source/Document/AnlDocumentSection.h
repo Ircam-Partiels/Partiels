@@ -37,6 +37,8 @@ namespace Document
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
 
+        static juce::BorderSize<int> getMainSectionBorderSize();
+
     private:
         // juce::DragAndDropContainer
         void dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details) override;
