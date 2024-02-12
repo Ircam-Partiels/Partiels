@@ -51,6 +51,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::focused:
             {
                 mThumbnailDecoration.setHighlighted(Tools::isSelected(acsr));
+                mEditor.setFocusInfo(acsr.getAttr<AttrType::focused>());
                 break;
             }
         }
