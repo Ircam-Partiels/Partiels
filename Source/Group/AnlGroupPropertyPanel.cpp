@@ -105,9 +105,8 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     addAndMakeVisible(mProcessorsSection);
     addAndMakeVisible(mGraphicalsSection);
 
-    mComponentListener.onComponentResized = [&](juce::Component& component)
+    mComponentListener.onComponentResized = [&]([[maybe_unused]] juce::Component& component)
     {
-        juce::ignoreUnused(component);
         mProcessorsSection.setEnabled(mPropertyProcessorsSection.getHeight() > 0);
         mGraphicalsSection.setEnabled(mPropertyGraphicalsSection.getHeight() > 0);
         resized();
@@ -132,7 +131,7 @@ Group::PropertyPanel::~PropertyPanel()
 void Group::PropertyPanel::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
