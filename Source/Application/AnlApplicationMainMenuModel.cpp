@@ -151,12 +151,12 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
         addDefaultTemplateMenu(menu);
 #endif
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpAutoUpdate);
         menu.addCommandItem(&commandManager, CommandIDs::helpCheckForUpdate);
-
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpSdifConverter);
     }
@@ -208,6 +208,7 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addSeparator();
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
     addDefaultTemplateMenu(extraAppleMenuItems);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 }

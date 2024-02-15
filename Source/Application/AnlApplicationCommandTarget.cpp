@@ -123,6 +123,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpSdifConverter
         , CommandIDs::helpAutoUpdate
         , CommandIDs::helpCheckForUpdate
+        , CommandIDs::helpOpenKeyMappings
     });
     // clang-format on
     Instance::get().getAllCommands(commands);
@@ -430,6 +431,12 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::helpCheckForUpdate:
         {
             result.setInfo(juce::translate("Check for New Version"), juce::translate("Checks for a new version"), "Help", 0);
+            result.setActive(true);
+        }
+        break;
+        case CommandIDs::helpOpenKeyMappings:
+        {
+            result.setInfo(juce::translate("Key Mapping..."), juce::translate("Shows the key mapping panel"), "Application", 0);
             result.setActive(true);
         }
         break;
@@ -953,6 +960,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::helpCheckForUpdate:
         {
             Instance::get().checkForNewVersion(true, true);
+            return true;
+        }
+        case CommandIDs::helpOpenKeyMappings:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showKeyMappingsPanel();
+            }
             return true;
         }
     }
