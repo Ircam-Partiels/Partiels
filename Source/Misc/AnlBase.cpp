@@ -31,9 +31,9 @@ juce::String Utils::getCommandDescriptionWithKey(juce::ApplicationCommandManager
     if(auto const* ci = commandManager.getCommandForID(command))
     {
         auto description = ci->description.isNotEmpty() ? ci->description : ci->shortName;
-        for(auto& eypresses : ci->defaultKeypresses)
+        for(auto& keypresses : ci->defaultKeypresses)
         {
-            auto const key = eypresses.getTextDescription();
+            auto const key = keypresses.getTextDescription();
             description << " [";
             if(key.length() == 1)
             {
