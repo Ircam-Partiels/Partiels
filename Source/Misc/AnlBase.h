@@ -129,6 +129,7 @@ enum ApplicationCommandIDs : int
     , helpSdifConverter
     , helpAutoUpdate
     , helpCheckForUpdate
+    , helpOpenKeyMappings
 };
 // clang-format on
 
