@@ -9,6 +9,7 @@
 #include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
+#include "AnlApplicationKeyMappings.h"
 #include "AnlApplicationLoader.h"
 
 ANALYSE_FILE_BEGIN
@@ -38,6 +39,7 @@ namespace Application
         void showExporterPanel();
         void showPluginSearchPathPanel();
         void showReaderLayoutPanel();
+        void showKeyMappingsPanel();
         void showTrackLoaderPanel();
 
         void showPluginListTablePanel();
@@ -146,6 +148,7 @@ namespace Application
         ExporterPanel mExporterPanel;
         PluginSearchPathPanel mPluginSearchPathPanel;
         ReaderLayoutPanel mReaderLayoutPanel;
+        KeyMappingsPanel mKeyMappingsPanel;
         TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;
 

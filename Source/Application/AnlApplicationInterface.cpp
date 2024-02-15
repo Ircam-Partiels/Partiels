@@ -243,6 +243,7 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mExporterPanel)
                              , std::ref<HideablePanel>(mPluginSearchPathPanel)
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
+                             , std::ref<HideablePanel>(mKeyMappingsPanel)
                              , std::ref<HideablePanel>(mTrackLoaderPanel)
                              });
     // clang-format on
@@ -335,6 +336,11 @@ void Application::Interface::showPluginSearchPathPanel()
 void Application::Interface::showReaderLayoutPanel()
 {
     mPanelManager.show(mReaderLayoutPanel);
+}
+
+void Application::Interface::showKeyMappingsPanel()
+{
+    mPanelManager.show(mKeyMappingsPanel);
 }
 
 void Application::Interface::showTrackLoaderPanel()
