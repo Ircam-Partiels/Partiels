@@ -196,7 +196,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::editUndo:
         {
             auto& undoManager = Instance::get().getUndoManager();
-            result.setInfo(juce::translate("Undo ") + undoManager.getUndoDescription(), juce::translate("Undoes the last action"), "Edit", 0);
+            auto const actionName = undoManager.canUndo() ? juce::String() : juce::String(" ") + undoManager.getUndoDescription();
+            result.setInfo(juce::translate("Undo") + actionName, juce::translate("Undoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
             result.setActive(undoManager.canUndo());
         }
@@ -204,7 +205,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::editRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
-            result.setInfo(juce::translate("Redo ") + undoManager.getRedoDescription(), juce::translate("Redoes the last action"), "Edit", 0);
+            auto const actionName = undoManager.canRedo() ? juce::String() : juce::String(" ") + undoManager.getRedoDescription();
+            result.setInfo(juce::translate("Redo") + actionName, juce::translate("Redoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(undoManager.canRedo());
         }
