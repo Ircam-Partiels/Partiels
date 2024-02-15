@@ -248,7 +248,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
                 result.setInfo(juce::translate("Remove Group(s) and Track(s)"), juce::translate("Removes the selected group(s) and track(s)"), "Edit", 0);
             }
             result.setActive(isItemMode && (!std::get<0_z>(selectedItems).empty() || !std::get<1_z>(selectedItems).empty()));
+#ifdef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
+#endif
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
         }
