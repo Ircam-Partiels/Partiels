@@ -100,7 +100,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
                            });
 
             auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-            auto getPluginName = [&]() -> juce::String
+            auto const getPluginName = [&]() -> juce::String
             {
                 try
                 {
@@ -121,8 +121,6 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
             colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
             trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
-
-            groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
             lastTrack = identifier;
             ++trackPosition;
         }
@@ -130,6 +128,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
 
     if(lastTrack.has_value())
     {
+        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *lastTrack]()
                                     {
@@ -140,6 +139,13 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
     else
     {
         documentDir.endAction(ActionState::abort);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Track cannot be created!"))
+                                 .withMessage(juce::translate("The track cannot be inserted into the document."))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+        return;
     }
 }
 
