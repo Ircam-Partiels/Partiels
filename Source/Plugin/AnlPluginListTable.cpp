@@ -181,6 +181,7 @@ void PluginList::Table::notifyAddSelectedPlugins()
             selection.insert(mFilteredList[static_cast<size_t>(index)].first);
         }
     }
+    MiscWeakAssert(!selection.empty());
     onAddPlugins(std::move(selection));
 }
 
