@@ -12,7 +12,7 @@ fi
 if [ -z $2 ]; then
   PARTIELS_BUILD_MODE="Release"
 else
-  PARTIELS_BUILD_MODE=$3
+  PARTIELS_BUILD_MODE=$2
 fi
 
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
