@@ -156,6 +156,36 @@ void Application::KeyMappingsContent::resized()
 Application::KeyMappingsPanel::KeyMappingsPanel()
 : HideablePanelTyped<KeyMappingsContent>(juce::translate("Key Mappings"))
 {
+#ifdef JUCE_DEBUG
+    addMouseListener(this, true);
+#endif
 }
+
+#ifdef JUCE_DEBUG
+void Application::KeyMappingsPanel::mouseDown(juce::MouseEvent const& event)
+{
+    if(event.mods.isCommandDown())
+    {
+        auto keyMappingFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory).getChildFile("PartielsKeyMappingFile.xml");
+        if(!keyMappingFile.existsAsFile())
+        {
+            auto* keyMapping = Instance::get().getApplicationCommandManager().getKeyMappings();
+            if(keyMapping == nullptr)
+            {
+                return;
+            }
+            auto xml = keyMapping->createXml(false);
+            if(xml == nullptr)
+            {
+                return;
+            }
+            if(!xml->writeTo(keyMappingFile))
+            {
+                return;
+            }
+        }
+    }
+}
+#endif
 
 ANALYSE_FILE_END

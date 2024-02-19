@@ -72,6 +72,10 @@ namespace Application
     public:
         KeyMappingsPanel();
         ~KeyMappingsPanel() override = default;
+
+#ifdef JUCE_DEBUG
+        void mouseDown(juce::MouseEvent const& event) override;
+#endif
     };
 } // namespace Application
 
