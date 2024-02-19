@@ -854,12 +854,13 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
 void Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
+    mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     if(mAlertCatcher != nullptr)
     {
+        mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Results file has been removed!"), juce::translate("The results file FLNAME of the track TKNAME has been removed.").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()));
         return;
     }
 
-    mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been removed!"))
