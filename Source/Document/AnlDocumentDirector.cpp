@@ -554,7 +554,7 @@ std::optional<juce::String> Document::Director::addTrack(juce::String const grou
         return std::optional<juce::String>();
     }
 
-    auto const identifier = juce::Uuid().toString();
+    auto const identifier = createNextUuid();
 
     auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
     trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
@@ -605,7 +605,7 @@ std::optional<juce::String> Document::Director::addGroup(size_t position, Notifi
         return std::optional<juce::String>();
     }
 
-    auto const identifier = juce::Uuid().toString();
+    auto const identifier = createNextUuid();
     auto const name = juce::String("Group ") + juce::String(index + 1_z);
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
@@ -731,7 +731,7 @@ void Document::Director::sanitize(NotificationType const notification)
             anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
             if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
             {
-                auto const newidentifier = juce::Uuid().toString();
+                auto const newidentifier = createNextUuid();
                 trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
                 identifiers.insert(newidentifier);
             }
@@ -748,7 +748,7 @@ void Document::Director::sanitize(NotificationType const notification)
             anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
             if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
             {
-                auto const newidentifier = juce::Uuid().toString();
+                auto const newidentifier = createNextUuid();
                 groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
                 identifiers.insert(newidentifier);
             }
@@ -1098,6 +1098,16 @@ void Document::Director::setBackupDirectory(juce::File const& directory)
             }
         }
     }
+}
+
+juce::String Document::Director::createNextUuid() const
+{
+    auto identifier = juce::Uuid().toString();
+    while(Tools::hasItem(mAccessor, identifier))
+    {
+        identifier = juce::Uuid().toString();
+    }
+    return identifier;
 }
 
 ANALYSE_FILE_END

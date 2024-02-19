@@ -57,6 +57,7 @@ namespace Document
         void initializeAudioReaders(NotificationType notification);
 
         void updateMarkers(NotificationType notification);
+        juce::String createNextUuid() const;
 
         Accessor& mAccessor;
         HierarchyManager mHierarchyManager{mAccessor};
