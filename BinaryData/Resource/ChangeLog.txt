@@ -1,3 +1,9 @@
+- Fix: The application no longer displays an alert when a result file is not found when a project is loaded (#437)
+- Fix: The application prevents adding tracks when reopening a project if the corresponding command has not been used directly (#436)
+- Add: Key mappings panel that display all keyboard shortcuts (#433)
+
+v2.0.1
+
 - Fix: Using a threshold for extra results can distort the graphical representation of curves (#432)
 - Fix: IVP - Identifiers are not reused when analyzing PM2 inharmonic partials and the result is truncated (#431)
 - Imp: Display keyboard shortcuts in button tooltips when available (430)
