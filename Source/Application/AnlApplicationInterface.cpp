@@ -101,6 +101,12 @@ Application::Interface::DocumentContainer::DocumentContainer()
 : mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 {
+    mPluginListTable.setMultipleSelectionEnabled(true);
+    mPluginListTable.onAddPlugins = [](std::set<Plugin::Key> keys)
+    {
+        Tools::addPluginTracks(Tools::getNewTrackPosition(), keys);
+    };
+
     addAndMakeVisible(mDocumentSection);
     addChildComponent(mLoaderDecorator);
     addAndMakeVisible(mPluginListTablePanel);

@@ -620,12 +620,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             if(auto* window = Instance::get().getWindow())
             {
-                auto& pluginListTable = window->getInterface().getPluginListTable();
-                pluginListTable.setMultipleSelectionEnabled(true);
-                pluginListTable.onAddPlugins = [](std::set<Plugin::Key> keys)
-                {
-                    Tools::addPluginTracks(Tools::getNewTrackPosition(), keys);
-                };
                 window->getInterface().togglePluginListTablePanel();
             }
             return true;
