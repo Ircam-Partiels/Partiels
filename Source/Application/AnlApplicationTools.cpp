@@ -53,9 +53,9 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& documentDir = Instance::get().getDocumentDirector();
     documentDir.startAction();
-
+    auto const references = documentDir.sanitize(NotificationType::synchronous);
     // Creates a group if there is none
-    auto groupIdentifier = std::get<0_z>(position);
+    auto groupIdentifier = references.count(std::get<0_z>(position)) > 0_z ? references.at(std::get<0_z>(position)) : std::get<0_z>(position);
     auto trackPosition = std::get<1_z>(position);
     if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
     {
@@ -73,7 +73,8 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             juce::AlertWindow::showAsync(options, nullptr);
             return;
         }
-        groupIdentifier = *identifier;
+        auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
+        groupIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
         trackPosition = 0_z;
     }
 
@@ -86,7 +87,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
     }
 
     auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-    std::optional<juce::String> lastTrack;
+    std::set<juce::String> trackIdentifiers;
     for(auto const& key : keys)
     {
         auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
@@ -121,18 +122,31 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
             colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
             trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
-            lastTrack = identifier;
+            trackIdentifiers.insert(identifier.value());
             ++trackPosition;
         }
     }
 
-    if(lastTrack.has_value())
+    if(!trackIdentifiers.empty())
     {
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+        auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
+        for(auto const& newReference : newReferences)
+        {
+            if(trackIdentifiers.count(newReference.first) > 0_z)
+            {
+                trackIdentifiers.erase(newReference.first);
+                trackIdentifiers.insert(newReference.second);
+            }
+        }
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [idtf = *lastTrack]()
+        juce::Timer::callAfterDelay(500, [trackIdentifiers]()
                                     {
-                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf, {}}, true, false, NotificationType::synchronous);
+                                        Document::Selection::clearAll(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
+                                        for(auto const& trackIdentifier : trackIdentifiers)
+                                        {
+                                            Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {trackIdentifier, {}}, false, false, NotificationType::synchronous);
+                                        }
                                     });
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Tracks"));
     }
@@ -167,14 +181,13 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& documentDir = Instance::get().getDocumentDirector();
     documentDir.startAction();
-
+    auto const references = documentDir.sanitize(NotificationType::synchronous);
     // Creates a group if there is none
-    auto groupIdentifier = std::get<0_z>(position);
+    auto groupIdentifier = references.count(std::get<0_z>(position)) > 0_z ? references.at(std::get<0_z>(position)) : std::get<0_z>(position);
     auto trackPosition = std::get<1_z>(position);
     if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
     {
         anlWeakAssert(groupIdentifier.isEmpty());
-
         auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
         anlWeakAssert(identifier.has_value());
         if(!identifier.has_value())
@@ -188,7 +201,8 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
             juce::AlertWindow::showAsync(options, nullptr);
             return;
         }
-        groupIdentifier = *identifier;
+        auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
+        groupIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
         trackPosition = 0_z;
     }
 
@@ -203,7 +217,9 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
     auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
     if(identifier.has_value())
     {
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
+        auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
+        auto const trackIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
+        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
         auto const colourChart = Instance::getColourChart();
         auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
@@ -218,9 +234,9 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
+        juce::Timer::callAfterDelay(500, [trackIdentifier]()
                                     {
-                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf, {}}, true, false, NotificationType::synchronous);
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {trackIdentifier, {}}, true, false, NotificationType::synchronous);
                                     });
     }
     else

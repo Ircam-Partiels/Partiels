@@ -39,7 +39,7 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
     Document::FileBased::loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
 
     anlDebug("Executor", "Sanitize document...");
-    mDirector.sanitize(NotificationType::synchronous);
+    [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
 
     mDirector.setAlertCatcher(nullptr);
 

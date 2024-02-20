@@ -565,8 +565,6 @@ std::optional<juce::String> Document::Director::addTrack(juce::String const grou
     position = std::min(position, layout.size());
     layout.insert(layout.begin() + static_cast<long>(position), identifier);
     groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::synchronous);
-
-    sanitize(notification);
     return std::optional<juce::String>(identifier);
 }
 
@@ -592,8 +590,6 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
-
-    sanitize(notification);
     return true;
 }
 
@@ -616,7 +612,6 @@ std::optional<juce::String> Document::Director::addGroup(size_t position, Notifi
     position = std::min(position, layout.size());
     layout.insert(layout.begin() + static_cast<long>(position), identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
-    sanitize(notification);
     return std::optional<juce::String>(identifier);
 }
 
@@ -644,8 +639,6 @@ bool Document::Director::removeGroup(juce::String const identifier, Notification
 
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
-
-    sanitize(notification);
     return true;
 }
 
@@ -679,84 +672,44 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t in
         groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     }
-
-    sanitize(notification);
     return true;
 }
 
-bool Document::Director::copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+std::optional<juce::String> Document::Director::copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
 {
     anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
     anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
     if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier) || !Tools::hasTrackAcsr(mAccessor, trackIdentifier))
     {
-        return false;
+        return {};
     }
     // The track should already be in a group
     anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
     if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
     {
-        return false;
+        return {};
     }
 
-    auto newTrackIdentifier = addTrack(groupIdentifier, index, NotificationType::synchronous);
+    auto newTrackIdentifier = addTrack(groupIdentifier, index, notification);
     if(!newTrackIdentifier.has_value())
     {
-        return false;
+        return {};
     }
 
-    auto& newTrackAcsr = Tools::getTrackAcsr(mAccessor, *newTrackIdentifier);
+    auto& newTrackAcsr = Tools::getTrackAcsr(mAccessor, newTrackIdentifier.value());
     Track::Accessor copy;
-    copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), NotificationType::synchronous);
-    copy.setAttr<Track::AttrType::identifier>(*newTrackIdentifier, NotificationType::synchronous);
-    newTrackAcsr.copyFrom(copy, NotificationType::synchronous);
-    sanitize(notification);
-    return true;
+    copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), notification);
+    copy.setAttr<Track::AttrType::identifier>(newTrackIdentifier.value(), notification);
+    newTrackAcsr.copyFrom(copy, notification);
+    return newTrackIdentifier;
 }
 
-void Document::Director::sanitize(NotificationType const notification)
+std::map<juce::String, juce::String> Document::Director::sanitize(NotificationType const notification)
 {
+    std::map<juce::String, juce::String> references;
     if(mAccessor.getNumAcsrs<AcsrType::tracks>() == 0_z && mAccessor.getNumAcsrs<AcsrType::groups>() == 0_z)
     {
-        return;
-    }
-
-    // Ensures all tracks and groups have a unique identifier
-    {
-        std::set<juce::String> identifiers;
-        auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        for(auto trackAcsr : trackAcsrs)
-        {
-            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
-            if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
-            {
-                auto const newidentifier = createNextUuid();
-                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
-                identifiers.insert(newidentifier);
-            }
-            else
-            {
-                identifiers.insert(identifier);
-            }
-        }
-
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        for(auto groupAcsr : groupAcsrs)
-        {
-            auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
-            if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
-            {
-                auto const newidentifier = createNextUuid();
-                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
-                identifiers.insert(newidentifier);
-            }
-            else
-            {
-                identifiers.insert(identifier);
-            }
-        }
+        return references;
     }
 
     // Ensures that there is also at least one group if there is one or more tracks
@@ -769,19 +722,85 @@ void Document::Director::sanitize(NotificationType const notification)
             anlStrongAssert(identifier.has_value());
             if(!identifier.has_value())
             {
-                return;
+                return references;
             }
         }
     }
 
+    // Ensures all tracks and groups have a unique identifier
+    {
+        std::set<juce::String> identifiers;
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        for(auto groupAcsr : groupAcsrs)
+        {
+            auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            if(identifier.isEmpty())
+            {
+                auto const newidentifier = createNextUuid();
+                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+            else if(!identifiers.insert(identifier).second)
+            {
+                auto const newidentifier = createNextUuid();
+                references[identifier] = newidentifier;
+                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+        }
+
+        auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        for(auto trackAcsr : trackAcsrs)
+        {
+            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            if(identifier.isEmpty())
+            {
+                auto const newidentifier = createNextUuid();
+                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+            else if(!identifiers.insert(identifier).second)
+            {
+                auto const newidentifier = createNextUuid();
+                references[identifier] = newidentifier;
+                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+        }
+    }
+
+    // Ensures that document's layout is valid
+    {
+        anlWeakAssert(mAccessor.getNumAcsrs<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
+        // Remove layout
+        auto layout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const identifier)
+                                          {
+                                              return !Tools::hasGroupAcsr(mAccessor, identifier);
+                                          });
+        auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        for(auto const& groupAcsr : groupAcsrs)
+        {
+            auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+            auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
+            if(it == layout.cend())
+            {
+                layout.push_back(identifier);
+            }
+        }
+        mAccessor.setAttr<AttrType::layout>(layout, notification);
+    }
+
     // Ensures that groups' layouts are valid
     {
+        std::set<juce::String> usedTracks;
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
         for(auto groupAcsr : groupAcsrs)
         {
             auto const groupLayout = copy_with_erased_if(groupAcsr.get().getAttr<Group::AttrType::layout>(), [&](auto const identifier)
                                                          {
-                                                             return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                             return !Tools::hasTrackAcsr(mAccessor, identifier) || !usedTracks.insert(identifier).second;
                                                          });
             anlWeakAssert(groupAcsr.get().getAttr<Group::AttrType::layout>().size() == groupLayout.size());
             groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, notification);
@@ -789,6 +808,7 @@ void Document::Director::sanitize(NotificationType const notification)
     }
 
     // Ensures that all tracks are in one group
+    anlStrongAssert(mAccessor.getNumAcsrs<AcsrType::groups>() > 0_z);
     if(mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z)
     {
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -825,34 +845,7 @@ void Document::Director::sanitize(NotificationType const notification)
         }
     }
 
-    // Ensures that document's layout is valid
-    {
-        anlWeakAssert(mAccessor.getNumAcsrs<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
-        auto const layout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const identifier)
-                                                {
-                                                    return !Tools::hasGroupAcsr(mAccessor, identifier);
-                                                });
-        mAccessor.setAttr<AttrType::layout>(layout, notification);
-    }
-
-    // Ensures that all groups are in the document
-    {
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        auto layout = mAccessor.getAttr<AttrType::layout>();
-        anlWeakAssert(groupAcsrs.size() == layout.size());
-        for(auto const& groupAcsr : groupAcsrs)
-        {
-            auto const groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-            if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
-                            {
-                                return identifier == groupIdentifier;
-                            }))
-            {
-                layout.push_back(groupIdentifier);
-            }
-        }
-        mAccessor.setAttr<AttrType::layout>(layout, notification);
-    }
+    return references;
 }
 
 void Document::Director::fileHasBeenRemoved(juce::File const& file)

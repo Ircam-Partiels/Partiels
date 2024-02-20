@@ -29,7 +29,7 @@ namespace Document
         std::function<Zoom::Accessor&()> getSafeTimeZoomAccessorFn();
         std::function<Transport::Accessor&()> getSafeTransportZoomAccessorFn();
 
-        void sanitize(NotificationType const notification);
+        [[nodiscard]] std::map<juce::String, juce::String> sanitize(NotificationType const notification);
 
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
@@ -40,7 +40,7 @@ namespace Document
         bool removeGroup(juce::String const identifier, NotificationType const notification);
 
         bool moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
-        bool copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
+        std::optional<juce::String> copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);

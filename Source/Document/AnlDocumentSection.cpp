@@ -77,36 +77,43 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     {
         if(copy)
         {
-            anlStrongAssert(Tools::hasGroupAcsr(mAccessor, identifier));
+            anlWeakAssert(Tools::hasGroupAcsr(mAccessor, identifier));
             if(!Tools::hasGroupAcsr(mAccessor, identifier))
             {
                 return;
             }
             mDirector.startAction();
-            auto const groupIdentifier = mDirector.addGroup(index, NotificationType::synchronous);
-            if(!groupIdentifier.has_value())
+            auto const references = mDirector.sanitize(NotificationType::synchronous);
+            auto const existingGroupIdentifier = references.count(identifier) > 0_z ? references.at(identifier) : identifier;
+            anlWeakAssert(Tools::hasGroupAcsr(mAccessor, existingGroupIdentifier));
+            if(!Tools::hasGroupAcsr(mAccessor, existingGroupIdentifier))
+            {
+                return;
+            }
+            auto const newGroupIdentifier = mDirector.addGroup(index, NotificationType::synchronous);
+            if(!newGroupIdentifier.has_value())
             {
                 mDirector.endAction(ActionState::abort);
             }
 
-            auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
-
+            auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, existingGroupIdentifier);
             Group::Accessor copyAcsr;
             copyAcsr.copyFrom(groupAcsr, NotificationType::synchronous);
-            copyAcsr.setAttr<Group::AttrType::identifier>(*groupIdentifier, NotificationType::synchronous);
+            copyAcsr.setAttr<Group::AttrType::identifier>(newGroupIdentifier.value(), NotificationType::synchronous);
             copyAcsr.setAttr<Group::AttrType::layout>(std::vector<juce::String>(), NotificationType::synchronous);
-            auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, *groupIdentifier);
+            auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, newGroupIdentifier.value());
             newGroupAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
 
             auto const trackIdentifiers = groupAcsr.getAttr<Group::AttrType::layout>();
             for(size_t i = 0; i < trackIdentifiers.size(); ++i)
             {
-                if(!mDirector.copyTrack(*groupIdentifier, i, trackIdentifiers[i], NotificationType::synchronous))
+                if(!mDirector.copyTrack(newGroupIdentifier.value(), i, trackIdentifiers.at(i), NotificationType::synchronous).has_value())
                 {
                     mDirector.endAction(ActionState::abort);
                     return;
                 }
             }
+            [[maybe_unused]] auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
             mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Group"));
         }
         else
@@ -115,6 +122,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
             layout.insert(layout.begin() + static_cast<long>(index), identifier);
             mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+            [[maybe_unused]] auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
             mDirector.endAction(ActionState::newTransaction, juce::translate("Move Group"));
         }
     };
@@ -760,9 +768,11 @@ void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t 
     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
     if(mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
     {
+        auto const references = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedTrackIdentifier = references.count(trackIdentifier) > 0_z ? references.at(trackIdentifier) : trackIdentifier;
         mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
-        mLastSelectedItem = {trackIdentifier, {}};
-        Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
+        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
+        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
     }
     else
     {
@@ -781,11 +791,14 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     mDirector.startAction();
     auto& groupAcsr = groupDirector.getAccessor();
     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-    if(mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
+    auto const newTrackIdentifier = mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous);
+    if(newTrackIdentifier.has_value())
     {
+        auto const references = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedTrackIdentifier = references.count(newTrackIdentifier.value()) > 0_z ? references.at(newTrackIdentifier.value()) : newTrackIdentifier.value();
         mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
-        mLastSelectedItem = {trackIdentifier, {}};
-        Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
+        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
+        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
     }
     else
     {

@@ -599,8 +599,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
             if(identifier.has_value())
             {
+                auto const references = documentDir.sanitize(NotificationType::synchronous);
+                auto const groupIdentifier = references.count(identifier.value()) > 0_z ? references.at(identifier.value()) : identifier.value();
                 documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
-                Document::Selection::selectItem(documentAcsr, {*identifier, {}}, true, false, NotificationType::synchronous);
+                Document::Selection::selectItem(documentAcsr, {groupIdentifier, {}}, true, false, NotificationType::synchronous);
             }
             else
             {
@@ -657,6 +659,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  {
                                                      documentDir.removeGroup(groupId, NotificationType::synchronous);
                                                  }
+                                                 [[maybe_unused]] auto const references = documentDir.sanitize(NotificationType::synchronous);
                                                  documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group(s)"));
                                              });
                 return true;
@@ -687,6 +690,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  {
                                                      documentDir.removeTrack(trackId, NotificationType::synchronous);
                                                  }
+                                                 [[maybe_unused]] auto const references = documentDir.sanitize(NotificationType::synchronous);
                                                  documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track(s)"));
                                              });
                 return true;
@@ -726,6 +730,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  {
                                                      documentDir.removeTrack(trackId, NotificationType::synchronous);
                                                  }
+                                                 [[maybe_unused]] auto const references = documentDir.sanitize(NotificationType::synchronous);
                                                  documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group(s) and Track(s)"));
                                              });
                 return true;

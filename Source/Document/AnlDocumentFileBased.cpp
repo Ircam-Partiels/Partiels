@@ -133,7 +133,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
-    mDirector.sanitize(NotificationType::synchronous);
+    [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
     catcher.showAsync();
 
@@ -255,7 +255,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
     mDirector.setAlertCatcher(&catcher);
 
     loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
-    mDirector.sanitize(NotificationType::synchronous);
+    [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
 
     mDirector.setAlertCatcher(nullptr);
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
@@ -299,7 +299,7 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     mDirector.setAlertCatcher(&catcher);
     mAccessor.copyFrom(getDefaultAccessor(), NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
-    mDirector.sanitize(NotificationType::synchronous);
+    [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
     catcher.showAsync();
 
