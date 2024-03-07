@@ -2,12 +2,11 @@
 
 APP_NAME="Partiels"
 
-ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-REPO_PATH="$ThisPath/.."
-BUILD_PATH="$REPO_PATH/build"
-APP_VERSION=$(<$BUILD_PATH/version.txt)
+THIS_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_PATH="$THIS_PATH/.."
 
-cd $BUILD_PATH
+mkdir -p package
+cd "$REPO_PATH/package"
 
 PROJECT_URL="https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts"
 PRIVATE_TOKEN=$(security find-generic-password -s 'Forge2 Ircam Token' -w)
@@ -16,6 +15,13 @@ if [ $PRIVATE_TOKEN == ""]; then
   echo '\033[0;31m' "Error: no private token defined"
   exit -1
 fi
+
+if [ -z $1 ]; then
+  echo '\033[0;31m' "Error: no tag defined"
+  exit -1
+fi
+
+APP_VERSION=$1
 
 echo '\033[0;34m' "Preparing " $APP_NAME-v$APP_VERSION "..."
 echo '\033[0m'
@@ -43,13 +49,18 @@ curl --output $APP_NAME-v$APP_VERSION-Manual.zip --header "PRIVATE-TOKEN: $PRIVA
 unzip  $APP_NAME-v$APP_VERSION-Manual.zip
 mv $APP_NAME-Manual.pdf "$APP_NAME-v$APP_VERSION-Manual.pdf"
 
+echo '\033[0;34m' "Generating ChangeLog.txt..."
+echo '\033[0m'
+echo "$APP_VERSION\n" > ./ChangeLog.txt
+cat "$REPO_PATH/BinaryData/Resource/ChangeLog.txt" >> ./ChangeLog.txt
+
 echo '\033[0;34m' "Installing zip files..."
 echo '\033[0m'
 cp "$APP_NAME-v$APP_VERSION-Linux.zip" $HOME/Nextcloud/Partiels/Temp
 cp "$APP_NAME-v$APP_VERSION-Windows.zip" $HOME/Nextcloud/Partiels/Temp
 cp "$APP_NAME-v$APP_VERSION-MacOS.zip" $HOME/Nextcloud/Partiels/Temp
 cp "$APP_NAME-v$APP_VERSION-Manual.pdf" $HOME/Nextcloud/Partiels/Temp
-cp "$BUILD_PATH/ChangeLog.txt" $HOME/Nextcloud/Partiels/Temp
+cp "ChangeLog.txt" $HOME/Nextcloud/Partiels/Temp
 
 echo '\033[0;34m' "done"
 echo '\033[0m'
