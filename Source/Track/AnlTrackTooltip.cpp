@@ -39,6 +39,23 @@ juce::String Track::Tools::getExtraTooltip(Accessor const& acsr, size_t index)
 
 juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component const& component, int y)
 {
+    auto const channelRange = getChannelVerticalRange(acsr, component.getLocalBounds(), y, false);
+    if(!channelRange.has_value())
+    {
+        return {};
+    }
+    auto const pixelRange = std::get<1_z>(channelRange.value());
+    auto const getScaledValue = [&](Zoom::Accessor const& zoomAcsr)
+    {
+        auto const zoomRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        if(pixelRange.isEmpty() || zoomRange.isEmpty())
+        {
+            return zoomRange.getStart();
+        }
+        auto const shiftY = y - pixelRange.getStart();
+        return static_cast<double>(pixelRange.getLength() - shiftY) / static_cast<double>(pixelRange.getLength()) * zoomRange.getLength() + zoomRange.getStart();
+    };
+
     auto const frameType = getFrameType(acsr);
     if(frameType.has_value())
     {
@@ -48,12 +65,12 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 return {};
             case FrameType::value:
             {
-                auto const value = Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::valueZoom>(), component, y);
+                auto const value = getScaledValue(acsr.getAcsr<AcsrType::valueZoom>());
                 return Format::valueToString(value, 4) + getUnit(acsr);
             }
             case FrameType::vector:
             {
-                auto const value = Zoom::Tools::getScaledValueFromHeight(acsr.getAcsr<AcsrType::binZoom>(), component, y);
+                auto const value = getScaledValue(acsr.getAcsr<AcsrType::binZoom>());
                 auto const index = static_cast<size_t>(std::floor(value));
                 return juce::translate("Bin INDEX").replace("INDEX", getBinName(acsr, index, true));
             }
