@@ -50,12 +50,34 @@ Build::MacOS:
   stage: build
   tags:
     - osx
+  before_script:
+    - security create-keychain -p "$DEV_ID_PASSWORD" buildagent
+    - security unlock-keychain -p "$DEV_ID_PASSWORD" buildagent
+    - security list-keychains -s buildagent && security default-keychain -s buildagent
+    - echo $DEV_ID_APP_CERT | base64 --decode > ./cert.p12
+    - security import ./cert.p12 -P "$DEV_ID_PASSWORD" -A -t cert -f pkcs12 -k buildagent -T /usr/bin/codesign >/dev/null
+    - rm ./cert.p12
+    - security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k "$DEV_ID_PASSWORD" buildagent >/dev/null
+    - xcrun notarytool store-credentials "notary-partiels" --apple-id "$DEV_USER_APPLE_ID" --team-id 3BD2P55TR2 --password $DEV_SPEC_APP_PASSWORD >/dev/null
   script:
     - cd $CI_PROJECT_DIR
-    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG
+    - cmake . -B build -G Xcode -DPARTIELS_BUILD_TAG=$CI_COMMIT_TAG -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="Application Partiels"
     - cmake --build build --target PartielsCheckFormat -- -quiet
     - ./Scripts/macos-build.sh Release
-    - ctest -C Release -VV --test-dir build 
+    - ctest -C Release -VV --test-dir build
+    - security unlock-keychain -p "$DEV_ID_PASSWORD" buildagent
+    - ./Scripts/macos-release.sh -c Release -p $CI_PROJECT_DIR/build -p notary-partiels --ci
+    - mv build/Partiels.dmg $CI_PROJECT_DIR
+  after_script:
+    - homedir=~
+    - eval homedir=$homedir
+    - default_keychain=$homedir/Library/Keychains/login.keychain-db
+    - security default-keychain -s "$default_keychain" && security list-keychains -s "$default_keychain"
+    - security delete-keychain buildagent || true
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/Partiels.dmg
+    expire_in: 1 week
 
 Build::Windows:
   stage: build
