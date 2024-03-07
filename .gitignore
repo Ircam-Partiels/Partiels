@@ -1,3 +1,4 @@
 build
 release
+package
 *.DS_Store
