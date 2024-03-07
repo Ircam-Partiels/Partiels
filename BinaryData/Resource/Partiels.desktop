@@ -5,4 +5,4 @@ Terminal = false
 Name = Partiels
 Exec = /usr/bin/Partiels
 Icon = /opt/Partiels/icon.png
-Categories = Application;
+Categories = Audio;
