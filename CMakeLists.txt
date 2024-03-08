@@ -222,7 +222,7 @@ if(WIN32)
     find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64")
     if(SIGNTOOL_EXE AND EXISTS PARTIELS_CODESIGN_WINDOWS_KEYFILE)
         add_custom_target(PartielsSign ALL
-        COMMAND ${SIGNTOOL_EXE} sign /f ${PARTIELS_CODESIGN_WINDOWS_KEYFILE} /p ${PARTIELS_CODESIGN_WINDOWS_KEYFILE} /fd SHA256 /td SHA256 /tr ${TIMESTAMP_SERVER_URL} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
+        COMMAND ${SIGNTOOL_EXE} sign /f ${PARTIELS_CODESIGN_WINDOWS_KEYFILE} /p ${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD} /fd SHA256 /td SHA256 /tr ${TIMESTAMP_SERVER_URL} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
         COMMAND ${SIGNTOOL_EXE} verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
         )
         add_dependencies(PartielsSign PartielsPackage)
