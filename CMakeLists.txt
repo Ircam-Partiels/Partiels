@@ -59,7 +59,7 @@ juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
     VERSION                             ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                           fr.ircam.dev.partiels
-    COMPANY_COPYRIGHT                   "Copyright 2023 Ircam. All rights reserved"
+    COMPANY_COPYRIGHT                   "Copyright 2024 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
     ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png"

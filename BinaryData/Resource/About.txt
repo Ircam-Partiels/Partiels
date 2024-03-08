@@ -1,7 +1,7 @@
 Partiels is software intended for the analysis of digital audio files. Partiels aims to offer a set of dynamic and ergonomic tools that meet the expectations of research in signal processing, musicology as well as compositional practices. Partiels allows to carry out, load, visualize, edit and export audio analyzes.
 
 Design & development by Pierre Guillot at IRCAM IMR Department.
-Copyright 2023 Ircam. All rights reserved.
+Copyright 2024 Ircam. All rights reserved.
 https://www.ircam.fr/
 
 Credits:
