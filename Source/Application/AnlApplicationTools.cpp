@@ -251,4 +251,100 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
     }
 }
 
+std::optional<std::tuple<Misc::Version, int, std::string>> Application::Tools::getLastestAsset(juce::String const& content)
+{
+    nlohmann::json json;
+    try
+    {
+        json = nlohmann::json::parse(content.toStdString());
+    }
+    catch(...)
+    {
+        return {};
+    }
+    if(!json.is_object())
+    {
+        return {};
+    }
+    auto const& releases = json.find("releases");
+    if(releases == json.cend() || !releases->is_array())
+    {
+        return {};
+    }
+
+    auto const getAsset = [](nlohmann::json::const_reference release) -> std::optional<std::tuple<int, std::string>>
+    {
+        auto const systemName = juce::SystemStats::getOperatingSystemName();
+        auto const effectiveName = systemName.substring(0, systemName.indexOf(" ")).toStdString();
+
+        auto const& assetsIt = release.find("assets");
+        if(assetsIt == release.cend() || !assetsIt->is_array())
+        {
+            return {};
+        }
+        for(auto assetIndex = 0_z; assetIndex < assetsIt->size(); ++assetIndex)
+        {
+            auto const& asset = assetsIt->at(assetIndex);
+            auto const& nameIt = asset.find("filename");
+            auto const& pkIt = asset.find("pk");
+            MiscWeakAssert(nameIt != asset.cend() && nameIt->is_string() && pkIt != asset.cend() && pkIt->is_number_integer());
+            if(nameIt != asset.cend() && nameIt->is_string() && pkIt != asset.cend() && pkIt->is_number_integer())
+            {
+                auto const name = nameIt->get<std::string>();
+                if(name.find(effectiveName) != std::string::npos)
+                {
+                    return std::make_tuple(pkIt->get<int>(), name);
+                }
+            }
+        }
+        return {};
+    };
+
+    std::optional<std::tuple<int, std::string>> asset;
+    Misc::Version version;
+    for(auto realeaseIndex = 0_z; realeaseIndex < releases->size(); ++realeaseIndex)
+    {
+        auto const& release = releases->at(realeaseIndex);
+        auto const& is_taggedIt = release.find("is_tagged");
+        MiscWeakAssert(is_taggedIt != release.cend() && is_taggedIt->is_boolean());
+        auto const latest = is_taggedIt != release.cend() && is_taggedIt->is_boolean() && is_taggedIt->get<bool>();
+        auto const& version_numberIt = release.find("version_number");
+        MiscWeakAssert(version_numberIt != release.cend());
+        auto const version_string = (version_numberIt != release.cend() && version_numberIt->is_string()) ? version_numberIt->get<std::string>() : std::optional<std::string>();
+        if(latest && version_string.has_value())
+        {
+            asset = getAsset(release);
+            if(asset.has_value())
+            {
+                version = std::max(version, Misc::Version::fromString(juce::String(version_string.value())));
+            }
+        }
+    }
+    using result_t = std::optional<std::tuple<Misc::Version, int, std::string>>;
+    return asset.has_value() ? result_t(std::make_tuple(version, std::get<0_z>(asset.value()), std::get<1_z>(asset.value()))) : result_t();
+}
+
+void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& company, std::function<void(int)> callback)
+{
+    if(upstreamVersion > currentVersion || (isCurrentVersionDev && upstreamVersion.tie() >= currentVersion.tie()))
+    {
+        auto options = juce::MessageBoxOptions()
+                           .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
+                           .withTitle(juce::translate("A new version is available!"))
+                           .withMessage(juce::translate("PRODUCT VERSION has been published on the COMPANY website.").replace("PRODUCT", product).replace("VERSION", upstreamVersion.toString()).replace("COMPANY", company))
+                           .withButton(juce::translate("Proceed to download page"));
+        options = warnIfUpToDate ? options.withButton(juce::translate("Close the window")) : options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
+        juce::AlertWindow::showAsync(options, callback);
+    }
+    else if(warnIfUpToDate)
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
+                                 .withTitle(juce::translate("The version is up to date!"))
+                                 .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the COMPANY website.").replace("PRODUCT", product).replace("VERSION", currentVersion.toString()).replace("COMPANY", company))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+    }
+}
+
 ANALYSE_FILE_END
