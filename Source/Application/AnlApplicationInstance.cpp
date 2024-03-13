@@ -760,111 +760,36 @@ void Application::Instance::checkPluginsQuarantine()
 #endif
 }
 
-Misc::Version Application::Instance::parseVersion(juce::String const& content)
-{
-    nlohmann::json json;
-    try
-    {
-        json = nlohmann::json::parse(content.toStdString());
-    }
-    catch(...)
-    {
-        return {};
-    }
-    if(!json.is_object())
-    {
-        return {};
-    }
-    auto const& releases = json.find("releases");
-    if(releases == json.cend() || !releases->is_array())
-    {
-        return {};
-    }
-
-    Misc::Version version;
-    for(auto index = 0_z; index < releases->size(); ++index)
-    {
-        auto const& release = releases->at(index);
-
-        auto const& is_tagged = release.find("is_tagged");
-        MiscWeakAssert(is_tagged != release.cend() && is_tagged->is_boolean());
-        auto const latest = is_tagged != release.cend() && is_tagged->is_boolean() && is_tagged->get<bool>();
-
-        auto const& version_number = release.find("version_number");
-        MiscWeakAssert(version_number != release.cend());
-        auto const version_string = (version_number != release.cend() && version_number->is_string()) ? version_number->get<std::string>() : std::optional<std::string>();
-
-        if(latest && version_string.has_value())
-        {
-            version = std::max(version, Misc::Version::fromString(juce::String(version_string.value())));
-        }
-    }
-    return version;
-}
-
 void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate)
 {
-    MiscWeakAssert(mApplicationAccessor != nullptr);
-    if(mApplicationAccessor == nullptr)
+    MiscWeakAssert(mApplicationAccessor != nullptr && mDownloader != nullptr);
+    if(mApplicationAccessor == nullptr || mDownloader == nullptr)
     {
         return;
     }
-
-    MiscWeakAssert(mDownloader != nullptr);
-    if(mDownloader == nullptr)
-    {
-        return;
-    }
-
-    static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
-    auto constexpr urlAddress = "https://forum.ircam.fr/api/projects/401/?format=json";
-    mDownloader->launch({urlAddress}, {}, [=, this](juce::String content)
+    mDownloader->launch({"https://forum.ircam.fr/api/projects/401/?format=json"}, {}, [=](juce::File file)
                         {
+                            static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
                             auto const currentVersion = Version::fromString(ProjectInfo::versionString);
-                            auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
+                            auto const checkVersion = Version::fromString(Instance::get().getApplicationAccessor().getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
-                            auto const upstreamVersion = parseVersion(content);
-                            if(upstreamVersion > usedVersion || (isDevelopmentVersion && upstreamVersion.tie() >= usedVersion.tie()))
-                            {
-                                auto options = juce::MessageBoxOptions()
-                                                   .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
-                                                   .withTitle(juce::translate("A new version is available!").replace("PRODUCT", ProjectInfo::projectName))
-                                                   .withMessage(juce::translate("PRODUCT VERSION has been published on the COMPAGNY website.").replace("PRODUCT", ProjectInfo::projectName).replace("VERSION", upstreamVersion.toString()).replace("COMPAGNY", ProjectInfo::companyName))
-                                                   .withButton(juce::translate("Proceed to download page"));
-                                if(warnIfUpToDate)
-                                {
-                                    options = options.withButton(juce::translate("Close the window"));
-                                }
-                                else
-                                {
-                                    options = options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
-                                }
-
-                                juce::AlertWindow::showAsync(options, [=, this](int result)
-                                                             {
-                                                                 if(result != 0)
-                                                                 {
-                                                                     mApplicationAccessor->setAttr<AttrType::lastVersion>(upstreamVersion.toString(), NotificationType::synchronous);
-                                                                 }
-                                                                 if(result == 1)
-                                                                 {
-                                                                     juce::Timer::callAfterDelay(20, []()
-                                                                                                 {
-                                                                                                     juce::URL("https://forum.ircam.fr/projects/detail/partiels/").launchInDefaultBrowser();
-                                                                                                 });
-                                                                 }
-                                                             });
-                            }
-                            else if(warnIfUpToDate)
-                            {
-                                auto const options = juce::MessageBoxOptions()
-                                                         .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
-                                                         .withTitle(juce::translate("The version is up to date!"))
-                                                         .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the COMPAGNY website.").replace("PRODUCT", ProjectInfo::projectName).replace("VERSION", currentVersion.toString()).replace("COMPAGNY", ProjectInfo::companyName))
-                                                         .withButton(juce::translate("Ok"));
-
-                                juce::AlertWindow::showAsync(options, nullptr);
-                            }
+                            auto const upstreamAsset = Tools::getLastestAsset(file.loadFileAsString());
+                            auto const upstreamVersion = upstreamAsset.has_value() ? std::get<0_z>(upstreamAsset.value()) : Version();
+                            Tools::notifyForNewVersion(upstreamVersion, usedVersion, isDevelopmentVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::companyName, [=](int result)
+                                                       {
+                                                           if(!upstreamAsset.has_value())
+                                                           {
+                                                               return;
+                                                           }
+                                                           if(result != 0)
+                                                           {
+                                                               Instance::get().getApplicationAccessor().setAttr<AttrType::lastVersion>(upstreamVersion.toString(), NotificationType::synchronous);
+                                                           }
+                                                           if(result == 1)
+                                                           {
+                                                               juce::URL("https://forum.ircam.fr/projects/detail/partiels/").launchInDefaultBrowser();
+                                                           }
+                                                       });
                         });
 }
 
