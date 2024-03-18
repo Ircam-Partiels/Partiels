@@ -169,7 +169,10 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
                                 });
             }
         }
-        mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu);
+        if(subMenu.getNumItems() > 2)
+        {
+            mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu);
+        }
     }
     {
         juce::PopupMenu subMenu;
@@ -182,7 +185,10 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             {
                 showPopupMenu(position);
             });
-        mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
+        if(subMenu.getNumItems() > 1)
+        {
+            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
+        }
     }
     {
         juce::PopupMenu subMenu;
@@ -195,7 +201,10 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             {
                 showPopupMenu(position);
             });
-        mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
+        if(subMenu.getNumItems() > 1)
+        {
+            mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
+        }
     }
     auto options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position));
     mainMenu.showMenuAsync(options, [=](int result)
