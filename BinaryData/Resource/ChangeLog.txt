@@ -1,3 +1,4 @@
+- Fix: It is impossible to select a group that does not contain a track (#443)
 - Fix: The value under the mouse displayed in the tooltip is not correct when the track has several channels (#438)
 - Fix: The application no longer displays an alert when a result file is not found when a project is loaded (#437)
 - Fix: The application prevents adding tracks when reopening a project if the corresponding command has not been used directly (#436)
