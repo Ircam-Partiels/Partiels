@@ -187,7 +187,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             {
                 showPopupMenu(position);
             });
-        if(subMenu.getNumItems() > 1)
+        if(subMenu.getNumItems() > 0)
         {
             mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
         }
