@@ -14,6 +14,8 @@ namespace Track
     : public juce::Component
     {
     public:
+        using ResizerFn = std::function<void(juce::String const&, int)>;
+
         // clang-format off
         enum ColourIds : int
         {
@@ -21,7 +23,7 @@ namespace Track
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, ResizerFn resizerFn);
         ~Section() override;
 
         juce::Rectangle<int> getPlotBounds() const;

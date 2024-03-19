@@ -2,12 +2,13 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::StrechableSection::StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
+Group::StrechableSection::StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mApplicationCommandManager(commandManager)
-, mSection(director, commandManager, transportAcsr, timeZoomAcsr)
+, mResizerFn(resizerFn)
+, mSection(director, commandManager, transportAcsr, timeZoomAcsr, resizerFn)
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -18,7 +19,6 @@ Group::StrechableSection::StrechableSection(Director& director, juce::Applicatio
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -32,7 +32,30 @@ Group::StrechableSection::StrechableSection(Director& director, juce::Applicatio
                 break;
             case AttrType::expanded:
             {
-                mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), true);
+                if(!mCanAnimate)
+                {
+                    mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), false);
+                    if(onLayoutChanged != nullptr)
+                    {
+                        onLayoutChanged();
+                    }
+                }
+                else
+                {
+                    if(acsr.getAttr<AttrType::expanded>())
+                    {
+                        if(onLayoutChanged != nullptr)
+                        {
+                            onLayoutChanged();
+                        }
+                        startTimer(100);
+                    }
+                    else
+                    {
+                        mConcertinaTable.setOpen(false, true);
+                    }
+                }
+                updateResizable();
             }
             break;
         }
@@ -103,23 +126,22 @@ void Group::StrechableSection::resized()
 void Group::StrechableSection::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(mConcertinaTable));
-    if(mConcertinaTable.isAnimating())
+    if(!mConcertinaTable.isAnimating() && !mConcertinaTable.isOpen())
     {
-        if(onResizingStarted != nullptr)
+        if(onLayoutChanged != nullptr)
         {
-            onResizingStarted();
-        }
-    }
-    else
-    {
-        if(onResizingEnded != nullptr)
-        {
-            onResizingEnded();
+            onLayoutChanged();
         }
     }
 }
 
-bool Group::StrechableSection::isResizing() const
+void Group::StrechableSection::timerCallback()
+{
+    stopTimer();
+    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
+}
+
+bool Group::StrechableSection::isStretching() const
 {
     return mConcertinaTable.isAnimating();
 }
@@ -162,19 +184,21 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     return {};
 }
 
-void Group::StrechableSection::setResizable(bool state)
+void Group::StrechableSection::setLastItemResizable(bool state)
 {
     if(mIsResizable != state)
     {
         mIsResizable = state;
-        mSection.setResizable(state);
-        for(auto& trackSection : mTrackSections.getContents())
-        {
-            if(trackSection.second != nullptr)
-            {
-                trackSection.second->setResizable(state);
-            }
-        }
+        updateResizable();
+    }
+}
+
+void Group::StrechableSection::setCanAnimate(bool state)
+{
+    mCanAnimate = state;
+    if(!state)
+    {
+        mConcertinaTable.setOpen(mConcertinaTable.isOpen(), false);
     }
 }
 
@@ -186,10 +210,10 @@ void Group::StrechableSection::updateContent()
         {
             auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
             auto& trackDirector = mDirector.getTrackDirector(identifier);
-            auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor);
+            auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor, mResizerFn);
+            MiscWeakAssert(trackSection != nullptr);
             if(trackSection != nullptr)
             {
-                trackSection->setResizable(mIsResizable);
                 trackSection->addMouseListener(this, false);
             }
             return trackSection;
@@ -205,11 +229,41 @@ void Group::StrechableSection::updateContent()
         auto it = contents.find(identifier);
         if(it != contents.cend())
         {
-            components.push_back(*it->second.get());
+            components.push_back(std::ref(*it->second.get()));
         }
     }
     mDraggableTable.setComponents(components);
+    updateResizable();
+
     resized();
+    if(onLayoutChanged != nullptr)
+    {
+        onLayoutChanged();
+    }
+}
+
+void Group::StrechableSection::updateResizable()
+{
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const& contents = mTrackSections.getContents();
+    auto const hasTrackVisible = mAccessor.getAttr<AttrType::expanded>() && !layout.empty();
+    mSection.setResizable(hasTrackVisible || mIsResizable);
+    for(auto const& identifier : layout)
+    {
+        auto it = contents.find(identifier);
+        if(it != contents.cend())
+        {
+            it->second->setResizable(true);
+        }
+    }
+    if(!layout.empty())
+    {
+        auto it = contents.find(layout.back());
+        if(it != contents.cend())
+        {
+            it->second->setResizable(hasTrackVisible && mIsResizable);
+        }
+    }
 }
 
 ANALYSE_FILE_END

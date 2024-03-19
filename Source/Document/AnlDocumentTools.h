@@ -25,6 +25,9 @@ namespace Document
         size_t getGroupPosition(Accessor const& accessor, juce::String const& identifier);
         size_t getItemPosition(Accessor const& accessor, juce::String const& identifier);
 
+        void resizeItem(Accessor& accessor, juce::String const& itemIdentifier, int newHeight, int parentHeight);
+        void resizeItems(Accessor& accessor, bool preserveRatio, int parentHeight);
+
         std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& accessor);
     } // namespace Tools
 

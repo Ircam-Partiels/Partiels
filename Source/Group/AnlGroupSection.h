@@ -14,6 +14,8 @@ namespace Group
     , public juce::DragAndDropTarget
     {
     public:
+        using ResizerFn = std::function<void(juce::String const&, int)>;
+
         // clang-format off
         enum ColourIds : int
         {
@@ -22,7 +24,7 @@ namespace Group
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn);
         ~Section() override;
 
         std::function<void(juce::String const& identifier, bool copy)> onTrackInserted = nullptr;

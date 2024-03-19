@@ -146,6 +146,273 @@ size_t Document::Tools::getItemPosition(Accessor const& accessor, juce::String c
     return index;
 }
 
+void Document::Tools::resizeItem(Accessor& accessor, juce::String const& itemIdentifier, int newHeight, int parentHeight)
+{
+    MiscWeakAssert(hasItem(accessor, itemIdentifier));
+    if(!hasItem(accessor, itemIdentifier))
+    {
+        return;
+    }
+    static auto constexpr minHeight = 23;
+    static auto constexpr maxHeight = 2000;
+    newHeight = std::clamp(newHeight, minHeight, maxHeight);
+    if(accessor.getAttr<AttrType::autoresize>())
+    {
+        class LayoutInfo
+        {
+        public:
+            LayoutInfo(juce::String const& r, int p)
+            : mReferenceIdentifier(r)
+            , mParentHeight(p)
+            {
+            }
+
+            void update(juce::String const& currentIdentifier, int currentHeight)
+            {
+                if(mReferenceIdentifier == currentIdentifier)
+                {
+                    MiscWeakAssert(mIsBefore);
+                    mIsBefore = false;
+                    mReferenceHeight = currentHeight;
+                }
+                else if(mIsBefore)
+                {
+                    mPreviousHeight += currentHeight;
+                }
+                else
+                {
+                    ++mFollowingItems;
+                }
+            }
+
+            int getPreviousHeight() const
+            {
+                return mPreviousHeight;
+            }
+
+            int getSavedReferenceHeight() const
+            {
+                return mReferenceHeight;
+            }
+
+            int getFollowingItems() const
+            {
+                return mFollowingItems;
+            }
+
+            int getMaxReferenceHeight() const
+            {
+                return mParentHeight - (mPreviousHeight + mFollowingItems * minHeight);
+            }
+
+        private:
+            juce::String const mReferenceIdentifier;
+            int const mParentHeight;
+            bool mIsBefore = true;
+            int mPreviousHeight = 0;
+            int mReferenceHeight = 0;
+            int mFollowingItems = 0;
+        };
+
+        LayoutInfo info(itemIdentifier, parentHeight);
+        auto const& documentLayout = accessor.getAttr<AttrType::layout>();
+        for(auto const& groupIdentifier : documentLayout)
+        {
+            if(hasGroupAcsr(accessor, groupIdentifier))
+            {
+                auto const& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
+                info.update(groupIdentifier, groupAcsr.getAttr<Group::AttrType::height>());
+                if(groupAcsr.getAttr<Group::AttrType::expanded>())
+                {
+                    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
+                                                                 {
+                                                                     return !Tools::hasTrackAcsr(accessor, trackIdentifier);
+                                                                 });
+                    for(auto const& trackIdentifier : groupLayout)
+                    {
+                        auto const& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                        info.update(trackIdentifier, trackAcsr.getAttr<Track::AttrType::height>());
+                    }
+                }
+            }
+        }
+        if(info.getFollowingItems() == 0)
+        {
+            return;
+        }
+
+        newHeight = std::clamp(newHeight, minHeight, info.getMaxReferenceHeight());
+        if(hasGroupAcsr(accessor, itemIdentifier))
+        {
+            getGroupAcsr(accessor, itemIdentifier).setAttr<Group::AttrType::height>(newHeight, NotificationType::synchronous);
+        }
+        else if(hasTrackAcsr(accessor, itemIdentifier))
+        {
+            getTrackAcsr(accessor, itemIdentifier).setAttr<Track::AttrType::height>(newHeight, NotificationType::synchronous);
+        }
+        auto remainder = 0.0f;
+        bool isBefore = true;
+        auto const previousFollowingHeight = parentHeight - info.getPreviousHeight() - info.getSavedReferenceHeight();
+        auto remainingHeight = parentHeight - info.getPreviousHeight() - newHeight;
+        auto const followingRatio = static_cast<float>(remainingHeight) / static_cast<float>(previousFollowingHeight);
+        for(auto const& groupIdentifier : documentLayout)
+        {
+            if(hasGroupAcsr(accessor, groupIdentifier))
+            {
+                auto& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
+                if(!isBefore)
+                {
+                    auto const scaledHeight = static_cast<float>(groupAcsr.getAttr<Group::AttrType::height>()) * followingRatio + remainder;
+                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                    remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                    remainingHeight -= effectiveHeight;
+                    groupAcsr.setAttr<Group::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                }
+                if(groupIdentifier == itemIdentifier)
+                {
+                    isBefore = false;
+                }
+                if(groupAcsr.getAttr<Group::AttrType::expanded>())
+                {
+                    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
+                                                                 {
+                                                                     return !Tools::hasTrackAcsr(accessor, trackIdentifier);
+                                                                 });
+                    for(auto const& trackIdentifier : groupLayout)
+                    {
+                        auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                        if(!isBefore)
+                        {
+                            auto const scaledHeight = static_cast<float>(trackAcsr.getAttr<Track::AttrType::height>()) * followingRatio + remainder;
+                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                            remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                            remainingHeight -= effectiveHeight;
+                            trackAcsr.setAttr<Track::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                        }
+                        if(trackIdentifier == itemIdentifier)
+                        {
+                            isBefore = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if(hasGroupAcsr(accessor, itemIdentifier))
+    {
+        getGroupAcsr(accessor, itemIdentifier).setAttr<Group::AttrType::height>(newHeight, NotificationType::synchronous);
+    }
+    else if(hasTrackAcsr(accessor, itemIdentifier))
+    {
+        getTrackAcsr(accessor, itemIdentifier).setAttr<Track::AttrType::height>(newHeight, NotificationType::synchronous);
+    }
+}
+
+void Document::Tools::resizeItems(Accessor& accessor, bool preserveRatio, int parentHeight)
+{
+    static auto constexpr minHeight = 23;
+    int previousHeight = 0;
+    int numItems = 0;
+    auto const& documentLayout = accessor.getAttr<AttrType::layout>();
+    for(auto const& groupIdentifier : documentLayout)
+    {
+        if(hasGroupAcsr(accessor, groupIdentifier))
+        {
+            auto const& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
+            previousHeight += groupAcsr.getAttr<Group::AttrType::height>();
+            ++numItems;
+            if(groupAcsr.getAttr<Group::AttrType::expanded>())
+            {
+                auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
+                                                             {
+                                                                 return !Tools::hasTrackAcsr(accessor, trackIdentifier);
+                                                             });
+                for(auto const& trackIdentifier : groupLayout)
+                {
+                    auto const& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                    previousHeight += trackAcsr.getAttr<Track::AttrType::height>();
+                    ++numItems;
+                }
+            }
+        }
+    }
+
+    auto remainder = 0.0f;
+    auto remainingHeight = parentHeight;
+    if(preserveRatio)
+    {
+        auto const followingRatio = static_cast<float>(parentHeight) / static_cast<float>(previousHeight);
+        for(auto const& groupIdentifier : documentLayout)
+        {
+            if(hasGroupAcsr(accessor, groupIdentifier))
+            {
+                auto& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
+                {
+                    auto const scaledHeight = static_cast<float>(groupAcsr.getAttr<Group::AttrType::height>()) * followingRatio + remainder;
+                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                    remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                    remainingHeight -= effectiveHeight;
+                    groupAcsr.setAttr<Group::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                }
+                if(groupAcsr.getAttr<Group::AttrType::expanded>())
+                {
+                    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
+                                                                 {
+                                                                     return !Tools::hasTrackAcsr(accessor, trackIdentifier);
+                                                                 });
+                    for(auto const& trackIdentifier : groupLayout)
+                    {
+                        auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                        {
+                            auto const scaledHeight = static_cast<float>(trackAcsr.getAttr<Track::AttrType::height>()) * followingRatio + remainder;
+                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                            remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                            remainingHeight -= effectiveHeight;
+                            trackAcsr.setAttr<Track::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        auto const itemHeight = static_cast<float>(parentHeight) / static_cast<float>(numItems);
+        for(auto const& groupIdentifier : documentLayout)
+        {
+            if(hasGroupAcsr(accessor, groupIdentifier))
+            {
+                auto& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
+                {
+                    auto const scaledHeight = itemHeight + remainder;
+                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                    remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                    remainingHeight -= effectiveHeight;
+                    groupAcsr.setAttr<Group::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                }
+                if(groupAcsr.getAttr<Group::AttrType::expanded>())
+                {
+                    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
+                                                                 {
+                                                                     return !Tools::hasTrackAcsr(accessor, trackIdentifier);
+                                                                 });
+                    for(auto const& trackIdentifier : groupLayout)
+                    {
+                        auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                        {
+                            auto const scaledHeight = itemHeight + remainder;
+                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                            remainder = scaledHeight - static_cast<float>(effectiveHeight);
+                            remainingHeight -= effectiveHeight;
+                            trackAcsr.setAttr<Track::AttrType::height>(effectiveHeight, NotificationType::synchronous);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& accessor)
 {
     class RangeEditor

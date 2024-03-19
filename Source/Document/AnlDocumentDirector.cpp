@@ -70,13 +70,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 [[fallthrough]];
             }
             case AttrType::autoresize:
-            {
-                if(mAccessor.getAttr<AttrType::autoresize>())
-                {
-                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
-                }
-            }
-            break;
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::samplerate:
@@ -157,10 +150,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
-                if(mAccessor.getAttr<AttrType::autoresize>())
-                {
-                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
-                }
                 mHierarchyManager.notifyHierarchyChanged(notification);
             }
             break;
@@ -195,10 +184,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
 
                 groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
-                if(mAccessor.getAttr<AttrType::autoresize>())
-                {
-                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
-                }
                 mHierarchyManager.notifyHierarchyChanged(notification);
                 break;
             }
@@ -226,10 +211,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
                 updateMarkers(notification);
-                if(mAccessor.getAttr<AttrType::autoresize>())
-                {
-                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
-                }
                 mHierarchyManager.notifyHierarchyChanged(notification);
                 mTracks.erase(mTracks.begin() + static_cast<long>(index));
             }
@@ -240,10 +221,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 if(index >= mGroups.size())
                 {
                     return;
-                }
-                if(mAccessor.getAttr<AttrType::autoresize>())
-                {
-                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
                 mHierarchyManager.notifyHierarchyChanged(notification);
                 mGroups.erase(mGroups.begin() + static_cast<long>(index));

@@ -16,15 +16,13 @@ Document::FileBased::FileBased(Director& director, juce::String const& fileExten
 , mFileExtension(fileExtension)
 {
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&]([[maybe_unused]] Accessor const& acsr, [[maybe_unused]] AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
 
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [&]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
@@ -48,10 +46,9 @@ Document::FileBased::FileBased(Director& director, juce::String const& fileExten
         }
     };
 
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [&]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
         triggerAsyncUpdate();
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
@@ -73,15 +70,13 @@ Document::FileBased::FileBased(Director& director, juce::String const& fileExten
         }
     };
 
-    mTrackListener.onAttrChanged = [&](Track::Accessor const& acsr, Track::AttrType attribute)
+    mTrackListener.onAttrChanged = [&]([[maybe_unused]] Track::Accessor const& acsr, [[maybe_unused]] Track::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
 
-    mGroupListener.onAttrChanged = [&](Group::Accessor const& acsr, Group::AttrType attribute)
+    mGroupListener.onAttrChanged = [&]([[maybe_unused]] Group::Accessor const& acsr, [[maybe_unused]] Group::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
 
@@ -132,8 +127,10 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
+    mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
+    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
     catcher.showAsync();
 
@@ -200,6 +197,7 @@ juce::Result Document::FileBased::consolidate()
     mDirector.startAction();
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
+    mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     auto const directory = getConsolidateDirectory(file);
 
     auto const audioResult = Exporter::consolidateAudioFiles(mAccessor, directory);
@@ -208,6 +206,7 @@ juce::Result Document::FileBased::consolidate()
         mDirector.endAction(ActionState::abort);
         return audioResult;
     }
+    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
 
     // Create a commmit for all tracks to for consolidation
@@ -253,10 +252,10 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
-
+    mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
-
+    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     triggerAsyncUpdate();
@@ -297,9 +296,11 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
+    mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     mAccessor.copyFrom(getDefaultAccessor(), NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
+    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
     catcher.showAsync();
 

@@ -10,6 +10,16 @@ ResizerBar::ResizerBar(Orientation const orientation, bool direction, juce::Rang
     enablementChanged();
 }
 
+int ResizerBar::getSavedPosition() const
+{
+    return mSavedPosition;
+}
+
+int ResizerBar::getNewPosition() const
+{
+    return mNewPosition;
+}
+
 void ResizerBar::paint(juce::Graphics& g)
 {
     g.setColour(findColour(isMouseOverOrDragging() && isEnabled() ? ColourIds::activeColourId : ColourIds::inactiveColourId));
@@ -22,10 +32,13 @@ void ResizerBar::mouseDown(juce::MouseEvent const& event)
     {
         return;
     }
-    juce::ignoreUnused(event);
+    event.source.enableUnboundedMouseMovement(true, true);
     auto const isVertical = mOrientation == Orientation::vertical;
     mSavedPosition = isVertical ? (mDirection ? getX() : getRight()) : (mDirection ? getY() : getBottom());
-    event.source.enableUnboundedMouseMovement(true, true);
+    if(onMouseDown != nullptr)
+    {
+        onMouseDown(event);
+    }
 }
 
 void ResizerBar::mouseDrag(juce::MouseEvent const& event)
@@ -34,38 +47,26 @@ void ResizerBar::mouseDrag(juce::MouseEvent const& event)
     {
         return;
     }
-    auto getRange = [&]() -> juce::Range<int>
-    {
-        if(mDirection)
-        {
-            return mRange;
-        }
-        else if(mOrientation == Orientation::horizontal)
-        {
-            return {getParentHeight() - mRange.getEnd(), getParentHeight() - mRange.getStart()};
-        }
-        return {getParentWidth() - mRange.getEnd(), getParentWidth() - mRange.getStart()};
-    };
-
     event.source.enableUnboundedMouseMovement(true, true);
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY();
-    auto const newPosition = mRange.isEmpty() ? mSavedPosition + offset : getRange().clipValue(mSavedPosition + offset);
-    if(mDirection)
+    mNewPosition = mRange.isEmpty() ? mSavedPosition + offset : mRange.clipValue(mSavedPosition + offset);
+    if(onMouseDrag != nullptr)
     {
-        setTopLeftPosition(isVertical ? newPosition : getX(),
-                           !isVertical ? newPosition : getY());
+        onMouseDrag(event);
     }
     else
     {
-        setTopLeftPosition(isVertical ? newPosition - getWidth() : getX(),
-                           !isVertical ? newPosition - getHeight() : getY());
-    }
-
-    if(onMoved != nullptr)
-    {
-        onMoved(mDirection ? newPosition : mOrientation == Orientation::horizontal ? getParentHeight() - newPosition
-                                                                                   : getParentWidth() - newPosition);
+        if(mDirection)
+        {
+            setTopLeftPosition(isVertical ? mNewPosition : getX(),
+                               !isVertical ? mNewPosition : getY());
+        }
+        else
+        {
+            setTopLeftPosition(isVertical ? mNewPosition - getWidth() : getX(),
+                               !isVertical ? mNewPosition - getHeight() : getY());
+        }
     }
 }
 
@@ -75,8 +76,11 @@ void ResizerBar::mouseUp(juce::MouseEvent const& event)
     {
         return;
     }
-    juce::ignoreUnused(event);
     event.source.enableUnboundedMouseMovement(false);
+    if(onMouseUp != nullptr)
+    {
+        onMouseUp(event);
+    }
 }
 
 void ResizerBar::enablementChanged()

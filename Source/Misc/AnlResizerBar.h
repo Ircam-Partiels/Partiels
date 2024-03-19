@@ -11,7 +11,7 @@ public:
     // clang-format off
     enum ColourIds : int
     {
-          activeColourId = 0x2000800
+          activeColourId = 0x4000800
         , inactiveColourId
     };
     // clang-format on
@@ -27,6 +27,9 @@ public:
     ResizerBar(Orientation const orientation, bool direction, juce::Range<int> const range = {});
     ~ResizerBar() override = default;
 
+    int getSavedPosition() const;
+    int getNewPosition() const;
+
     // juce::Component
     void paint(juce::Graphics& g) override;
     void mouseDown(juce::MouseEvent const& event) override;
@@ -34,13 +37,16 @@ public:
     void mouseUp(juce::MouseEvent const& event) override;
     void enablementChanged() override;
 
-    std::function<void(int)> onMoved = nullptr;
+    std::function<void(juce::MouseEvent const& event)> onMouseDown = nullptr;
+    std::function<void(juce::MouseEvent const& event)> onMouseDrag = nullptr;
+    std::function<void(juce::MouseEvent const& event)> onMouseUp = nullptr;
 
 private:
     Orientation const mOrientation;
     bool const mDirection;
     juce::Range<int> const mRange;
     int mSavedPosition;
+    int mNewPosition;
 };
 
 ANALYSE_FILE_END

@@ -15,6 +15,7 @@ namespace Document
     , public juce::DragAndDropContainer
     , public CommandTarget
     , private juce::ApplicationCommandManagerListener
+    , private juce::AsyncUpdater
     {
     public:
         // clang-format off
@@ -50,10 +51,13 @@ namespace Document
         void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
         void applicationCommandListChanged() override;
 
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
+
         void updateLayout();
-        void updateHeights();
         void updateExpandState();
         void updateFocus();
+        void updateAutoresize();
 
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
@@ -103,6 +107,7 @@ namespace Document
         LayoutNotifier mLayoutNotifier;
         LayoutNotifier mExpandedNotifier;
         LayoutNotifier mFocusNotifier;
+        bool mIsLoading = true;
     };
 } // namespace Document
 

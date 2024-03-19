@@ -258,7 +258,7 @@ Application::Interface::Interface()
         switch(signal)
         {
             case Document::SignalType::viewport:
-            case Document::SignalType::updateSize:
+            case Document::SignalType::isLoading:
                 break;
             case Document::SignalType::showReaderLayoutPanel:
             {

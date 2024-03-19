@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
+Group::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
@@ -29,7 +29,7 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
                 break;
             case AttrType::height:
             {
-                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
+                setSize(getWidth(), acsr.getAttr<AttrType::height>());
             }
             break;
             case AttrType::focused:
@@ -45,14 +45,23 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
         }
     };
 
-    mResizerBar.onMoved = [&](int size)
+    MiscWeakAssert(resizerFn != nullptr);
+    mResizerBar.onMouseDrag = [=, this](juce::MouseEvent const& event)
     {
-        mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
+        auto const size = mResizerBar.getNewPosition();
+        if(resizerFn != nullptr)
+        {
+            resizerFn(mAccessor.getAttr<AttrType::identifier>(), size);
+        }
+        else
+        {
+            mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
+        }
         if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
         {
             if(viewport->canScrollVertically())
             {
-                auto const point = viewport->getLocalPoint(this, juce::Point<int>{0, size + 1});
+                auto const point = event.getEventRelativeTo(viewport).getPosition();
                 viewport->autoScroll(point.x, point.y, 20, 10);
             }
         }
