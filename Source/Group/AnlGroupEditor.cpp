@@ -70,18 +70,20 @@ void Group::Editor::updateContent()
     if(!trackAcsr.has_value())
     {
         mTrackEditor.reset();
+        mTrackIdentifier.clear();
     }
     else if(mTrackIdentifier != trackAcsr.value().get().getAttr<Track::AttrType::identifier>())
     {
-        mTrackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+        auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         mTrackEditor = std::make_unique<Track::Editor>(
-            mDirector.getTrackDirector(mTrackIdentifier), mTimeZoomAccessor, mTransportAccessor, mCommandManager, mContent, [this](juce::Point<int> const& pt)
+            mDirector.getTrackDirector(trackIdentifier), mTimeZoomAccessor, mTransportAccessor, mCommandManager, mContent, [this](juce::Point<int> const& pt)
             {
                 return getBubbleTooltip(pt);
             },
             false);
         if(mTrackEditor != nullptr)
         {
+            mTrackIdentifier = trackIdentifier;
             mTrackEditor->onMouseDown = [this](juce::MouseEvent const& event)
             {
                 if(!event.mods.isPopupMenu())
