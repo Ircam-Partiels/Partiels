@@ -82,7 +82,25 @@ std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilitySta
 
 bool Group::Tools::isSelected(Accessor const& accessor)
 {
-    return !getSelectedChannels(accessor).empty();
+    auto const& states = accessor.getAttr<AttrType::focused>();
+    auto const referenceTrack = Tools::getReferenceTrackAcsr(accessor);
+    if(!referenceTrack.has_value())
+    {
+        return states.any();
+    }
+    auto const maxChannels = std::min(referenceTrack.value().get().getAttr<Track::AttrType::channelsLayout>().size(), states.size());
+    if(maxChannels == 0_z)
+    {
+        return states.any();
+    }
+    for(auto index = 0_z; index < maxChannels; ++index)
+    {
+        if(states.test(index))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
@@ -97,7 +115,7 @@ std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
     std::set<size_t> channels;
     for(auto index = 0_z; index < maxChannels; ++index)
     {
-        if(states[index])
+        if(states.test(index))
         {
             channels.insert(index);
         }
