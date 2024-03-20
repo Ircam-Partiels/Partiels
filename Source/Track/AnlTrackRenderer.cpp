@@ -375,6 +375,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
     juce::RectangleList<float> durations;
     std::vector<std::tuple<juce::String, int, int>> labels;
     auto const showLabel = !colours.text.isTransparent();
+    auto const showDuration = !colours.duration.isTransparent();
     auto const font = g.getCurrentFont();
 
     auto const y = fbounds.getY();
@@ -411,23 +412,26 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
                 currentTick = {x, y, 1.0f, height};
             }
 
-            if(w >= 1.0f && !currentDuration.isEmpty() && currentDuration.getRight() >= x)
+            if(showDuration)
             {
-                currentDuration = currentDuration.getUnion({x, y, w, height});
-            }
-            else
-            {
-                if(!currentDuration.isEmpty())
+                if(w >= 1.0f && !currentDuration.isEmpty() && currentDuration.getRight() >= x)
                 {
-                    durations.addWithoutMerging(currentDuration);
-                }
-                if(w >= 1.0f)
-                {
-                    currentDuration = {x, y, w, height};
+                    currentDuration = currentDuration.getUnion({x, y, w, height});
                 }
                 else
                 {
-                    currentDuration = {};
+                    if(!currentDuration.isEmpty())
+                    {
+                        durations.addWithoutMerging(currentDuration);
+                    }
+                    if(w >= 1.0f)
+                    {
+                        currentDuration = {x, y, w, height};
+                    }
+                    else
+                    {
+                        currentDuration = {};
+                    }
                 }
             }
 
@@ -456,8 +460,11 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
         durations.addWithoutMerging(currentDuration);
     }
 
-    g.setColour(colours.foreground.withAlpha(0.4f));
-    g.fillRectList(durations);
+    if(showDuration)
+    {
+        g.setColour(colours.duration);
+        g.fillRectList(durations);
+    }
 
     if(!colours.shadow.isTransparent())
     {
