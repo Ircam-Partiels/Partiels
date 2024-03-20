@@ -633,20 +633,18 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istre
     using namespace std::string_literals;
     std::vector<Track::Results::Markers> channelResults;
 
-    auto trimString = [](std::string const& s)
+    auto const trimString = [](std::string const& s)
     {
-        auto ltrim = [](std::string const& sr)
+        auto const ltrim = [](std::string const& sr)
         {
             auto const start = sr.find_first_not_of(" \n\r\t\f\v");
             return (start == std::string::npos) ? "" : sr.substr(start);
         };
-
-        auto rtrim = [](std::string const& sr)
+        auto const rtrim = [](std::string const& sr)
         {
             auto const end = sr.find_last_not_of(" \n\r\t\f\v");
             return (end == std::string::npos) ? "" : sr.substr(0, end + 1);
         };
-
         return rtrim(ltrim(s));
     };
 
@@ -1180,39 +1178,56 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sam
         return true;
     }
 
-    if(file.hasFileExtension("csv"))
+    if(file.hasFileExtension("csv") || file.hasFileExtension("lab"))
     {
-        mPropertyColumnSeparator.setVisible(true);
-        mSdifPanel.setVisible(false);
-        mLoadButton.setEnabled(true);
-        juce::WeakReference<juce::Component> weakReference(this);
-        mLoadButton.entry.onClick = [=, this]()
+        auto const getCsvSeparator = [&]() -> std::optional<std::string>
         {
-            if(weakReference.get() == nullptr)
+            std::string line;
+            while(std::getline(stream, line))
             {
-                return;
+                auto const position = line.find_first_of(", \t|/:");
+                if(position != std::string::npos)
+                {
+                    return line.substr(position, 1);
+                }
             }
+            return {};
+        };
+
+        auto const fileSeparator = getCsvSeparator();
+        if(fileSeparator.has_value())
+        {
             FileInfo fileInfo;
             fileInfo.file = file;
-            static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
-            auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
-            auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
-            fileInfo.args.set("separator", juce::String(separator));
-            fileInfo.args.set("useendtime", "false");
+            fileInfo.args.set("separator", fileSeparator.value());
+            fileInfo.args.set("useendtime", "true");
             callback(fileInfo);
-        };
-        resized();
-        return true;
-    }
-
-    if(file.hasFileExtension("lab"))
-    {
-        FileInfo fileInfo;
-        fileInfo.file = file;
-        fileInfo.args.set("separator", "\t");
-        fileInfo.args.set("useendtime", "true");
-        callback(fileInfo);
-        return false;
+            return false;
+        }
+        else
+        {
+            mPropertyColumnSeparator.setVisible(true);
+            mSdifPanel.setVisible(false);
+            mLoadButton.setEnabled(true);
+            juce::WeakReference<juce::Component> weakReference(this);
+            mLoadButton.entry.onClick = [=, this]()
+            {
+                if(weakReference.get() == nullptr)
+                {
+                    return;
+                }
+                FileInfo fileInfo;
+                fileInfo.file = file;
+                static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
+                auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
+                auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
+                fileInfo.args.set("separator", juce::String(separator));
+                fileInfo.args.set("useendtime", file.hasFileExtension("lab") ? "true" : "false");
+                callback(fileInfo);
+            };
+            resized();
+            return true;
+        }
     }
 
     if(file.hasFileExtension("json"))
