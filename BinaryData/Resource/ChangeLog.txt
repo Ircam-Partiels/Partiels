@@ -1,3 +1,5 @@
+- Add: A specific color to display label durations instead of the semi-transparent foreground color (#444)
+
 v2.0.2
 
 - Fix: A track may disappear from the group display when moved from one group to another (#445)
