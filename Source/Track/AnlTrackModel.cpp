@@ -43,6 +43,14 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
                 XmlParser::toXml(*copy.get(), "key", key);
             }
         }
+        if(version <= 0x20002)
+        {
+            if(auto* child = copy->getChildByName("colours"))
+            {
+                auto const foreground = XmlParser::fromXml(*child, "foreground", juce::Colour());
+                XmlParser::toXml(*child, "duration", foreground.withAlpha(0.4f));
+            }
+        }
     }
     return copy;
 }
@@ -57,6 +65,7 @@ void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier 
         toXml(*child, "map", value.map);
         toXml(*child, "background", value.background);
         toXml(*child, "foreground", value.foreground);
+        toXml(*child, "duration", value.duration);
         toXml(*child, "text", value.text);
         toXml(*child, "shadow", value.shadow);
         xml.addChildElement(child.release());
@@ -77,6 +86,7 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     value.map = fromXml(*child, "map", defaultValue.map);
     value.background = fromXml(*child, "background", defaultValue.background);
     value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
+    value.duration = fromXml(*child, "duration", defaultValue.duration);
     value.text = fromXml(*child, "text", defaultValue.text);
     value.shadow = fromXml(*child, "shadow", defaultValue.shadow);
     return value;
@@ -87,6 +97,7 @@ void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)
     j["map"] = colourSet.map;
     j["background"] = colourSet.background;
     j["foreground"] = colourSet.foreground;
+    j["duration"] = colourSet.duration;
     j["text"] = colourSet.text;
     j["shadow"] = colourSet.shadow;
 }
@@ -96,6 +107,7 @@ void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
     colourSet.map = j.value("map", colourSet.map);
     colourSet.background = j.value("background", colourSet.background);
     colourSet.foreground = j.value("foreground", colourSet.foreground);
+    colourSet.duration = j.value("duration", colourSet.duration);
     colourSet.text = j.value("text", colourSet.text);
     colourSet.shadow = j.value("shadow", colourSet.shadow);
 }

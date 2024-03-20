@@ -58,6 +58,7 @@ namespace Track
         ColourMap map = ColourMap::Inferno;
         juce::Colour background = juce::Colours::transparentBlack;
         juce::Colour foreground = juce::Colours::black;
+        juce::Colour duration = juce::Colours::black.withAlpha(0.4f);
         juce::Colour text = juce::Colours::transparentBlack;
         juce::Colour shadow = juce::Colours::transparentBlack;
 
@@ -66,6 +67,7 @@ namespace Track
             return map == rhd.map &&
                    background == rhd.background &&
                    foreground == rhd.foreground &&
+                   duration == rhd.duration &&
                    text == rhd.text &&
                    shadow == rhd.shadow;
         }
