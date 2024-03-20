@@ -121,6 +121,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             auto const colourChart = Instance::getColourChart();
             auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
             colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+            colours.duration = colours.foreground.withAlpha(0.4f);
             trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
             trackIdentifiers.insert(identifier.value());
             ++trackPosition;
@@ -224,6 +225,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         auto const colourChart = Instance::getColourChart();
         auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
         colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+        colours.duration = colours.foreground.withAlpha(0.4f);
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
         trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
 
