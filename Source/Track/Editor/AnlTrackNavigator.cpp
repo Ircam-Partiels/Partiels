@@ -53,7 +53,7 @@ Track::Navigator::Navigator(Accessor& accessor, Zoom::Accessor& timeZoomAccessor
             case AttrType::results:
             case AttrType::channelsLayout:
             {
-                auto zoomAcsr = Tools::getVerticalZoomAccessor(mAccessor, false);
+                auto zoomAcsr = Tools::getVerticalZoomAccessor(mAccessor, true);
                 if(!mVerticalZoomAcsr.has_value() || !zoomAcsr.has_value() || std::addressof(mVerticalZoomAcsr.value().get()) != std::addressof(zoomAcsr.value().get()))
                 {
                     mVerticalRulers.clear();

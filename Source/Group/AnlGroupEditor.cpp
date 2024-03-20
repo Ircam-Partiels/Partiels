@@ -227,10 +227,10 @@ juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
     juce::StringArray lines;
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
-    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-    if(referenceTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+    auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
+    if(zoomTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(zoomTrackAcsr.value()))
     {
-        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
+        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(zoomTrackAcsr.value().get(), *this, pt.y)));
     }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

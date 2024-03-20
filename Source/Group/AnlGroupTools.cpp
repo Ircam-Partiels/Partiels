@@ -147,9 +147,31 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getReferenc
     return {};
 }
 
+std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrackAcsr(Accessor const& accessor)
+{
+    auto const referenceTrackAcsr = getReferenceTrackAcsr(accessor);
+    if(referenceTrackAcsr.has_value() && Track::Tools::getFrameType(referenceTrackAcsr.value().get()) != Track::FrameType::label)
+    {
+        return referenceTrackAcsr;
+    }
+    for(auto const& trackIdentifier : accessor.getAttr<AttrType::layout>())
+    {
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackAcsrRef = trackAcsr.value().get();
+            if(trackAcsrRef.getAttr<Track::AttrType::showInGroup>() && Track::Tools::getFrameType(trackAcsrRef) != Track::FrameType::label)
+            {
+                return trackAcsr;
+            }
+        }
+    }
+    return {};
+}
+
 bool Group::Tools::canZoomIn(Accessor const& accessor)
 {
-    auto const trackAcsr = getReferenceTrackAcsr(accessor);
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         return Track::Tools::canZoomIn(trackAcsr.value().get());
@@ -159,7 +181,7 @@ bool Group::Tools::canZoomIn(Accessor const& accessor)
 
 bool Group::Tools::canZoomOut(Accessor const& accessor)
 {
-    auto const trackAcsr = getReferenceTrackAcsr(accessor);
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         return Track::Tools::canZoomOut(trackAcsr.value().get());
@@ -169,7 +191,7 @@ bool Group::Tools::canZoomOut(Accessor const& accessor)
 
 void Group::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const trackAcsr = getReferenceTrackAcsr(accessor);
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         Track::Tools::zoomIn(trackAcsr.value().get(), ratio, notification);
@@ -178,7 +200,7 @@ void Group::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType not
 
 void Group::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto const trackAcsr = getReferenceTrackAcsr(accessor);
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
     if(trackAcsr.has_value())
     {
         Track::Tools::zoomOut(trackAcsr.value().get(), ratio, notification);

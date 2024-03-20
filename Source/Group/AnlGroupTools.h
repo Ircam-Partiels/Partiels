@@ -17,6 +17,7 @@ namespace Group
         std::optional<size_t> getChannel(Accessor const& accessor, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator);
 
         std::optional<std::reference_wrapper<Track::Accessor>> getReferenceTrackAcsr(Accessor const& accessor);
+        std::optional<std::reference_wrapper<Track::Accessor>> getZoomTrackAcsr(Accessor const& accessor);
         bool canZoomIn(Accessor const& accessor);
         bool canZoomOut(Accessor const& accessor);
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);

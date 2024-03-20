@@ -206,28 +206,28 @@ void Group::Section::updateContent()
     }
     else
     {
-        auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-        if(!referenceTrackAcsr.has_value() || !Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+        auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
+        if(!zoomTrackAcsr.has_value() || !Track::Tools::hasVerticalZoom(zoomTrackAcsr.value()))
         {
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
             mGridIdentifier.clear();
         }
-        else if(mGridIdentifier != referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
+        else if(mGridIdentifier != zoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
         {
-            mRuler = std::make_unique<Track::Ruler>(referenceTrackAcsr.value());
+            mRuler = std::make_unique<Track::Ruler>(zoomTrackAcsr.value());
             if(mRuler != nullptr)
             {
                 mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
                 addAndMakeVisible(mDecoratorRuler.get());
             }
-            mScrollBar = std::make_unique<Track::ScrollBar>(referenceTrackAcsr.value());
+            mScrollBar = std::make_unique<Track::ScrollBar>(zoomTrackAcsr.value());
             if(mScrollBar != nullptr)
             {
                 addAndMakeVisible(mScrollBar.get());
             }
-            mGridIdentifier = referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+            mGridIdentifier = zoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         }
     }
 
