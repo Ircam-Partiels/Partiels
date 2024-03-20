@@ -7,6 +7,8 @@ ANALYSE_FILE_BEGIN
 Application::LookAndFeel::LookAndFeel()
 {
     setColourChart(ColourChart::Mode::night);
+    setColour(ResizerBar::ColourIds::activeColourId, juce::Colours::transparentBlack);
+    setColour(ResizerBar::ColourIds::inactiveColourId, juce::Colours::transparentBlack);
 }
 
 void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)

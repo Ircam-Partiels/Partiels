@@ -7,4 +7,5 @@
 #include "AnlHideablePanel.h"
 #include "AnlLoadingIcon.h"
 #include "AnlMouseScroller.h"
+#include "AnlResizerBar.h"
 #include "AnlSdifConverter.h"
