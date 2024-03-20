@@ -21,6 +21,7 @@ namespace Track
         void addExtraThresholdProperties();
         void setColourMap(ColourMap const& colourMap);
         void setForegroundColour(juce::Colour const& colour);
+        void setDurationColour(juce::Colour const& colour);
         void setBackgroundColour(juce::Colour const& colour);
         void setTextColour(juce::Colour const& colour);
         void setShadowColour(juce::Colour const& colour);
@@ -45,6 +46,7 @@ namespace Track
 
         PropertyList mPropertyColourMap;
         PropertyColourButton mPropertyForegroundColour;
+        PropertyColourButton mPropertyDurationColour;
         PropertyColourButton mPropertyBackgroundColour;
         PropertyColourButton mPropertyTextColour;
         PropertyColourButton mPropertyShadowColour;

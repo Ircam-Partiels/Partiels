@@ -65,6 +65,27 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
       {
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
       })
+, mPropertyDurationColour(
+      juce::translate("Duration Color"), juce::translate("The duration color of the graphical renderer."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
+      {
+          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction();
+          }
+          setDurationColour(colour);
+          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction();
+      },
+      [&]()
+      {
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
+      })
 , mPropertyBackgroundColour(
       juce::translate("Background Color"), juce::translate("The background color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
       {
@@ -262,6 +283,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         case Track::FrameType::label:
                         {
                             mPropertyForegroundColour.setVisible(true);
+                            mPropertyDurationColour.setVisible(true);
                             mPropertyTextColour.setVisible(true);
                             mPropertyBackgroundColour.setVisible(true);
                             mPropertyShadowColour.setVisible(true);
@@ -331,6 +353,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 auto const colours = acsr.getAttr<AttrType::colours>();
                 mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
                 mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
+                mPropertyDurationColour.entry.setCurrentColour(colours.duration, juce::NotificationType::dontSendNotification);
                 mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
                 mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
@@ -470,6 +493,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     NumberField::Label::storeProperties(mPropertyFontSize.entry.getProperties(), {4.0, 200.0}, 0.1, 1, "");
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
+    addAndMakeVisible(mPropertyDurationColour);
     addAndMakeVisible(mPropertyTextColour);
     addAndMakeVisible(mPropertyBackgroundColour);
     addAndMakeVisible(mPropertyShadowColour);
@@ -513,6 +537,7 @@ void Track::PropertyGraphicalSection::resized()
     };
     setBounds(mPropertyColourMap);
     setBounds(mPropertyForegroundColour);
+    setBounds(mPropertyDurationColour);
     setBounds(mPropertyTextColour);
     setBounds(mPropertyBackgroundColour);
     setBounds(mPropertyShadowColour);
@@ -617,6 +642,13 @@ void Track::PropertyGraphicalSection::setForegroundColour(juce::Colour const& co
 {
     auto colours = mAccessor.getAttr<AttrType::colours>();
     colours.foreground = colour;
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+}
+
+void Track::PropertyGraphicalSection::setDurationColour(juce::Colour const& colour)
+{
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.duration = colour;
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 }
 
