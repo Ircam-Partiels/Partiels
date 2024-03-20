@@ -64,6 +64,27 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
       {
           mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's foreground color"));
       })
+, mPropertyDurationColour(
+      juce::translate("Duration Color"), juce::translate("The duration color used by the graphical renderers of the tracks of the group."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
+      {
+          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction(true);
+          }
+          setDurationColour(colour);
+          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction(true);
+      },
+      [&]()
+      {
+          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
+      })
 , mPropertyBackgroundColour(
       juce::translate("Background Color"), juce::translate("The background color used by the graphical renderers of the tracks of the group."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
       {
@@ -169,6 +190,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
 
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
+    addAndMakeVisible(mPropertyDurationColour);
     addAndMakeVisible(mPropertyTextColour);
     addAndMakeVisible(mPropertyBackgroundColour);
     addAndMakeVisible(mPropertyShadowColour);
@@ -192,6 +214,7 @@ void Group::PropertyGraphicalsSection::resized()
     };
     setBounds(mPropertyColourMap);
     setBounds(mPropertyForegroundColour);
+    setBounds(mPropertyDurationColour);
     setBounds(mPropertyTextColour);
     setBounds(mPropertyBackgroundColour);
     setBounds(mPropertyShadowColour);
@@ -236,6 +259,24 @@ void Group::PropertyGraphicalsSection::setForegroundColour(juce::Colour const& c
     {
         auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
         colours.foreground = colour;
+        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+    }
+}
+
+void Group::PropertyGraphicalsSection::setDurationColour(juce::Colour const& colour)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::label;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
+        colours.duration = colour;
         trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
     }
 }
@@ -501,8 +542,10 @@ void Group::PropertyGraphicalsSection::updateColourMap()
 void Group::PropertyGraphicalsSection::updateColours()
 {
     juce::StringArray trackNames;
+    juce::StringArray labelTrackNames;
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     std::set<juce::uint32> foregroundColours;
+    std::set<juce::uint32> durationColours;
     std::set<juce::uint32> backgrounColours;
     std::set<juce::uint32> textColours;
     std::set<juce::uint32> shadowColours;
@@ -516,6 +559,11 @@ void Group::PropertyGraphicalsSection::updateColours()
             textColours.insert(colours.text.getARGB());
             shadowColours.insert(colours.shadow.getARGB());
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+            {
+                durationColours.insert(colours.duration.getARGB());
+                labelTrackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+            }
         }
     }
     mPropertyForegroundColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The foreground color used by the graphical renderers of the tracks of the group."));
@@ -527,6 +575,17 @@ void Group::PropertyGraphicalsSection::updateColours()
     else
     {
         mPropertyForegroundColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
+    }
+
+    mPropertyDurationColour.setTooltip("Track(s): " + labelTrackNames.joinIntoString(", ") + " - " + juce::translate("The duration color used by the graphical renderers of the tracks of the group."));
+    mPropertyDurationColour.setVisible(!durationColours.empty());
+    if(durationColours.size() == 1_z)
+    {
+        mPropertyDurationColour.entry.setCurrentColour(juce::Colour(*durationColours.cbegin()), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyDurationColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
     }
 
     mPropertyBackgroundColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The background color used by the graphical renderers of the tracks of the group."));
