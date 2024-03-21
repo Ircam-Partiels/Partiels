@@ -210,14 +210,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::zoomAcsr:
             {
                 auto sharedZoomAcsr = mAccessor.getAttr<AttrType::zoomAcsr>();
-                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(mSharedZoomAccessor.value().get()) != std::addressof(sharedZoomAcsr.value().get())))
+                if(mSharedZoomAccessor.has_value())
                 {
-                    mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
+                    mSharedZoomAccessor.value().get().removeListener(mSharedZoomListener);
                 }
                 mSharedZoomAccessor = sharedZoomAcsr;
                 if(mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>())
                 {
-                    mSharedZoomAccessor->get().addListener(mSharedZoomListener, NotificationType::synchronous);
+                    mSharedZoomAccessor.value().get().addListener(mSharedZoomListener, NotificationType::synchronous);
                 }
             }
             break;
@@ -246,7 +246,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         {
             return;
         }
-        auto& sharedZoom = mSharedZoomAccessor->get();
+        auto& sharedZoom = mSharedZoomAccessor.value().get();
         auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
         {
             if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty() && zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
@@ -436,7 +436,7 @@ Track::Director::~Director()
     setLoaderSelector(nullptr, nullptr);
     if(mSharedZoomAccessor.has_value())
     {
-        mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
+        mSharedZoomAccessor.value().get().removeListener(mSharedZoomListener);
     }
 
     mGraphics.onRenderingAborted = nullptr;
