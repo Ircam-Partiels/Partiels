@@ -146,7 +146,7 @@ void Track::Scroller::applicationCommandInvoked(juce::ApplicationCommandTarget::
                 anlWeakAssert(scoller != nullptr);
                 if(scoller != nullptr)
                 {
-                    scoller->setAccessors(mTimeZoomAccessor, zoomAcsr.value(), transportAcsrRef);
+                    scoller->setAccessors(mTimeZoomAccessor, zoomAcsr, transportAcsrRef);
                 }
             }
             break;
