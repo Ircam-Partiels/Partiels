@@ -28,6 +28,8 @@ namespace Group
         void setFontStyle(juce::String const& style);
         void setFontSize(float size);
         void setUnit(juce::String const& unit);
+        void setLabelJustification(Track::LabelLayout::Justification justification);
+        void setLabelPosition(float position);
         void showVisibilityInGroup();
         void showChannelLayout();
         void updateContent();
@@ -35,6 +37,7 @@ namespace Group
         void updateColours();
         void updateFont();
         void updateUnit();
+        void updateLabel();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -49,6 +52,8 @@ namespace Group
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
         PropertyText mPropertyUnit;
+        PropertyList mPropertyLabelJustification;
+        PropertyNumber mPropertyLabelPosition;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
         PropertyTextButton mPropertyShowInGroup;

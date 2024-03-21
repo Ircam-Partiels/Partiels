@@ -170,6 +170,18 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                 {
                     setUnit(text);
                 })
+, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
+                              {
+                                  mDirector.startAction(true);
+                                  setLabelJustification(magic_enum::enum_cast<Track::LabelLayout::Justification>(static_cast<int>(index)).value_or(Track::LabelLayout::Justification::top));
+                                  mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's justification of the labels"));
+                              })
+, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
+                         {
+                             mDirector.startAction(true);
+                             setLabelPosition(position);
+                             mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's position of the labels"));
+                         })
 , mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visibility of the channels of the tracks of the group."), [this]()
                          {
                              showChannelLayout();
@@ -198,6 +210,9 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
     addAndMakeVisible(mPropertyUnit);
+    addAndMakeVisible(mPropertyLabelJustification);
+    addAndMakeVisible(mPropertyLabelPosition);
+    addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyShowInGroup);
     addAndMakeVisible(mPropertyChannelLayout);
 }
@@ -222,6 +237,8 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
     setBounds(mPropertyUnit);
+    setBounds(mPropertyLabelJustification);
+    setBounds(mPropertyLabelPosition);
     setBounds(mPropertyShowInGroup);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
@@ -458,6 +475,46 @@ void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
     }
 }
 
+void Group::PropertyGraphicalsSection::setLabelJustification(Track::LabelLayout::Justification justification)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::label;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto labelLayout = trackAcsr.get().getAttr<Track::AttrType::labelLayout>();
+        labelLayout.justification = justification;
+        trackAcsr.get().setAttr<Track::AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+    }
+    updateLabel();
+}
+
+void Group::PropertyGraphicalsSection::setLabelPosition(float position)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::label;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto labelLayout = trackAcsr.get().getAttr<Track::AttrType::labelLayout>();
+        labelLayout.position = position;
+        trackAcsr.get().setAttr<Track::AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+    }
+    updateLabel();
+}
+
 void Group::PropertyGraphicalsSection::showChannelLayout()
 {
     juce::PopupMenu menu;
@@ -504,6 +561,7 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateColours();
     updateFont();
     updateUnit();
+    updateLabel();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const numChannels = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 0_z, [](auto n, auto const& trackAcsr)
                                              {
@@ -739,6 +797,37 @@ void Group::PropertyGraphicalsSection::updateUnit()
         };
     }
     resized();
+}
+
+void Group::PropertyGraphicalsSection::updateLabel()
+{
+    juce::StringArray trackNames;
+    std::set<Track::LabelLayout> labelLayouts;
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label)
+        {
+            labelLayouts.insert(trackAcsr.get().getAttr<Track::AttrType::labelLayout>());
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+    mPropertyLabelJustification.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."));
+    mPropertyLabelPosition.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The position of the labels for the graphical renderers of the tracks of the group."));
+    mPropertyLabelJustification.setVisible(!labelLayouts.empty());
+    mPropertyLabelPosition.setVisible(!labelLayouts.empty());
+    if(labelLayouts.size() == 1_z)
+    {
+        auto const& labelLayout = *labelLayouts.cbegin();
+        auto const index = magic_enum::enum_index(labelLayout.justification).value_or(mPropertyLabelJustification.entry.getSelectedItemIndex());
+        mPropertyLabelJustification.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
+        mPropertyLabelPosition.entry.setValue(static_cast<double>(labelLayout.position), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyLabelJustification.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+        mPropertyLabelPosition.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+    }
 }
 
 ANALYSE_FILE_END
