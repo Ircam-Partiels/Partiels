@@ -112,4 +112,45 @@ void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
     colourSet.shadow = j.value("shadow", colourSet.shadow);
 }
 
+template <>
+void XmlParser::toXml<Track::LabelLayout>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::LabelLayout const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "position", value.position);
+        toXml(*child, "justification", value.justification);
+        xml.addChildElement(child.release());
+    }
+}
+
+template <>
+auto XmlParser::fromXml<Track::LabelLayout>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::LabelLayout const& defaultValue)
+    -> Track::LabelLayout
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Track::LabelLayout value;
+    value.position = fromXml(*child, "position", defaultValue.position);
+    value.justification = fromXml(*child, "justification", defaultValue.justification);
+    return value;
+}
+
+void Track::to_json(nlohmann::json& j, LabelLayout const& labelLayout)
+{
+    j["position"] = labelLayout.position;
+    j["justification"] = labelLayout.justification;
+}
+
+void Track::from_json(nlohmann::json const& j, LabelLayout& labelLayout)
+{
+    labelLayout.position = j.value("position", labelLayout.position);
+    labelLayout.justification = j.value("justification", labelLayout.justification);
+}
+
 ANALYSE_FILE_END

@@ -81,6 +81,49 @@ namespace Track
     void to_json(nlohmann::json& j, ColourSet const& colourSet);
     void from_json(nlohmann::json const& j, ColourSet& colourSet);
 
+    struct LabelLayout
+    {
+        // clang-format off
+        enum class Justification
+        {
+              top
+            , centred
+            , bottom
+        };
+        // clang-format on
+
+        float position = 12.0f;
+        Justification justification = Justification::top;
+
+        const auto tie() const
+        {
+            return std::tie(position, justification);
+        }
+
+        bool operator==(LabelLayout const& rhs) const
+        {
+            return tie() == rhs.tie();
+        }
+
+        bool operator!=(LabelLayout const& rhs) const
+        {
+            return tie() != rhs.tie();
+        }
+
+        bool operator>(LabelLayout const& rhs) const
+        {
+            return tie() > rhs.tie();
+        }
+
+        bool operator<(LabelLayout const& rhs) const
+        {
+            return tie() < rhs.tie();
+        }
+    };
+
+    void to_json(nlohmann::json& j, LabelLayout const& labelLayout);
+    void from_json(nlohmann::json const& j, LabelLayout& labelLayout);
+
     // clang-format off
     enum class GridMode
     {
@@ -255,6 +298,13 @@ namespace XmlParser
     template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
         -> Track::ColourSet;
+
+    template <>
+    void toXml<Track::LabelLayout>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::LabelLayout const& value);
+
+    template <>
+    auto fromXml<Track::LabelLayout>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::LabelLayout const& defaultValue)
+        -> Track::LabelLayout;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
