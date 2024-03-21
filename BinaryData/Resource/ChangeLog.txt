@@ -1,6 +1,6 @@
 - Add: Justification and position properties to configure the positioning of marker labels (#449)
 - Add: Pre-analyze .lab and .csv files to automatically determine the separator used before parsing (#447)
-- Add: A specific color to display label durations instead of the semi-transparent foreground color (#444)
+- Add: A specific color to display label durations instead of the semi-transparent foreground color (#442)
 
 v2.0.2
 
