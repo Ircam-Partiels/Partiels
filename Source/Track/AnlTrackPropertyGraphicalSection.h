@@ -26,6 +26,8 @@ namespace Track
         void setTextColour(juce::Colour const& colour);
         void setShadowColour(juce::Colour const& colour);
         void setUnit(juce::String const& unit);
+        void setLabelJustification(LabelLayout::Justification justification);
+        void setLabelPosition(float position);
         void setPluginValueRange();
         void setResultValueRange();
         void setValueRangeMin(double value);
@@ -54,6 +56,8 @@ namespace Track
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
         PropertyText mPropertyUnit;
+        PropertyList mPropertyLabelJustification;
+        PropertyNumber mPropertyLabelPosition;
         PropertyList mPropertyValueRangeMode;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;

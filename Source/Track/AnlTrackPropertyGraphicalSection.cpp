@@ -182,6 +182,18 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 {
                     setUnit(text);
                 })
+, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
+                              {
+                                  mDirector.startAction();
+                                  setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(mAccessor.getAttr<AttrType::labelLayout>().justification));
+                                  mDirector.endAction(ActionState::newTransaction, juce::translate("Change the justification of the labels"));
+                              })
+, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
+                         {
+                             mDirector.startAction();
+                             setLabelPosition(position);
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change the position of the labels"));
+                         })
 , mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
                           {
                               switch(index)
@@ -258,8 +270,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
         {
             case AttrType::description:
             case AttrType::results:
-            case AttrType::channelsLayout:
             case AttrType::unit:
+            case AttrType::channelsLayout:
             case AttrType::zoomValueMode:
             case AttrType::hasPluginColourMap:
             {
@@ -290,6 +302,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyFontName.setVisible(true);
                             mPropertyFontStyle.setVisible(true);
                             mPropertyFontSize.setVisible(true);
+                            mPropertyLabelJustification.setVisible(true);
+                            mPropertyLabelPosition.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
                             mPropertyShowInGroup.setVisible(true);
                             break;
@@ -379,6 +393,14 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 {
                     mPropertyFontSize.entry.setText(juce::String(font.getHeight(), 1), juce::NotificationType::dontSendNotification);
                 }
+            }
+            break;
+            case AttrType::labelLayout:
+            {
+                auto const& labelLayout = acsr.getAttr<AttrType::labelLayout>();
+                auto const index = magic_enum::enum_index(labelLayout.justification).value_or(mPropertyLabelJustification.entry.getSelectedItemIndex());
+                mPropertyLabelJustification.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
+                mPropertyLabelPosition.entry.setValue(static_cast<double>(labelLayout.position), juce::NotificationType::dontSendNotification);
             }
             break;
             case AttrType::zoomLink:
@@ -501,6 +523,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
     addAndMakeVisible(mPropertyUnit);
+    addAndMakeVisible(mPropertyLabelJustification);
+    addAndMakeVisible(mPropertyLabelPosition);
     addAndMakeVisible(mPropertyValueRangeMode);
     addAndMakeVisible(mPropertyValueRangeMin);
     addAndMakeVisible(mPropertyValueRangeMax);
@@ -545,6 +569,8 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
     setBounds(mPropertyUnit);
+    setBounds(mPropertyLabelJustification);
+    setBounds(mPropertyLabelPosition);
     setBounds(mPropertyValueRangeMode);
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
@@ -704,6 +730,20 @@ void Track::PropertyGraphicalSection::setUnit(juce::String const& unit)
         mAccessor.setAttr<AttrType::unit>(unit, NotificationType::synchronous);
         mDirector.endAction(ActionState::newTransaction, juce::translate("Change unit of the values name"));
     }
+}
+
+void Track::PropertyGraphicalSection::setLabelJustification(LabelLayout::Justification justification)
+{
+    auto labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
+    labelLayout.justification = justification;
+    mAccessor.setAttr<AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+}
+
+void Track::PropertyGraphicalSection::setLabelPosition(float position)
+{
+    auto labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
+    labelLayout.position = position;
+    mAccessor.setAttr<AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setPluginValueRange()
