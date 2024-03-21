@@ -25,6 +25,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::state:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::zoomValueMode:

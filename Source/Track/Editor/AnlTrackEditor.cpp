@@ -71,6 +71,7 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::results:
             case AttrType::edit:
             case AttrType::focused:
+            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::hasPluginColourMap:
                 break;

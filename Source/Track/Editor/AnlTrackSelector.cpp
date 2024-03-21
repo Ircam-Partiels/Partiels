@@ -30,11 +30,12 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
+            case AttrType::showInGroup:
             case AttrType::grid:
             case AttrType::description:
             case AttrType::results:
             case AttrType::edit:
-            case AttrType::showInGroup:
             case AttrType::hasPluginColourMap:
             case AttrType::focused:
                 break;

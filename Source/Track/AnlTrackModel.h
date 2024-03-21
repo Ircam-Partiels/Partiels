@@ -157,6 +157,7 @@ namespace Track
         , colours
         , font
         , unit
+        , labelLayout
         , channelsLayout
         , showInGroup
         , zoomValueMode
@@ -199,6 +200,7 @@ namespace Track
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::font, juce::Font, Model::Flag::basic>
     , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
+    , Model::Attr<AttrType::labelLayout, LabelLayout, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::showInGroup, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomValueMode, ZoomValueMode, Model::Flag::notifying | Model::Flag::saveable>
@@ -242,6 +244,7 @@ namespace Track
                                  , {120}
                                  , {}
                                  , {juce::Font("Nunito Sans", 14.0f, juce::Font::plain)}
+                                 , {}
                                  , {}
                                  , {std::vector<bool>{}}
                                  , {true}

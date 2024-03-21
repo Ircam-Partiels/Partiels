@@ -51,6 +51,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::identifier:

@@ -227,6 +227,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::grid:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::zoomValueMode:
             case AttrType::extraThresholds:

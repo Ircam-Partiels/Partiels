@@ -41,6 +41,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             {
                 repaint();
@@ -389,6 +390,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::processing:
             case AttrType::results:
             case AttrType::edit:
+            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::hasPluginColourMap:
                 break;

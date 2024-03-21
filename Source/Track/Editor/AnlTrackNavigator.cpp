@@ -43,8 +43,9 @@ Track::Navigator::Navigator(Accessor& accessor, Zoom::Accessor& timeZoomAccessor
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
-            case AttrType::grid:
+            case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::grid:
             case AttrType::hasPluginColourMap:
                 break;
             case AttrType::zoomLink:

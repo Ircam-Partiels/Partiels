@@ -30,8 +30,9 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
-            case AttrType::grid:
+            case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::grid:
             case AttrType::hasPluginColourMap:
                 break;
             case AttrType::description:
@@ -176,6 +177,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:

@@ -36,6 +36,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::colours:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::labelLayout:
             case AttrType::extraThresholds:
             case AttrType::channelsLayout:
             {
