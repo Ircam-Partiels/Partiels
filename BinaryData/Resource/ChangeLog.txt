@@ -5,6 +5,7 @@
 - Fix: The application no longer displays an alert when a result file is not found when a project is loaded (#437)
 - Fix: The application prevents adding tracks when reopening a project if the corresponding command has not been used directly (#436)
 - Add: Key mappings panel that display all keyboard shortcuts (#433)
+- Fix: Opening a document may cause the application to crash due to poor zoom management in a user interface (#424)
 - Imp: Package and publish directly from CI services (#400)
 
 v2.0.1
