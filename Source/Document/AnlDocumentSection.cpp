@@ -591,10 +591,10 @@ void Document::Section::updateLayout()
         auto& groupDirector = mDirector.getGroupDirector(identifier);
         auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, mApplicationCommandManager, transportAcsr, timeZoomAcsr, [this](juce::String const& itemIdentifier, int newHeight)
-                                                                       {
-                                                                           Tools::resizeItem(mAccessor, itemIdentifier, newHeight, mViewport.getHeight());
-                                                                       });
+        auto groupSection = std::make_unique<Group::StretchableSection>(groupDirector, mApplicationCommandManager, transportAcsr, timeZoomAcsr, [this](juce::String const& itemIdentifier, int newHeight)
+                                                                        {
+                                                                            Tools::resizeItem(mAccessor, itemIdentifier, newHeight, mViewport.getHeight());
+                                                                        });
         if(groupSection != nullptr)
         {
             groupSection->addMouseListener(this, true);

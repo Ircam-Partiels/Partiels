@@ -1,5 +1,5 @@
 #include "AnlGroupThumbnail.h"
-#include "AnlGroupStrechableSection.h"
+#include "AnlGroupStretchableSection.h"
 #include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
@@ -274,7 +274,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     }
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
-    auto* parent = findParentComponentOfClass<StrechableSection>();
+    auto* parent = findParentComponentOfClass<StretchableSection>();
     auto* laf = dynamic_cast<LookAndFeel*>(&getLookAndFeel());
     anlWeakAssert(dragContainer != nullptr && parent != nullptr && laf != nullptr);
     if(dragContainer != nullptr && laf != nullptr && !dragContainer->isDragAndDropActive() && section != nullptr && parent != nullptr)

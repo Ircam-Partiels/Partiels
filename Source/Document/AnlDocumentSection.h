@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Group/AnlGroupStrechableSection.h"
+#include "../Group/AnlGroupStretchableSection.h"
 #include "AnlDocumentCommandTarget.h"
 #include "AnlDocumentHeader.h"
 #include "AnlDocumentSelection.h"
@@ -94,7 +94,7 @@ namespace Document
         Decorator mLoopBarDecoration{mLoopBar};
         ColouredPanel mTopSeparator;
 
-        std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
+        std::map<juce::String, std::unique_ptr<Group::StretchableSection>> mGroupSections;
         DraggableTable mDraggableTable{"Group"};
         Viewport mViewport;
         ColouredPanel mBottomSeparator;

@@ -1,6 +1,6 @@
 #include "AnlGroupSection.h"
 #include "../Track/AnlTrackSection.h"
-#include "AnlGroupStrechableSection.h"
+#include "AnlGroupStretchableSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -145,8 +145,8 @@ void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
     anlWeakAssert(obj != nullptr && source != nullptr);
-    auto* parent = findParentComponentOfClass<StrechableSection>();
-    if(obj == nullptr || source == nullptr || source->findParentComponentOfClass<StrechableSection>() == parent)
+    auto* parent = findParentComponentOfClass<StretchableSection>();
+    if(obj == nullptr || source == nullptr || source->findParentComponentOfClass<StretchableSection>() == parent)
     {
         mIsItemDragged = false;
         repaint();

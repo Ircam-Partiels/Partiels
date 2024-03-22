@@ -7,17 +7,16 @@ ANALYSE_FILE_BEGIN
 
 namespace Group
 {
-    class StrechableSection
+    class StretchableSection
     : public juce::Component
     , private juce::ChangeListener
     , private juce::Timer
     {
     public:
-        JUCE_COMPILER_WARNING("rename StretchableSection")
         using ResizerFn = Section::ResizerFn;
 
-        StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn);
-        ~StrechableSection() override;
+        StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn);
+        ~StretchableSection() override;
 
         bool isStretching() const;
         juce::Component const& getSection(juce::String const& identifier) const;

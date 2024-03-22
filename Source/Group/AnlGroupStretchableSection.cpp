@@ -1,8 +1,8 @@
-#include "AnlGroupStrechableSection.h"
+#include "AnlGroupStretchableSection.h"
 
 ANALYSE_FILE_BEGIN
 
-Group::StrechableSection::StrechableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn)
+Group::StretchableSection::StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
@@ -107,7 +107,7 @@ Group::StrechableSection::StrechableSection(Director& director, juce::Applicatio
     setSize(200, height);
 }
 
-Group::StrechableSection::~StrechableSection()
+Group::StretchableSection::~StretchableSection()
 {
     mSection.removeMouseListener(this);
     mComponentListener.detachFrom(mConcertinaTable);
@@ -116,14 +116,14 @@ Group::StrechableSection::~StrechableSection()
     mConcertinaTable.removeChangeListener(this);
 }
 
-void Group::StrechableSection::resized()
+void Group::StretchableSection::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mSection.setBounds(bounds.removeFromTop(mSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
 }
 
-void Group::StrechableSection::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
+void Group::StretchableSection::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(mConcertinaTable));
     if(!mConcertinaTable.isAnimating() && !mConcertinaTable.isOpen())
@@ -135,18 +135,18 @@ void Group::StrechableSection::changeListenerCallback([[maybe_unused]] juce::Cha
     }
 }
 
-void Group::StrechableSection::timerCallback()
+void Group::StretchableSection::timerCallback()
 {
     stopTimer();
     mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
 }
 
-bool Group::StrechableSection::isStretching() const
+bool Group::StretchableSection::isStretching() const
 {
     return mConcertinaTable.isAnimating();
 }
 
-juce::Component const& Group::StrechableSection::getSection(juce::String const& identifier) const
+juce::Component const& Group::StretchableSection::getSection(juce::String const& identifier) const
 {
     if(identifier == mAccessor.getAttr<AttrType::identifier>())
     {
@@ -165,7 +165,7 @@ juce::Component const& Group::StrechableSection::getSection(juce::String const& 
     return *this;
 }
 
-juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const& identifier) const
+juce::Rectangle<int> Group::StretchableSection::getPlotBounds(juce::String const& identifier) const
 {
     if(identifier == mAccessor.getAttr<AttrType::identifier>())
     {
@@ -184,7 +184,7 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     return {};
 }
 
-void Group::StrechableSection::setLastItemResizable(bool state)
+void Group::StretchableSection::setLastItemResizable(bool state)
 {
     if(mIsResizable != state)
     {
@@ -193,7 +193,7 @@ void Group::StrechableSection::setLastItemResizable(bool state)
     }
 }
 
-void Group::StrechableSection::setCanAnimate(bool state)
+void Group::StretchableSection::setCanAnimate(bool state)
 {
     mCanAnimate = state;
     if(!state)
@@ -202,7 +202,7 @@ void Group::StrechableSection::setCanAnimate(bool state)
     }
 }
 
-void Group::StrechableSection::updateContent()
+void Group::StretchableSection::updateContent()
 {
     mTrackSections.updateContents(
         mAccessor,
@@ -242,7 +242,7 @@ void Group::StrechableSection::updateContent()
     }
 }
 
-void Group::StrechableSection::updateResizable()
+void Group::StretchableSection::updateResizable()
 {
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     auto const& contents = mTrackSections.getContents();
