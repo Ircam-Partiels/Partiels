@@ -53,9 +53,17 @@ bool Application::Interface::PluginSearchPathPanel::escapeKeyPressed()
 
 Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)
 : mTitleLabel("Title", juce::translate("Add Plugins..."))
+, mCloseButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
 , mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
 , mContent(content)
 {
+    mCloseButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().hidePluginListTablePanel();
+        }
+    };
     mSettingsButton.onClick = []()
     {
         if(auto* window = Instance::get().getWindow())
@@ -65,6 +73,7 @@ Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Compone
     };
     mTitleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(mTitleLabel);
+    addAndMakeVisible(mCloseButton);
     addAndMakeVisible(mSettingsButton);
     addAndMakeVisible(mTopSeparator);
     addAndMakeVisible(mLeftSeparator);
@@ -81,6 +90,7 @@ void Application::Interface::PluginListTablePanel::resized()
     auto bounds = getLocalBounds();
     mLeftSeparator.setBounds(bounds.removeFromLeft(1));
     auto top = bounds.removeFromTop(24);
+    mCloseButton.setBounds(top.removeFromLeft(24).reduced(4));
     mSettingsButton.setBounds(top.removeFromRight(24).reduced(4));
     mTitleLabel.setBounds(top);
     mTopSeparator.setBounds(bounds.removeFromTop(1));

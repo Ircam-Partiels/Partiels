@@ -100,6 +100,7 @@ namespace Application
 
         private:
             juce::Label mTitleLabel;
+            Icon mCloseButton;
             Icon mSettingsButton;
             ColouredPanel mTopSeparator;
             ColouredPanel mLeftSeparator;
