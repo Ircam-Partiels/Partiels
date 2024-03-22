@@ -140,6 +140,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewTimeZoomAnchorOnPlayhead);
         menu.addCommandItem(&commandManager, CommandIDs::viewInfoBubble);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::viewShowItemProperties);
     }
     else if(menuName == "Help")
     {

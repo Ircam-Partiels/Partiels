@@ -115,6 +115,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewVerticalZoomOut
         , CommandIDs::viewTimeZoomAnchorOnPlayhead
         , CommandIDs::viewInfoBubble
+        , CommandIDs::viewShowItemProperties
         
         , CommandIDs::helpOpenAudioSettings
         , CommandIDs::helpOpenPluginSettings
@@ -242,7 +243,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             {
                 result.setInfo(juce::translate("Remove Group(s)"), juce::translate("Removes the selected group(s)"), "Edit", 0);
             }
-            else if(!std::get<0_z>(selectedItems).empty() && std::get<1_z>(selectedItems).empty())
+            else if(std::get<0_z>(selectedItems).empty() && !std::get<1_z>(selectedItems).empty())
             {
                 result.setInfo(juce::translate("Remove Track(s)"), juce::translate("Removes the selected track(s)"), "Edit", 0);
             }
@@ -383,6 +384,26 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
+        }
+        break;
+        case CommandIDs::viewShowItemProperties:
+        {
+            auto const groups = Document::Selection::getGroups(documentAcsr);
+            auto const tracks = Document::Selection::getTracks(documentAcsr);
+            if(!groups.empty() && tracks.empty())
+            {
+                result.setInfo(juce::translate("Show group(s) properties"), juce::translate("Shows the group(s) properties window"), "View", 0);
+            }
+            else if(groups.empty() && !tracks.empty())
+            {
+                result.setInfo(juce::translate("Show track(s) properties"), juce::translate("Shows the track(s) properties window"), "View", 0);
+            }
+            else
+            {
+                result.setInfo(juce::translate("Show group(s) and track(s) properties"), juce::translate("Shows the group(s) and track(s) properties window"), "View", 0);
+            }
+            result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
+            result.setActive(!groups.empty() || !tracks.empty());
         }
         break;
 
@@ -908,6 +929,37 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto& accessor = Instance::get().getApplicationAccessor();
             accessor.setAttr<AttrType::showInfoBubble>(!accessor.getAttr<AttrType::showInfoBubble>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::viewShowItemProperties:
+        {
+            static auto constexpr offset = juce::Point<int>(20, 20);
+            auto* window = Instance::get().getWindow();
+            if(window != nullptr)
+            {
+                auto position = window->getScreenPosition();
+                position += offset;
+                for(auto& groupId : Document::Selection::getGroups(documentAcsr))
+                {
+                    if(auto var = std::make_unique<juce::DynamicObject>())
+                    {
+                        var->setProperty("x", position.x);
+                        var->setProperty("y", position.y);
+                        Document::Tools::getGroupAcsr(documentAcsr, groupId).sendSignal(Group::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                    }
+                    position += offset;
+                }
+                for(auto& trackId : Document::Selection::getTracks(documentAcsr))
+                {
+                    if(auto var = std::make_unique<juce::DynamicObject>())
+                    {
+                        var->setProperty("x", position.x);
+                        var->setProperty("y", position.y);
+                        Document::Tools::getTrackAcsr(documentAcsr, trackId).sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                    }
+                    position += offset;
+                }
+            }
             return true;
         }
 
