@@ -1,3 +1,5 @@
+- Add: A keyboard shortcut to display property windows for selected tracks and groups (#453)
+- Fix: Action to delete groups and tracks does not display the correct name when only tracks are selected (#452)
 - Add: A new close button at the top left of the plugin tracks panel (#451)
 - Add: Justification and position properties to configure the positioning of marker labels (#449)
 - Add: Pre-analyze .lab and .csv files to automatically determine the separator used before parsing (#447)
