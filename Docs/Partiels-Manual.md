@@ -81,11 +81,9 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 
 ### 1.2. System Requirements
 
-- MacOS 10.13* and higher (64bit - Universal Intel/Silicon)
+- MacOS 10.13* and higher (64bit - Universal Intel/Silicon) - except the FCN plug-in which requires MacOS 10.15
 - Linux (64 bit)
-- Windows 10 and 11 (64 bit).
-
-\* With the exception of the FCN plug-in, which requires MacOS 10.15.
+- Windows 10 and 11 (64 bit)
 
 ### 1.3. Third-party
 
@@ -97,7 +95,7 @@ You will find a large number of analysis plug-ins on the [Vamp plug-in](https://
 
 At startup, Partiels checks for the release of a new version on the Ircam forum. If a new version has been released, you can either go to the Partiels website to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
 
-If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`
+If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`.
 
 ### 1.5. Credits
 
@@ -580,7 +578,8 @@ A color can be modified using the color selector that is prompted by clicking on
 
 <p align="center">
 <img src="Images/section-track-properties.6.a-v1.0.5.png" width="196"/><br>
-<img src="Images/section-track-properties.6.b-v1.0.5.png" width="196"/>
+<img src="Images/section-track-properties.6.b-v1.0.5.png" width="196"/><br>
+<img src="Images/section-track-properties.6.e-v2.0.3.png" width="196"/>
 </p>
 
 - Color Map: The color map used to render the columns.
@@ -588,6 +587,7 @@ A color can be modified using the color selector that is prompted by clicking on
 - Background Color: The color used to render the background behind the markers or the segments between points.
 - Text Color: The color used to render the labels of the markers or the points values.
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
+- Duration Color: The shadow color used to duration of the markers.
 
 **Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
 
@@ -602,6 +602,15 @@ The font properties are only available for marker or point type analyses. By def
 - Font Name: The name of the font used to render the labels of the markers or the  values of the points.
 - Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
 - Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
+
+Label properties are only available for marker analyses. They allow you to adapt the position of marker labels on the graphical representation.
+
+<p align="center">
+<img src="Images/section-track-properties.6.d-v2.0.3.png" width="196"/>
+</p>
+
+- Label Justification: Vertical label anchoring (top, center, bottom). 
+- Label Position: Vertical positioning in pixels of labels in relation to the justification.
 
 #### 9.2.3. Ranges
 
