@@ -142,7 +142,7 @@ void Application::KeyMappingsContent::Container::changeListenerCallback([[maybe_
 Application::KeyMappingsContent::KeyMappingsContent()
 : mContainer(*Instance::get().getApplicationCommandManager().getKeyMappings())
 {
-    setSize(280, 400);
+    setSize(320, 400);
     mContainer.setSize(getWidth() - mViewport.getScrollBarThickness(), 400);
     mViewport.setViewedComponent(std::addressof(mContainer), false);
     addAndMakeVisible(mViewport);
