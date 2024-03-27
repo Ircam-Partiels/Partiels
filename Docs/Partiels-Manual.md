@@ -81,9 +81,11 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 
 ### 1.2. System Requirements
 
-- MacOS 10.13 and higher (64bit - Universal Intel/Silicon)
+- MacOS 10.13* and higher (64bit - Universal Intel/Silicon)
 - Linux (64 bit)
 - Windows 10 and 11 (64 bit).
+
+\* With the exception of the FCN plug-in, which requires MacOS 10.15.
 
 ### 1.3. Third-party
 
@@ -111,6 +113,10 @@ Partiels has a main graphical interface to view, navigate and edit the different
 <p align="center"><img src="Images/section-overview.1-v2.0.1.png" alt="Example" width="1250"/></p>
 
 To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
+
+You can display the Key Mappings panel that presents all the application's keyboard shortcuts via the main menu `Partiels → Key Mappings...` (Mac) or `Help → Key Mappings...` (Linux/Windows).
+
+<p align="center"><img src="Images/section-overview.2-v2.0.3.png" alt="Example" width="214"/></p>
 
 <div style="page-break-after: always;"></div>
 
