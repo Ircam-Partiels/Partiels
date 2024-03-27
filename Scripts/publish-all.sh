@@ -102,7 +102,7 @@ else
 
   echo '\033[0;34m' "Generating ChangeLog.txt..."
   echo '\033[0m'
-  echo "$APP_VERSION\n" > ./ChangeLog.txt
+  echo "v$APP_VERSION\n" > ./ChangeLog.txt
   cat "$REPO_PATH/BinaryData/Resource/ChangeLog.txt" >> ./ChangeLog.txt
 
   echo '\033[0;34m' "Generating pakages..."
