@@ -170,17 +170,19 @@ Tracks can be created in two ways, from the analysis of a Vamp plug-in or from a
 
 When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plug-ins installed on your computer are listed in the interface. 
 
-> For further information about the plug-in management, please refer to the [Plug-in settings](#12-plug-ins-settings) section.
-
-<p><img src="Images/section-add-new-plugin-tracks.1-v1.3.2.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
+<p><img src="Images/section-add-new-plugin-tracks.1-v2.0.3.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
-**Tip**: Click on the Ircam icon to filter only Ircam plug-ins.
+**Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
 
-Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P2**). 
+Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
 
-You can select one or more plug-ins and then press the `Return ⏎` key (or you can simply double click on a plug-in) to add a new track for each plug-in in your document (**P3**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+You can select one or more plug-ins and then press the `Return ⏎` key (or you can simply double click on a plug-in) to add a new track for each plug-in in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+
+> For further information about the plug-in management, please refer to the [Plug-ins settings](#12-plug-ins-settings) section.
+
+**Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
 
 <br clear="left"/>
 
