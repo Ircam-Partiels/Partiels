@@ -481,16 +481,16 @@ Partiels provides basic audio playback capabilities to allow listening to audio 
 The actions to move the start position of the playback head and control the playback loop depend on the magnetize option that sticks the positions to the markers of the analysis tracks.
 
 - Toogle the audio playback: Click the playback button (**T1**), use the main menu `Transport → Toggle Playback` or the space bar `⎵` to start or stop audio playback at the playhead's starting position. 
-- Toogle the audio loop: Click on the loop button (**T2**), use the main menu `Transport → Toggle Loop` or the keyboard shortcut `⌘ Cmd + L` (Mac) or `Ctrl + L` to enable or disable the audio loop.
+- Toogle the audio loop: Click on the loop button (**T2**), use the main menu `Transport → Toggle Loop` or the keyboard shortcut `⌘ Cmd + L` (Mac) or `Ctrl + L` (Linux/Windows) to enable or disable the audio loop.
 - Control the loop range: Use the loop bar (**T4**) to control le loop range, if the the magnetize option is enabled, the positions move to the closest markers.
   - Click on the borders of the existing loop range without any keyboard modifier and dragging to resize the starting or the ending of the loop range.
   - Click and drag anywhere else without any keyboard modifier to select a new loop range.
   - Click and drag with `⇧ Shift` on the loop range to shift the loop range over the time.
   - Double click on the loop bar to select the range between the two closest markers.
 - Stop the playback automatically at the end of the loop: Use the main menu `Transport → Toggle Stop Playback at Loop End` to enable or disable the option.
-- Rewind playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` to move the playhead to the beginning of the audio files or the beginning of the play loop if the loop is enabled.  
-- Move playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ + ←` (Mac) or `Ctrl + ←` to move the playhead to the previous marker when the magnetize option is enabled.  
-- Move playhead forward: Use the main menu `Transport → Move the Playhead Forward` or the keyboard shortcut `⌘ + →` (Mac) or `Ctrl + →` to move the playhead to the next marker when the magnetize option is enabled.  
+- Rewind playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` (Linux/Windows) to move the playhead to the beginning of the audio files or the beginning of the play loop if the loop is enabled.  
+- Move playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ Cmd + ←` (Mac) or `Ctrl + ←` (Linux/Windows) to move the playhead to the previous marker when the magnetize option is enabled.  
+- Move playhead forward: Use the main menu `Transport → Move the Playhead Forward` or the keyboard shortcut `⌘ Cmd + →` (Mac) or `Ctrl + →` (Linux/Windows) to move the playhead to the next marker when the magnetize option is enabled.  
 - Set playhead position: Use the time entry (**T6**) when the the playback is stopped to define the start playhead position. When the playback is started, the time entry displays the running playhead position. Click on an analysis to move the start playhead position at the corresponding time position, if the magnetize option is enabled, the position moves to the closest marker. 
 - Control the volume: Cick and drag the volume slider (**T7**) to control the volume of the audio output.
 
@@ -501,7 +501,7 @@ The actions to move the start position of the playback head and control the play
 
 ## 9. Track properties
 
-The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**).
+The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**), the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-track-properties.1-v1.3.2.png" width="242"/>
@@ -646,7 +646,7 @@ The graphical section displays information about the plugin such as the name, th
 
 ## 10. Group properties
 
-The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel via the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**).
+The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel using the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-group-properties.1-v2.0.1.png" width="242"/>
