@@ -297,9 +297,8 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
         }
     };
 
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, [[maybe_unused]] size_t index)
     {
-        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::groups:
