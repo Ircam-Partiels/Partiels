@@ -673,6 +673,7 @@ void Document::Section::updateLayout()
 
     updateExpandState();
     updateAutoresize();
+    handleAsyncUpdate();
 }
 
 void Document::Section::updateAutoresize()
