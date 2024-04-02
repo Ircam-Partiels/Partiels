@@ -44,111 +44,106 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                          setColourMap(static_cast<ColourMap>(index));
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track color map"));
                      })
-, mPropertyForegroundColour(
-      juce::translate("Foreground Color"), juce::translate("The foreground color of the graphical renderer."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          setForegroundColour(colour);
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
-      })
-, mPropertyDurationColour(
-      juce::translate("Duration Color"), juce::translate("The duration color of the graphical renderer."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          setDurationColour(colour);
-          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
-      })
-, mPropertyBackgroundColour(
-      juce::translate("Background Color"), juce::translate("The background color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          setBackgroundColour(colour);
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
-      })
-, mPropertyTextColour(
-      juce::translate("Text Color"), juce::translate("The text color of the graphical renderer."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          setTextColour(colour);
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
-      })
-, mPropertyShadowColour(
-      juce::translate("Shadow Color"), juce::translate("The shadow color of the graphical renderer."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          setShadowColour(colour);
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
-      })
+, mPropertyForegroundColour(juce::translate("Foreground Color"), juce::translate("The foreground color of the graphical renderer."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
+                            {
+                                if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.startAction();
+                                }
+                                setForegroundColour(colour);
+                                if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
+                                }
+                            },
+                            [&]()
+                            {
+                                mDirector.startAction();
+                            },
+                            [&]()
+                            {
+                                mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
+                            })
+, mPropertyDurationColour(juce::translate("Duration Color"), juce::translate("The duration color of the graphical renderer."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
+                          {
+                              if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+                              {
+                                  mDirector.startAction();
+                              }
+                              setDurationColour(colour);
+                              if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+                              {
+                                  mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
+                              }
+                          },
+                          [&]()
+                          {
+                              mDirector.startAction();
+                          },
+                          [&]()
+                          {
+                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track duration color"));
+                          })
+, mPropertyBackgroundColour(juce::translate("Background Color"), juce::translate("The background color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
+                            {
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.startAction();
+                                }
+                                setBackgroundColour(colour);
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
+                                }
+                            },
+                            [&]()
+                            {
+                                mDirector.startAction();
+                            },
+                            [&]()
+                            {
+                                mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
+                            })
+, mPropertyTextColour(juce::translate("Text Color"), juce::translate("The text color of the graphical renderer."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
+                      {
+                          if(!mPropertyTextColour.entry.isColourSelectorVisible())
+                          {
+                              mDirector.startAction();
+                          }
+                          setTextColour(colour);
+                          if(!mPropertyTextColour.entry.isColourSelectorVisible())
+                          {
+                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
+                          }
+                      },
+                      [&]()
+                      {
+                          mDirector.startAction();
+                      },
+                      [&]()
+                      {
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
+                      })
+, mPropertyShadowColour(juce::translate("Shadow Color"), juce::translate("The shadow color of the graphical renderer."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
+                        {
+                            if(!mPropertyShadowColour.entry.isColourSelectorVisible())
+                            {
+                                mDirector.startAction();
+                            }
+                            setShadowColour(colour);
+                            if(!mPropertyShadowColour.entry.isColourSelectorVisible())
+                            {
+                                mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
+                            }
+                        },
+                        [&]()
+                        {
+                            mDirector.startAction();
+                        },
+                        [&]()
+                        {
+                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
+                        })
 , mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
                     {
                         mDirector.startAction();
@@ -228,19 +223,18 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                              setValueRangeMax(static_cast<double>(value));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
-, mPropertyValueRange(
-      juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&]()
-      {
-          mDirector.startAction();
-      },
-      [&](float min, float max)
-      {
-          setValueRange(Zoom::Range(min, max));
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
-      })
+, mPropertyValueRange(juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&]()
+                      {
+                          mDirector.startAction();
+                      },
+                      [&](float min, float max)
+                      {
+                          setValueRange(Zoom::Range(min, max));
+                      },
+                      [&]()
+                      {
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
+                      })
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());

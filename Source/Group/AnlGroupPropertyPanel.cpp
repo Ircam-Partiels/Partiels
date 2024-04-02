@@ -28,27 +28,26 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
                     mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group name"));
                 })
-, mPropertyBackgroundColour(
-      juce::translate("Group Background Color"), juce::translate("The background color of the group."), juce::translate("Select the background color"), [this](juce::Colour const& colour)
-      {
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(false);
-          }
-          mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(false);
-      },
-      [&]()
-      {
-          mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
-      })
+, mPropertyBackgroundColour(juce::translate("Group Background Color"), juce::translate("The background color of the group."), juce::translate("Select the background color"), [this](juce::Colour const& colour)
+                            {
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.startAction(false);
+                                }
+                                mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
+                                }
+                            },
+                            [&]()
+                            {
+                                mDirector.startAction(false);
+                            },
+                            [&]()
+                            {
+                                mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
+                            })
 , mPropertyReferenceTrack(juce::translate("Group Track Reference"), juce::translate("The track used for the edition and the navigation"), "", std::vector<std::string>{""}, [this](size_t index)
                           {
                               mDirector.startAction(false);

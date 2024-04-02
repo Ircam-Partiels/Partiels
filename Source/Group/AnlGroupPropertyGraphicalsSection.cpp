@@ -43,111 +43,106 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                          setColourMap(static_cast<Track::ColourMap>(index));
                          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's color map"));
                      })
-, mPropertyForegroundColour(
-      juce::translate("Foreground Color"), juce::translate("The foreground color used by the graphical renderers of the tracks of the group."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(true);
-          }
-          setForegroundColour(colour);
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's foreground color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(true);
-      },
-      [&]()
-      {
-          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's foreground color"));
-      })
-, mPropertyDurationColour(
-      juce::translate("Duration Color"), juce::translate("The duration color used by the graphical renderers of the tracks of the group."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(true);
-          }
-          setDurationColour(colour);
-          if(!mPropertyDurationColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(true);
-      },
-      [&]()
-      {
-          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
-      })
-, mPropertyBackgroundColour(
-      juce::translate("Background Color"), juce::translate("The background color used by the graphical renderers of the tracks of the group."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(true);
-          }
-          setBackgroundColour(colour);
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's background color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(true);
-      },
-      [&]()
-      {
-          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's background color"));
-      })
-, mPropertyTextColour(
-      juce::translate("Text Color"), juce::translate("The text color used by the graphical renderers of the tracks of the group."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(true);
-          }
-          setTextColour(colour);
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's text color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(true);
-      },
-      [&]()
-      {
-          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's text color"));
-      })
-, mPropertyShadowColour(
-      juce::translate("Shadow Color"), juce::translate("The shadow color used by the graphical renderers of the tracks of the group."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
-      {
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction(true);
-          }
-          setShadowColour(colour);
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's shadow color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction(true);
-      },
-      [&]()
-      {
-          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's shadow color"));
-      })
+, mPropertyForegroundColour(juce::translate("Foreground Color"), juce::translate("The foreground color used by the graphical renderers of the tracks of the group."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
+                            {
+                                if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.startAction(true);
+                                }
+                                setForegroundColour(colour);
+                                if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's foreground color"));
+                                }
+                            },
+                            [&]()
+                            {
+                                mDirector.startAction(true);
+                            },
+                            [&]()
+                            {
+                                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's foreground color"));
+                            })
+, mPropertyDurationColour(juce::translate("Duration Color"), juce::translate("The duration color used by the graphical renderers of the tracks of the group."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
+                          {
+                              if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+                              {
+                                  mDirector.startAction(true);
+                              }
+                              setDurationColour(colour);
+                              if(!mPropertyDurationColour.entry.isColourSelectorVisible())
+                              {
+                                  mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
+                              }
+                          },
+                          [&]()
+                          {
+                              mDirector.startAction(true);
+                          },
+                          [&]()
+                          {
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's duration color"));
+                          })
+, mPropertyBackgroundColour(juce::translate("Background Color"), juce::translate("The background color used by the graphical renderers of the tracks of the group."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
+                            {
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.startAction(true);
+                                }
+                                setBackgroundColour(colour);
+                                if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
+                                {
+                                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's background color"));
+                                }
+                            },
+                            [&]()
+                            {
+                                mDirector.startAction(true);
+                            },
+                            [&]()
+                            {
+                                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's background color"));
+                            })
+, mPropertyTextColour(juce::translate("Text Color"), juce::translate("The text color used by the graphical renderers of the tracks of the group."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
+                      {
+                          if(!mPropertyTextColour.entry.isColourSelectorVisible())
+                          {
+                              mDirector.startAction(true);
+                          }
+                          setTextColour(colour);
+                          if(!mPropertyTextColour.entry.isColourSelectorVisible())
+                          {
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's text color"));
+                          }
+                      },
+                      [&]()
+                      {
+                          mDirector.startAction(true);
+                      },
+                      [&]()
+                      {
+                          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's text color"));
+                      })
+, mPropertyShadowColour(juce::translate("Shadow Color"), juce::translate("The shadow color used by the graphical renderers of the tracks of the group."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
+                        {
+                            if(!mPropertyShadowColour.entry.isColourSelectorVisible())
+                            {
+                                mDirector.startAction(true);
+                            }
+                            setShadowColour(colour);
+                            if(!mPropertyShadowColour.entry.isColourSelectorVisible())
+                            {
+                                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's shadow color"));
+                            }
+                        },
+                        [&]()
+                        {
+                            mDirector.startAction(true);
+                        },
+                        [&]()
+                        {
+                            mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's shadow color"));
+                        })
 , mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderers of the tracks of the group."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
                     {
                         mDirector.startAction(true);

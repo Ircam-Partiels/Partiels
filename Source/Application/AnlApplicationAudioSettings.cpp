@@ -123,17 +123,17 @@ Application::AudioSettingsContent::AudioSettingsContent()
 #if JUCE_MAC
                            juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
 #else
-          auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-          auto* audioDevice = audioDeviceManager.getCurrentAudioDevice();
-          if(audioDevice != nullptr && audioDevice->hasControlPanel())
-          {
-              if(audioDevice->showControlPanel())
-              {
-                  // Force to update the audio device
-                  audioDeviceManager.closeAudioDevice();
-                  audioDeviceManager.restartLastAudioDevice();
-              }
-          }
+                           auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                           auto* audioDevice = audioDeviceManager.getCurrentAudioDevice();
+                           if(audioDevice != nullptr && audioDevice->hasControlPanel())
+                           {
+                               if(audioDevice->showControlPanel())
+                               {
+                                   // Force to update the audio device
+                                   audioDeviceManager.closeAudioDevice();
+                                   audioDeviceManager.restartLastAudioDevice();
+                               }
+                           }
 #endif
                        })
 {

@@ -151,7 +151,7 @@ namespace Track
                 FocusInfo const mFocus;
             };
         } // namespace Modifier
-    }     // namespace Result
+    } // namespace Result
 } // namespace Track
 
 ANALYSE_FILE_END
