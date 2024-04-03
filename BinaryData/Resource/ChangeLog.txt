@@ -1,3 +1,5 @@
+v2.0.3
+
 - Add: A keyboard shortcut to display property windows for selected tracks and groups (#453)
 - Fix: Action to delete groups and tracks does not display the correct name when only tracks are selected (#452)
 - Add: A new close button at the top left of the plugin tracks panel (#451)

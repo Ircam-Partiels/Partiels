@@ -20,7 +20,7 @@ set(IVE_PLUGIN_EXAMPLE ON CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
-project(Partiels VERSION 2.0.3 LANGUAGES C CXX)
+project(Partiels VERSION 2.0.4 LANGUAGES C CXX)
 
 set(PARTIELS_CODESIGN_WINDOWS_KEYFILE "" CACHE PATH "The Windows (.pfx) certificate file")
 set(PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD "" CACHE STRING "The password of the Windows (.pfx) certificate file")
