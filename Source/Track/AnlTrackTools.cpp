@@ -158,6 +158,24 @@ void Track::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType no
     }
 }
 
+bool Track::Tools::hasVerticalZoomInHertz(Accessor const& accessor)
+{
+    auto const isHertz = [](std::string unit)
+    {
+        std::transform(unit.cbegin(), unit.cend(), unit.begin(), [](unsigned char c)
+                       {
+                           return std::tolower(c);
+                       });
+        return unit.find("hz") != std::string::npos || unit.find("hertz") != std::string::npos;
+    };
+    if(isHertz(getUnit(accessor).toStdString()))
+    {
+        return true;
+    }
+    auto const& binNames = accessor.getAttr<AttrType::description>().output.binNames;
+    return std::any_of(binNames.cbegin(), binNames.cend(), isHertz);
+}
+
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
