@@ -20,34 +20,20 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         {
             return;
         }
-        auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
-        {
-            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
-            {
-                return;
-            }
-            auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-        };
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                auto const frameType = Tools::getFrameType(mAccessor);
-                if(frameType.has_value())
+                auto zoomAcsr = Tools::getVerticalZoomAccessor(mAccessor, false);
+                if(zoomAcsr.has_value())
                 {
-                    switch(frameType.value())
+                    if(zoomAcsr.value().get().getAttr<Zoom::AttrType::globalRange>().isEmpty())
                     {
-                        case FrameType::label:
-                            break;
-                        case FrameType::value:
-                            updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
-                            break;
-                        case FrameType::vector:
-                            updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
-                            break;
+                        return;
                     }
+                    auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.value().get().getAttr<Zoom::AttrType::globalRange>());
+                    zoomAcsr.value().get().setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                 }
             }
             break;
@@ -239,7 +225,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
 
     auto const updateLinkedZoom = [this](NotificationType notification)
     {
-        if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value())
+        auto zoomAcsr = Tools::getVerticalZoomAccessor(mAccessor, false);
+        if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value() || !zoomAcsr.has_value())
         {
             return;
         }
@@ -249,30 +236,12 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             return;
         }
         auto& sharedZoom = mSharedZoomAccessor.value().get();
-        auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
+        if(zoomAcsr.value().get().getAttr<Zoom::AttrType::globalRange>().isEmpty() && zoomAcsr.value().get().getAttr<Zoom::AttrType::visibleRange>().isEmpty())
         {
-            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty() && zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
-            {
-                return;
-            }
-            auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
-            sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-        };
-        auto const frameType = Tools::getFrameType(mAccessor);
-        if(frameType.has_value())
-        {
-            switch(frameType.value())
-            {
-                case Track::FrameType::label:
-                    break;
-                case Track::FrameType::value:
-                    updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
-                    break;
-                case Track::FrameType::vector:
-                    updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
-                    break;
-            }
+            return;
         }
+        auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr.value().get(), sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+        sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
     };
 
     auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
