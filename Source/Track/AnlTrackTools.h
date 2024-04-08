@@ -24,6 +24,7 @@ namespace Track
         bool canZoomOut(Accessor const& accessor);
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
         void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
+        bool hasVerticalZoomInHertz(Accessor const& accessor);
 
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float pixelToValue(float position, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
@@ -49,6 +50,38 @@ namespace Track
 
         std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);
         std::unique_ptr<juce::Component> createBinRangeEditor(Accessor& acsr);
+
+        static auto constexpr scaledFrequencyCenter = 440.0;
+        static auto constexpr scaledMidiCenter = 69.0;
+        static inline float getMidiFromHertz(float const& frequency)
+        {
+            return frequency > 0.0f ? std::log2(frequency / static_cast<float>(scaledFrequencyCenter)) * 12.0f + static_cast<float>(scaledMidiCenter) : 0.0f;
+        }
+
+        static inline float getHertzFromMidi(float const& midi)
+        {
+            return static_cast<float>(scaledFrequencyCenter) * std::pow(2.0f, (midi - static_cast<float>(scaledMidiCenter)) / 12.0f);
+        }
+
+        static inline double getMidiFromHertz(double const& frequency)
+        {
+            return frequency > 0.0 ? std::log2(frequency / scaledFrequencyCenter) * 12.0 + scaledMidiCenter : 0.0;
+        }
+
+        static inline double getHertzFromMidi(double const& midi)
+        {
+            return scaledFrequencyCenter * std::pow(2.0, (midi - scaledMidiCenter) / 12.0);
+        }
+
+        static inline juce::Range<double> getMidiFromHertz(juce::Range<double> const& range)
+        {
+            return {getMidiFromHertz(range.getStart()), getMidiFromHertz(range.getEnd())};
+        }
+
+        static inline juce::Range<double> getHertzFromMidi(juce::Range<double> const& range)
+        {
+            return {getHertzFromMidi(range.getStart()), getHertzFromMidi(range.getEnd())};
+        }
     } // namespace Tools
 } // namespace Track
 
