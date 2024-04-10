@@ -27,6 +27,10 @@ namespace Track
         juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
         juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort);
 
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort);
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort);
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort);
+
         juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort);
         juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
         juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort);

@@ -769,6 +769,134 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort)
+{
+    auto const name = accessor.getAttr<AttrType::name>();
+    auto constexpr format = "Reaper";
+
+    if(!static_cast<bool>(stream))
+    {
+        return failed(name, format, ErrorType::streamAccessFailure);
+    }
+
+    auto const& results = accessor.getAttr<AttrType::results>();
+
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return failed(name, format, ErrorType::dataLocked);
+    }
+
+    if(results.isEmpty())
+    {
+        return failed(name, format, ErrorType::dataInvalid);
+    }
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    auto const markers = results.getMarkers();
+    if(markers == nullptr)
+    {
+        return failed(name, format, "the result data are not of marker type");
+    }
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    auto const escapeString = [](juce::String const& s)
+    {
+        return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
+    };
+
+    stream << std::fixed;
+    stream << std::setprecision(10);
+    stream << "#,Name,Start,End,Length" << '\n';
+
+    for(size_t i = 0; i < markers->size(); ++i)
+    {
+        if(shouldAbort)
+        {
+            return aborted(name, format);
+        }
+        auto const& channelMarkers = markers->at(i);
+        auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
+        auto index = std::distance(channelMarkers.cbegin(), it);
+        while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+        {
+            if(isMarker)
+            {
+                stream << 'M' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ",,\n";
+            }
+            else
+            {
+                stream << 'R' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ',' << std::get<0_z>(*it) + std::get<1_z>(*it) << ',' << std::get<1_z>(*it) << '\n';
+            }
+            ++it;
+            ++index;
+        }
+        stream << '\n';
+    }
+
+    if(!stream.good())
+    {
+        return failed(name, format, ErrorType::streamWritingFailure);
+    }
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    return juce::Result::ok();
+}
+
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort)
+{
+    auto const name = accessor.getAttr<AttrType::name>();
+    auto constexpr format = "Reaper";
+
+    juce::TemporaryFile temp(file);
+    std::ofstream stream(temp.getFile().getFullPathName().toStdString());
+    if(!stream.is_open())
+    {
+        return failed(name, format, ErrorType::streamAccessFailure);
+    }
+    auto const result = toReaper(accessor, timeRange, stream, isMarker, shouldAbort);
+    if(result.failed())
+    {
+        return result;
+    }
+    // This is important on Windows otherwise the temporary file cannot be copied
+    stream.close();
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return failed(name, format, ErrorType::fileAccessFailure, file);
+    }
+    return juce::Result::ok();
+}
+
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort)
+{
+    std::ostringstream stream;
+    auto const result = toReaper(accessor, timeRange, stream, isMarker, shouldAbort);
+    if(result.failed())
+    {
+        return result;
+    }
+    string = stream.str();
+    return juce::Result::ok();
+}
+
 juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
