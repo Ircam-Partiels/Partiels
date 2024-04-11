@@ -22,6 +22,7 @@ namespace Document
                 , lab
                 , json
                 , cue
+                , reaper
                 , sdif
             };
             
@@ -42,6 +43,12 @@ namespace Document
                 , selection
                 , manual
             };
+            
+            enum class ReaperType
+            {
+                  marker
+                , region
+            };
             // clang-format on
 
             Format format{Format::jpeg};
@@ -51,6 +58,7 @@ namespace Document
             int imageHeight{1200};
             bool includeHeaderRaw{true};
             bool ignoreGridResults{true};
+            ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
             bool includeDescription{true};
             juce::String sdifFrameSignature{"????"};
@@ -116,6 +124,7 @@ namespace Document
             PropertyNumber mPropertyHeight;
             PropertyToggle mPropertyRowHeader;
             PropertyList mPropertyColumnSeparator;
+            PropertyList mPropertyReaperType;
             PropertyToggle mPropertyIncludeDescription;
             PropertyText mPropertySdifFrame;
             PropertyText mPropertySdifMatrix;

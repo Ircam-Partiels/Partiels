@@ -1,5 +1,6 @@
 #include "AnlDocumentExporter.h"
 #include "../Group/AnlGroupExporter.h"
+#include "../Group/AnlGroupTools.h"
 #include "../Track/AnlTrackExporter.h"
 #include "../Track/AnlTrackTools.h"
 #include "AnlDocumentTools.h"
@@ -16,6 +17,7 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            includeHeaderRaw == rhd.includeHeaderRaw &&
            ignoreGridResults == rhd.ignoreGridResults &&
            columnSeparator == rhd.columnSeparator &&
+           reaperType == rhd.reaperType &&
            includeDescription == rhd.includeDescription &&
            sdifFrameSignature == rhd.sdifFrameSignature &&
            sdifMatrixSignature == rhd.sdifMatrixSignature &&
@@ -45,6 +47,10 @@ juce::String Document::Exporter::Options::getFormatName() const
 
 juce::String Document::Exporter::Options::getFormatExtension() const
 {
+    if(format == Format::reaper)
+    {
+        return "csv";
+    }
     return getFormatName().toLowerCase();
 }
 
@@ -128,7 +134,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "SDIF"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -182,6 +188,12 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                                options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                                setOptions(options, juce::NotificationType::sendNotificationSync);
                            })
+, mPropertyReaperType("Reaper Type", "The Reaper data type", "", std::vector<std::string>{"Marker", "Region"}, [this](size_t index)
+                      {
+                          auto options = mOptions;
+                          options.reaperType = magic_enum::enum_value<Document::Exporter::Options::ReaperType>(index);
+                          setOptions(options, juce::NotificationType::sendNotificationSync);
+                      })
 , mPropertyIncludeDescription("Include Extra Description", "Include the extra description of the track in the results", [this](bool state)
                               {
                                   auto options = mOptions;
@@ -225,7 +237,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                           {
                               updateItems();
-                          })
+                          },
+                          {Group::AttrType::identifier}, {Track::AttrType::identifier, Track::AttrType::results, Track::AttrType::description})
 {
     addAndMakeVisible(mPropertyItem);
     if(showTimeRange)
@@ -242,6 +255,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     addAndMakeVisible(mPropertyHeight);
     addChildComponent(mPropertyRowHeader);
     addChildComponent(mPropertyColumnSeparator);
+    addChildComponent(mPropertyReaperType);
     addChildComponent(mPropertyIncludeDescription);
     addChildComponent(mPropertySdifFrame);
     addChildComponent(mPropertySdifMatrix);
@@ -420,6 +434,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertyHeight);
     setBounds(mPropertyRowHeader);
     setBounds(mPropertyColumnSeparator);
+    setBounds(mPropertyReaperType);
     setBounds(mPropertyIncludeDescription);
     setBounds(mPropertySdifFrame);
     setBounds(mPropertySdifMatrix);
@@ -526,6 +541,14 @@ void Document::Exporter::Panel::updateItems()
     {
         entryBox.setSelectedId(documentItemFactor, juce::NotificationType::dontSendNotification);
     }
+
+    auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
+    auto const hasLabel = std::any_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
+                                      {
+                                          return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label;
+                                      });
+    mPropertyFormat.entry.setItemEnabled(mPropertyFormat.entry.getItemId(static_cast<int>(Options::Format::cue)), hasLabel);
+    mPropertyFormat.entry.setItemEnabled(mPropertyFormat.entry.getItemId(static_cast<int>(Options::Format::reaper)), hasLabel);
     sanitizeProperties(false);
 }
 
@@ -543,28 +566,37 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
         mPropertyHeight.setEnabled(true);
     }
 
+    auto options = mOptions;
+
     if(itemIsTrack)
     {
         mPropertyGroupMode.setEnabled(false);
-        if(updateModel)
-        {
-            auto options = mOptions;
-            options.useGroupOverview = false;
-            setOptions(options, juce::NotificationType::sendNotificationSync);
-        }
+        options.useGroupOverview = false;
     }
 
-    if(mGetSizeForFn != nullptr && updateModel && mOptions.useAutoSize && !itemIsDocument)
+    if(mGetSizeForFn != nullptr && mOptions.useAutoSize && !itemIsDocument)
     {
         auto const size = mGetSizeForFn(identifier);
-        auto options = mOptions;
         options.imageWidth = std::get<0>(size);
         options.imageHeight = std::get<1>(size);
+    }
+
+    auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
+    auto const hasLabel = std::any_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
+                                      {
+                                          return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label;
+                                      });
+    if(!hasLabel && (mPropertyFormat.entry.getSelectedItemIndex() == static_cast<int>(Options::Format::reaper) || mPropertyFormat.entry.getSelectedItemIndex() == static_cast<int>(Options::Format::cue)))
+    {
+        options.format = Options::Format::csv;
+    }
+    if(updateModel)
+    {
         setOptions(options, juce::NotificationType::sendNotificationSync);
     }
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
-    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue);
+    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
 }
 
 Document::Exporter::Options const& Document::Exporter::Panel::getOptions() const
@@ -610,6 +642,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
 
     mPropertyRowHeader.entry.setToggleState(options.includeHeaderRaw, silent);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
+    mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
@@ -622,6 +655,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyHeight.setVisible(options.useImageFormat());
     mPropertyRowHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyColumnSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyReaperType.setVisible(options.format == Document::Exporter::Options::Format::reaper);
     mPropertyIncludeDescription.setVisible(options.format == Document::Exporter::Options::Format::json);
     mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
@@ -742,6 +776,50 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
     if(!options.isValid())
     {
         return juce::Result::fail("Invalid options");
+    }
+    if(accessor.getNumAcsrs<AcsrType::tracks>() == 0_z)
+    {
+        return juce::Result::fail("Empty project");
+    }
+
+    auto const getAllTrackAcsrs = [&]() -> std::vector<std::reference_wrapper<Track::Accessor>>
+    {
+        if(identifier.isEmpty())
+        {
+            return accessor.getAcsrs<AcsrType::tracks>();
+        }
+        else if(Tools::hasGroupAcsr(accessor, identifier))
+        {
+            return Group::Tools::getTrackAcsrs(Tools::getGroupAcsr(accessor, identifier));
+        }
+        else if(Tools::hasTrackAcsr(accessor, identifier))
+        {
+            return {Tools::getTrackAcsr(accessor, identifier)};
+        }
+        return {};
+    };
+
+    if(options.format == Options::Format::reaper || options.format == Options::Format::cue)
+    {
+        auto const& tracks = getAllTrackAcsrs();
+        if(std::none_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
+                        {
+                            return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label;
+                        }))
+        {
+            return juce::Result::fail("Invalid format for items");
+        }
+    }
+    else if(options.useTextFormat() && options.ignoreGridResults)
+    {
+        auto const& tracks = getAllTrackAcsrs();
+        if(std::all_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
+                       {
+                           return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
+                       }))
+        {
+            return juce::Result::fail("Invalid format for items");
+        }
     }
 
     if(options.useImageFormat())
@@ -968,7 +1046,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             return juce::Result::ok();
         }
-        if(identifier != trackIdentifier && options.format == Options::Format::cue && Track::Tools::getFrameType(trackAcsr) != Track::FrameType::label)
+        auto const isLabelOnly = options.format == Options::Format::cue || options.format == Options::Format::reaper;
+        if(identifier != trackIdentifier && isLabelOnly && Track::Tools::getFrameType(trackAcsr) != Track::FrameType::label)
         {
             return juce::Result::ok();
         }
@@ -989,6 +1068,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
                 return Track::Exporter::toCue(trackAcsr, timeRange, fileUsed, shouldAbort);
+            case Options::Format::reaper:
+                return Track::Exporter::toReaper(trackAcsr, timeRange, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);
