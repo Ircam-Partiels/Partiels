@@ -1,3 +1,5 @@
+- Add: Import and export formatted CSV files for Reaper - regions and markers (#455)
+
 v2.0.3
 
 - Add: A keyboard shortcut to display property windows for selected tracks and groups (#453)
