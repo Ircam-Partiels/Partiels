@@ -747,6 +747,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo c
     {
         return {juce::translate("The input stream of cannot be opened")};
     }
+    if(fileInfo.args.getValue("isreaper", "false") == "true")
+    {
+        return loadFromReaper(stream, shouldAbort, advancement);
+    }
     auto const separator = fileInfo.args.getValue("separator", ",").toStdString();
     auto const useEndTime = fileInfo.args.getValue("useendtime", "false") == "true";
     return loadFromCsv(stream, separator.empty() ? ',' : separator.at(0_z), useEndTime, shouldAbort, advancement);
@@ -898,6 +902,89 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         return Track::Results(std::move(points));
     }
     return {juce::translate("Parsing error")};
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto const trimString = [](std::string const& s)
+    {
+        auto const ltrim = [](std::string const& sr)
+        {
+            auto const start = sr.find_first_not_of(" \n\r\t\f\v");
+            return (start == std::string::npos) ? "" : sr.substr(start);
+        };
+
+        auto const rtrim = [](std::string const& sr)
+        {
+            auto const end = sr.find_last_not_of(" \n\r\t\f\v");
+            return (end == std::string::npos) ? "" : sr.substr(0, end + 1);
+        };
+
+        return rtrim(ltrim(s));
+    };
+
+    auto const unescapeString = [](juce::String const& s)
+    {
+        return s.replace("\\\"", "\"").replace("\\\'", "\'").replace("\\t", "\t").replace("\\r", "\r").replace("\\n", "\n").unquoted();
+    };
+
+    std::vector<Results::Markers> markers;
+    auto addNewChannel = true;
+    std::string line;
+    while(std::getline(stream, line, '\n'))
+    {
+        if(shouldAbort)
+        {
+            return {};
+        }
+
+        line = trimString(line);
+        if(line.empty() || line == "\n" || line.find("#,Name,Start,End,Length") != std::string::npos)
+        {
+            addNewChannel = true;
+        }
+        else
+        {
+            if(std::exchange(addNewChannel, false))
+            {
+                markers.push_back({});
+            }
+            std::string index, label, start, end, duration;
+            std::istringstream linestream(line);
+            std::getline(linestream, index, ',');
+            std::getline(linestream, label, ',');
+            std::getline(linestream, start, ',');
+            std::getline(linestream, end, ',');
+            std::getline(linestream, duration, ',');
+
+            if(index.empty() || start.empty())
+            {
+                return {juce::translate("Parsing error")};
+            }
+            else if(std::isdigit(static_cast<int>(start[0])))
+            {
+                auto& channel = markers.back();
+                channel.push_back({});
+                std::get<0_z>(channel.back()) = std::stod(start);
+                if(!duration.empty() && std::isdigit(static_cast<int>(duration[0])))
+                {
+                    std::get<1_z>(channel.back()) = std::stod(duration);
+                }
+                else if(!end.empty() && std::isdigit(static_cast<int>(end[0])))
+                {
+                    std::get<1_z>(channel.back()) = std::max(std::stod(end) - std::get<0_z>(channel.back()), 0.0);
+                }
+                else
+                {
+                    std::get<1_z>(channel.back()) = 0.0;
+                }
+                std::get<2_z>(channel.back()) = unescapeString(label).toStdString();
+            }
+        }
+    }
+
+    advancement.store(1.0f);
+    return Track::Results(std::move(markers));
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -1180,6 +1267,33 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sam
 
     if(file.hasFileExtension("csv") || file.hasFileExtension("lab"))
     {
+        auto const isReaper = [&]()
+        {
+            std::string line;
+            while(std::getline(stream, line))
+            {
+                line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+                if(line.find("#,Name,Start,End,Length") != std::string::npos)
+                {
+                    return true;
+                }
+                else if(!line.empty())
+                {
+                    return false;
+                }
+            }
+            return false;
+        };
+
+        if(isReaper())
+        {
+            FileInfo fileInfo;
+            fileInfo.file = file;
+            fileInfo.args.set("isreaper", "true");
+            callback(fileInfo);
+            return false;
+        }
+
         auto const getCsvSeparator = [&]() -> std::optional<std::string>
         {
             std::string line;
