@@ -56,7 +56,7 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
-         "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue or sdif) (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).\n\t"
          "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
@@ -64,6 +64,7 @@ Application::CommandLine::CommandLine()
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
          "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
+         "--reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').\n\t"
          "--description Includes the plugin description (optional with the json format).\n\t"
          "--frame <framesignature> Defines the 4 characters frame signaturer (required with the sdif format).\n\t"
          "--matrix <matrixsignature> Defines the 4 characters matrix signaturer (required with the sdif format).\n\t"
@@ -127,7 +128,7 @@ Application::CommandLine::CommandLine()
                  options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
                  options.useGroupOverview = args.containsOption("--groups");
              }
-             else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "sdif")
+             else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif")
              {
                  if(format == "csv")
                  {
@@ -145,6 +146,10 @@ Application::CommandLine::CommandLine()
                  {
                      options.format = Options::Format::cue;
                  }
+                 else if(format == "reaper")
+                 {
+                     options.format = Options::Format::reaper;
+                 }
                  else
                  {
                      options.format = Options::Format::sdif;
@@ -160,6 +165,7 @@ Application::CommandLine::CommandLine()
                  options.ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
+                 options.reaperType = args.getValueForOption("--reapertype").toLowerCase() == "marker" ? Options::ReaperType::marker : Options::ReaperType::region;
                  options.sdifFrameSignature = args.getValueForOption("--frame").removeCharacters("\"").toUpperCase();
                  options.sdifMatrixSignature = args.getValueForOption("--matrix").removeCharacters("\"").toUpperCase();
                  options.sdifColumnName = args.getValueForOption("--colname");
