@@ -420,7 +420,11 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::helpOpenPluginSettings:
         {
+#if JUCE_MAC
             result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Application", 0);
+#else
+            result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Help", 0);
+#endif
         }
         break;
         case CommandIDs::helpOpenAbout:
