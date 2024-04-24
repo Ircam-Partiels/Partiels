@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    using Flag = Model::Flag;
 
     // clang-format off
     enum class ColourMode
@@ -37,20 +36,20 @@ namespace Application
     };
 
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::desktopGlobalScaleFactor, float, Flag::basic>
-    , Model::Attr<AttrType::windowState, juce::String, Flag::basic>
-    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
-    , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
-    , Model::Attr<AttrType::defaultTemplateFile, juce::File, Flag::basic>
-    , Model::Attr<AttrType::colourMode, ColourMode, Flag::basic>
-    , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
-    , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
-    , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
-    , Model::Attr<AttrType::autoLoadConvertedFile, bool, Flag::basic>
-    , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Flag::basic>
-    , Model::Attr<AttrType::autoUpdate, bool, Flag::basic>
-    , Model::Attr<AttrType::lastVersion, juce::String, Flag::basic>
-    , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Flag::basic>
+    < Model::Attr<AttrType::desktopGlobalScaleFactor, float, Model::Flag::basic>
+    , Model::Attr<AttrType::windowState, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Model::Flag::basic>
+    , Model::Attr<AttrType::currentDocumentFile, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::defaultTemplateFile, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::colourMode, ColourMode, Model::Flag::basic>
+    , Model::Attr<AttrType::showInfoBubble, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Model::Flag::basic>
+    , Model::Attr<AttrType::adaptationToSampleRate, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::autoLoadConvertedFile, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Model::Flag::basic>
+    , Model::Attr<AttrType::autoUpdate, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::lastVersion, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Model::Flag::basic>
     >;
     // clang-format on
 
