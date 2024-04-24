@@ -247,6 +247,7 @@ bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() 
 }
 
 Application::Interface::Interface()
+: mOscSettingsPanel(Instance::get().getOscSender())
 {
     addAndMakeVisible(mPanelManager);
     // clang-format off
@@ -254,6 +255,7 @@ Application::Interface::Interface()
                              std::vector<std::reference_wrapper<HideablePanel>>
                              { std::ref<HideablePanel>(mAboutPanel)
                              , std::ref<HideablePanel>(mAudioSettingsPanel)
+                             , std::ref<HideablePanel>(mOscSettingsPanel)
                              , std::ref<HideablePanel>(mBatcherPanel)
                              , std::ref<HideablePanel>(mConverterPanel)
                              , std::ref<HideablePanel>(mExporterPanel)
@@ -327,6 +329,11 @@ void Application::Interface::showAboutPanel()
 void Application::Interface::showAudioSettingsPanel()
 {
     mPanelManager.show(mAudioSettingsPanel);
+}
+
+void Application::Interface::showOscSettingsPanel()
+{
+    mPanelManager.show(mOscSettingsPanel);
 }
 
 void Application::Interface::showBatcherPanel()

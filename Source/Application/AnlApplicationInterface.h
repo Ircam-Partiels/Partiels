@@ -34,6 +34,7 @@ namespace Application
         void hideCurrentPanel();
         void showAboutPanel();
         void showAudioSettingsPanel();
+        void showOscSettingsPanel();
         void showBatcherPanel();
         void showConverterPanel();
         void showExporterPanel();
@@ -144,6 +145,7 @@ namespace Application
         DocumentContainer mDocumentContainer;
         AboutPanel mAboutPanel;
         AudioSettingsPanel mAudioSettingsPanel;
+        Osc::SettingsPanel mOscSettingsPanel;
         BatcherPanel mBatcherPanel;
         ConverterPanel mConverterPanel;
         ExporterPanel mExporterPanel;
