@@ -45,12 +45,12 @@ void Application::Accessor::setRecentlyOpenedFilesList(std::vector<juce::File> c
         }
         return copy;
     };
-    Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
 }
 
 void Application::Accessor::setDesktopGlobalScaleFactor(float const& value, NotificationType notification)
 {
-    Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, float>(std::clamp(value, 1.0f, 2.0f), notification);
+    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, float>(std::clamp(value, 1.0f, 2.0f), notification);
 }
 
 ANALYSE_FILE_END

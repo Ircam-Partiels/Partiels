@@ -2,12 +2,12 @@
 
 #include "../Document/AnlDocumentExporter.h"
 #include "AnlApplicationLookAndFeel.h"
+#include "AnlApplicationOsc.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-
     // clang-format off
     enum class ColourMode
     {
@@ -34,6 +34,11 @@ namespace Application
         , lastVersion
         , timeZoomAnchorOnPlayhead
     };
+    
+    enum class AcsrType : size_t
+    {
+          osc
+    };
 
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::desktopGlobalScaleFactor, float, Model::Flag::basic>
@@ -51,13 +56,17 @@ namespace Application
     , Model::Attr<AttrType::lastVersion, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Model::Flag::basic>
     >;
+    
+    using AcsrContainer = Model::Container
+    < Model::Acsr<AcsrType::osc, Osc::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    >;
     // clang-format on
 
     class Accessor
-    : public Model::Accessor<Accessor, AttrContainer>
+    : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     {
     public:
-        using Model::Accessor<Accessor, AttrContainer>::Accessor;
+        using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         // clang-format off
         Accessor()
         : Accessor(AttrContainer(
@@ -94,7 +103,7 @@ namespace Application
             }
             else
             {
-                Model::Accessor<Accessor, AttrContainer>::setAttr<type, value_v>(value, notification);
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
             }
         }
 
