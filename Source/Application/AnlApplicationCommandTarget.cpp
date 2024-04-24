@@ -118,6 +118,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewShowItemProperties
         
         , CommandIDs::helpOpenAudioSettings
+        , CommandIDs::helpOpenOscSettings
         , CommandIDs::helpOpenPluginSettings
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
@@ -415,6 +416,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Shows the audio settings panel"), "Help", 0);
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier, 0));
+#endif
+        }
+        break;
+        case CommandIDs::helpOpenOscSettings:
+        {
+#if JUCE_MAC
+            result.setInfo(juce::translate("OSC Settings..."), juce::translate("Shows the OSC settings panel"), "Application", 0);
+#else
+            result.setInfo(juce::translate("OSC Settings..."), juce::translate("Shows the OSC settings panel"), "Help", 0);
 #endif
         }
         break;
@@ -972,6 +982,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(auto* window = Instance::get().getWindow())
             {
                 window->getInterface().showAudioSettingsPanel();
+            }
+            return true;
+        }
+        case CommandIDs::helpOpenOscSettings:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showOscSettingsPanel();
             }
             return true;
         }

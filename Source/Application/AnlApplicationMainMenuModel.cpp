@@ -152,6 +152,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 #ifndef JUCE_MAC
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
         addDefaultTemplateMenu(menu);
@@ -209,6 +210,7 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
     extraAppleMenuItems.addSeparator();
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
     addDefaultTemplateMenu(extraAppleMenuItems);

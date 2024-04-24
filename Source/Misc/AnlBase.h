@@ -124,6 +124,7 @@ enum ApplicationCommandIDs : int
     , viewShowItemProperties
     
     , helpOpenAudioSettings
+    , helpOpenOscSettings
     , helpOpenPluginSettings
     , helpOpenAbout
     , helpOpenProjectPage
