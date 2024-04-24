@@ -57,6 +57,7 @@ namespace Application
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
+        Osc::Sender& getOscSender();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
@@ -94,6 +95,7 @@ namespace Application
 
         std::unique_ptr<PluginList::Accessor> mPluginListAccessor;
         std::unique_ptr<PluginList::Scanner> mPluginListScanner;
+        std::unique_ptr<Osc::Sender> mOscSender;
         std::unique_ptr<Document::Accessor> mDocumentAccessor;
         std::unique_ptr<Document::Director> mDocumentDirector;
 
@@ -107,6 +109,7 @@ namespace Application
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<CommandLine> mCommandLine;
         std::unique_ptr<Downloader> mDownloader;
+        std::unique_ptr<Osc::Dispatcher> mOscDispatcher;
 
         std::atomic<bool> mIsPluginListReady{true};
         juce::File mPreviousFile{};

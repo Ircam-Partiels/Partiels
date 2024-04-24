@@ -73,6 +73,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mPluginListScanner = std::make_unique<PluginList::Scanner>();
     AppQuitIfInvalidPointer(mPluginListScanner);
 
+    mOscSender = std::make_unique<Osc::Sender>(mApplicationAccessor->getAcsr<AcsrType::osc>());
+    AppQuitIfInvalidPointer(mOscSender);
+
     mDocumentAccessor = std::make_unique<Document::Accessor>();
     AppQuitIfInvalidPointer(mDocumentAccessor);
 
@@ -97,6 +100,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDownloader = std::make_unique<Downloader>();
     AppQuitIfInvalidPointer(mDownloader);
+
+    mOscDispatcher = std::make_unique<Osc::Dispatcher>(getOscSender());
+    AppQuitIfInvalidPointer(mOscDispatcher);
 
     checkPluginsQuarantine();
 
@@ -304,6 +310,7 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mOscDispatcher.reset();
     mDownloader.reset();
     mMainMenuModel.reset();
     mWindow.reset();
@@ -312,6 +319,7 @@ void Application::Instance::shutdown()
     mProperties.reset();
     mDocumentDirector.reset();
     mDocumentAccessor.reset();
+    mOscSender.reset();
     mPluginListScanner.reset();
     mPluginListAccessor.reset();
     mApplicationListener.reset();
@@ -572,6 +580,11 @@ PluginList::Accessor& Application::Instance::getPluginListAccessor()
 PluginList::Scanner& Application::Instance::getPluginListScanner()
 {
     return *mPluginListScanner.get();
+}
+
+Application::Osc::Sender& Application::Instance::getOscSender()
+{
+    return *mOscSender.get();
 }
 
 Document::Accessor& Application::Instance::getDocumentAccessor()
