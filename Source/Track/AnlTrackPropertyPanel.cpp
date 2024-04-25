@@ -20,7 +20,6 @@ Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPa
 
 Track::PropertyPanel::PropertyPanel(Director& director)
 : mDirector(director)
-, mTooltip(this)
 , mPropertyName("Name", "The name of the track", [&](juce::String text)
                 {
                     mDirector.startAction();
@@ -73,20 +72,24 @@ Track::PropertyPanel::PropertyPanel(Director& director)
         juce::ignoreUnused(component);
         mProcessorSection.setEnabled(mPropertyProcessorSection.getHeight() > 0);
         mGraphicalSection.setEnabled(mPropertyGraphicalSection.getHeight() > 0);
+        mOscSection.setEnabled(mPropertyOscSection.getHeight() > 0);
         mPluginSection.setEnabled(mPropertyPluginSection.getHeight() > 0);
         resized();
     };
     mComponentListener.attachTo(mProcessorSection);
     mComponentListener.attachTo(mGraphicalSection);
+    mComponentListener.attachTo(mOscSection);
     mComponentListener.attachTo(mPluginSection);
 
     mProcessorSection.setComponents({mPropertyProcessorSection});
     mGraphicalSection.setComponents({mPropertyGraphicalSection});
+    mOscSection.setComponents({mPropertyOscSection});
     mPluginSection.setComponents({mPropertyPluginSection});
 
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mProcessorSection);
     addAndMakeVisible(mGraphicalSection);
+    addAndMakeVisible(mOscSection);
     addAndMakeVisible(mPluginSection);
 
     setSize(300, 400);
@@ -101,6 +104,7 @@ Track::PropertyPanel::~PropertyPanel()
 {
     mComponentListener.detachFrom(mProcessorSection);
     mComponentListener.detachFrom(mGraphicalSection);
+    mComponentListener.detachFrom(mOscSection);
     mComponentListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
 }
@@ -108,7 +112,7 @@ Track::PropertyPanel::~PropertyPanel()
 void Track::PropertyPanel::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
@@ -118,6 +122,7 @@ void Track::PropertyPanel::resized()
     setBounds(mPropertyName);
     setBounds(mProcessorSection);
     setBounds(mGraphicalSection);
+    setBounds(mOscSection);
     setBounds(mPluginSection);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
@@ -128,11 +133,6 @@ void Track::PropertyPanel::parentHierarchyChanged()
     {
         window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", mAccessor.getAttr<AttrType::name>().toUpperCase()));
     }
-}
-
-juce::TooltipWindow& Track::PropertyPanel::getTooltipWindow()
-{
-    return mTooltip;
 }
 
 ANALYSE_FILE_END

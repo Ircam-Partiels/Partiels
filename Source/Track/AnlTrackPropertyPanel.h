@@ -3,6 +3,7 @@
 #include "AnlTrackDirector.h"
 #include "AnlTrackProgressBar.h"
 #include "AnlTrackPropertyGraphicalSection.h"
+#include "AnlTrackPropertyOscSection.h"
 #include "AnlTrackPropertyPluginSection.h"
 #include "AnlTrackPropertyProcessorSection.h"
 
@@ -22,8 +23,6 @@ namespace Track
         void resized() override;
         void parentHierarchyChanged() override;
 
-        juce::TooltipWindow& getTooltipWindow();
-
         class WindowContainer
         : public FloatingWindowContainer
         {
@@ -40,7 +39,6 @@ namespace Track
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
         ComponentListener mComponentListener;
-        juce::TooltipWindow mTooltip;
 
         PropertyText mPropertyName;
 
@@ -51,6 +49,10 @@ namespace Track
         PropertyGraphicalSection mPropertyGraphicalSection{mDirector};
         ConcertinaTable mGraphicalSection{juce::translate("GRAPHICAL"), true,
                                           juce::translate("The graphical parameters of the track")};
+
+        PropertyOscSection mPropertyOscSection{mDirector};
+        ConcertinaTable mOscSection{juce::translate("OSC"), true,
+                                    juce::translate("The OSC parameters of the track")};
 
         PropertyPluginSection mPropertyPluginSection{mDirector};
         ConcertinaTable mPluginSection{juce::translate("PLUGIN"), true,
