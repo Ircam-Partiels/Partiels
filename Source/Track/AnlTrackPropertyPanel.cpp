@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPanel)
 : FloatingWindowContainer(juce::translate("Properties"), mViewport)
 , mPropertyPanel(propertyPanel)
-, mTooltip(&mPropertyPanel)
 {
     mViewport.setSize(mPropertyPanel.getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
     mViewport.setScrollBarsShown(true, false, true, false);
@@ -21,6 +20,7 @@ Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPa
 
 Track::PropertyPanel::PropertyPanel(Director& director)
 : mDirector(director)
+, mTooltip(this)
 , mPropertyName("Name", "The name of the track", [&](juce::String text)
                 {
                     mDirector.startAction();
@@ -128,6 +128,11 @@ void Track::PropertyPanel::parentHierarchyChanged()
     {
         window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", mAccessor.getAttr<AttrType::name>().toUpperCase()));
     }
+}
+
+juce::TooltipWindow& Track::PropertyPanel::getTooltipWindow()
+{
+    return mTooltip;
 }
 
 ANALYSE_FILE_END

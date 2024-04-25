@@ -22,6 +22,8 @@ namespace Track
         void resized() override;
         void parentHierarchyChanged() override;
 
+        juce::TooltipWindow& getTooltipWindow();
+
         class WindowContainer
         : public FloatingWindowContainer
         {
@@ -31,7 +33,6 @@ namespace Track
         private:
             PropertyPanel& mPropertyPanel;
             juce::Viewport mViewport;
-            juce::TooltipWindow mTooltip;
         };
 
     private:
@@ -39,6 +40,7 @@ namespace Track
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
         ComponentListener mComponentListener;
+        juce::TooltipWindow mTooltip;
 
         PropertyText mPropertyName;
 
