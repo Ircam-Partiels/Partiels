@@ -54,6 +54,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::sendViaOsc:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::focused:

@@ -39,6 +39,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::sendViaOsc:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
@@ -167,6 +168,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::sendViaOsc:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
