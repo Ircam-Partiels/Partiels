@@ -61,6 +61,7 @@ Application::CommandTarget::CommandTarget()
 
     Instance::get().getDocumentFileBased().addChangeListener(this);
     Instance::get().getUndoManager().addChangeListener(this);
+    Instance::get().getOscSender().addChangeListener(this);
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
@@ -70,6 +71,7 @@ Application::CommandTarget::~CommandTarget()
 {
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().removeListener(mTransportListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
+    Instance::get().getOscSender().removeChangeListener(this);
     Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
 }
@@ -108,6 +110,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::transportRewindPlayHead
         , CommandIDs::transportMovePlayHeadBackward
         , CommandIDs::transportMovePlayHeadForward
+        , CommandIDs::transportOscConnected
         
         , CommandIDs::viewTimeZoomIn
         , CommandIDs::viewTimeZoomOut
@@ -321,6 +324,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setActive(hasReader && Transport::Tools::canMovePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+        }
+        break;
+        case CommandIDs::transportOscConnected:
+        {
+            result.setInfo(juce::translate("OSC connected"), juce::translate("State of the OSC connection"), "Transport", 0);
+            result.setTicked(Instance::get().getOscSender().isConnected());
+            result.setActive(true);
         }
         break;
 
@@ -878,6 +888,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             Transport::Tools::movePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
             return true;
         }
+        case CommandIDs::transportOscConnected:
+        {
+            return true;
+        }
 
         case CommandIDs::viewTimeZoomIn:
         {
@@ -1052,6 +1066,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if(source == &Instance::get().getUndoManager())
+    {
+        Instance::get().getApplicationCommandManager().commandStatusChanged();
+        return;
+    }
+    if(source == &Instance::get().getOscSender())
     {
         Instance::get().getApplicationCommandManager().commandStatusChanged();
         return;

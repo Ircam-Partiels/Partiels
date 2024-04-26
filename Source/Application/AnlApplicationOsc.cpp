@@ -80,6 +80,7 @@ bool Application::Osc::Sender::connect()
         mMessages.add(juce::translate("Connected to host NAME at port PORT.").replace("NAME", name).replace("PORT", juce::String(port)));
     }
     sendChangeMessage();
+    Instance::get().getApplicationCommandManager().invokeDirectly(ApplicationCommandIDs::transportOscConnected, true);
     return mIsConnected;
 }
 
@@ -97,6 +98,7 @@ bool Application::Osc::Sender::disconnect()
             mMessages.add(juce::translate("Disconnected from host."));
         }
         sendChangeMessage();
+        Instance::get().getApplicationCommandManager().invokeDirectly(ApplicationCommandIDs::transportOscConnected, true);
     }
     return !mIsConnected;
 }

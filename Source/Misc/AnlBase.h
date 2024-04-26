@@ -114,6 +114,7 @@ enum ApplicationCommandIDs : int
     , transportRewindPlayHead
     , transportMovePlayHeadBackward
     , transportMovePlayHeadForward
+    , transportOscConnected
     
     , viewTimeZoomIn
     , viewTimeZoomOut
