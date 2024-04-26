@@ -45,7 +45,8 @@
 * [9. Track properties](#9-track-properties)
   * [9.1. Processor](#91-processor)
   * [9.2. Graphical](#92-graphical)
-  * [9.3. Plugin](#93-plugin)
+  * [9.3. OSC](#93-osc)
+  * [9.4. Plugin](#94-plugin)
 * [10. Group properties](#10-group-properties)
 * [11. Audio files layout](#11-audio-files-layout)
   * [11.1. Audio files information](#111-audio-files-information)
@@ -517,7 +518,7 @@ Connection to the host is configured via the OSC property panel, accessible via 
 <img src="Images/section-navigation-zoom-and-transport.2-v2.0.4.png" alt="OSC Settings" width="280"/>
 </p>
 
-To enable a track's results to be sent via OSC, the corresponding option must be enabled in the [track's properties](#9-track-properties).  
+To enable a track's results to be sent via OSC, the corresponding option must be enabled in the [track's properties](#93-osc).  
 
 To ensure compatibility with as many applications as possible, results are sent in the form of messages. Messages are sent each time the playback head is advanced. For each channel of each track with OSC enabled, the message includes:
 1. Track identifier (string)
@@ -539,10 +540,10 @@ To ensure compatibility with as many applications as possible, results are sent 
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**), the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
-<img src="Images/section-track-properties.1-v1.3.2.png" width="242"/>
+<img src="Images/section-track-properties.1-v2.0.4.png" width="242"/>
 </p>
 
-The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
+The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, osc, plugin.  
 
 ### 9.1. Processor
 
@@ -684,7 +685,11 @@ The value range of the points and the columns results can be adapted to optimize
 
 - Channel Layout: The channel layout button allows to show or hide channels of the analysis results. This channel layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section). This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
 
-### 9.3. Plugin
+### 9.3. OSC
+
+The OSC properties of a track allow you to retrieve the track's unique identifier used when sending OSC messages, by clicking on the corresponding button to copy it to the system clipboard. And enable or disable OSC support for the track.
+
+### 9.4. Plugin
 
 The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
 
@@ -695,7 +700,7 @@ The graphical section displays information about the plugin such as the name, th
 The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel using the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
-<img src="Images/section-group-properties.1-v2.0.1.png" width="242"/>
+<img src="Images/section-group-properties.1-v2.0.4.png" width="242"/>
 </p>
 
 The first entries correpond to exclusive properties of the group :
