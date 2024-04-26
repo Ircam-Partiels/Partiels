@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 Group::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPanel)
 : FloatingWindowContainer(juce::translate("Properties"), mViewport)
 , mPropertyPanel(propertyPanel)
-, mTooltip(&mPropertyPanel)
 {
     mViewport.setSize(mPropertyPanel.getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
     mViewport.setScrollBarsShown(true, false, true, false);

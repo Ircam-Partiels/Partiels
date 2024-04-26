@@ -29,7 +29,6 @@ namespace Group
         private:
             PropertyPanel& mPropertyPanel;
             juce::Viewport mViewport;
-            juce::TooltipWindow mTooltip;
         };
 
     private:
