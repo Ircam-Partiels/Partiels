@@ -11,6 +11,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
 , mNameButton(juce::translate("Untitled"), juce::translate("Document not saved"))
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>(), commandManager)
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
+, mOscButton(juce::translate("OSC"), juce::translate("Show OSC Settings"))
 , mBubbleTooltipButton(juce::ImageCache::getFromMemory(AnlIconsData::bubble_png, AnlIconsData::bubble_pngSize))
 , mEditModeButton(juce::ImageCache::getFromMemory(AnlIconsData::edit_png, AnlIconsData::edit_pngSize))
 {
@@ -18,6 +19,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     addAndMakeVisible(mNameButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
+    addAndMakeVisible(mOscButton);
     addAndMakeVisible(mBubbleTooltipButton);
     addAndMakeVisible(mEditModeButton);
 
@@ -39,6 +41,8 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
             mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::documentSave, true);
         }
     };
+
+    mOscButton.setCommandToTrigger(&mApplicationCommandManager, ApplicationCommandIDs::helpOpenOscSettings, true);
 
     mBubbleTooltipButton.setClickingTogglesState(true);
     mBubbleTooltipButton.onClick = [this]()
@@ -145,9 +149,20 @@ void Document::Header::resized()
     {
         mTransportSelectionInfo.setBounds(rightPart.removeFromRight(164));
     }
+    mOscButton.setVisible(rightPart.getWidth() > 44);
+    mOscButton.setBounds(rightPart.removeFromLeft(44).removeFromBottom(22).withSizeKeepingCentre(40, 16));
 
     mTransportDisplay.setVisible(bounds.getWidth() >= transportDisplayWidth);
-    mTransportDisplay.setBounds(bounds.withSizeKeepingCentre(transportDisplayWidth, 40));
+    if(mTransportDisplay.isVisible())
+    {
+        bounds.removeFromLeft((bounds.getWidth() - transportDisplayWidth) / 2);
+        mTransportDisplay.setBounds(bounds.removeFromLeft(transportDisplayWidth).withSizeKeepingCentre(transportDisplayWidth, 40));
+    }
+}
+
+void Document::Header::colourChanged()
+{
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::transportOscConnected});
 }
 
 void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
@@ -160,6 +175,9 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
         case ApplicationCommandIDs::frameToggleDrawing:
             mEditModeButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
             break;
+        case ApplicationCommandIDs::transportOscConnected:
+            mOscButton.setColour(juce::TextButton::ColourIds::buttonColourId, info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked ? juce::Colours::green : findColour(juce::TextButton::ColourIds::buttonColourId));
+            break;
         default:
             break;
     }
@@ -169,7 +187,7 @@ void Document::Header::applicationCommandListChanged()
 {
     mBubbleTooltipButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::viewInfoBubble));
     mEditModeButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::frameToggleDrawing));
-    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble, ApplicationCommandIDs::frameToggleDrawing});
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble, ApplicationCommandIDs::frameToggleDrawing, ApplicationCommandIDs::transportOscConnected});
 }
 
 ANALYSE_FILE_END

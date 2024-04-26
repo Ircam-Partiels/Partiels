@@ -18,6 +18,7 @@ namespace Document
 
         // juce::Component
         void resized() override;
+        void colourChanged() override;
 
     private:
         // juce::ApplicationCommandManagerListener
@@ -33,6 +34,7 @@ namespace Document
         juce::TextButton mNameButton;
         TransportDisplay mTransportDisplay;
         TransportSelectionInfo mTransportSelectionInfo;
+        juce::TextButton mOscButton;
         Icon mBubbleTooltipButton;
         Icon mEditModeButton;
     };
