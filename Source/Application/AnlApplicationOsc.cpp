@@ -231,6 +231,9 @@ Application::Osc::Dispatcher::Dispatcher(Sender& sender)
         {
             case Transport::AttrType::playback:
             {
+                juce::OSCMessage message("/playback");
+                message.addInt32(accessor.getAttr<Transport::AttrType::playback>() ? 1 : 0);
+                mSender.send(message);
                 if(accessor.getAttr<Transport::AttrType::playback>())
                 {
                     sendBundle(accessor.getAttr<Transport::AttrType::startPlayhead>());
