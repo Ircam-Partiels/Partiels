@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlGroupPropertyGraphicalsSection.h"
+#include "AnlGroupPropertyOscSection.h"
 #include "AnlGroupPropertyProcessorsSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -50,6 +51,10 @@ namespace Group
         PropertyGraphicalsSection mPropertyGraphicalsSection{mDirector};
         ConcertinaTable mGraphicalsSection{juce::translate("GRAPHICALS"), true,
                                            juce::translate("The graphicals' parameters of the group")};
+
+        PropertyOscSection mPropertyOscSection{mDirector};
+        ConcertinaTable mOscSection{juce::translate("OSC"), true,
+                                    juce::translate("The OSC parameters of the group")};
 
         LayoutNotifier mLayoutNotifier;
     };

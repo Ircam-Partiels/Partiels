@@ -103,18 +103,22 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     addAndMakeVisible(mPropertyReferenceTrack);
     addAndMakeVisible(mProcessorsSection);
     addAndMakeVisible(mGraphicalsSection);
+    addAndMakeVisible(mOscSection);
 
     mComponentListener.onComponentResized = [&]([[maybe_unused]] juce::Component& component)
     {
         mProcessorsSection.setEnabled(mPropertyProcessorsSection.getHeight() > 0);
         mGraphicalsSection.setEnabled(mPropertyGraphicalsSection.getHeight() > 0);
+        mGraphicalsSection.setEnabled(mPropertyOscSection.getHeight() > 0);
         resized();
     };
 
     mComponentListener.attachTo(mProcessorsSection);
     mComponentListener.attachTo(mGraphicalsSection);
+    mComponentListener.attachTo(mOscSection);
     mProcessorsSection.setComponents({mPropertyProcessorsSection});
     mGraphicalsSection.setComponents({mPropertyGraphicalsSection});
+    mOscSection.setComponents({mPropertyOscSection});
 
     setSize(300, 400);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -124,6 +128,7 @@ Group::PropertyPanel::~PropertyPanel()
 {
     mComponentListener.detachFrom(mGraphicalsSection);
     mComponentListener.detachFrom(mProcessorsSection);
+    mComponentListener.detachFrom(mOscSection);
     mAccessor.removeListener(mListener);
 }
 
@@ -142,6 +147,7 @@ void Group::PropertyPanel::resized()
     setBounds(mPropertyReferenceTrack);
     setBounds(mProcessorsSection);
     setBounds(mGraphicalsSection);
+    setBounds(mOscSection);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
 
