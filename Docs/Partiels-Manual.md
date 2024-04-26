@@ -5,7 +5,7 @@
 <i>Manual by Pierre Guillot</i><br>
 <a href="www.ircam.fr">www.ircam.fr</a><br><br>
 
-<img src="Images/overview-v2.0.0.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
+<img src="Images/overview-v2.0.4.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
 </p>
 
 <div style="page-break-after: always;"></div>
@@ -41,6 +41,7 @@
   * [8.1. View](#81-view)
   * [8.2. Zoom](#82-navigation)
   * [8.3. Transport](#83-transport)
+  * [8.4. OSC](#83-osc)
 * [9. Track properties](#9-track-properties)
   * [9.1. Processor](#91-processor)
   * [9.2. Graphical](#92-graphical)
@@ -108,7 +109,7 @@ If you don't want Partiels to check for a new release on startup, you can toggle
 
 Partiels has a main graphical interface to view, navigate and edit the different analyses of a document. The actions and interaction modes are presented in detail in the different sections of this manual.  
 
-<p align="center"><img src="Images/section-overview.1-v2.0.1.png" alt="Example" width="1250"/></p>
+<p align="center"><img src="Images/section-overview.1-v2.0.4.png" alt="Example" width="1250"/></p>
 
 To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
 
@@ -505,6 +506,31 @@ The actions to move the start position of the playback head and control the play
 
 
 > Refer to these sections to configure the [audio files layout](#10-audio-files-layout) and the [audio settings](#11-audio-settings).
+
+### 8.4. OSC
+
+Partiels offers the option of sending analysis track values via OSC (Open Sound Control) during playback. Information can be retrieved from other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of results. 
+
+Connection to the host is configured via the OSC property panel, accessible via the menu `Partiels → OSC Settings...` (Mac) or `Help → OSC Settings...` on (Linux/Windows), or by clicking on the OSC button ([Overview](#2-overview) **O**) in the center of the main interface header (when OSC is connected, button turns green.).
+
+<p align="center">
+<img src="Images/section-navigation-zoom-and-transport.2-v2.0.4.png" alt="OSC Settings" width="280"/>
+</p>
+
+To enable a track's results to be sent via OSC, the corresponding option must be enabled in the [track's properties](#9-track-properties).  
+
+To ensure compatibility with as many applications as possible, results are sent in the form of messages. Messages are sent each time the playback head is advanced. For each channel of each track with OSC enabled, the message includes:
+1. Track identifier (string)
+2. Channel index
+3. Result index corresponding to playback time (>= playback time)
+4. Playback time
+5. Result time 
+6. Result duration
+7. Result values:
+    - Label string for a marker
+    - Value number for a value (or "-" label for a break)
+    - Size and list of numbers for a vector
+8. List of numbers for the extra values
 
 <div style="page-break-after: always;"></div>
 
