@@ -520,18 +520,20 @@ Connection to the host is configured via the OSC property panel, accessible via 
 
 To enable a track's results to be sent via OSC, the corresponding option must be enabled in the [track's properties](#93-osc).  
 
-To ensure compatibility with as many applications as possible, results are sent in the form of messages. Messages are sent each time the playback head is advanced. For each channel of each track with OSC enabled, the message includes:
-1. Track identifier (string)
-2. Channel index
-3. Result index corresponding to playback time (>= playback time)
-4. Playback time
-5. Result time 
-6. Result duration
+To ensure compatibility with as many applications as possible, results are sent in the form of messages (no bundles). 
+
+Messages are sent each time playback is advanced. For each channel of each track whose OSC is activated, a message corresponding to the result whose time is greater than or equal to the playback time is sent with the address corresponding to the track identifier followed by :
+
+1. Channel index (int)
+3. Result index (int)
+4. Playback time (float)
+5. Result time (float)
+6. Result duration (float)
 7. Result values:
-    - Label string for a marker
-    - Value number for a value (or "-" label for a break)
-    - Size and list of numbers for a vector
-8. List of numbers for the extra values
+    - Label string for a marker (string)
+    - Value number for a value (float) or "-" label for a break (string)
+    - Size (int) and list of numbers (float) for a vector
+8. List of numbers (float) for the extra values
 
 <div style="page-break-after: always;"></div>
 
@@ -708,7 +710,7 @@ The first entries correpond to exclusive properties of the group :
 - Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent.
 - Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay.  By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
 
-The following sections Processor and Graphical contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
+The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
 > The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
 
