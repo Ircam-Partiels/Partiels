@@ -196,13 +196,15 @@ If you want to modify the analysis and graphical properties of a track, please r
 
 A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), LAB (*.lab*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + Shift + I` (Linux/Windows). 
 
-If you're importing a file in CSV format, the application will automatically try to determine the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). If the application fails to automatically determine the separator, the `Load File...` window appears, allowing you to select the separator character. 
+If you're importing a file in CSV format, the application will automatically try to determine the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). The Reaper-specific CSV format is also automatically detected and supported. If the application fails to automatically determine the separator, the `Load File...` window appears, allowing you to select the separator character. 
 
 <p align="center">
 <img src="Images/selection-import-new-result tracks.1-v1.0.7.png" width="232"/>
 </p>
 
 When importing markers in CSV format, it is recommended to escape the tags (with single or double quotes for example) to ensure that the numeric values of the labels are considered as text.
+
+**Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
 
 If you are importing a file in SDIF format, , the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
 
@@ -330,10 +332,10 @@ The `Time Preset` drop-down menu allows you to select one of three presets: *Glo
 You can also define the time range with the text entries `Time Start`, `Time End`, and `Time Length`, the preset then automatically switches to *Manual* mode. 
 
 <p align="center">
-<img src="Images/section-export-analyses.4-v1.2.1.png" width="202"/>
+<img src="Images/section-export-analyses.4-v2.0.4.png" width="202"/>
 </p>
 
-The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV*, *LAB* or *CUE* or a binary format *SDIF*. For each format, you can set specific options (**E4**).
+The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV*, *LAB*, *CUE*, *REAPER*, or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
 ### 7.2. Images options
 
@@ -353,14 +355,18 @@ The `Image Width` and `Image Height` number fields can be used to manually defin
 
 The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
 
-Export to CSV offers two options:
+Export to CSV format offers two options:
 - `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
 - `Column Separator` allows to define the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). This can facilitate the parsing of files in other applications. 
 
-Export to JSON offers one option:
+Export to Lab format corresponds to the CSV format, with the *Tab* character as separator and the end time used instead of the duration.
+
+Export in Reaper format corresponds to the CSV format supported by the application, with an option for markers or regions.
+
+Export to JSON format offers one option:
 - `Include Extra Description` enables writing a JSON object after the results containing all the properties of the audio processor for analysis and graphical rendering of the track. This allows to automatically optimize the display of the analysis but also to restart the analysis if needed.
 
-Export to SDIF offers three options:
+Export to SDIF format offers three options:
 - `Frame Signature` defines the frame signature to encode the results in the SDIF file. 
 - `Matrix Signature` defines the matrix signature to encode the results in the SDIF file. 
 - `Column Name` defines the name of the column to encode the results in the SDIF file.
