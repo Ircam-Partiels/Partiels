@@ -12,4 +12,4 @@
 	url = ../misc.git
 [submodule "Dependencies/ircam-vamp-extension"]
 	path = Dependencies/ircam-vamp-extension
-	url = ../ircam-vamp-extension.git
+	url = https://github.com/Ircam-Partiels/ircam-vamp-extension.git
