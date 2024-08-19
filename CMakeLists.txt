@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
 set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "" FORCE)
@@ -17,7 +17,10 @@ set(IFP_CLI ON CACHE STRING "" FORCE)
 set(IFP_TEST OFF CACHE STRING "" FORCE)
 set(IVE_PLUGIN_EXAMPLE ON CACHE STRING "" FORCE)
 
-set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
+set(VAMP_SDK_PATH "" CACHE PATH "The path to the Vamp plugin SDK")
+set(VAMP_SDK_TAG "d7ceb7d1d490674c93d334e5378108c4328e9e05" CACHE PATH "The tag of the Vamp plugin SDK")
+set(VAMP_SDK_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/vamp-plugin-sdk-src.patch")
+
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
 project(Partiels VERSION 2.0.4 LANGUAGES C CXX)
@@ -47,6 +50,26 @@ file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE
 file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
+
+if(NOT EXISTS ${VAMP_SDK_PATH})
+  include(FetchContent)
+  find_package(Git REQUIRED)
+  FetchContent_Declare(
+    vamp-plugin-sdk
+    GIT_REPOSITORY      https://github.com/vamp-plugins/vamp-plugin-sdk.git
+    GIT_TAG             ${VAMP_SDK_TAG}
+    PATCH_COMMAND       ${GIT_EXECUTABLE} reset --hard && ${GIT_EXECUTABLE} clean -fxd && ${GIT_EXECUTABLE} apply ${VAMP_SDK_PATCH}
+    CONFIGURE_COMMAND   ""
+    BUILD_COMMAND       ""
+    INSTALL_COMMAND     ""
+    UPDATE_DISCONNECTED TRUE
+    EXCLUDE_FROM_ALL
+  )
+  FetchContent_MakeAvailable(vamp-plugin-sdk)
+  set(VAMP_SDK_PATH ${vamp-plugin-sdk_SOURCE_DIR} CACHE PATH "The path to the Vamp plugin SDK" FORCE)
+
+  message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
+endif()
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/ircam-vamp-extension)
@@ -272,7 +295,7 @@ enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
 
-set(VAMP_EXAMPLES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vamp-plugin-sdk/examples)
+set(VAMP_EXAMPLES_DIRECTORY ${VAMP_SDK_PATH}/examples)
 file(GLOB VAMP_EXAMPLE_PLUGINS_SOURCES ${VAMP_EXAMPLES_DIRECTORY}/*h  ${VAMP_EXAMPLES_DIRECTORY}/*cpp ${VAMP_EXAMPLES_DIRECTORY}/*c)
 source_group("Vamp/Examples" FILES ${VAMP_EXAMPLE_PLUGINS_SOURCES})
 add_library(vamp-example-plugins SHARED ${VAMP_EXAMPLE_PLUGINS_SOURCES})
