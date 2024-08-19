@@ -1,9 +1,6 @@
 [submodule "JUCE"]
 	path = JUCE
 	url = ../JUCE.git
-[submodule "Dependencies/sdif"]
-	path = Dependencies/sdif
-	url = ../sdif.git
 [submodule "Dependencies/Misc"]
 	path = Dependencies/Misc
 	url = ../misc.git
