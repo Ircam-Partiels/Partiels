@@ -254,6 +254,7 @@ if(WIN32)
     endif()
 endif()
 
+### Manual ###
 set(PARTIELS_MANUAL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Manual)
 file(MAKE_DIRECTORY ${PARTIELS_MANUAL_DIR})
 
@@ -268,6 +269,7 @@ else()
   message(STATUS "Manual target cannot be generated because mdpdf is not found")
 endif()
 
+### Format ###
 find_program(CLANG_FORMAT_EXE "clang-format" HINTS "C:/Program Files/LLVM/bin")
 if(CLANG_FORMAT_EXE)
     file(GLOB_RECURSE ClangFormatSources
@@ -288,6 +290,7 @@ else()
     message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
 endif()
 
+### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Linux.tar.gz](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz)\n")
@@ -295,6 +298,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-MacOS.p
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Windows.exe](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Manual.zip](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.zip)\n") 
 
+### Testing ###
 enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
