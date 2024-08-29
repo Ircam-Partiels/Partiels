@@ -270,7 +270,7 @@ Application::Osc::Dispatcher::~Dispatcher()
     transportAcsr.removeListener(mTransportListener);
 }
 
-void Application::Osc::Dispatcher::changeListenerCallback(juce::ChangeBroadcaster* source)
+void Application::Osc::Dispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(mSender));
     auto& transportAcsr = Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>();
