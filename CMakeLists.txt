@@ -193,12 +193,12 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_recommended_warning_flags
     )
 
-if(DEFINED PARTIELS_PROVISIONING_PROFILE_SPECIFIER)
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")
+if(DEFINED PARTIELS_PROVISIONING_PROFILE_SPECIFIER AND DEFINED PARTIELS_DEVELOPMENT_TEAM)
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${PARTIELS_DEVELOPMENT_TEAM}")
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
-elseif(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")
+elseif(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER} AND DEFINED ENV{PARTIELS_DEVELOPMENT_TEAM})
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "$ENV{PARTIELS_DEVELOPMENT_TEAM}")
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
 endif()
@@ -215,10 +215,7 @@ endif()
 add_dependencies(Partiels partiels-vamp-plugins)
 
 if(APPLE)
-    set_target_properties(Partiels PROPERTIES 
-        XCODE_EMBED_PLUGINS partiels-vamp-plugins
-        XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON
-        )
+    set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
 else()
@@ -233,25 +230,70 @@ else()
     )
 endif()
 
+### Packaging ###
 if(WIN32)
-    find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6")
-    if(ISCC_EXE)
-        add_custom_target(PartielsPackage ALL ${ISCC_EXE} /DMyDir="${CMAKE_CURRENT_BINARY_DIR}" /DMyConfig="$<IF:$<CONFIG:Debug>,Debug,Release>" /O${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/windows-package.iss)
-        add_dependencies(PartielsPackage Partiels)
-    else()
-        message(WARNING "PartielsPackage cannot be generated because ISCC.exe is not found")
+    set(PARTIELS_PACKAGE_OUTDIR "${CMAKE_CURRENT_BINARY_DIR}")
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_OUTDIR})
+    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_OUTDIR PARTIELS_PACKAGE_DIR_NAT)
+    set(PARTIELS_PACKAGE_OUTEXE "${PARTIELS_PACKAGE_OUTDIR}/Partiels-Windows.exe")
+    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_OUTEXE PARTIELS_PACKAGE_OUTEXE_NAT)
+    set(PARTIELS_PACKAGE_TEMPDIR "${CMAKE_CURRENT_BINARY_DIR}/Package")
+    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_TEMPDIR PARTIELS_PACKAGE_TEMPDIR_NAT)
+    set(PARTIELS_ISS_FILE  "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/windows-package.iss")
+    cmake_path(NATIVE_PATH PARTIELS_ISS_FILE PARTIELS_ISS_FILE_NAT)  
+    set(PARTIELS_PACKAGE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/PartielsPackage.bat")
+
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR})
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/PlugIns)
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Templates)
+    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/Install.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+
+    find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6" REQUIRED)
+    cmake_path(NATIVE_PATH ISCC_EXE ISCC_EXE_NAT)
+    
+    add_custom_command(TARGET Partiels POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:Partiels>" "${PARTIELS_PACKAGE_TEMPDIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "${PARTIELS_PACKAGE_TEMPDIR}/Templates"
+    )
+    file(WRITE ${PARTIELS_PACKAGE_SCRIPT} "\"${ISCC_EXE_NAT}\" /DMyAppVerName=\"${PARTIELS_BUILD_TAG}\" /DMyBinaryDir=\"${PARTIELS_PACKAGE_TEMPDIR_NAT}\" /O\"${PARTIELS_PACKAGE_DIR_NAT}\" \"${PARTIELS_ISS_FILE_NAT}\"\n")
+
+    if(PARTIELS_NOTARIZE)
+        find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64" REQUIRED)
+        cmake_path(NATIVE_PATH SIGNTOOL_EXE SIGNTOOL_EXE_NAT)
+        cmake_path(NATIVE_PATH PARTIELS_CODESIGN_WINDOWS_KEYFILE PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT)
+        file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "\"${SIGNTOOL_EXE_NAT}\" sign /f \"${PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT}\" /p \"${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD}\" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com \"${PARTIELS_PACKAGE_OUTEXE_NAT}\"\n")
+        file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "\"${SIGNTOOL_EXE_NAT}\" verify /pa \"${PARTIELS_PACKAGE_OUTEXE_NAT}\"\n")
     endif()
 
-    find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64")
-    if(SIGNTOOL_EXE AND EXISTS ${PARTIELS_CODESIGN_WINDOWS_KEYFILE})
-        add_custom_target(PartielsSign ALL
-        COMMAND ${SIGNTOOL_EXE} sign /f ${PARTIELS_CODESIGN_WINDOWS_KEYFILE} /p ${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD} /fd SHA256 /td SHA256 /tr ${TIMESTAMP_SERVER_URL} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
-        COMMAND ${SIGNTOOL_EXE} verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
-        )
-        add_dependencies(PartielsSign PartielsPackage)
-    else()
-        message(WARNING "PartielsSign cannot be signed because signtool.exe is not found or keyfile doesn't exist")
-    endif()
+    add_custom_target(PartielsPackage ALL COMMAND ${PARTIELS_PACKAGE_SCRIPT})
+    add_dependencies(PartielsPackage Partiels)
+elseif(UNIX AND NOT APPLE)
+    set(PARTIELS_PACKAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/Partiels)
+    set(PARTIELS_PACKAGE_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/PartielsPackage.sh)
+    file(WRITE ${PARTIELS_PACKAGE_SCRIPT} "#!/bin/sh\n\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "PARTIELS_BINARY_PATH=$1\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "rm -rf ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "mkdir -p ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp $PARTIELS_BINARY_PATH/Partiels ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/PlugIns ${PARTIELS_PACKAGE_DIR}/PlugIns\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Templates ${PARTIELS_PACKAGE_DIR}/Templates\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/linux-install.sh ${PARTIELS_PACKAGE_DIR}/install.sh\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/linux-uninstall.sh ${PARTIELS_PACKAGE_DIR}/uninstall.sh\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cd ${CMAKE_CURRENT_BINARY_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "tar zcvf Partiels-Linux.tar.gz Partiels\n")
+    file(CHMOD ${PARTIELS_PACKAGE_SCRIPT} PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+    add_custom_target(PartielsPackage ALL COMMAND ${PARTIELS_PACKAGE_SCRIPT} $<TARGET_FILE_DIR:Partiels>)
+    add_dependencies(PartielsPackage Partiels)
 endif()
 
 ### Manual ###
@@ -264,7 +306,7 @@ string(REPLACE "src=\"Images/" "src=\"${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images/" 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
 find_program(MDPDF_EXE "mdpdf")
 if(MDPDF_EXE)
-  add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${PARTIELS_MANUAL_DIR}/Partiels-Manual.pdf VERBATIM)
+  add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${PARTIELS_MANUAL_DIR}/Partiels-Manual.pdf --debug VERBATIM)
 else()
   message(STATUS "Manual target cannot be generated because mdpdf is not found")
 endif()
@@ -294,9 +336,9 @@ endif()
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Linux.tar.gz](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-MacOS.pkg](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.pkg)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-MacOS.dmg](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.dmg)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Windows.exe](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Manual.zip](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.zip)\n") 
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Manual.pdf](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf)\n") 
 
 ### Testing ###
 enable_testing()
