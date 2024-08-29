@@ -1,0 +1,219 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  # Checks for the '[debug]' string in the commit message to compile as debug instead of release.
+  build_type: ${{ contains(github.event.head_commit.message, '[debug]') && 'Debug' || 'Release' }}
+  # Checks whether the event corresponds to a tag to activate the automatic creation of a release.
+  is_tagged: ${{ startsWith(github.ref, 'refs/tags/') }}
+  # The name of the version
+  tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || ''}}
+
+jobs:
+  # Checks source code formatting with clang before compiling.
+  Format:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'Source'
+          - 'VampPlugins'
+          - 'Dependencies/Misc/Source'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check
+      uses: jidicula/clang-format-action@v4.13.0
+      with:
+        clang-format-version: '18'
+        check-path: ${{ matrix.path }}
+  # Compiles, tests and packages the plugin for Ubuntu.
+  Ubuntu:
+    runs-on: ubuntu-latest
+    needs: Format
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: seanmiddleditch/gha-setup-ninja@master
+    - name: Prepare
+      run: sudo apt update && sudo apt install libasound2-dev libjack-jackd2-dev ladspa-sdk libcurl4-openssl-dev  libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev mesa-common-dev
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build
+    - name: Test
+      run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+    - name: Artifact
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: Partiels-Linux
+        path: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/Partiels-Release.md
+        files: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
+  # Compiles, tests and packages the plugin for Windows.
+  Windows:
+    runs-on: windows-latest
+    needs: Format
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Prepare
+      run: powershell -Command "& {[System.IO.File]::WriteAllBytes('${{ github.workspace }}\cert.p12', [System.Convert]::FromBase64String('${{ secrets.SECTIGO_CERT_P12}}'))}"
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_NOTARIZE=ON -DPARTIELS_CODESIGN_WINDOWS_KEYFILE=${{ github.workspace }}\cert.p12 -DPARTIELS_CODESIGN_WINDOWS_KEYPASSWORD=${{ secrets.DEV_ID_PASSWORD }} -DPARTIELS_BUILD_TAG="${{ env.tag_name }}"
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
+    - name: Test
+      run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+    - name: Artifact
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: Partiels-Windows
+        path: ${{ github.workspace }}/build/Partiels-Windows.exe
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/Partiels-Release.md
+        files: ${{ github.workspace }}/build/Partiels-Windows.exe
+  # Compiles, tests and packages the plugin for MacOS.
+  MacOS:
+    runs-on: macos-latest
+    needs: Format
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm install -g appdmg
+    - name: Prepare
+      run: |
+        security create-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security list-keychains -s buildagent && security default-keychain -s buildagent
+        echo ${{ secrets.DEV_ID_APP_CERT }} | base64 --decode > ./cert.p12
+        security import ./cert.p12 -P ${{ secrets.DEV_ID_PASSWORD }} -A -t cert -f pkcs12 -k buildagent -T /usr/bin/codesign >/dev/null
+        rm ./cert.p12
+        echo ${{ secrets.DEV_ID_INST_CERT }} | base64 --decode > ./cert.p12
+        security import ./cert.p12 -P ${{ secrets.DEV_ID_PASSWORD }} -A -t cert -f pkcs12 -k buildagent -T /usr/bin/codesign >/dev/null
+        rm ./cert.p12
+        security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k ${{ secrets.DEV_ID_PASSWORD }} buildagent >/dev/null
+        xcrun notarytool store-credentials "notary-installer" --apple-id ${{ secrets.DEV_USER_APPLE_ID }} --team-id ${{ secrets.DEV_TEAM_APPLE_ID }} --password ${{ secrets.DEV_SPEC_APP_PASSWORD }} >/dev/null
+        echo ${{ secrets.PARTIELS_PROVISIONPROFILE }} | base64 --decode > ./Application_Partiels.provisionprofile
+        ppuuid=`grep UUID -A1 -a ./Application_Partiels.provisionprofile | grep -io "[-A-F0-9]\{36\}"`
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+        cp Application_Partiels.provisionprofile ~/Library/MobileDevice/Provisioning\ Profiles/$ppuuid.provisionprofile
+        rm ./Application_Partiels.provisionprofile
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="Application Partiels" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+    - name: Build
+      run: |
+        security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security set-keychain-settings -lut 7200 buildagent
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
+    - name: Test
+      run: |
+        rm ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
+        cp -r ${{ github.workspace }}/build/Partiels.xcarchive/Products/Applications/Partiels.app ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}
+        ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+    - name: Export
+      run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
+    - name: Notorize
+      run: |
+        ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.app" "${{ github.workspace }}/build/Partiels.zip"
+        xcrun notarytool submit "${{ github.workspace }}/build/Partiels.zip" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
+        cat "${{ github.workspace }}/build/notarize.log"
+        notaryid=$(awk '/^  id:/{sub(/^  id:/ , ""); print; exit}' "${{ github.workspace }}/build/notarize.log")
+        xcrun notarytool log $notaryid --keychain-profile "notary-installer"
+        xcrun stapler staple "${{ github.workspace }}/build/Partiels.app"
+        xcrun stapler validate "${{ github.workspace }}/build/Partiels.app"
+    - name: Build Disk Image
+      run: |
+        appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+        xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+        xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+    - name: Notorize Disk Image
+      run: |
+        xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
+        cat "${{ github.workspace }}/build/notarize.log"
+        notaryid=$(awk '/^  id:/{sub(/^  id:/ , ""); print; exit}' "${{ github.workspace }}/build/notarize.log")
+        xcrun notarytool log $notaryid --keychain-profile "notary-installer"
+        xcrun stapler staple "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+        xcrun stapler validate "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+    - name: Artifact
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: Partiels-MacOS
+        path: ${{ github.workspace }}/build/Partiels-MacOS.dmg
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/Partiels-Release.md
+        files: ${{ github.workspace }}/build/Partiels-MacOS.dmg
+  # Generates the documentation.
+  Doc:
+    runs-on: ubuntu-latest
+    needs: Format
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Create LFS file list
+      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+    - name: Restore LFS cache
+      uses: actions/cache@v4
+      id: lfs-cache
+      with:
+        path: .git/lfs
+        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+    - name: Git LFS Pull
+      run: git lfs pull
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm install -g git+https://github.com/elliotblackburn/mdpdf.git#3.0.4
+    - name: Prepare
+      run: sudo apt update && sudo apt install libasound2-dev libjack-jackd2-dev ladspa-sdk libcurl4-openssl-dev  libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev mesa-common-dev
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --target PartielsManual
+    - name: Artifact
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: Partiels-Manual
+        path: ${{ github.workspace }}/build/Partiels-Manual.pdf
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/Partiels-Release.md
+        files: ${{ github.workspace }}/build/Partiels-Manual.pdf
