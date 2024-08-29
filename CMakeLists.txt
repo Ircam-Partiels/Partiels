@@ -288,6 +288,13 @@ else()
     message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
 endif()
 
+set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Linux.tar.gz](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-MacOS.pkg](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.pkg)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Windows.exe](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Manual.zip](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.zip)\n") 
+
 enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
