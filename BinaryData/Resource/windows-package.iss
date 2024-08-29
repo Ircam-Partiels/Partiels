@@ -2,8 +2,6 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Partiels"
-#define MyVersionFileHandle FileOpen(MyDir + "\version.txt")
-#define MyAppVersionName FileRead(MyVersionFileHandle)
 #define MyAppPublisher "Ircam"
 #define MyAppURL "www.ircam.fr"
 #define MyAppExeName "Partiels.exe"
@@ -13,7 +11,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{2BE88D38-04D3-44AE-B6F6-2D78BD410D58}}
 AppName={#MyAppName}
-AppVerName={#MyAppName} {#MyAppVersionName}
+AppVerName={#MyAppVerName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -21,13 +19,13 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf64}\{#MyAppName}
 DisableProgramGroupPage=yes
 DisableDirPage=no
-OutputDir={#MyDir}
-OutputBaseFilename={#MyAppName}-install
-InfoBeforeFile={#MyDir}\Install.txt
+OutputDir=.
+OutputBaseFilename={#MyAppName}-Windows
+InfoBeforeFile={#MyBinaryDir}\Install.txt
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-WizardImageFile={#MyDir}\..\BinaryData\Resource\Ircam-logo-noir-RS.bmp
+WizardImageFile={#MyBinaryDir}\Ircam-logo-noir-RS.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -36,12 +34,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
-Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
-Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\Templates\FactoryTemplate.ptldoc"; DestDir: "{app}\Templates"; Flags: ignoreversion
-Source: "{#MyDir}\..\BinaryData\Resource\About.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyDir}\..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\Templates\FactoryTemplate.ptldoc"; DestDir: "{app}\Templates"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\About.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
