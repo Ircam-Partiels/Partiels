@@ -208,9 +208,9 @@ void Transport::SelectionBar::colourChanged()
     mSelectionBar.setColour(Zoom::SelectionBar::ColourIds::thumbCoulourId, findColour(ColourIds::thumbCoulourId));
 }
 
-void Transport::SelectionBar::setDefaultMouseCursor(juce::MouseCursor const& cursor)
+void Transport::SelectionBar::setDefaultMouseCursor(juce::MouseCursor const& c)
 {
-    mSelectionBar.setDefaultMouseCursor(cursor);
+    mSelectionBar.setDefaultMouseCursor(c);
 }
 
 Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)

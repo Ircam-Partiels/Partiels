@@ -45,9 +45,9 @@ void Zoom::SelectionBar::setState(bool active)
     }
 }
 
-void Zoom::SelectionBar::setDefaultMouseCursor(juce::MouseCursor const& cursor)
+void Zoom::SelectionBar::setDefaultMouseCursor(juce::MouseCursor const& c)
 {
-    mDefaultMouseCursor = cursor;
+    mDefaultMouseCursor = c;
 }
 
 std::tuple<juce::Range<double>, Zoom::SelectionBar::Anchor> Zoom::SelectionBar::getRange() const
