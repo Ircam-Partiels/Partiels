@@ -52,23 +52,23 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
 if(NOT EXISTS ${VAMP_SDK_PATH})
-  include(FetchContent)
-  find_package(Git REQUIRED)
-  FetchContent_Declare(
-    vamp-plugin-sdk
-    GIT_REPOSITORY      https://github.com/vamp-plugins/vamp-plugin-sdk.git
-    GIT_TAG             ${VAMP_SDK_TAG}
-    PATCH_COMMAND       ${GIT_EXECUTABLE} reset --hard && ${GIT_EXECUTABLE} clean -fxd && ${GIT_EXECUTABLE} apply ${VAMP_SDK_PATCH}
-    CONFIGURE_COMMAND   ""
-    BUILD_COMMAND       ""
-    INSTALL_COMMAND     ""
-    UPDATE_DISCONNECTED TRUE
-    EXCLUDE_FROM_ALL
-  )
-  FetchContent_MakeAvailable(vamp-plugin-sdk)
-  set(VAMP_SDK_PATH ${vamp-plugin-sdk_SOURCE_DIR} CACHE PATH "The path to the Vamp plugin SDK" FORCE)
+    include(FetchContent)
+    find_package(Git REQUIRED)
+    FetchContent_Declare(
+        vamp-plugin-sdk
+        GIT_REPOSITORY      https://github.com/vamp-plugins/vamp-plugin-sdk.git
+        GIT_TAG             ${VAMP_SDK_TAG}
+        PATCH_COMMAND       ${GIT_EXECUTABLE} reset --hard && ${GIT_EXECUTABLE} clean -fxd && ${GIT_EXECUTABLE} apply ${VAMP_SDK_PATCH}
+        CONFIGURE_COMMAND   ""
+        BUILD_COMMAND       ""
+        INSTALL_COMMAND     ""
+        UPDATE_DISCONNECTED TRUE
+        EXCLUDE_FROM_ALL
+    )
+    FetchContent_MakeAvailable(vamp-plugin-sdk)
+    set(VAMP_SDK_PATH ${vamp-plugin-sdk_SOURCE_DIR} CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 
-  message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
+    message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
 endif()
 
 add_subdirectory(JUCE)
@@ -147,9 +147,7 @@ if(WIN32)
 endif()
 
 set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
-file(GLOB TranslationsDataSources
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/*.txt
-    )
+file(GLOB TranslationsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/*.txt)
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
 file(GLOB PartielsResourceDataSources
@@ -297,18 +295,16 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 ### Manual ###
-set(PARTIELS_MANUAL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Manual)
-file(MAKE_DIRECTORY ${PARTIELS_MANUAL_DIR})
-
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
 string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
-string(REPLACE "src=\"Images/" "src=\"${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
+string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
 find_program(MDPDF_EXE "mdpdf")
 if(MDPDF_EXE)
-  add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${PARTIELS_MANUAL_DIR}/Partiels-Manual.pdf --debug VERBATIM)
+    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else()
-  message(STATUS "Manual target cannot be generated because mdpdf is not found")
+    message(STATUS "Manual target cannot be generated because mdpdf is not found")
 endif()
 
 ### Format ###
