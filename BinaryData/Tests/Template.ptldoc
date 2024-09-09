@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document MiscModelVersion="65541" viewport_x="0" viewport_y="0" path="/Users/guillot/Gitlab/partiels/BinaryData/Tests/Template.ptldoc"
-          grid="2" autoresize="0" samplerate="44100.0">
+<document MiscModelVersion="131076" viewport_x="0" viewport_y="20" path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/Template.ptldoc"
+          grid="2" autoresize="0" samplerate="44100.0" channels="2">
   <reader>
     <value file="/Users/guillot/Nextcloud/Sounds/Sound1.wav" channel="0"/>
   </reader>
@@ -10,41 +10,41 @@
   </reader>
   <layout value="dc5e59b9f3654979946bb384fcf0e673"/>
   <layout value="d6e44a1123f84fa3bd19c28f558c2d5b"/>
-  <timeZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="3.672154195011338"
+  <timeZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="3.672154195011338"
             minimumLength="0.01160997732426304" visibleRange_start="0.0"
             visibleRange_end="3.672154195011338">
-    <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="0"
+    <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="65541" startPlayhead="0.4105514006844974" looping="0"
-             loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0" autoScroll="1"
-             gain="3.981071705534973" magnetize="0"/>
-  <groups MiscModelVersion="65541" identifier="dc5e59b9f3654979946bb384fcf0e673"
-          name="Group 1" height="448" colour="0" expanded="0" zoomid="">
+  <transport MiscModelVersion="131076" startPlayhead="0.4105514006844974"
+             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
+             autoScroll="1" gain="3.981071705534973" magnetize="0"/>
+  <groups MiscModelVersion="131076" identifier="dc5e59b9f3654979946bb384fcf0e673"
+          name="Group 1" height="448" colour="0" expanded="0" referenceid="">
     <layout value="487a5aeef8ab431899dd9eed5d65b4ef"/>
     <layout value="476914820dde48e7a01c1e77d230d3e6"/>
-    <zoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <groups MiscModelVersion="65541" identifier="d6e44a1123f84fa3bd19c28f558c2d5b"
-          name="Group 2" height="447" colour="0" expanded="0" zoomid="">
+  <groups MiscModelVersion="131076" identifier="d6e44a1123f84fa3bd19c28f558c2d5b"
+          name="Group 2" height="447" colour="0" expanded="0" referenceid="">
     <layout value="3b72fe5561b646b097855c0379bce3c8"/>
     <layout value="127a20c224c04622b020d1d26fc1cc18"/>
-    <zoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <tracks MiscModelVersion="65541" identifier="476914820dde48e7a01c1e77d230d3e6"
-          name="Simple Power Spectrum" height="120" zoomLink="1">
-    <file path="">
+  <tracks MiscModelVersion="131076" identifier="476914820dde48e7a01c1e77d230d3e6"
+          name="Simple Power Spectrum" input="" height="120" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="2" zoomLink="1">
+    <file path="" commit="">
       <args/>
     </file>
-    <key identifier="vamp-example-plugins:powerspectrum" feature="powerspectrum"/>
     <description name="Simple Power Spectrum" inputDomain="1" maker="Vamp SDK Example Plugins"
                  version="2" category="Visualisation" details="Return the power spectrum of a signal&#10;Freely redistributable (BSD license)">
       <defaultState blockSize="1024" stepSize="512" windowType="3"/>
@@ -52,30 +52,36 @@
               unit="V&#94;2" hasFixedBinCount="1" binCount="2049" hasKnownExtents="0"
               minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
               sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
     </description>
+    <key identifier="vamp-example-plugins:powerspectrum" feature="powerspectrum"/>
     <state blockSize="4096" stepSize="512" windowType="3"/>
-    <colours map="7" background="0" foreground="ff000000" text="ff000000"
-             shadow="ff000000"/>
+    <colours map="7" background="0" foreground="ff000000" duration="66000000"
+             text="ff000000" shadow="ff000000"/>
+    <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
+    <valueZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="235305.4375"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
-               visibleRange_end="0.03383243083953857">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+               visibleRange_end="7960.954940386115">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="2049.0"
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="2049.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="2049.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="65541" identifier="487a5aeef8ab431899dd9eed5d65b4ef"
-          name="Spectral Centroid" height="319" zoomLink="1">
-    <file path="">
+  <tracks MiscModelVersion="131076" identifier="487a5aeef8ab431899dd9eed5d65b4ef"
+          name="Spectral Centroid" input="" height="319" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="2" zoomLink="1">
+    <file path="" commit="">
       <args/>
     </file>
-    <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
     <description name="Spectral Centroid" inputDomain="1" maker="Vamp SDK Example Plugins"
                  version="2" category="Low Level Features" details="Calculate the centroid frequency of the spectrum of the input signal&#10;Freely redistributable (BSD license)">
       <defaultState blockSize="1024" stepSize="512" windowType="3"/>
@@ -84,30 +90,36 @@
               hasFixedBinCount="1" binCount="1" hasKnownExtents="0" minValue="0.0"
               maxValue="0.0" isQuantized="0" quantizeStep="0.0" sampleType="0"
               sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
     </description>
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
     <state blockSize="8192" stepSize="256" windowType="3"/>
-    <colours map="7" background="0" foreground="ffef0000" text="ffef0000"
-             shadow="ffef0000"/>
+    <colours map="7" background="0" foreground="ffef0000" duration="66ef0000"
+             text="ffef0000" shadow="ffef0000"/>
+    <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="44100.0"
-               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
-               visibleRange_end="44100.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="0"
+    <valueZoom MiscModelVersion="131076" globalRange_start="1149.7705078125"
+               globalRange_end="9253.705078125" minimumLength="1.192092895507812e-7"
+               visibleRange_start="1149.7705078125" visibleRange_end="9253.705078125">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="0"
             tickPowerBase="10.0" tickDivisionFactor="4.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="65541" identifier="3b72fe5561b646b097855c0379bce3c8"
-          name="Amplitude Follower" height="120" zoomLink="1">
-    <file path="">
+  <tracks MiscModelVersion="131076" identifier="3b72fe5561b646b097855c0379bce3c8"
+          name="Amplitude Follower" input="" height="120" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="2" zoomLink="1">
+    <file path="" commit="">
       <args/>
     </file>
-    <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
     <description name="Amplitude Follower" inputDomain="0" maker="Vamp SDK Example Plugins"
                  version="1" category="Low Level Features" details="Track the amplitude of the audio signal&#10;Code copyright 2006 Dan Stowell; method from SuperCollider.  Freely redistributable (BSD license)">
       <defaultState blockSize="0" stepSize="0" windowType="3">
@@ -128,56 +140,83 @@
               unit="V" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
               minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
               sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
     </description>
+    <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
     <state blockSize="512" stepSize="512" windowType="3">
       <parameters key="attack" value="0.009999999776482582"/>
       <parameters key="release" value="0.009999999776482582"/>
     </state>
-    <colours map="7" background="0" foreground="ff4800ff" text="ff4800ff"
-             shadow="ff4800ff"/>
+    <colours map="7" background="0" foreground="ff4800ff" duration="664800ff"
+             text="ff4800ff" shadow="ff4800ff"/>
+    <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
-               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
-               visibleRange_end="1.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+    <valueZoom MiscModelVersion="131076" globalRange_start="0.00154017738532275"
+               globalRange_end="0.6106328964233398" minimumLength="1.192092895507812e-7"
+               visibleRange_start="0.00154017738532275" visibleRange_end="0.6106328964233398">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks MiscModelVersion="65541" identifier="127a20c224c04622b020d1d26fc1cc18"
-          name="Simple Percussion Onset Detector" height="120" zoomLink="1">
-    <file path="">
+  <tracks MiscModelVersion="131076" identifier="127a20c224c04622b020d1d26fc1cc18"
+          name="Simple Percussion Onset Detector" input="" height="120"
+          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="0"
+          zoomValueMode="0" zoomLink="1">
+    <file path="" commit="">
       <args/>
     </file>
-    <key identifier="vamp-example-plugins:percussiononsets" feature="onsets"/>
-    <description name="" inputDomain="0" maker="" version="0" category="" details="">
-      <defaultState blockSize="512" stepSize="512" windowType="3"/>
-      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
-              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
-              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
-              hasDuration="0"/>
+    <description name="Simple Percussion Onset Detector" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="Time" details="Detect percussive note onsets by identifying broadband energy rises&#10;Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3">
+        <parameters key="sensitivity" value="40.0"/>
+        <parameters key="threshold" value="3.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="threshold" name="Energy rise threshold" description="Energy rise within a frequency bin necessary to count toward broadband total"
+               unit="dB" minValue="0.0" maxValue="20.0" defaultValue="3.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="sensitivity" name="Sensitivity" description="Sensitivity of peak detector applied to broadband detection function"
+               unit="%" minValue="0.0" maxValue="100.0" defaultValue="40.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="onsets" name="Onsets" description="Percussive note onset locations"
+              unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="44100.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
     </description>
+    <key identifier="vamp-example-plugins:percussiononsets" feature="onsets"/>
     <state blockSize="1024" stepSize="512" windowType="3">
       <parameters key="sensitivity" value="40.0"/>
       <parameters key="threshold" value="3.0"/>
     </state>
-    <colours map="7" background="0" foreground="ff00ff44" text="ff00ff44"
-             shadow="ff00ff44"/>
+    <colours map="7" background="0" foreground="ff00ff44" duration="6600ff44"
+             text="ff00ff44" shadow="ff00ff44"/>
+    <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="0.0"
+    <valueZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="0.0"
                minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="65541" globalRange_start="0.0" globalRange_end="0.0"
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="0.0"
              minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid MiscModelVersion="65541" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
