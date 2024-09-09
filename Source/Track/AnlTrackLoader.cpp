@@ -425,12 +425,12 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
     char type[7] = {'\0'};
     if(!stream.read(type, sizeof(char) * 6))
     {
-        return {juce::translate("Parsing error")};
+        return {juce::translate("Parsing error - type")};
     }
 
     if(stream.eof())
     {
-        return {juce::translate("Parsing error")};
+        return {juce::translate("Parsing error - eof")};
     }
 
     auto const readTimeAndDuration = [&](auto& frame)
@@ -461,9 +461,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
         return true;
     };
 
-    if(std::string(type) == "PTLMKS" || std::string(type) == "PTLM01")
+    auto const stype = std::string(type);
+    if(stype == "PTLMKS" || stype == "PTLM01")
     {
-        auto const hasExtra = std::string(type) == "PTLM01";
+        auto const hasExtra = stype == "PTLM01";
         std::vector<Results::Markers> results;
         while(!stream.eof())
         {
@@ -475,7 +476,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                 {
                     break;
                 }
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error - channels")};
             }
             markers.resize(static_cast<size_t>(numChannels));
 
@@ -488,21 +489,21 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
                 if(!readTimeAndDuration(marker))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - time and duration")};
                 }
                 uint64_t length;
                 if(!stream.read(reinterpret_cast<char*>(&length), sizeof(length)))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - length")};
                 }
                 std::get<2_z>(marker).resize(length);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2_z>(marker).data()), static_cast<long>(length * sizeof(char))))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - marker")};
                 }
-                if(hasExtra)
+                if(hasExtra && !readExtra(marker))
                 {
-                    readExtra(marker);
+                    return {juce::translate("Parsing error - extra")};
                 }
             }
             results.push_back(std::move(markers));
@@ -510,9 +511,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
         res = Results(std::move(results));
     }
-    else if(std::string(type) == "PTLPTS" || std::string(type) == "PTLP01")
+    else if(stype == "PTLPTS" || stype == "PTLP01")
     {
-        auto const hasExtra = std::string(type) == "PTLP01";
+        auto const hasExtra = stype == "PTLP01";
         std::vector<Results::Points> results;
         while(!stream.eof())
         {
@@ -524,7 +525,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                 {
                     break;
                 }
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error - channels")};
             }
             points.resize(static_cast<size_t>(numChannels));
             for(auto& point : points)
@@ -536,25 +537,25 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
                 if(!readTimeAndDuration(point))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - time and duration")};
                 }
                 bool hasValue;
                 if(!stream.read(reinterpret_cast<char*>(&hasValue), sizeof(hasValue)))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - has value")};
                 }
                 if(hasValue)
                 {
                     float value;
                     if(!stream.read(reinterpret_cast<char*>(&value), sizeof(value)))
                     {
-                        return {juce::translate("Parsing error")};
+                        return {juce::translate("Parsing error - value")};
                     }
                     std::get<2_z>(point) = value;
                 }
-                if(hasExtra)
+                if(hasExtra && !readExtra(point))
                 {
-                    readExtra(point);
+                    return {juce::translate("Parsing error - extra")};
                 }
             }
             results.push_back(std::move(points));
@@ -562,9 +563,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
         res = Results(std::move(results));
     }
-    else if(std::string(type) == "PTLCLS" || std::string(type) == "PTLC01")
+    else if(stype == "PTLCLS" || stype == "PTLC01")
     {
-        auto const hasExtra = std::string(type) == "PTLC01";
+        auto const hasExtra = stype == "PTLC01";
         std::vector<Results::Columns> results;
         while(!stream.eof())
         {
@@ -576,7 +577,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                 {
                     break;
                 }
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error - channels")};
             }
             columns.resize(static_cast<size_t>(numChannels));
             for(auto& column : columns)
@@ -588,21 +589,21 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
                 if(!readTimeAndDuration(column))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - time and duration")};
                 }
                 uint64_t numBins;
                 if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - num columns")};
                 }
                 std::get<2_z>(column).resize(numBins);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2_z>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error - columns")};
                 }
-                if(hasExtra)
+                if(hasExtra && !readExtra(column))
                 {
-                    readExtra(column);
+                    return {juce::translate("Parsing error - extra")};
                 }
             }
             results.push_back(std::move(columns));
@@ -611,7 +612,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
     }
     else
     {
-        return {juce::translate("Parsing error")};
+        return {juce::translate("Parsing error - invalid type ") + stype};
     }
 
     advancement.store(1.0f);
@@ -843,7 +844,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
             std::getline(linestream, value, separator);
             if(time.empty() || duration.empty())
             {
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error - time and duration")};
             }
             else if(std::isdigit(static_cast<int>(time[0])) && std::isdigit(static_cast<int>(duration[0])))
             {
@@ -872,7 +873,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 {
                     if(mode == Mode::point)
                     {
-                        return {juce::translate("Parsing error")};
+                        return {juce::translate("Parsing error - mode")};
                     }
                     mode = Mode::marker;
                     markerChannel.push_back({});
@@ -901,7 +902,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     {
         return Track::Results(std::move(points));
     }
-    return {juce::translate("Parsing error")};
+    return {juce::translate("Parsing error - unknown mode")};
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -959,7 +960,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(std::is
 
             if(index.empty() || start.empty())
             {
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error - time and duration")};
             }
             else if(std::isdigit(static_cast<int>(start[0])))
             {
@@ -1378,40 +1379,40 @@ public:
 
     void runTest() override
     {
-        auto checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9)
+        auto const checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9)
         {
-            expectEquals(vResult.index(), 0_z);
-            if(vResult.index() == 1_z)
+            if(vResult.index() != 0_z)
             {
-                expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
+                expectEquals(vResult.index(), 0_z, *std::get_if<juce::String>(&vResult));
                 return;
             }
+            expectEquals(vResult.index(), 0_z);
             auto const results = *std::get_if<Results>(&vResult);
             auto const access = results.getReadAccess();
-            expect(static_cast<bool>(access));
+            expect(static_cast<bool>(access), "Access");
             auto const markers = results.getMarkers();
-            expect(markers != nullptr);
+            expect(markers != nullptr, "Pointer");
             if(markers == nullptr)
             {
                 return;
             }
-            expectEquals(markers->size(), 2_z);
+            expectEquals(markers->size(), 2_z, "Num Channels");
             if(markers->size() != 2_z)
             {
                 return;
             }
 
             using namespace std::string_literals;
-            auto expectMarker = [this, timeEpsilon](Results::Marker const& marker, double time, std::string const& label)
+            auto const expectMarker = [this, timeEpsilon](Results::Marker const& marker, double time, std::string const& label)
             {
-                expectWithinAbsoluteError(std::get<0>(marker), time, timeEpsilon);
-                expectWithinAbsoluteError(std::get<1>(marker), 0.0, 1e-9);
-                expectEquals(std::get<2>(marker), label);
+                expectWithinAbsoluteError(std::get<0>(marker), time, timeEpsilon, "Time");
+                expectWithinAbsoluteError(std::get<1>(marker), 0.0, 1e-9, "Duration");
+                expectEquals(std::get<2>(marker), label, "Label");
             };
 
-            auto expectChannel = [&](Results::Markers const& channelMarkers, std::vector<std::tuple<double, std::string>> const& expectedResults)
+            auto const expectChannel = [&](Results::Markers const& channelMarkers, std::vector<std::tuple<double, std::string>> const& expectedResults)
             {
-                expectEquals(channelMarkers.size(), expectedResults.size());
+                expectEquals(channelMarkers.size(), expectedResults.size(), "Num Markers");
                 if(channelMarkers.size() != expectedResults.size())
                 {
                     return;
@@ -1427,44 +1428,44 @@ public:
             expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {10.023582767, "A"s}});
         };
 
-        auto checkPoints = [this](std::variant<Results, juce::String> vResult)
+        auto const checkPoints = [this](std::variant<Results, juce::String> vResult)
         {
-            expectEquals(vResult.index(), 0_z);
-            if(vResult.index() == 1_z)
+            if(vResult.index() != 0_z)
             {
-                expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
+                expectEquals(vResult.index(), 0_z, *std::get_if<juce::String>(&vResult));
                 return;
             }
+            expectEquals(vResult.index(), 0_z);
             auto const results = *std::get_if<Results>(&vResult);
             auto const access = results.getReadAccess();
-            expect(static_cast<bool>(access));
+            expect(static_cast<bool>(access), "Access");
             auto const points = results.getPoints();
-            expect(points != nullptr);
+            expect(points != nullptr, "Pointer");
             if(points == nullptr)
             {
                 return;
             }
-            expectEquals(points->size(), 2_z);
+            expectEquals(points->size(), 2_z, "Num Channels");
             if(points->size() != 2_z)
             {
                 return;
             }
 
             using namespace std::string_literals;
-            auto expectPoint = [this](Results::Point const& point, double time, float value)
+            auto const expectPoint = [this](Results::Point const& point, double time, float value)
             {
-                expectWithinAbsoluteError(std::get<0>(point), time, 1e-9);
-                expectWithinAbsoluteError(std::get<1>(point), 0.0, 1e-9);
-                expect(std::get<2>(point).has_value());
+                expectWithinAbsoluteError(std::get<0>(point), time, 1e-9, "Time");
+                expectWithinAbsoluteError(std::get<1>(point), 0.0, 1e-9, "Duration");
+                expect(std::get<2>(point).has_value(), "Has Value");
                 if(std::get<2>(point).has_value())
                 {
-                    expectWithinAbsoluteError(*std::get<2>(point), value, 1e-9f);
+                    expectWithinAbsoluteError(*std::get<2>(point), value, 1e-9f, "Value");
                 }
             };
 
-            auto expectChannel = [&](Results::Points const& channelPoints, std::vector<std::tuple<double, float>> const& expectedResults)
+            auto const expectChannel = [&](Results::Points const& channelPoints, std::vector<std::tuple<double, float>> const& expectedResults)
             {
-                expectEquals(channelPoints.size(), expectedResults.size());
+                expectEquals(channelPoints.size(), expectedResults.size(), "Num Points");
                 if(channelPoints.size() != expectedResults.size())
                 {
                     return;
@@ -1560,6 +1561,33 @@ public:
             checkPoints(loadFromCsv(stream, ' ', false, shouldAbort, advancement));
         }
 
+        beginTest("load lab markers");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Markers_lab, TestResultsData::Markers_labSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCsv(stream, '\t', true, shouldAbort, advancement));
+        }
+
+        beginTest("load reaper markers m");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::MarkersReaperM_csv, TestResultsData::MarkersReaperM_csvSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromReaper(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load reaper markers r");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::MarkersReaperR_csv, TestResultsData::MarkersReaperR_csvSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromReaper(stream, shouldAbort, advancement));
+        }
+
         beginTest("load json error");
         {
             auto const result = std::string(TestResultsData::Error_json);
@@ -1596,7 +1624,7 @@ public:
             expectEquals(loadFromBinary(stream, shouldAbort, advancement).index(), 1_z);
         }
 
-        beginTest("load binary Markers");
+        beginTest("load binary markers");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Markers_dat, TestResultsData::Markers_datSize);
@@ -1605,7 +1633,16 @@ public:
             checkMakers(loadFromBinary(stream, shouldAbort, advancement));
         }
 
-        beginTest("load binary Points");
+        beginTest("load binary markers backup");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Markersbackup_dat, TestResultsData::Markersbackup_datSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromBinary(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load binary points");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Points_dat, TestResultsData::Points_datSize);
@@ -1614,13 +1651,13 @@ public:
             checkPoints(loadFromBinary(stream, shouldAbort, advancement));
         }
 
-        beginTest("load lab Markers");
+        beginTest("load binary points backup");
         {
             std::stringstream stream;
-            stream.write(TestResultsData::Markers_lab, TestResultsData::Markers_labSize);
+            stream.write(TestResultsData::Pointsbackup_dat, TestResultsData::Pointsbackup_datSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', true, shouldAbort, advancement));
+            checkPoints(loadFromBinary(stream, shouldAbort, advancement));
         }
     }
 };

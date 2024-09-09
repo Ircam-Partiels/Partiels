@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="131076" viewport_x="0" viewport_y="0" path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/Reference.ptldoc"
+          grid="1" autoresize="0" samplerate="96000.0" channels="1">
+  <reader>
+    <value file="/Users/guillot/Nextcloud/Sounds/01.-... And The Gods Made Love.flac"
+           channel="0"/>
+  </reader>
+  <layout value="5be37606954e4685b31aa6693727fae9"/>
+  <timeZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="84.0"
+            minimumLength="0.005333333333333333" visibleRange_start="0.0"
+            visibleRange_end="1.0">
+    <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="131076" startPlayhead="0.3304347826086956"
+             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
+             autoScroll="1" gain="1.0" magnetize="0"/>
+  <groups MiscModelVersion="131076" identifier="5be37606954e4685b31aa6693727fae9"
+          name="Group 1" height="144" colour="0" expanded="1" referenceid="">
+    <layout value="031d2ce6c0f84297935a4132775bd753"/>
+    <layout value="544397856e194fa1961651424531679f"/>
+    <layout value="9952c6ce27e94d6bb750da711e19664c"/>
+    <zoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="131076" identifier="031d2ce6c0f84297935a4132775bd753"
+          name="Columns" input="" height="120" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="2" zoomLink="1">
+    <file path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/Columns.json"
+          commit="">
+      <args/>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="131076" globalRange_start="-101.7575988769531"
+               globalRange_end="-52.2513542175293" minimumLength="1.192092895507812e-7"
+               visibleRange_start="-101.7575988769531" visibleRange_end="-52.2513542175293">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="4.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="4.0">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="131076" identifier="544397856e194fa1961651424531679f"
+          name="Markers" input="" height="120" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="0" zoomLink="1">
+    <file path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/Markers.json"
+          commit="">
+      <args/>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="0.0"
+               minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="131076" identifier="9952c6ce27e94d6bb750da711e19664c"
+          name="Points" input="" height="120" font="Nunito Sans; 14.0 Regular"
+          showInGroup="1" sendViaOsc="0" zoomValueMode="2" zoomLink="1">
+    <file path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/Points.json"
+          commit="">
+      <args/>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="131076" globalRange_start="2361.65478515625"
+               globalRange_end="3899.171630859375" minimumLength="1.192092895507812e-7"
+               visibleRange_start="2361.65478515625" visibleRange_end="3899.171630859375">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131076" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131076" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
