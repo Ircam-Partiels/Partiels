@@ -356,6 +356,7 @@ endif()
 add_test(NAME UnitTests COMMAND Partiels --unit-tests)
 
 add_test(NAME Version COMMAND Partiels --version)
+set_tests_properties(Version PROPERTIES PASS_REGULAR_EXPRESSION "${PARTIELS_BUILD_TAG}")
 
 add_test(NAME Help COMMAND Partiels --help)
 
