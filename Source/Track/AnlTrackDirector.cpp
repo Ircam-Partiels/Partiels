@@ -71,8 +71,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                     {
                         try
                         {
-                            auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0;
-                            return PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), sampleRate);
+                            return PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), mAccessor.getAttr<AttrType::sampleRate>());
                         }
                         catch(...)
                         {
@@ -179,6 +178,19 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::colours:
             {
                 if(!mAccessor.getAttr<AttrType::hasPluginColourMap>())
+                {
+                    runRendering();
+                }
+            }
+            break;
+            case AttrType::zoomLogScale:
+            case AttrType::sampleRate:
+            {
+                if(mAudioFormatReader != nullptr && (mAccessor.getAttr<AttrType::sampleRate>() - mAudioFormatReader->sampleRate) > std::numeric_limits<double>::epsilon())
+                {
+                    mAccessor.setAttr<AttrType::sampleRate>(mAudioFormatReader->sampleRate, NotificationType::synchronous);
+                }
+                else
                 {
                     runRendering();
                 }
@@ -595,8 +607,8 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     {
         return;
     }
-
     std::swap(mAudioFormatReader, audioFormatReader);
+    mAccessor.setAttr<AttrType::sampleRate>(mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0, notification);
     runAnalysis(notification);
 }
 
@@ -714,7 +726,7 @@ void Track::Director::runRendering()
         {
             return nullptr;
         }
-        auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0;
+        auto const sampleRate = mAccessor.getAttr<AttrType::sampleRate>();
         try
         {
             return Plugin::Tools::createPluginWrapper(key, sampleRate);
@@ -1150,7 +1162,7 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 44100.0;
+                                  auto const sampleRate = mAccessor.getAttr<AttrType::sampleRate>();
                                   if(mLoaderSelector->setFile(results.getFirst(), sampleRate, [=, this](Track::FileInfo fileInfo)
                                                               {
                                                                   if(safePointer.get() == nullptr)
