@@ -36,6 +36,7 @@ namespace Track
         void showChannelLayout();
         void updateZoomMode();
         void updateExtraTheshold();
+        void updateGridPanel();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -62,6 +63,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
+        PropertyToggle mPropertyValueRangeLogScale;
         std::vector<std::unique_ptr<PropertySlider>> mPropertyExtraThresholds;
         PropertyTextButton mPropertyGrid;
         PropertyToggle mPropertyRangeLink;

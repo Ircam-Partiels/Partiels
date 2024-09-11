@@ -235,9 +235,15 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                       {
                           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                       })
+, mPropertyValueRangeLogScale(juce::translate("Value Log. Scale"), juce::translate("Toggle the logarithmic scale of the zoom range."), [&](bool value)
+                              {
+                                  mDirector.startAction();
+                                  mAccessor.setAttr<AttrType::zoomLogScale>(value, NotificationType::synchronous);
+                                  mDirector.endAction(ActionState::newTransaction, juce::translate("Change track log scale"));
+                              })
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
-                    mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
+                    updateGridPanel();
                     mZoomGridPropertyWindow.show();
                 })
 , mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
@@ -318,6 +324,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyFontSize.setVisible(true);
                             mPropertyUnit.setVisible(true);
                             mPropertyValueRangeMode.setVisible(true);
+                            mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
                             mPropertyValueRangeMin.setVisible(true);
                             mPropertyValueRangeMax.setVisible(true);
                             mPropertyRangeLink.setVisible(true);
@@ -338,6 +345,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                             mPropertyUnit.setVisible(true);
                             mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
                             mPropertyValueRangeMin.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                             mPropertyValueRangeMax.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                             mPropertyValueRange.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
@@ -402,6 +410,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 mPropertyRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::zoomLogScale:
+            {
+                mPropertyValueRangeLogScale.entry.setToggleState(acsr.getAttr<AttrType::zoomLogScale>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
             case AttrType::showInGroup:
             {
                 mPropertyShowInGroup.entry.setToggleState(acsr.getAttr<AttrType::showInGroup>(), juce::NotificationType::dontSendNotification);
@@ -427,6 +440,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::sendViaOsc:
+            case AttrType::sampleRate:
                 break;
         }
     };
@@ -496,10 +510,24 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 
     mZoomGridPropertyPanel.onChangeEnd = [this](Zoom::Grid::Accessor const& acsr)
     {
-        mDirector.startAction();
         auto& zoomAcsr = getCurrentZoomAcsr();
         auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
-        gridAcsr.copyFrom(acsr, NotificationType::synchronous);
+        auto const isLog = mAccessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(mAccessor);
+        if(isLog)
+        {
+            Zoom::Grid::Accessor temp;
+            temp.copyFrom(acsr, NotificationType::synchronous);
+            auto const reference = temp.getAttr<Zoom::Grid::AttrType::tickReference>();
+            auto const nyquist = mAccessor.getAttr<AttrType::sampleRate>() / 2.0;
+            auto const scaleRatio = static_cast<float>(nyquist / std::max(Tools::getMidiFromHertz(nyquist), 1.0));
+            temp.setAttr<Zoom::Grid::AttrType::tickReference>(Tools::getMidiFromHertz(reference) * scaleRatio, NotificationType::synchronous);
+            gridAcsr.copyFrom(temp, NotificationType::synchronous);
+        }
+        else
+        {
+            gridAcsr.copyFrom(acsr, NotificationType::synchronous);
+        }
+        updateGridPanel();
         mDirector.endAction(ActionState::newTransaction, juce::translate("Edit Grid Properties"));
     };
 
@@ -521,6 +549,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
     addAndMakeVisible(mPropertyValueRangeMode);
+    addAndMakeVisible(mPropertyValueRangeLogScale);
     addAndMakeVisible(mPropertyValueRangeMin);
     addAndMakeVisible(mPropertyValueRangeMax);
     addAndMakeVisible(mPropertyValueRange);
@@ -567,6 +596,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
     setBounds(mPropertyValueRangeMode);
+    setBounds(mPropertyValueRangeLogScale);
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
     setBounds(mPropertyValueRange);
@@ -897,6 +927,25 @@ void Track::PropertyGraphicalSection::updateExtraTheshold()
             property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
             property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
         }
+    }
+}
+
+void Track::PropertyGraphicalSection::updateGridPanel()
+{
+    auto const isLog = mAccessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(mAccessor);
+    if(isLog)
+    {
+        Zoom::Grid::Accessor temp;
+        temp.copyFrom(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>(), NotificationType::synchronous);
+        auto const reference = temp.getAttr<Zoom::Grid::AttrType::tickReference>();
+        auto const nyquist = mAccessor.getAttr<AttrType::sampleRate>() / 2.0;
+        auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
+        temp.setAttr<Zoom::Grid::AttrType::tickReference>(Tools::getHertzFromMidi(reference * scaleRatio), NotificationType::synchronous);
+        mZoomGridPropertyPanel.setGrid(temp);
+    }
+    else
+    {
+        mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
     }
 }
 
