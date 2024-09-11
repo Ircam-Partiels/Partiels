@@ -182,16 +182,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Create LFS file list
-      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-    - name: Restore LFS cache
-      uses: actions/cache@v4
-      id: lfs-cache
-      with:
-        path: .git/lfs
-        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
-    - name: Git LFS Pull
-      run: git lfs pull
     - uses: actions/setup-node@v4
       with:
         node-version: 20
