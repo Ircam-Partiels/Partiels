@@ -152,6 +152,7 @@ namespace Track
         , key
         , input
         , state
+        , sampleRate
         
         , height
         , colours
@@ -197,6 +198,7 @@ namespace Track
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::input, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
+    , Model::Attr<AttrType::sampleRate, double, Model::Flag::notifying | Model::Flag::saveable>
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
@@ -244,6 +246,7 @@ namespace Track
                                  , {}
                                  , {}
                                  , {}
+                                 , {48000.0}
                                  
                                  , {120}
                                  , {}
