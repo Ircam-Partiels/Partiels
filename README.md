@@ -1,5 +1,7 @@
 # Partiels
 
+<p align="center"><a href="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml"><img src="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml/badge.svg" alt="Workflows"></a></p>
+
 **[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is a software suite for **analysing and exploring the content and characteristics** of sounds.
 
 <p align="center"><img src="BinaryData/Resource/Partiels-v2.0.0-Sample-v2.gif"></p>
