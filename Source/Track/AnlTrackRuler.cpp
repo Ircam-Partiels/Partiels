@@ -35,6 +35,8 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::sendViaOsc:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
             case AttrType::description:
             case AttrType::results:
@@ -192,6 +194,8 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::showInGroup:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
             case AttrType::description:
             case AttrType::results:

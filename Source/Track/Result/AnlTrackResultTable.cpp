@@ -50,6 +50,8 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
         }
     };
@@ -176,6 +178,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::processing:
+            case AttrType::zoomLogScale:
+            case AttrType::sampleRate:
                 break;
             case AttrType::focused:
             {

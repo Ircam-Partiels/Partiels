@@ -63,6 +63,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
         }
     };
