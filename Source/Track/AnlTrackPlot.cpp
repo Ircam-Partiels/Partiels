@@ -40,6 +40,8 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::labelLayout:
             case AttrType::extraThresholds:
             case AttrType::channelsLayout:
+            case AttrType::zoomLogScale:
+            case AttrType::sampleRate:
             {
                 repaint();
                 break;
