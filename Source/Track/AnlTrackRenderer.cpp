@@ -174,7 +174,7 @@ namespace Track
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit);
+        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, juce::String const& unit);
         void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
     } // namespace Renderer
 } // namespace Track
@@ -225,6 +225,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
     auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
     {
+        auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
         auto const getStringify = [&]() -> std::function<juce::String(double)>
         {
             switch(frameType.value())
@@ -235,26 +236,54 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
                 }
                 case Track::FrameType::value:
                 {
-                    return [unit = Tools::getUnit(accessor)](double value)
+                    auto const unit = Tools::getUnit(accessor);
+                    if(isLog)
                     {
-                        return Format::valueToString(value, 4) + unit;
-                    };
+                        auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+                        auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
+                        return [scaleRatio, unit](double value)
+                        {
+                            return Format::valueToString(std::round(Tools::getHertzFromMidi(value * scaleRatio)), 0) + unit;
+                        };
+                    }
+                    else
+                    {
+                        return [unit](double value)
+                        {
+                            return Format::valueToString(value, 4) + unit;
+                        };
+                    }
                 }
                 case Track::FrameType::vector:
                 {
-                    return [&](double value)
+                    if(isLog)
                     {
-                        return Tools::getBinName(accessor, static_cast<size_t>(std::round(value)), false);
-                    };
+                        auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+                        auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+                        auto const midiMax = std::max(Tools::getMidiFromHertz(nyquist), 1.0);
+                        return [&, numBins, nyquist, midiMax](double value)
+                        {
+                            auto const startMidi = Tools::getHertzFromMidi(value / numBins * midiMax);
+                            return Tools::getBinName(accessor, static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0)), false);
+                        };
+                    }
+                    else
+                    {
+                        return [&](double value)
+                        {
+                            return Tools::getBinName(accessor, static_cast<size_t>(std::round(value)), false);
+                        };
+                    }
                 }
             }
             return nullptr;
         };
 
+        auto const stringify = getStringify();
         auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
         {
             g.setColour(colour);
-            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, getStringify(), justificationHorizontal);
+            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
         };
 
         switch(frameType.value())
@@ -509,7 +538,8 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+    auto const& valueZoomAcsr = accessor.getAcsr<AcsrType::valueZoom>();
+    auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = accessor.getAttr<AttrType::colours>();
     auto const& unit = Tools::getUnit(accessor);
 
@@ -520,6 +550,17 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
         return;
     }
 
+    auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
+    auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+    auto const scaleRatio = static_cast<float>(nyquist / std::max(Tools::getMidiFromHertz(nyquist), 1.0));
+    auto const scaleFn = isLog ? std::function<float(float)>([=](float v)
+                                                             {
+                                                                 return Tools::getMidiFromHertz(v) * scaleRatio;
+                                                             })
+                               : std::function<float(float)>([](float v)
+                                                             {
+                                                                 return v;
+                                                             });
     auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
     auto const markers = results.getPoints();
     if(markers != nullptr && markers->size() > channel)
@@ -530,15 +571,15 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
             auto* data = std::get_if<std::vector<Result::Data::Point>>(&edition.data);
             if(data != nullptr && !data->empty())
             {
-                paintPoints(g, bounds, markers->at(channel), thesholds, *data, timeRange, valueRange, colours, unit);
+                paintPoints(g, bounds, markers->at(channel), thesholds, *data, timeRange, valueRange, scaleFn, colours, unit);
                 return;
             }
         }
-        paintPoints(g, bounds, markers->at(channel), thesholds, {}, timeRange, valueRange, colours, unit);
+        paintPoints(g, bounds, markers->at(channel), thesholds, {}, timeRange, valueRange, scaleFn, colours, unit);
     }
 }
 
-void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit)
+void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, juce::String const& unit)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty() || valueRange.isEmpty())
@@ -573,7 +614,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     if(results.size() == 1_z && itShowsValues(results.cbegin()))
     {
         auto const value = std::get<2_z>(results.at(0)).value();
-        auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+        auto const y = Tools::valueToPixel(scaleValue(value), valueRange, fbounds);
         auto const fullLine = std::get<0_z>(results.at(0)) + std::get<1_z>(results.at(0)) < std::numeric_limits<double>::epsilon() * 2.0;
         auto const x1 = fullLine ? fbounds.getX() : Tools::secondsToPixel(std::get<0_z>(results.at(0)), timeRange, fbounds);
         auto const x2 = fullLine ? fbounds.getRight() : Tools::secondsToPixel(std::get<0_z>(results.at(0)) + std::get<1_z>(results.at(0)), timeRange, fbounds);
@@ -736,8 +777,8 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
 
             if(it != next && (max - min) >= valueEpsilon)
             {
-                auto const y1 = Tools::valueToPixel(max, valueRange, fbounds);
-                auto const y2 = Tools::valueToPixel(min, valueRange, fbounds);
+                auto const y1 = Tools::valueToPixel(scaleValue(max), valueRange, fbounds);
+                auto const y2 = Tools::valueToPixel(scaleValue(min), valueRange, fbounds);
                 if(pathArr.isLineStarted())
                 {
                     pathArr.addLine(x, x, y1);
@@ -757,7 +798,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             else
             {
                 auto const value = std::get<2_z>(*it).value();
-                auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+                auto const y = Tools::valueToPixel(scaleValue(value), valueRange, fbounds);
                 if(showLabel)
                 {
                     labelArr.addValue(value, x, y);
@@ -771,7 +812,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         else
         {
             auto const value = std::get<2_z>(*it).value();
-            auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+            auto const y = Tools::valueToPixel(scaleValue(value), valueRange, fbounds);
             auto const start = std::get<0_z>(*it);
             auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
             auto const end = getEndTime(it);
@@ -861,7 +902,7 @@ void Track::Renderer::paintColumns(Accessor const& accessor, size_t channel, juc
                 return juce::Range<float>();
             }
             auto const scale = static_cast<float>(imageSize);
-            auto scaleValue = [&](double value)
+            auto const scaleValue = [&](double value)
             {
                 return static_cast<float>((value - globalRange.getStart()) / globalLength * scale);
             };
