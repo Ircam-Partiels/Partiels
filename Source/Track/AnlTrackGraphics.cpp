@@ -284,17 +284,18 @@ void Track::Graphics::performRendering(std::vector<Track::Result::Data::Columns>
                         for(int j = 0; j < imageHeight; ++j)
                         {
                             auto const startMidi = Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio);
-                            auto const rowIndexStart = static_cast<size_t>(std::max(std::round(startMidi * hertzRatio), 0.0));
+                            auto const startRow = static_cast<size_t>(std::max(std::round(startMidi * hertzRatio), 0.0));
 
                             auto const endMidi = Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio);
-                            auto const rowIndexNext = static_cast<size_t>(std::max(std::round(endMidi * hertzRatio), 0.0));
-                            if(rowIndexStart >= values.size())
+                            auto const endRow = static_cast<size_t>(std::max(std::round(endMidi * hertzRatio), 0.0));
+                            if(startRow >= values.size())
                             {
                                 reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
                             }
                             else
                             {
-                                auto const rval = *std::max_element(std::next(values.cbegin(), rowIndexStart), std::next(values.cbegin(), rowIndexNext));
+                                using diff_t = decltype(values.cbegin())::difference_type;
+                                auto const rval = *std::max_element(std::next(values.cbegin(), static_cast<diff_t>(startRow)), std::next(values.cbegin(), static_cast<diff_t>(endRow)));
                                 auto const value = std::round((rval - valueStart) * valueScale);
                                 auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
                                 reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
@@ -306,15 +307,16 @@ void Track::Graphics::performRendering(std::vector<Track::Result::Data::Columns>
                     {
                         for(int j = 0; j < imageHeight; ++j)
                         {
-                            auto const rowIndexStart = static_cast<size_t>(std::round(j * hd));
-                            auto const rowIndexNext = static_cast<size_t>(std::round((j + 1) * hd));
-                            if(rowIndexStart >= values.size())
+                            auto const startRow = static_cast<size_t>(std::round(j * hd));
+                            auto const endRow = static_cast<size_t>(std::round((j + 1) * hd));
+                            if(startRow >= values.size())
                             {
                                 reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
                             }
                             else
                             {
-                                auto const rval = *std::max_element(std::next(values.cbegin(), rowIndexStart), std::next(values.cbegin(), rowIndexNext));
+                                using diff_t = decltype(values.cbegin())::difference_type;
+                                auto const rval = *std::max_element(std::next(values.cbegin(), static_cast<diff_t>(startRow)), std::next(values.cbegin(), static_cast<diff_t>(endRow)));
                                 auto const value = std::round((rval - valueStart) * valueScale);
                                 auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
                                 reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
