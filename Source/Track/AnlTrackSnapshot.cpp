@@ -44,6 +44,8 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
+            case AttrType::zoomLogScale:
+            case AttrType::sampleRate:
             {
                 repaint();
             }
@@ -246,7 +248,8 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
         return;
     }
 
-    auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+    auto const& valueZoomAcsr = accessor.getAcsr<AcsrType::valueZoom>();
+    auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     if(valueRange.isEmpty())
     {
         return;
@@ -263,7 +266,11 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     {
         return;
     }
-    auto const y = Tools::valueToPixel(*value, valueRange, bounds.toFloat());
+    auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
+    auto const sampleRate = accessor.getAttr<AttrType::sampleRate>();
+    auto const scaleRatio = static_cast<float>((sampleRate / 2.0) / std::max(Tools::getMidiFromHertz(sampleRate / 2.0), 1.0));
+    auto const scaledValue = isLog ? Tools::getMidiFromHertz(value.value()) * scaleRatio : value.value();
+    auto const y = Tools::valueToPixel(scaledValue, valueRange, bounds.toFloat());
     auto const shadowColour = accessor.getAttr<AttrType::colours>().shadow;
     if(!shadowColour.isTransparent())
     {
@@ -402,6 +409,8 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 repaint();
             }
             break;
+            case AttrType::zoomLogScale:
+            case AttrType::sampleRate:
             case AttrType::channelsLayout:
             {
                 updateTooltip(getMouseXYRelative());
