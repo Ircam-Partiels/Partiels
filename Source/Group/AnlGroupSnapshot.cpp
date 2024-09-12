@@ -45,6 +45,8 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::labelLayout:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
+            case Track::AttrType::zoomLogScale:
+            case Track::AttrType::sampleRate:
             {
                 repaint();
             }
