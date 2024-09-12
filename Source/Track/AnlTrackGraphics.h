@@ -24,6 +24,7 @@ namespace Track
 
     private:
         void abortRendering();
+        void performRendering(std::vector<Track::Result::Data::Columns> const columns, ColourMap const colourMap, juce::Range<double> const valueRange, bool logScale, double sampleRate, int width, int height, Ive::PluginWrapper* plugin, int featureIndex, bool hasDuration);
 
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
