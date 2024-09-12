@@ -39,6 +39,8 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::edit:
             case AttrType::hasPluginColourMap:
             case AttrType::focused:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
             case AttrType::channelsLayout:
             {

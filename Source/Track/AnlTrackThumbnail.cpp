@@ -99,6 +99,8 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
         }
     };

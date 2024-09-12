@@ -107,6 +107,8 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
                 break;
         }
     };
