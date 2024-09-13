@@ -177,6 +177,12 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                              setLabelPosition(position);
                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's position of the labels"));
                          })
+, mPropertyValueRangeLogScale(juce::translate("Value Log. Scale"), juce::translate("Toggle the logarithmic scale of the zoom range of the tracks of the group."), [&](bool value)
+                              {
+                                  mDirector.startAction(true);
+                                  setLogScale(value);
+                                  mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group log scale"));
+                              })
 , mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visibility of the channels of the tracks of the group."), [this]()
                          {
                              showChannelLayout();
@@ -189,7 +195,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -208,6 +214,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
     addAndMakeVisible(mPropertyUnit);
+    addAndMakeVisible(mPropertyValueRangeLogScale);
     addAndMakeVisible(mPropertyShowInGroup);
     addAndMakeVisible(mPropertyChannelLayout);
 }
@@ -234,6 +241,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
+    setBounds(mPropertyValueRangeLogScale);
     setBounds(mPropertyShowInGroup);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
@@ -510,6 +518,24 @@ void Group::PropertyGraphicalsSection::setLabelPosition(float position)
     updateLabel();
 }
 
+void Group::PropertyGraphicalsSection::setLogScale(bool state)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return !Track::Tools::hasVerticalZoomInHertz(trackAcsr.get());
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        trackAcsr.get().setAttr<Track::AttrType::zoomLogScale>(state, NotificationType::synchronous);
+    }
+    updateLogScale();
+}
+
 void Group::PropertyGraphicalsSection::showChannelLayout()
 {
     juce::PopupMenu menu;
@@ -557,6 +583,7 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateFont();
     updateUnit();
     updateLabel();
+    updateLogScale();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const numChannels = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 0_z, [](auto n, auto const& trackAcsr)
                                              {
@@ -823,6 +850,32 @@ void Group::PropertyGraphicalsSection::updateLabel()
         mPropertyLabelJustification.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
         mPropertyLabelPosition.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
+}
+
+void Group::PropertyGraphicalsSection::updateLogScale()
+{
+    juce::StringArray trackNames;
+    std::set<bool> logScales;
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::hasVerticalZoomInHertz(trackAcsr.get()))
+        {
+            logScales.insert(trackAcsr.get().getAttr<Track::AttrType::zoomLogScale>());
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+    mPropertyValueRangeLogScale.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The logarithmic scale of the zoom range of the tracks of the group."));
+    mPropertyValueRangeLogScale.setVisible(!logScales.empty());
+    if(logScales.size() == 1_z)
+    {
+        mPropertyValueRangeLogScale.entry.setToggleState(*logScales.cbegin(), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyValueRangeLogScale.entry.setToggleState(false, juce::NotificationType::dontSendNotification);
+    }
+    mPropertyValueRangeLogScale.entry.setAlpha(logScales.size() > 1_z ? 0.5f : 1.0f);
 }
 
 ANALYSE_FILE_END

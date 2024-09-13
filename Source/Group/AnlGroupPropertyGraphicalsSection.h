@@ -30,6 +30,7 @@ namespace Group
         void setUnit(juce::String const& unit);
         void setLabelJustification(Track::LabelLayout::Justification justification);
         void setLabelPosition(float position);
+        void setLogScale(bool state);
         void showVisibilityInGroup();
         void showChannelLayout();
         void updateContent();
@@ -38,6 +39,7 @@ namespace Group
         void updateFont();
         void updateUnit();
         void updateLabel();
+        void updateLogScale();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -54,6 +56,7 @@ namespace Group
         PropertyText mPropertyUnit;
         PropertyList mPropertyLabelJustification;
         PropertyNumber mPropertyLabelPosition;
+        PropertyToggle mPropertyValueRangeLogScale;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
         PropertyTextButton mPropertyShowInGroup;
