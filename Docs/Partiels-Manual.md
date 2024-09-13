@@ -656,6 +656,7 @@ The value range of the points and the columns results can be adapted to optimize
 </p>
 
 - Value Range Mode: Select the value range mode: default (if available), results, manual (selected automatically when the range doesn't match one of the two other mode)
+- Value Log. Scale: If the value range is frequency (the unit corresponds to hertz), this parameter allows you to use a logorithmic display scale centred on the note A 440Hertz.
 - Minimum Range Value: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
 - Maximum Range Value: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
 - Value Range Link: If the visible value range of the points corresponding to the vertical axis is linked to the the vertical axis of the group containing the track.  
