@@ -75,7 +75,14 @@ void Track::Writer::mouseDown(juce::MouseEvent const& event)
                         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                         auto const top = static_cast<float>(std::get<1_z>(*channel).getStart());
                         auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
-                        auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                        auto value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                        auto const isLog = mAccessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(mAccessor);
+                        if(isLog)
+                        {
+                            auto const nyquist = mAccessor.getAttr<AttrType::sampleRate>() / 2.0;
+                            auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
+                            value = Tools::getHertzFromMidi(value * scaleRatio);
+                        }
                         mCurrentEdition.channel = std::get<0_z>(channel.value());
                         mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value, getDefaultExtra()}};
                         mMouseDownTime = time;
@@ -168,7 +175,15 @@ void Track::Writer::mouseDrag(juce::MouseEvent const& event)
                         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                         auto const top = static_cast<float>(channels.at(mCurrentEdition.channel).getStart());
                         auto const bottom = static_cast<float>(channels.at(mCurrentEdition.channel).getEnd());
-                        auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                        auto value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                        auto const isLog = mAccessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(mAccessor);
+                        if(isLog)
+                        {
+                            auto const nyquist = mAccessor.getAttr<AttrType::sampleRate>() / 2.0;
+                            auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
+                            value = Tools::getHertzFromMidi(value * scaleRatio);
+                        }
+
                         auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
 
                         // remove points before time is necessary
