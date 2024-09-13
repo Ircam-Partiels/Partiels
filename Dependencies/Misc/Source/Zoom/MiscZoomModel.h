@@ -45,7 +45,7 @@ namespace Zoom
     };
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::grid, Grid::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    < Model::Acsr<AcsrType::grid, Grid::Accessor, Model::Flag::basic, 1>
     >;
     // clang-format on
 
