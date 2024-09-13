@@ -93,6 +93,8 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
                 break;
             }
             case AttrType::channelsLayout:
+            case AttrType::sampleRate:
+            case AttrType::zoomLogScale:
             {
                 Tooltip::BubbleClient::setTooltip(mGetTooltip(getMouseXYRelative()));
                 break;
