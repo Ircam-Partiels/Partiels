@@ -65,13 +65,27 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 return {};
             case FrameType::value:
             {
-                auto const value = getScaledValue(acsr.getAcsr<AcsrType::valueZoom>());
+                auto value = getScaledValue(acsr.getAcsr<AcsrType::valueZoom>());
+                if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                {
+                    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+                    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+                    value = static_cast<float>(getHertzFromMidi(static_cast<double>(value) / nyquist * midiMax));
+                }
                 return Format::valueToString(value, 4) + getUnit(acsr);
             }
             case FrameType::vector:
             {
                 auto const value = getScaledValue(acsr.getAcsr<AcsrType::binZoom>());
-                auto const index = static_cast<size_t>(std::floor(value));
+                auto index = static_cast<size_t>(std::max(std::floor(value), 0.0));
+                if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                {
+                    auto const numBins = acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+                    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+                    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+                    auto const startMidi = getHertzFromMidi(value / numBins * midiMax);
+                    index = static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0));
+                }
                 return juce::translate("Bin INDEX").replace("INDEX", getBinName(acsr, index, true));
             }
         }
@@ -224,8 +238,17 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             return lines;
         }
         it = std::prev(it);
-        auto const value = Zoom::Tools::getScaledValueFromHeight(accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>(), component, y);
-        auto const binIndex = static_cast<size_t>(std::floor(value));
+        auto const& binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
+        auto const value = Zoom::Tools::getScaledValueFromHeight(binVisibleRange, component, y);
+        auto binIndex = static_cast<size_t>(std::max(std::floor(value), 0.0));
+        if(accessor.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(accessor))
+        {
+            auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+            auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+            auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+            auto const startMidi = getHertzFromMidi(value / numBins * midiMax);
+            binIndex = static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0));
+        }
         auto const& column = std::get<2_z>(*it);
         if(binIndex >= column.size())
         {
