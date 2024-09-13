@@ -1,3 +1,6 @@
+
+- Add: Add a logarithmic scale parameter to tracks that have frequency values in hertz enhancement
+
 v2.0.4
 
 - Add: OSC support for sending audio playback information and running analysis values (#456)
