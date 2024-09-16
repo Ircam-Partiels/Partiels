@@ -414,4 +414,159 @@ void Application::Osc::TransportDispatcher::changeListenerCallback([[maybe_unuse
     }
 }
 
+Application::Osc::MouseDispatcher::MouseDispatcher(Sender& sender)
+: mSender(sender)
+{
+    mSender.addChangeListener(this);
+}
+
+Application::Osc::MouseDispatcher::~MouseDispatcher()
+{
+    juce::Desktop::getInstance().removeGlobalMouseListener(this);
+    mSender.removeChangeListener(this);
+}
+
+void Application::Osc::MouseDispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
+{
+    MiscWeakAssert(source == std::addressof(mSender));
+    if(mSender.isConnected())
+    {
+        juce::Desktop::getInstance().addGlobalMouseListener(this);
+    }
+    else
+    {
+        juce::Desktop::getInstance().removeGlobalMouseListener(this);
+    }
+}
+
+void Application::Osc::MouseDispatcher::mouseMove(juce::MouseEvent const& event)
+{
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
+    if(documentAcsr.getAcsr<Document::AcsrType::transport>().getAttr<Transport::AttrType::playback>())
+    {
+        return;
+    }
+    auto const isMouseOver = !event.mods.isAnyMouseButtonDown() && event.mods.isAltDown();
+    if(isMouseOver != mMouseOver)
+    {
+        mMouseOver = isMouseOver;
+        juce::OSCMessage message("/mouseover");
+        message.addInt32(mMouseOver ? 1 : 0);
+        mSender.send(message);
+    }
+
+    if(!mMouseOver)
+    {
+        return;
+    }
+
+    auto const getGroupSection = [](juce::Component& component)
+    {
+        auto* plot = dynamic_cast<Group::Section*>(&component);
+        if(plot != nullptr)
+        {
+            return plot;
+        }
+        return component.findParentComponentOfClass<Group::Section>();
+    };
+
+    auto const getTrackSection = [](juce::Component& component)
+    {
+        auto* plot = dynamic_cast<Track::Section*>(&component);
+        if(plot != nullptr)
+        {
+            return plot;
+        }
+        return component.findParentComponentOfClass<Track::Section>();
+    };
+
+    auto const sendTrack = [&](juce::String const& identifier, juce::Point<int> const& pos, juce::Rectangle<int> const& bounds)
+    {
+        auto const timeRange = documentAcsr.getAcsr<Document::AcsrType::timeZoom>().getAttr<Zoom::AttrType::visibleRange>();
+        if(timeRange.isEmpty())
+        {
+            return;
+        }
+        auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+        auto const channel = Track::Tools::getChannelVerticalRange(trackAcsr, bounds, pos.y - bounds.getY(), false);
+        if(!channel.has_value() || std::get<1>(channel.value()).isEmpty())
+        {
+            return;
+        }
+        auto const scaleX = static_cast<double>(pos.x - bounds.getX()) / static_cast<double>(bounds.getWidth());
+        auto const time = scaleX * timeRange.getLength() + timeRange.getStart();
+        auto const verRange = std::get<1>(channel.value());
+        auto const scaledY = static_cast<double>(verRange.getEnd() - pos.y) / static_cast<double>(verRange.getLength());
+        auto const binRange = trackAcsr.getAcsr<Track::AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
+        auto binIndex = scaledY * binRange.getLength() + binRange.getStart();
+        if(trackAcsr.getAttr<Track::AttrType::zoomLogScale>() && Track::Tools::hasVerticalZoomInHertz(trackAcsr))
+        {
+            auto const numBins = trackAcsr.getAcsr<Track::AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+            auto const nyquist = trackAcsr.getAttr<Track::AttrType::sampleRate>() / 2.0;
+            auto const midiMax = std::max(Track::Tools::getMidiFromHertz(nyquist), 1.0);
+            auto const startMidi = Track::Tools::getHertzFromMidi(binIndex / numBins * midiMax);
+            binIndex = startMidi / nyquist * numBins;
+        }
+        mSender.sendTrack(trackAcsr, time, std::get<0>(channel.value()), static_cast<size_t>(std::max(std::round(binIndex), 0.0)));
+    };
+
+    auto* component = event.source.getComponentUnderMouse();
+    if(component == nullptr || event.mods.isAnyMouseButtonDown())
+    {
+        return;
+    }
+    if(auto const* groupSection = getGroupSection(*component))
+    {
+        auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupSection->getIdentifier());
+        auto const tracks = Group::Tools::getTrackAcsrs(groupAcsr);
+        auto const pos = groupSection->getMouseXYRelative();
+        auto const bounds = groupSection->getPlotBounds();
+        for(auto const& track : tracks)
+        {
+            sendTrack(track.get().getAttr<Track::AttrType::identifier>(), pos, bounds);
+        }
+    }
+    else if(auto const* trackSection = getTrackSection(*component))
+    {
+        sendTrack(trackSection->getIdentifier(), trackSection->getMouseXYRelative(), trackSection->getPlotBounds());
+    }
+    else if(mMouseOver)
+    {
+        mMouseOver = false;
+        juce::OSCMessage message("/mouseover");
+        message.addInt32(false);
+        mSender.send(message);
+    }
+}
+
+void Application::Osc::MouseDispatcher::mouseEnter(juce::MouseEvent const& event)
+{
+    mouseMove(event);
+}
+
+void Application::Osc::MouseDispatcher::mouseExit(juce::MouseEvent const& event)
+{
+    mouseMove(event);
+}
+
+void Application::Osc::MouseDispatcher::mouseDown(juce::MouseEvent const& event)
+{
+    mouseMove(event);
+}
+
+void Application::Osc::MouseDispatcher::mouseUp(juce::MouseEvent const& event)
+{
+    mouseMove(event);
+}
+
+void Application::Osc::MouseDispatcher::mouseWheelMove(juce::MouseEvent const& event, [[maybe_unused]] juce::MouseWheelDetails const& wheel)
+{
+    mouseMove(event);
+}
+
+void Application::Osc::MouseDispatcher::mouseMagnify(juce::MouseEvent const& event, [[maybe_unused]] float scaleFactor)
+{
+    mouseMove(event);
+}
+
 ANALYSE_FILE_END

@@ -119,6 +119,32 @@ namespace Application
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportDispatcher)
         };
+
+        class MouseDispatcher
+        : public juce::ChangeListener
+        , private juce::MouseListener
+        {
+        public:
+            MouseDispatcher(Sender& sender);
+            ~MouseDispatcher() override;
+
+        private:
+            // juce::ChangeListener
+            void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+            // juce::MouseListener
+            void mouseMove(juce::MouseEvent const& event) override;
+            void mouseEnter(juce::MouseEvent const& event) override;
+            void mouseExit(juce::MouseEvent const& event) override;
+            void mouseDown(juce::MouseEvent const& event) override;
+            void mouseUp(juce::MouseEvent const& event) override;
+            void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
+            void mouseMagnify(juce::MouseEvent const& event, float scaleFactor) override;
+
+            Sender& mSender;
+            bool mMouseOver{false};
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MouseDispatcher)
         };
     } // namespace Osc
 } // namespace Application
