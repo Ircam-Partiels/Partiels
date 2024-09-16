@@ -118,6 +118,129 @@ void Application::Osc::Sender::clearMessages()
     mMessages.clear();
 }
 
+void Application::Osc::Sender::sendTrack(Track::Accessor const& trackAcsr, double time, std::optional<size_t> channel, std::optional<size_t> bin)
+{
+    if(!trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
+    {
+        return;
+    }
+    auto const sendResult = [&](auto const identifier, auto const channelIndex, auto const valueIndex, auto const it, auto const parser)
+    {
+        juce::OSCMessage message("/" + identifier);
+        message.addInt32(static_cast<int32_t>(channelIndex));
+        message.addInt32(static_cast<int32_t>(valueIndex));
+        message.addFloat32(static_cast<float>(time));
+        message.addFloat32(static_cast<float>(std::get<0>(*it)));
+        message.addFloat32(static_cast<float>(std::get<1>(*it)));
+        parser(message, it);
+        for(auto const& extra : std::get<3>(*it))
+        {
+            message.addFloat32(extra);
+        }
+        mSender.send(message);
+    };
+
+    auto const results = trackAcsr.getAttr<Track::AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(static_cast<bool>(access))
+    {
+        auto const& identifier = trackAcsr.getAttr<Track::AttrType::identifier>();
+        if(auto const allMakers = results.getMarkers())
+        {
+            if(!allMakers->empty())
+            {
+                auto channelIndex = std::min(channel.value_or(0_z), allMakers->size() - 1_z);
+                auto const endChannel = channel.value_or(allMakers->size() - 1_z) + 1_z;
+                while(channelIndex < endChannel)
+                {
+                    auto const channelMakers = allMakers->at(channelIndex);
+                    auto const it = std::lower_bound(channelMakers.cbegin(), channelMakers.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Marker>);
+                    if(it != channelMakers.cend())
+                    {
+                        sendResult(identifier, channelIndex, std::distance(channelMakers.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
+                                   {
+                                       message.addString(juce::String(std::get<2>(*iter)));
+                                   });
+                    }
+                    ++channelIndex;
+                }
+            }
+        }
+        else if(auto const allPoints = results.getPoints())
+        {
+            if(!allPoints->empty())
+            {
+                auto channelIndex = std::min(channel.value_or(0_z), allPoints->size() - 1_z);
+                auto const endChannel = channel.value_or(allPoints->size() - 1_z) + 1_z;
+                while(channelIndex < endChannel)
+                {
+                    auto const channelPoints = allPoints->at(channelIndex);
+                    auto const it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Point>);
+                    if(it != channelPoints.cend())
+                    {
+                        sendResult(identifier, channelIndex, std::distance(channelPoints.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
+                                   {
+                                       if(std::get<2>(*iter).has_value())
+                                       {
+                                           message.addFloat32(std::get<2>(*iter).value());
+                                       }
+                                       else
+                                       {
+                                           message.addString("-");
+                                       }
+                                   });
+                    }
+                    ++channelIndex;
+                }
+            }
+        }
+        else if(auto const allColumns = results.getColumns())
+        {
+            if(!allColumns->empty())
+            {
+                auto channelIndex = std::min(channel.value_or(0_z), allColumns->size() - 1_z);
+                auto const endChannel = channel.value_or(allColumns->size() - 1_z) + 1_z;
+                while(channelIndex < endChannel)
+                {
+                    auto const channelColmuns = allColumns->at(channelIndex);
+                    auto const it = std::lower_bound(channelColmuns.cbegin(), channelColmuns.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Column>);
+                    if(it != channelColmuns.cend())
+                    {
+                        if(!bin.has_value())
+                        {
+                            sendResult(identifier, channelIndex, std::distance(channelColmuns.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
+                                       {
+                                           message.addInt32(static_cast<int32_t>(std::get<2>(*iter).size()));
+                                           for(auto const& value : std::get<2>(*iter))
+                                           {
+                                               message.addFloat32(value);
+                                           }
+                                       });
+                        }
+                        else
+                        {
+                            auto const binIndex = bin.value();
+                            sendResult(identifier, channelIndex, std::distance(channelColmuns.cbegin(), it), it, [&](juce::OSCMessage& message, auto iter)
+                                       {
+                                           message.addInt32(static_cast<int32_t>(binIndex));
+                                           if(binIndex < std::get<2>(*iter).size())
+                                           {
+                                               message.addFloat32(std::get<2>(*iter).at(binIndex));
+                                           }
+                                           else
+                                           {
+                                               message.addString("-");
+                                           }
+                                       });
+                        }
+                    }
+                    ++channelIndex;
+                }
+            }
+        }
+    }
+}
+
 Application::Osc::SettingsContent::SettingsContent(Sender& sender)
 : mSender(sender)
 , mAccessor(sender.getAccessor())
