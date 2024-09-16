@@ -114,8 +114,6 @@ namespace Application
             // juce::ChangeListener
             void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
-            void sendBundle(double time);
-
             Sender& mSender;
             Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
 
