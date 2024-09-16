@@ -101,8 +101,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mDownloader = std::make_unique<Downloader>();
     AppQuitIfInvalidPointer(mDownloader);
 
-    mOscDispatcher = std::make_unique<Osc::Dispatcher>(getOscSender());
-    AppQuitIfInvalidPointer(mOscDispatcher);
+    mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
+    AppQuitIfInvalidPointer(mOscTransportDispatcher);
 
     checkPluginsQuarantine();
 
@@ -310,7 +310,7 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
-    mOscDispatcher.reset();
+    mOscTransportDispatcher.reset();
     mDownloader.reset();
     mMainMenuModel.reset();
     mWindow.reset();

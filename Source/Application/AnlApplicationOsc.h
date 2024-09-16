@@ -100,12 +100,12 @@ namespace Application
             SettingsContent mContent;
         };
 
-        class Dispatcher
+        class TransportDispatcher
         : public juce::ChangeListener
         {
         public:
-            Dispatcher(Sender& sender);
-            ~Dispatcher() override;
+            TransportDispatcher(Sender& sender);
+            ~TransportDispatcher() override;
 
         private:
             // juce::ChangeListener
@@ -116,7 +116,8 @@ namespace Application
             Sender& mSender;
             Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
 
-            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Dispatcher)
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportDispatcher)
+        };
         };
     } // namespace Osc
 } // namespace Application
