@@ -109,7 +109,7 @@ namespace Application
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<CommandLine> mCommandLine;
         std::unique_ptr<Downloader> mDownloader;
-        std::unique_ptr<Osc::Dispatcher> mOscDispatcher;
+        std::unique_ptr<Osc::TransportDispatcher> mOscTransportDispatcher;
 
         std::atomic<bool> mIsPluginListReady{true};
         juce::File mPreviousFile{};

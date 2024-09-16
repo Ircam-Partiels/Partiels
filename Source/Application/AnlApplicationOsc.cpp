@@ -219,7 +219,7 @@ Application::Osc::SettingsPanel::~SettingsPanel()
     setContent("", nullptr);
 }
 
-Application::Osc::Dispatcher::Dispatcher(Sender& sender)
+Application::Osc::TransportDispatcher::TransportDispatcher(Sender& sender)
 : mSender(sender)
 {
     mSender.addChangeListener(this);
@@ -263,14 +263,14 @@ Application::Osc::Dispatcher::Dispatcher(Sender& sender)
     };
 }
 
-Application::Osc::Dispatcher::~Dispatcher()
+Application::Osc::TransportDispatcher::~TransportDispatcher()
 {
     mSender.removeChangeListener(this);
     auto& transportAcsr = Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>();
     transportAcsr.removeListener(mTransportListener);
 }
 
-void Application::Osc::Dispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
+void Application::Osc::TransportDispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(mSender));
     auto& transportAcsr = Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>();
@@ -284,7 +284,7 @@ void Application::Osc::Dispatcher::changeListenerCallback([[maybe_unused]] juce:
     }
 }
 
-void Application::Osc::Dispatcher::sendBundle(double time)
+void Application::Osc::TransportDispatcher::sendBundle(double time)
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
