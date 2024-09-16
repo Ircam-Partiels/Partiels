@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
+#include "../Track/AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -54,6 +55,8 @@ namespace Application
 
             juce::StringArray getMessages() const;
             void clearMessages();
+
+            void sendTrack(Track::Accessor const& trackAcsr, double time, std::optional<size_t> channel, std::optional<size_t> bin);
 
         private:
             Accessor& mAccessor;
