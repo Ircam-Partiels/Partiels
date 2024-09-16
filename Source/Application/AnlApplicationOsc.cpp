@@ -350,6 +350,19 @@ Application::Osc::TransportDispatcher::TransportDispatcher(Sender& sender)
 
     mTransportListener.onAttrChanged = [this](Transport::Accessor const& accessor, Transport::AttrType const& attribute)
     {
+        auto const sendTracks = [&](double time)
+        {
+            if(accessor.getAttr<Transport::AttrType::playback>())
+            {
+                auto const& documentAcsr = Instance::get().getDocumentAccessor();
+                auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+                for(auto const& trackAcsr : trackAcsrs)
+                {
+                    mSender.sendTrack(trackAcsr.get(), time, {}, {});
+                }
+            }
+        };
+
         switch(attribute)
         {
             case Transport::AttrType::playback:
@@ -357,20 +370,14 @@ Application::Osc::TransportDispatcher::TransportDispatcher(Sender& sender)
                 juce::OSCMessage message("/playback");
                 message.addInt32(accessor.getAttr<Transport::AttrType::playback>() ? 1 : 0);
                 mSender.send(message);
-                if(accessor.getAttr<Transport::AttrType::playback>())
-                {
-                    sendBundle(accessor.getAttr<Transport::AttrType::startPlayhead>());
-                }
+                sendTracks(accessor.getAttr<Transport::AttrType::startPlayhead>());
                 break;
             }
             case Transport::AttrType::startPlayhead:
                 break;
             case Transport::AttrType::runningPlayhead:
             {
-                if(accessor.getAttr<Transport::AttrType::playback>())
-                {
-                    sendBundle(accessor.getAttr<Transport::AttrType::runningPlayhead>());
-                }
+                sendTracks(accessor.getAttr<Transport::AttrType::runningPlayhead>());
                 break;
             }
             case Transport::AttrType::looping:
@@ -404,96 +411,6 @@ void Application::Osc::TransportDispatcher::changeListenerCallback([[maybe_unuse
     else
     {
         transportAcsr.removeListener(mTransportListener);
-    }
-}
-
-void Application::Osc::TransportDispatcher::sendBundle(double time)
-{
-    auto const& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
-    auto const sendResult = [&](auto const identifier, auto const channelIndex, auto const valueIndex, auto const it, auto const parser)
-    {
-        juce::OSCMessage message("/" + identifier);
-        message.addInt32(static_cast<int32_t>(channelIndex));
-        message.addInt32(static_cast<int32_t>(valueIndex));
-        message.addFloat32(static_cast<float>(time));
-        message.addFloat32(static_cast<float>(std::get<0>(*it)));
-        message.addFloat32(static_cast<float>(std::get<1>(*it)));
-        parser(message, it);
-        for(auto const& extra : std::get<3>(*it))
-        {
-            message.addFloat32(extra);
-        }
-        mSender.send(message);
-    };
-
-    for(auto const& trackAcsr : trackAcsrs)
-    {
-        if(trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>())
-        {
-            auto const results = trackAcsr.get().getAttr<Track::AttrType::results>();
-            auto const access = results.getReadAccess();
-            if(static_cast<bool>(access))
-            {
-                auto const& identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-                if(auto const allMakers = results.getMarkers())
-                {
-                    for(auto channelIndex = 0_z; channelIndex < allMakers->size(); ++channelIndex)
-                    {
-                        auto const channelMakers = allMakers->at(channelIndex);
-                        auto const it = std::lower_bound(channelMakers.cbegin(), channelMakers.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Marker>);
-                        if(it != channelMakers.cend())
-                        {
-                            sendResult(identifier, channelIndex, std::distance(channelMakers.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
-                                       {
-                                           message.addString(juce::String(std::get<2>(*iter)));
-                                       });
-                        }
-                    }
-                }
-                else if(auto const allPoints = results.getPoints())
-                {
-                    for(auto channelIndex = 0_z; channelIndex < allPoints->size(); ++channelIndex)
-                    {
-                        auto const channelPoints = allPoints->at(channelIndex);
-                        auto const it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Point>);
-                        if(it != channelPoints.cend())
-                        {
-                            sendResult(identifier, channelIndex, std::distance(channelPoints.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
-                                       {
-                                           if(std::get<2>(*iter).has_value())
-                                           {
-                                               message.addFloat32(std::get<2>(*iter).value());
-                                           }
-                                           else
-                                           {
-                                               message.addString("-");
-                                           }
-                                       });
-                        }
-                    }
-                }
-                else if(auto const allColumns = results.getColumns())
-                {
-                    for(auto channelIndex = 0_z; channelIndex < allColumns->size(); ++channelIndex)
-                    {
-                        auto const channelColmuns = allColumns->at(channelIndex);
-                        auto const it = std::lower_bound(channelColmuns.cbegin(), channelColmuns.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Column>);
-                        if(it != channelColmuns.cend())
-                        {
-                            sendResult(identifier, channelIndex, std::distance(channelColmuns.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
-                                       {
-                                           message.addInt32(static_cast<int32_t>(std::get<2>(*iter).size()));
-                                           for(auto const& value : std::get<2>(*iter))
-                                           {
-                                               message.addFloat32(value);
-                                           }
-                                       });
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
