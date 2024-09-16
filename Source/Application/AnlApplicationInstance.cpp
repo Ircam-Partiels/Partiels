@@ -104,6 +104,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     AppQuitIfInvalidPointer(mOscTransportDispatcher);
 
+    mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
+    AppQuitIfInvalidPointer(mOscMouseDispatcher);
+
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -310,6 +313,7 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mDownloader.reset();
     mMainMenuModel.reset();
