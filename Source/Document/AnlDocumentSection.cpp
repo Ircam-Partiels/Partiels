@@ -564,7 +564,7 @@ void Document::Section::updateFocus()
 
 juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const
 {
-    auto getGroupIdentifier = [&]()
+    auto const getGroupIdentifier = [&]()
     {
         if(Tools::hasTrackAcsr(mAccessor, identifier) && Tools::isTrackInGroup(mAccessor, identifier))
         {
@@ -574,7 +574,7 @@ juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identi
         return identifier;
     };
 
-    auto it = mGroupSections.find(getGroupIdentifier());
+    auto const it = mGroupSections.find(getGroupIdentifier());
     anlWeakAssert(it != mGroupSections.end());
     if(it != mGroupSections.end())
     {
