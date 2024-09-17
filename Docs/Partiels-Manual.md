@@ -41,7 +41,7 @@
   * [8.1. View](#81-view)
   * [8.2. Zoom](#82-navigation)
   * [8.3. Transport](#83-transport)
-  * [8.4. OSC](#83-osc)
+  * [8.4. OSC](#84-osc)
 * [9. Track properties](#9-track-properties)
   * [9.1. Processor](#91-processor)
   * [9.2. Graphical](#92-graphical)
@@ -510,7 +510,7 @@ The actions to move the start position of the playback head and control the play
 
 ### 8.4. OSC
 
-Partiels offers the option of sending analysis track values via OSC (Open Sound Control) during playback. Information can be retrieved from other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of results. 
+Partiels offers the option of sending analysis track values via OSC (Open Sound Control) during playback or when hovering over tracks and groups with the mouse with the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). Information can be retrieved from other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of results. 
 
 Connection to the host is configured via the OSC property panel, accessible via the menu `Partiels → OSC Settings...` (Mac) or `Help → OSC Settings...` on (Linux/Windows), or by clicking on the OSC button ([Overview](#2-overview) **O**) in the center of the main interface header (when OSC is connected, button turns green.).
 
@@ -522,9 +522,10 @@ To enable a track's results to be sent via OSC, the corresponding option must be
 
 To ensure compatibility with as many applications as possible, results are sent in the form of messages (no bundles). 
 
-Messages are sent each time playback is advanced. For each channel of each track whose OSC is activated, a message corresponding to the result whose time is greater than or equal to the playback time is sent with the address corresponding to the track identifier followed by :
+When playback starts and stops, the OSC messages `playback 1` and `playback 0` are sent. During playback, OSC messages are sent each time the playhead advances. For each channel of each track whose OSC is activated, a message corresponding to the result whose time is greater than or equal to the playback time is sent:
 
-1. Channel index (int)
+1. Track address (string)
+2. Channel index (int)
 3. Result index (int)
 4. Playback time (float)
 5. Result time (float)
@@ -533,6 +534,20 @@ Messages are sent each time playback is advanced. For each channel of each track
     - Label string for a marker (string)
     - Value number for a value (float) or "-" label for a break (string)
     - Size (int) and list of numbers (float) for a vector
+8. List of numbers (float) for the extra values
+
+When playback is paused, the information are sent when hovering over groups and tracks with the mouse and the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The OSC messages `mouseover 1` and `mouseover 0` are sent when messages start or stop being sent. Each time the mouse is moved, and for each track under the cursor, a message containing the results is sent with the address corresponding to the track identifier followed by:
+
+1. Track address (string)
+2. Channel index (int)
+3. Result index (int)
+4. Playback time (float)
+5. Result time (float)
+6. Result duration (float)
+7. Result values:
+    - Label string for a marker (string)
+    - Value number for a value (float) or "-" label for a break (string)
+    - Bin index (int) and value of the bin (float) for a vector
 8. List of numbers (float) for the extra values
 
 <div style="page-break-after: always;"></div>
