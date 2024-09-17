@@ -1,0 +1,14 @@
+#N canvas 1009 591 552 359 12;
+#X obj 64 37 oscparse;
+#X obj 64 12 netreceive -u -b 9001;
+#X obj 64 93 smo-matrix 2476c2bd12534fc48f5612a755917925 1024;
+#X obj 122 155 smo-marker d9dc8ffb44944467a7099d1f9877f1ac;
+#X obj 108 240 output~;
+#X obj 94 123 smo-curve 03570fdcd3f14391a13d069fcabdf7ef;
+#X connect 0 0 2 0;
+#X connect 0 0 3 0;
+#X connect 0 0 5 0;
+#X connect 1 0 0 0;
+#X connect 2 0 4 0;
+#X connect 3 0 4 0;
+#X connect 5 0 4 0;
