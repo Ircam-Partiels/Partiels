@@ -13,26 +13,26 @@
   <layout value="daaaa5e9ca9440919fee0457c301a5ae"/>
   <layout value="66cf756a43824c299a0256f18b5df652"/>
   <timeZoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="57.12369614512472"
-            minimumLength="0.01160997732426304" visibleRange_start="3.528004907626882"
-            visibleRange_end="24.10047110740583">
+            minimumLength="0.01160997732426304" visibleRange_start="6.833910363234121"
+            visibleRange_end="17.05217626551128">
     <grid MiscModelVersion="131077" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131077" startPlayhead="12.52366714653643" looping="0"
+  <transport MiscModelVersion="131077" startPlayhead="9.150473751017453" looping="0"
              loopRange_start="55.674250339" loopRange_end="56.208309296" stopAtLoopEnd="0"
              autoScroll="1" gain="0.06478693864793536" magnetize="0"/>
   <groups MiscModelVersion="131077" identifier="66cf756a43824c299a0256f18b5df652"
-          name="Group 2" height="332" colour="0" expanded="1" referenceid="">
+          name="Group 2" height="687" colour="0" expanded="0" referenceid="">
     <layout value="03570fdcd3f14391a13d069fcabdf7ef"/>
     <layout value="2476c2bd12534fc48f5612a755917925"/>
     <zoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="1.0"
-          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.1754060008333296">
       <grid MiscModelVersion="131077" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
   <groups MiscModelVersion="131077" identifier="daaaa5e9ca9440919fee0457c301a5ae"
-          name="Group 1" height="269" colour="0" expanded="0" referenceid="4012ed3f6d2a4d5d8b2c0bd4e771088e">
+          name="Group 1" height="184" colour="0" expanded="0" referenceid="4012ed3f6d2a4d5d8b2c0bd4e771088e">
     <layout value="d9dc8ffb44944467a7099d1f9877f1ac"/>
     <layout value="4012ed3f6d2a4d5d8b2c0bd4e771088e"/>
     <zoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="1.0"
@@ -42,9 +42,9 @@
     </zoom>
   </groups>
   <tracks MiscModelVersion="131077" identifier="2476c2bd12534fc48f5612a755917925"
-          name="Fast Fourier Transform" input="" sampleRate="44100.0" height="133"
-          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="0"
-          zoomValueMode="1" zoomLogScale="1" zoomLink="1">
+          name="Fast Fourier Transform" input="" sampleRate="44100.0" height="360"
+          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="1"
+          zoomValueMode="1" zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
@@ -633,15 +633,15 @@
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
     <binZoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="513.0"
-             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="513.0">
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="89.98327842749809">
       <grid MiscModelVersion="131077" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
   <tracks MiscModelVersion="131077" identifier="03570fdcd3f14391a13d069fcabdf7ef"
-          name="Spectral Centroid" input="" sampleRate="44100.0" height="137"
-          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="0"
-          zoomValueMode="1" zoomLogScale="1" zoomLink="1">
+          name="Spectral Centroid" input="" sampleRate="44100.0" height="336"
+          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="1"
+          zoomValueMode="1" zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
@@ -717,7 +717,7 @@
     <channelsLayout value="1"/>
     <valueZoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="22050.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
-               visibleRange_end="22050.0">
+               visibleRange_end="3867.702318374918">
       <grid MiscModelVersion="131077" tickReference="0.0" mainTickInterval="0"
             tickPowerBase="10.0" tickDivisionFactor="4.0"/>
     </valueZoom>
