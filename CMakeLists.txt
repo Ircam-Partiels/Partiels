@@ -304,7 +304,7 @@ string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTE
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
 find_program(MDPDF_EXE "mdpdf")
 if(MDPDF_EXE)
-    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf --style=${CMAKE_CURRENT_SOURCE_DIR}/Docs/style.css --gh-style VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else()
     message(STATUS "Manual target cannot be generated because mdpdf is not found")
 endif()
