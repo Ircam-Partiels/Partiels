@@ -813,10 +813,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
     else if(options.useTextFormat() && options.ignoreGridResults)
     {
         auto const& tracks = getAllTrackAcsrs();
-        if(std::all_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
-                       {
-                           return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
-                       }))
+        if(tracks.size() > 1_z && std::all_of(tracks.cbegin(), tracks.cend(), [](auto const& trackAcsr)
+                                              {
+                                                  return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
+                                              }))
         {
             return juce::Result::fail("Invalid format for items");
         }
