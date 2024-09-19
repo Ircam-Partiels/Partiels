@@ -24,6 +24,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::edit:
             case AttrType::state:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:

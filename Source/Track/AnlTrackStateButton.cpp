@@ -51,6 +51,7 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
