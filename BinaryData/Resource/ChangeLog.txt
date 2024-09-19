@@ -1,4 +1,5 @@
 
+- Add: Addition of a line width parameter for graphical rendering of curve tracks and marker tracks
 - Add: Add OSC support for sending analysis values on mouseover
 - Fix: The "Ignore Matrix Tracks" export option prevents these tracks from being exported independently
 - Add: Add a logarithmic scale parameter to tracks that have frequency values in hertz enhancement
