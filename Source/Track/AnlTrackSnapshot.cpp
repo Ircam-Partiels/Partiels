@@ -41,6 +41,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
@@ -272,15 +273,16 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     auto const scaledValue = isLog ? Tools::getMidiFromHertz(value.value()) * scaleRatio : value.value();
     auto const y = Tools::valueToPixel(scaledValue, valueRange, bounds.toFloat());
     auto const shadowColour = accessor.getAttr<AttrType::colours>().shadow;
+    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
     if(!shadowColour.isTransparent())
     {
         g.setColour(juce::Colours::black.withAlpha(0.5f));
-        g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, 1.0f);
+        g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, lineWidth);
         g.setColour(juce::Colours::black.withAlpha(0.75f));
-        g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, 1.0f);
+        g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, lineWidth);
     }
     g.setColour(accessor.getAttr<AttrType::colours>().foreground);
-    g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
+    g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, lineWidth);
 }
 
 void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time)
@@ -405,6 +407,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             {
                 repaint();
             }
