@@ -27,6 +27,7 @@ namespace Group
         void setFontName(juce::String const& name);
         void setFontStyle(juce::String const& style);
         void setFontSize(float size);
+        void setLineWidth(float size);
         void setUnit(juce::String const& unit);
         void setLabelJustification(Track::LabelLayout::Justification justification);
         void setLabelPosition(float position);
@@ -37,6 +38,7 @@ namespace Group
         void updateColourMap();
         void updateColours();
         void updateFont();
+        void updateLineWidth();
         void updateUnit();
         void updateLabel();
         void updateLogScale();
@@ -53,6 +55,7 @@ namespace Group
         PropertyList mPropertyFontName;
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
+        PropertyNumber mPropertyLineWidth;
         PropertyText mPropertyUnit;
         PropertyList mPropertyLabelJustification;
         PropertyNumber mPropertyLabelPosition;

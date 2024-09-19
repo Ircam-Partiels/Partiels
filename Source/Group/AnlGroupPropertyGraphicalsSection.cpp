@@ -161,6 +161,12 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                         setFontSize(mPropertyFontSize.entry.getText().getFloatValue());
                         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's font size"));
                     })
+, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderers of the tracks of the group."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
+                     {
+                         mDirector.startAction(true);
+                         setLineWidth(value);
+                         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's line width"));
+                     })
 , mPropertyUnit(juce::translate("Unit"), juce::translate("The unit of the values for the graphical renderers of the tracks of the group."), [&](juce::String text)
                 {
                     setUnit(text);
@@ -195,11 +201,14 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyFontSize.entry.getProperties(), {4.0, 200.0}, 0.1, 1, "");
+
+    mPropertyLineWidth.entry.getProperties().set("isNumber", true);
+    NumberField::Label::storeProperties(mPropertyLineWidth.entry.getProperties(), {1.0, 100.0}, 0.5, 1, "");
 
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
@@ -210,6 +219,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyFontName);
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
+    addAndMakeVisible(mPropertyLineWidth);
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
@@ -238,6 +248,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyFontName);
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
+    setBounds(mPropertyLineWidth);
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
@@ -420,6 +431,24 @@ void Group::PropertyGraphicalsSection::setFontSize(float size)
     updateFont();
 }
 
+void Group::PropertyGraphicalsSection::setLineWidth(float size)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        trackAcsr.get().setAttr<Track::AttrType::lineWidth>(size, NotificationType::synchronous);
+    }
+    updateLineWidth();
+}
+
 void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
@@ -581,6 +610,7 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateColourMap();
     updateColours();
     updateFont();
+    updateLineWidth();
     updateUnit();
     updateLabel();
     updateLogScale();
@@ -772,6 +802,32 @@ void Group::PropertyGraphicalsSection::updateFont()
     else
     {
         mPropertyFontSize.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+    }
+    resized();
+}
+
+void Group::PropertyGraphicalsSection::updateLineWidth()
+{
+    juce::StringArray trackNames;
+    std::set<float> lineWidth;
+    for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+        {
+            lineWidth.insert(trackAcsr.get().getAttr<Track::AttrType::lineWidth>());
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+
+    mPropertyLineWidth.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The line width used by the graphical renderers of the tracks of the group."));
+    mPropertyLineWidth.setVisible(!lineWidth.empty());
+    if(lineWidth.size() == 1_z)
+    {
+        mPropertyLineWidth.entry.setValue(static_cast<double>(*lineWidth.cbegin()), juce::NotificationType::dontSendNotification);
+    }
+    else if(lineWidth.size() > 1_z)
+    {
+        mPropertyLineWidth.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
     resized();
 }
