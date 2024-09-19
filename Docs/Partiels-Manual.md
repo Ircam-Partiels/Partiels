@@ -653,7 +653,7 @@ The font properties are only available for marker or point type analyses. By def
 - Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
 - Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
 
-- Line Width: The line width used to render the the segments and markers.
+* Line Width: The line width used to render the the segments and markers.
 
 Label properties are only available for marker analyses. They allow you to adapt the position of marker labels on the graphical representation.
 
@@ -858,7 +858,6 @@ The Partiels executable can be used as a command line tool. The command line too
 Usage:
  Partiels --help|-h              Prints the list of commands
  Partiels --version|-v           Prints the current version number
- Partiels [file(s)]              Loads the document or creates a new document with the audio files specified as arguments.
  Partiels --new|-n [options]     Creates a new document with a template and an audio file.
 	--input|-i <audiofile> Defines the path to the audio file to analyze (required).
 	--template|-t <templatefile> Defines the path to the template file (required).
@@ -899,7 +898,8 @@ Usage:
 	--frame|-f <framesignature> The 4 characters frame signature (required).
 	--matrix|-m <matrixsignature> The 4 characters matrix signature (required).
 
-````
+Partiels [file(s)]              Loads the document or creates a new document with the audio files specified as arguments.
+```
 
 It is recommended to add the path to the executable in the paths of your command line tool environment. 
 
