@@ -641,7 +641,7 @@ A color can be modified using the color selector that is prompted by clicking on
 
 **Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
 
-#### 9.2.2. Font
+#### 9.2.2. Font, Label and Line Width
 
 The font properties are only available for marker or point type analyses. By default, the font *Nunito Sans* with a size of 14 and a regular style is used. You can change the font according to the ones available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if some characters are not supported.
 
@@ -652,6 +652,8 @@ The font properties are only available for marker or point type analyses. By def
 - Font Name: The name of the font used to render the labels of the markers or the  values of the points.
 - Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
 - Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
+
+- Line Width: The line width used to render the the segments and markers.
 
 Label properties are only available for marker analyses. They allow you to adapt the position of marker labels on the graphical representation.
 
