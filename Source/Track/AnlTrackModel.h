@@ -157,6 +157,7 @@ namespace Track
         , height
         , colours
         , font
+        , lineWidth
         , unit
         , labelLayout
         , channelsLayout
@@ -203,6 +204,7 @@ namespace Track
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::font, juce::Font, Model::Flag::basic>
+    , Model::Attr<AttrType::lineWidth, float, Model::Flag::basic>
     , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::labelLayout, LabelLayout, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
@@ -251,6 +253,7 @@ namespace Track
                                  , {120}
                                  , {}
                                  , {juce::Font("Nunito Sans", 14.0f, juce::Font::plain)}
+                                 , {1.0f}
                                  , {}
                                  , {}
                                  , {std::vector<bool>{}}
@@ -276,6 +279,10 @@ namespace Track
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
+            if constexpr(type == AttrType::lineWidth)
+            {
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(std::max(value, 1.0f), notification);
+            }
             if constexpr(type == AttrType::channelsLayout)
             {
                 if(!value.empty() && std::none_of(value.cbegin(), value.cend(), [](auto const& state)
