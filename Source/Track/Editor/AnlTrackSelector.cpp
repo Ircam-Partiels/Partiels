@@ -29,6 +29,7 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:

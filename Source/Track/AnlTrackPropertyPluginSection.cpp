@@ -27,6 +27,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::warnings:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:

@@ -29,6 +29,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:
@@ -179,6 +180,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::channelsLayout:

@@ -65,6 +65,7 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::extraThresholds:
             case AttrType::graphics:
             case AttrType::font:
+            case AttrType::lineWidth:
             case AttrType::warnings:
             case AttrType::grid:
             case AttrType::processing:
