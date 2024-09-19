@@ -56,6 +56,7 @@ namespace Track
         PropertyList mPropertyFontName;
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
+        PropertyNumber mPropertyLineWidth;
         PropertyText mPropertyUnit;
         PropertyList mPropertyLabelJustification;
         PropertyNumber mPropertyLabelPosition;

@@ -173,6 +173,12 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font size"));
                     })
+, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
+                     {
+                         mDirector.startAction();
+                         mAccessor.setAttr<AttrType::lineWidth>(value, NotificationType::synchronous);
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change the line width for the graphical renderer"));
+                     })
 , mPropertyUnit("Unit", "The unit of the values", [&](juce::String text)
                 {
                     setUnit(text);
@@ -302,6 +308,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyFontName.setVisible(true);
                             mPropertyFontStyle.setVisible(true);
                             mPropertyFontSize.setVisible(true);
+                            mPropertyLineWidth.setVisible(true);
                             mPropertyLabelJustification.setVisible(true);
                             mPropertyLabelPosition.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
@@ -322,6 +329,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyFontName.setVisible(true);
                             mPropertyFontStyle.setVisible(true);
                             mPropertyFontSize.setVisible(true);
+                            mPropertyLineWidth.setVisible(true);
                             mPropertyUnit.setVisible(true);
                             mPropertyValueRangeMode.setVisible(true);
                             mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
@@ -395,6 +403,12 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 {
                     mPropertyFontSize.entry.setText(juce::String(font.getHeight(), 1), juce::NotificationType::dontSendNotification);
                 }
+            }
+            break;
+            case AttrType::lineWidth:
+            {
+                auto const& lineWidth = acsr.getAttr<AttrType::lineWidth>();
+                mPropertyLineWidth.entry.setValue(static_cast<double>(lineWidth), juce::NotificationType::dontSendNotification);
             }
             break;
             case AttrType::labelLayout:
@@ -536,6 +550,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyFontSize.entry.getProperties(), {4.0, 200.0}, 0.1, 1, "");
+    mPropertyLineWidth.entry.getProperties().set("isNumber", true);
+    NumberField::Label::storeProperties(mPropertyLineWidth.entry.getProperties(), {1.0, 100.0}, 0.5, 1, "");
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
     addAndMakeVisible(mPropertyDurationColour);
@@ -545,6 +561,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyFontName);
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
+    addAndMakeVisible(mPropertyLineWidth);
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
@@ -592,6 +609,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyFontName);
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
+    setBounds(mPropertyLineWidth);
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
