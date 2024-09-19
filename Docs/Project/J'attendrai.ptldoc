@@ -13,12 +13,12 @@
   <layout value="daaaa5e9ca9440919fee0457c301a5ae"/>
   <layout value="66cf756a43824c299a0256f18b5df652"/>
   <timeZoom MiscModelVersion="131077" globalRange_start="0.0" globalRange_end="57.12369614512472"
-            minimumLength="0.01160997732426304" visibleRange_start="6.833910363234121"
-            visibleRange_end="17.05217626551128">
+            minimumLength="0.01160997732426304" visibleRange_start="17.66830186991283"
+            visibleRange_end="46.09175495829903">
     <grid MiscModelVersion="131077" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131077" startPlayhead="9.150473751017453" looping="0"
+  <transport MiscModelVersion="131077" startPlayhead="26.83089326921248" looping="0"
              loopRange_start="55.674250339" loopRange_end="56.208309296" stopAtLoopEnd="0"
              autoScroll="1" gain="0.06478693864793536" magnetize="0"/>
   <groups MiscModelVersion="131077" identifier="66cf756a43824c299a0256f18b5df652"
@@ -43,8 +43,8 @@
   </groups>
   <tracks MiscModelVersion="131077" identifier="2476c2bd12534fc48f5612a755917925"
           name="Fast Fourier Transform" input="" sampleRate="44100.0" height="360"
-          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="1"
-          zoomValueMode="1" zoomLogScale="0" zoomLink="1">
+          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
+          sendViaOsc="1" zoomValueMode="1" zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
@@ -640,8 +640,8 @@
   </tracks>
   <tracks MiscModelVersion="131077" identifier="03570fdcd3f14391a13d069fcabdf7ef"
           name="Spectral Centroid" input="" sampleRate="44100.0" height="336"
-          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="1"
-          zoomValueMode="1" zoomLogScale="0" zoomLink="1">
+          font="Nunito Sans; 14.0 Regular" lineWidth="2.0" showInGroup="1"
+          sendViaOsc="1" zoomValueMode="1" zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
@@ -729,8 +729,8 @@
   </tracks>
   <tracks MiscModelVersion="131077" identifier="4012ed3f6d2a4d5d8b2c0bd4e771088e"
           name="Waveform" input="" sampleRate="48000.0" height="109" font="Nunito Sans; 14.0 Regular"
-          showInGroup="1" sendViaOsc="0" zoomValueMode="1" zoomLogScale="0"
-          zoomLink="1">
+          lineWidth="1.0" showInGroup="1" sendViaOsc="0" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
@@ -767,8 +767,8 @@
   </tracks>
   <tracks MiscModelVersion="131077" identifier="d9dc8ffb44944467a7099d1f9877f1ac"
           name="Beat Detection" input="" sampleRate="48000.0" height="109"
-          font="Nunito Sans; 14.0 Regular" showInGroup="1" sendViaOsc="1"
-          zoomValueMode="0" zoomLogScale="0" zoomLink="1">
+          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
+          sendViaOsc="1" zoomValueMode="0" zoomLogScale="0" zoomLink="1">
     <file path="" commit="">
       <args/>
     </file>
