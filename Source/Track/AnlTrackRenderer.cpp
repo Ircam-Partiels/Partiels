@@ -42,7 +42,7 @@ namespace Track
                 }
             }
 
-            void draw(juce::Graphics& g, juce::Colour const& foreground, juce::Colour const& shadow)
+            void draw(juce::Graphics& g, juce::Colour const& foreground, juce::Colour const& shadow, float lineWidth)
             {
                 stopLine();
                 if(mPath.isEmpty())
@@ -50,7 +50,7 @@ namespace Track
                     return;
                 }
 
-                juce::PathStrokeType const pathStrokeType(1.0f);
+                juce::PathStrokeType const pathStrokeType(lineWidth);
                 pathStrokeType.createStrokedPath(mPath, mPath);
                 if(!shadow.isTransparent())
                 {
@@ -172,9 +172,9 @@ namespace Track
 
         void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, juce::String const& unit);
+        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, juce::String const& unit);
+        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, float lineWidth, juce::String const& unit);
         void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
     } // namespace Renderer
 } // namespace Track
@@ -365,12 +365,13 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
 
     auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
     auto const& edition = accessor.getAttr<AttrType::edit>();
+    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
     if(edition.channel == channel)
     {
         auto* data = std::get_if<std::vector<Result::Data::Marker>>(&edition.data);
         if(data != nullptr && !data->empty())
         {
-            paintMarkers(g, bounds, *data, thesholds, timeRange, {}, colours, labelLayout, unit);
+            paintMarkers(g, bounds, *data, thesholds, timeRange, {}, colours, labelLayout, lineWidth, unit);
         }
     }
 
@@ -383,11 +384,11 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
     auto const markers = results.getMarkers();
     if(markers != nullptr && markers->size() > channel)
     {
-        paintMarkers(g, bounds, markers->at(channel), thesholds, timeRange, edition.range, colours, labelLayout, unit);
+        paintMarkers(g, bounds, markers->at(channel), thesholds, timeRange, edition.range, colours, labelLayout, lineWidth, unit);
     }
 }
 
-void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, juce::String const& unit)
+void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty())
@@ -431,7 +432,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 
             if(!currentTick.isEmpty() && currentTick.getRight() >= x)
             {
-                currentTick = currentTick.getUnion({x, y, 1.0f, height});
+                currentTick = currentTick.getUnion({x, y, lineWidth, height});
             }
             else
             {
@@ -439,14 +440,14 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
                 {
                     ticks.addWithoutMerging(currentTick);
                 }
-                currentTick = {x, y, 1.0f, height};
+                currentTick = {x, y, lineWidth, height};
             }
 
             if(showDuration)
             {
                 if(w >= 1.0f && !currentDuration.isEmpty() && currentDuration.getRight() >= x)
                 {
-                    currentDuration = currentDuration.getUnion({x, y, w, height});
+                    currentDuration = currentDuration.getUnion({x, y, w + lineWidth, height});
                 }
                 else
                 {
@@ -456,7 +457,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
                     }
                     if(w >= 1.0f)
                     {
-                        currentDuration = {x, y, w, height};
+                        currentDuration = {x, y, w + lineWidth, height};
                     }
                     else
                     {
@@ -542,7 +543,7 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
     auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = accessor.getAttr<AttrType::colours>();
     auto const& unit = Tools::getUnit(accessor);
-
+    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
     auto const& results = accessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
@@ -571,15 +572,15 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
             auto* data = std::get_if<std::vector<Result::Data::Point>>(&edition.data);
             if(data != nullptr && !data->empty())
             {
-                paintPoints(g, bounds, markers->at(channel), thesholds, *data, timeRange, valueRange, scaleFn, colours, unit);
+                paintPoints(g, bounds, markers->at(channel), thesholds, *data, timeRange, valueRange, scaleFn, colours, lineWidth, unit);
                 return;
             }
         }
-        paintPoints(g, bounds, markers->at(channel), thesholds, {}, timeRange, valueRange, scaleFn, colours, unit);
+        paintPoints(g, bounds, markers->at(channel), thesholds, {}, timeRange, valueRange, scaleFn, colours, lineWidth, unit);
     }
 }
 
-void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, juce::String const& unit)
+void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, float lineWidth, juce::String const& unit)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty() || valueRange.isEmpty())
@@ -621,12 +622,12 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         if(!colours.shadow.isTransparent())
         {
             g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
-            g.drawLine(x1, y + 2.f, x2, y + 2.f);
+            g.drawLine(x1, y + 2.f, x2, y + 2.f, lineWidth);
             g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
-            g.drawLine(x1, y + 1.f, x2, y + 1.f);
+            g.drawLine(x1, y + 1.f, x2, y + 1.f, lineWidth);
         }
         g.setColour(colours.foreground);
-        g.drawLine(x1, y, x2, y);
+        g.drawLine(x1, y, x2, y, lineWidth);
 
         if(!colours.text.isTransparent())
         {
@@ -748,6 +749,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     PathArrangement pathArr;
     LabelArrangement labelArr(font, unit, numDecimals);
     auto const showLabel = !colours.text.isTransparent();
+    auto const rectExtent = std::max((lineWidth - 1) / 4.0f, 0.0f);
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
     {
@@ -785,7 +787,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
                 }
                 pathArr.stopLine();
 
-                rectangles.addWithoutMerging(juce::Rectangle<float>(x, y1, x2 - x, y2 - y1));
+                rectangles.addWithoutMerging(juce::Rectangle<float>(x, y1, x2 - x, y2 - y1).expanded(rectExtent));
                 if(showLabel)
                 {
                     labelArr.addValue(min, x, y1);
@@ -834,7 +836,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         g.fillRectList(rectangles);
     }
 
-    pathArr.draw(g, colours.foreground, colours.shadow);
+    pathArr.draw(g, colours.foreground, colours.shadow, lineWidth);
     if(showLabel)
     {
         labelArr.draw(g, colours.text);
