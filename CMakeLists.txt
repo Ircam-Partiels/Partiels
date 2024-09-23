@@ -333,10 +333,37 @@ endif()
 ### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels App\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Linux.tar.gz](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-MacOS.dmg](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.dmg)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Windows.exe](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Manual.pdf](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf)\n") 
+
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins\n")
+
+set(IVP_URL "https://nubo.ircam.fr/index.php/s/4erMZk8agBwjZya")
+set(IVP_TAG "2.0.3")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugin\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Linux.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Linux.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-MacOS.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-MacOS.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Windows.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Windows.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Manuals.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Manuals.zip)\n")
+
+set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
+set(CREPE_TAG "1.0.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Crepe Vamp Plugin\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Linux.tar.gz](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Linux.tar.gz)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-MacOS.dmg](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-MacOS.dmg)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Windows.exe](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Windows.exe)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Manual.zip](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Manual.zip)\n") 
+
+set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
+set(WHISPER_TAG "1.0.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-Linux.tar.gz](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-MacOS.dmg](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.dmg)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-Windows.exe](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Windows.exe)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-Manual.zip](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Manual.zip)\n") 
 
 ### Testing ###
 enable_testing()
