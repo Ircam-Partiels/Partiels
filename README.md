@@ -1,8 +1,17 @@
 # Partiels
 
-<p align="center"><a href="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml"><img src="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml/badge.svg" alt="Workflows"></a></p>
+<p align="center">
+    <a href="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml"><img src="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+    <a href="https://github.com/Ircam-Partiels/partiels/actions/workflows/codacy.yml"><img src="https://github.com/Ircam-Partiels/partiels/actions/workflows/codacy.yml/badge.svg" alt="Codacy"></a>
+</p>
 
-**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is a software suite for **analysing and exploring the content and characteristics** of sounds.
+<p align="center">
+    <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/release/Ircam-Partiels/partiels.svg" alt="Release"></a>
+    <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/downloads/Ircam-Partiels/partiels/total.svg?colorB=007ec6" alt="Downloads"></a>
+    <a href="https://github.com/Ircam-Partiels/Partiels?tab=GPL-3.0-1-ov-file"><img src="https://img.shields.io/badge/license-GPL--v3-blue.svg" alt="License"></a>
+</p>
+
+**[Partiels](https://github.com/Ircam-Partiels/Partiels)** is a software suite for **analysing and exploring the content and characteristics** of sounds.
 
 <p align="center"><img src="BinaryData/Resource/Partiels-v2.0.0-Sample-v2.gif"></p>
 
@@ -24,8 +33,15 @@ Partiels allows **analysis** of one or several audio files using Vamp plug-ins
 - Command line interface to analyze, export, and convert results
 - Consolidating documents for sharing
 
+Alongside Partiels, a wide range of analyses based on audio engines developed at IRCAM and outside are ported to Vamp plug-ins. These plug-ins allow you to perform FFT, LPC, transient, fundamental, formant, tempo, TTS and many other analyses. You can also find a large number of analysis plug-ins on the [Vamp plug-ins website](https://www.vamp-plugins.org/). 
+
+<p align="center">
+<strong><a href="https://github.com/Ircam-Partiels/partiels/releases/latest">👉 Download Partiels and the plugin suite</a></strong>
+</p>
+
 <p align="center"><img src="BinaryData/Resource/Partiels-Endorsements.png", width=520></p>
 
+> For bug requests or reports, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
 
 ## Compatibility
 
@@ -33,6 +49,7 @@ Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), 
 
 <p align="center"><img src="BinaryData/Resource/Partiels-Compatibility.png"></p>
 
+> ⚠️ Some Vamp plugins may not support the same configurations and may have other restrictions.
 
 ## Compilation
 
