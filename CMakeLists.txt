@@ -23,6 +23,8 @@ set(VAMP_SDK_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/vamp-plugin-
 
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
+option(GCOV_SUPPORT "Enable code coverage using gcov" OFF)
+
 project(Partiels VERSION 2.0.6 LANGUAGES C CXX)
 
 set(PARTIELS_CODESIGN_WINDOWS_KEYFILE "" CACHE PATH "The Windows (.pfx) certificate file")
@@ -227,6 +229,19 @@ else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
+    )
+endif()
+
+### Coverage ###
+if(GCOV_SUPPORT)
+    set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+    include(CodeCoverage)
+    append_coverage_compiler_flags_to_target(Partiels)
+    setup_target_for_coverage_lcov(
+        NAME PartielsCoverage
+        EXECUTABLE Partiels --unit-tests
+        DEPENDENCIES Partiels 
+        BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/src"
     )
 endif()
 
