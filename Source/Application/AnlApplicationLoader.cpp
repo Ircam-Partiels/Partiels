@@ -383,7 +383,7 @@ bool Application::DragAndDropTarget::isInterestedInFileDrag(juce::StringArray co
     auto const fileWildcard = documentWildcard + ";" + (documentHasAudioFiles ? importFormatsWildcard : audioFormatsWildcard);
     return std::any_of(files.begin(), files.end(), [&](auto const& fileName)
                        {
-                           return fileWildcard.contains(juce::File(fileName).getFileExtension());
+                           return fileWildcard.contains(juce::File(fileName).getFileExtension().toLowerCase());
                        });
 }
 
@@ -416,11 +416,11 @@ void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files
         for(auto const& fileName : files)
         {
             juce::File const file(fileName);
-            if(openWildcard.contains(file.getFileExtension()))
+            if(openWildcard.contains(file.getFileExtension().toLowerCase()))
             {
                 openFiles.push_back(file);
             }
-            else if(importFormatsWildcard.contains(file.getFileExtension()))
+            else if(importFormatsWildcard.contains(file.getFileExtension().toLowerCase()))
             {
                 importFiles.push_back(file);
             }

@@ -408,7 +408,7 @@ bool AudioFileLayoutTable::isInterestedInFileDrag(juce::StringArray const& files
     for(auto const& result : files)
     {
         juce::File const file(result);
-        if(file.isDirectory() || wildcard.contains(file.getFileExtension()))
+        if(file.isDirectory() || wildcard.contains(file.getFileExtension().toLowerCase()))
         {
             return true;
         }
@@ -828,7 +828,7 @@ std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audio
                 addToAudioFiles(child);
             }
         }
-        else if(file.existsAsFile() && wildcardForAllFormats.contains(file.getFileExtension()))
+        else if(file.existsAsFile() && wildcardForAllFormats.contains(file.getFileExtension().toLowerCase()))
         {
             addToAudioFiles(file);
         }
