@@ -465,7 +465,7 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
     std::vector<AudioFileLayout> readerLayout;
     for(auto const& file : files)
     {
-        auto const fileExtension = file.getFileExtension();
+        auto const fileExtension = file.getFileExtension().toLowerCase();
         anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension));
         if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension))
         {
@@ -518,7 +518,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     auto const audioFormatsWildCard = getWildCardForAudioFormats();
     for(auto const& file : files)
     {
-        auto const fileExtension = file.getFileExtension();
+        auto const fileExtension = file.getFileExtension().toLowerCase();
         if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFormatsWildCard.contains(fileExtension))
         {
             audioFiles.push_back(file);
@@ -545,7 +545,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
 void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
 {
     auto const importFileWildcard = getWildCardForImportFormats();
-    auto const fileExtension = file.getFileExtension();
+    auto const fileExtension = file.getFileExtension().toLowerCase();
     anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
     auto* window = getWindow();
     if(window == nullptr || mDocumentAccessor == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
