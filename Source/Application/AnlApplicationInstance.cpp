@@ -804,7 +804,7 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
                                                            }
                                                            if(result == 1)
                                                            {
-                                                               juce::URL("https://forum.ircam.fr/projects/detail/partiels/").launchInDefaultBrowser();
+                                                               juce::URL("https://github.com/Ircam-Partiels/Partiels/releases").launchInDefaultBrowser();
                                                            }
                                                        });
                         });
