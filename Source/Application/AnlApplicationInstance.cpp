@@ -784,17 +784,39 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
     {
         return;
     }
-    mDownloader->launch({"https://forum.ircam.fr/api/projects/401/?format=json"}, {}, [=](juce::File file)
+    mDownloader->launch({"https://api.github.com/repos/Ircam-Partiels/Partiels/releases/latest"}, {"Accept: application/vnd.github+json\" \"X-GitHub-Api-Version: 2022-11-28\nX-GitHub-Api-Version: 2022-11-28"}, [=](juce::File file)
                         {
                             static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
                             auto const currentVersion = Version::fromString(ProjectInfo::versionString);
                             auto const checkVersion = Version::fromString(Instance::get().getApplicationAccessor().getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
-                            auto const upstreamAsset = Tools::getLastestAsset(file.loadFileAsString());
-                            auto const upstreamVersion = upstreamAsset.has_value() ? std::get<0_z>(upstreamAsset.value()) : Version();
+                            auto const getVersion = [](juce::String const& content) -> Version
+                            {
+                                nlohmann::json json;
+                                try
+                                {
+                                    json = nlohmann::json::parse(content.toStdString());
+                                }
+                                catch(...)
+                                {
+                                    return {};
+                                }
+                                if(!json.is_object())
+                                {
+                                    return {};
+                                }
+                                auto const& nameIt = json.find("name");
+                                if(nameIt == json.cend() || !nameIt->is_string())
+                                {
+                                    return {};
+                                }
+                                return Version::fromString(nameIt->get<std::string>());
+                            };
+
+                            auto const upstreamVersion = getVersion(file.loadFileAsString());
                             Tools::notifyForNewVersion(upstreamVersion, usedVersion, isDevelopmentVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::companyName, [=](int result)
                                                        {
-                                                           if(!upstreamAsset.has_value())
+                                                           if(upstreamVersion == Version())
                                                            {
                                                                return;
                                                            }
