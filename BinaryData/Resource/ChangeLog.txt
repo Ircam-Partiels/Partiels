@@ -1,4 +1,5 @@
 
+- Imp: Use the GitHub API/website instead of those of the IRCAM Forum 
 - Fix: Support for upper case file extension
 
 v2.0.5
