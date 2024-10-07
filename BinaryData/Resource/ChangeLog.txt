@@ -1,4 +1,6 @@
 
+- Fix: Support for upper case file extension
+
 v2.0.5
 
 - Add: Line width parameter for the graphical rendering of curve tracks and marker tracks
