@@ -178,6 +178,11 @@ struct Version
         return tie() < rhs.tie();
     }
 
+    bool operator==(Version const& rhs) const
+    {
+        return tie() == rhs.tie();
+    }
+
     static Version fromString(juce::String const& text)
     {
         auto const numbers = juce::StringArray::fromTokens(text, ".", {});
