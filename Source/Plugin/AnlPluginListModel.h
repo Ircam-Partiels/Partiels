@@ -45,7 +45,7 @@ namespace PluginList
     };
 
     std::vector<juce::File> getDefaultSearchPath();
-    void setEnvironment(Accessor const& accessor);
+    void setEnvironment(Accessor const& accessor, juce::File const& blacklistFile);
 
 #if JUCE_MAC
     std::vector<juce::File> findLibrariesInQuarantine(Accessor const& accessor);
