@@ -253,14 +253,14 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
     }
 }
 
-void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& company, std::function<void(int)> callback)
+void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback)
 {
     if(upstreamVersion > currentVersion || (isCurrentVersionDev && upstreamVersion.tie() >= currentVersion.tie()))
     {
         auto options = juce::MessageBoxOptions()
                            .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                            .withTitle(juce::translate("A new version is available!"))
-                           .withMessage(juce::translate("PRODUCT VERSION has been published on the COMPANY website.").replace("PRODUCT", product).replace("VERSION", upstreamVersion.toString()).replace("COMPANY", company))
+                           .withMessage(juce::translate("PRODUCT VERSION has been published on the PROJECT page.").replace("PRODUCT", product).replace("VERSION", upstreamVersion.toString()).replace("PROJECT", project))
                            .withButton(juce::translate("Proceed to download page"));
         options = warnIfUpToDate ? options.withButton(juce::translate("Close the window")) : options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
         juce::AlertWindow::showAsync(options, callback);
@@ -270,7 +270,7 @@ void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersio
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                                  .withTitle(juce::translate("The version is up to date!"))
-                                 .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the COMPANY website.").replace("PRODUCT", product).replace("VERSION", currentVersion.toString()).replace("COMPANY", company))
+                                 .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the PROJECT page.").replace("PRODUCT", product).replace("VERSION", currentVersion.toString()).replace("PROJECT", project))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
     }

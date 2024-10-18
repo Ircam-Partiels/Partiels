@@ -814,7 +814,7 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
                             };
 
                             auto const upstreamVersion = getVersion(file.loadFileAsString());
-                            Tools::notifyForNewVersion(upstreamVersion, usedVersion, isDevelopmentVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::companyName, [=](int result)
+                            Tools::notifyForNewVersion(upstreamVersion, usedVersion, isDevelopmentVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::projectName, [=](int result)
                                                        {
                                                            if(upstreamVersion == Version())
                                                            {
