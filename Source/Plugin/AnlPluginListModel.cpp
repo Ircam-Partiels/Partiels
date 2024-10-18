@@ -29,8 +29,12 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 #endif
 }
 
-void PluginList::setEnvironment(Accessor const& accessor)
+void PluginList::setEnvironment(Accessor const& accessor, juce::File const& blacklistFile)
 {
+    if(auto* instance = Vamp::HostExt::PluginLoader::getInstance())
+    {
+        instance->setBlackListFile(blacklistFile.getFullPathName().toStdString());
+    }
 #if JUCE_MAC
     auto const quarantineMode = accessor.getAttr<AttrType::quarantineMode>();
     Vamp::HostExt::PluginLoader::setIgnoreQuanrantineLibs(quarantineMode == QuarantineMode::force || quarantineMode == QuarantineMode::ignore);
@@ -80,6 +84,15 @@ void PluginList::setEnvironment(Accessor const& accessor)
 #elif JUCE_WINDOWS
     _putenv_s("VAMP_PATH", value.c_str());
 #endif
+}
+
+juce::File PluginList::getBlackListFile()
+{
+    if(auto* instance = Vamp::HostExt::PluginLoader::getInstance())
+    {
+        return {juce::String(instance->getBlackListFile())};
+    }
+    return {};
 }
 
 #if JUCE_MAC
@@ -140,12 +153,6 @@ bool PluginList::removeLibrariesFromQuarantine(std::vector<juce::File> const& fi
                 std::cerr << "remove from quaratine failed: " << file.getFullPathName() << "\n";
             }
         }
-    }
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
-    if(pluginLoader != nullptr)
-    {
-        pluginLoader->listPluginsIn(names);
     }
     return !names.empty();
 }

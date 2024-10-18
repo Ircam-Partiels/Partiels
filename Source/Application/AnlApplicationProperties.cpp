@@ -141,7 +141,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             };
             searchPath.insert(searchPath.begin(), getPluginPackageDirectory());
             copy.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
-            PluginList::setEnvironment(copy);
+            PluginList::setEnvironment(copy, getFile("plugin.blacklist"));
         }
         break;
         case PropertyType::AudioSetup:

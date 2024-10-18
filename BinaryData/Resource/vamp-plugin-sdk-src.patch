@@ -1,39 +1,104 @@
-diff --git forkSrcPrefix/vamp-hostsdk/PluginHostAdapter.h forkDstPrefix/vamp-hostsdk/PluginHostAdapter.h
-index 2ca1d6994943e75febcbbce5cdc6fe22a3aa9342..ddadf94fad83e1cbf1151f65d0eaf30de959a9d7 100644
---- forkSrcPrefix/vamp-hostsdk/PluginHostAdapter.h
-+++ forkDstPrefix/vamp-hostsdk/PluginHostAdapter.h
-@@ -107,6 +107,10 @@ public:
- 
-     FeatureSet getRemainingFeatures();
- 
-+    VampPluginHandle getPluginHandle() {
-+        return m_handle;
-+    }
-+
- protected:
-     void convertFeatures(VampFeatureList *, FeatureSet &);
- 
 diff --git forkSrcPrefix/src/vamp-hostsdk/PluginLoader.cpp forkDstPrefix/src/vamp-hostsdk/PluginLoader.cpp
-index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6dc954ee9f49885306f47afdbd23142eb44d9bc8 100644
+index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6d5a46a19052f7757eb05f7f83ae443a9bcf168a 100644
 --- forkSrcPrefix/src/vamp-hostsdk/PluginLoader.cpp
 +++ forkDstPrefix/src/vamp-hostsdk/PluginLoader.cpp
-@@ -45,6 +45,7 @@
+@@ -45,6 +45,8 @@
  #include "Files.h"
  
  #include <fstream>
 +#include <mutex>
++#include <sstream>
  
  using namespace std;
  
-@@ -114,6 +115,7 @@ protected:
+@@ -73,6 +75,8 @@ public:
+     PluginCategoryHierarchy getPluginCategory(PluginKey key);
+ 
+     string getLibraryPathForPlugin(PluginKey key);
++    void setBlackListFile(std::string const& path);
++    std::string getBlackListFile() const;
+ 
+     static void setInstanceToClean(PluginLoader *instance);
+ 
+@@ -114,8 +118,10 @@ protected:
      map<PluginKey, PluginCategoryHierarchy> m_taxonomy;
      void generateTaxonomy();
  
 +    std::mutex m_mutex;
      map<Plugin *, void *> m_pluginLibraryHandleMap;
- 
+-
++    std::string m_blacklist;
++    
      bool decomposePluginKey(PluginKey key,
-@@ -446,7 +448,9 @@ PluginLoader::Impl::loadPlugin(PluginKey key,
+                             string &libraryName, string &identifier);
+ 
+@@ -299,9 +305,33 @@ PluginLoader::Impl::enumeratePlugins(Enumeration enumeration)
+ 
+     vector<PluginKey> added;
+     
++    ifstream pblf(m_blacklist);
++    string blacklist;
++    if(pblf.is_open())
++    {
++        stringstream buffer;
++        buffer << pblf.rdbuf();
++        blacklist = buffer.str();
++        pblf.close();
++    }
++
+     for (size_t i = 0; i < fullPaths.size(); ++i) {
+ 
+         string fullPath = fullPaths[i];
++        if(blacklist.find(fullPath) != string::npos)
++        {
++            cerr << "Vamp::HostExt::PluginLoader: "
++            << "dynamic library ignored \""
++            << fullPath << "\"" << endl;
++            continue;
++        }
++        std::ofstream oblf(m_blacklist, std::ofstream::out | std::ofstream::trunc);
++        if(oblf.is_open())
++        {
++            oblf << blacklist << "\n" << fullPath << "\n";
++            oblf.close();
++        }
++        
+         void *handle = Files::loadLibrary(fullPath);
+         if (!handle) continue;
+             
+@@ -352,6 +382,12 @@ PluginLoader::Impl::enumeratePlugins(Enumeration enumeration)
+         m_allPluginsEnumerated = true;
+     }
+ 
++    std::ofstream oblf(m_blacklist, std::ofstream::out | std::ofstream::trunc);
++    if(oblf.is_open())
++    {
++        oblf << blacklist;
++        oblf.close();
++    }
+     return added;
+ }
+ 
+@@ -403,6 +439,18 @@ PluginLoader::Impl::getLibraryPathForPlugin(PluginKey plugin)
+     return m_pluginLibraryNameMap[plugin];
+ }    
+ 
++void 
++PluginLoader::Impl::setBlackListFile(std::string const& path)
++{
++    m_blacklist = path;
++}
++
++std::string 
++PluginLoader::Impl::getBlackListFile() const
++{
++    return m_blacklist;
++}
++    
+ Plugin *
+ PluginLoader::Impl::loadPlugin(PluginKey key,
+                                float inputSampleRate, int adapterFlags)
+@@ -446,7 +494,9 @@ PluginLoader::Impl::loadPlugin(PluginKey key,
  
              Plugin *adapter = new PluginDeletionNotifyAdapter(plugin, this);
  
@@ -43,7 +108,7 @@ index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6dc954ee9f49885306f47afdbd23142e
  
              if (adapterFlags & ADAPT_INPUT_DOMAIN) {
                  if (adapter->getInputDomain() == Plugin::FrequencyDomain) {
-@@ -566,6 +570,7 @@ PluginLoader::Impl::generateTaxonomy()
+@@ -566,6 +616,7 @@ PluginLoader::Impl::generateTaxonomy()
  void
  PluginLoader::Impl::pluginDeleted(PluginDeletionNotifyAdapter *adapter)
  {
@@ -51,7 +116,7 @@ index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6dc954ee9f49885306f47afdbd23142e
      void *handle = m_pluginLibraryHandleMap[adapter];
      if (!handle) return;
  
-@@ -577,6 +582,7 @@ PluginLoader::Impl::pluginDeleted(PluginDeletionNotifyAdapter *adapter)
+@@ -577,6 +628,7 @@ PluginLoader::Impl::pluginDeleted(PluginDeletionNotifyAdapter *adapter)
              return;
          }
      }
@@ -59,7 +124,7 @@ index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6dc954ee9f49885306f47afdbd23142e
      
      Files::unloadLibrary(handle);
  }
-@@ -602,6 +608,13 @@ PluginLoader::Impl::PluginDeletionNotifyAdapter::~PluginDeletionNotifyAdapter()
+@@ -602,6 +654,23 @@ PluginLoader::Impl::PluginDeletionNotifyAdapter::~PluginDeletionNotifyAdapter()
      if (m_loader) m_loader->pluginDeleted(this);
  }
  
@@ -69,10 +134,60 @@ index c0f1894969b315d19c43a0cbf31f85ef81c686fd..6dc954ee9f49885306f47afdbd23142e
 +    Files::ignoreQuarantine = state;
 +}
 +#endif
++    
++void PluginLoader::setBlackListFile(std::string const& path)
++{
++    m_impl->setBlackListFile(path);
++}
++    
++std::string PluginLoader::getBlackListFile() const
++{
++    return m_impl->getBlackListFile();
++}
 +
  }
  
  }
+diff --git forkSrcPrefix/vamp-hostsdk/PluginWrapper.h forkDstPrefix/vamp-hostsdk/PluginWrapper.h
+index 45e68803f30c3d8b2d845812a7023daa3c08a6b4..70b90ed28e049b1630263e94ae741f3224cfcaf5 100644
+--- forkSrcPrefix/vamp-hostsdk/PluginWrapper.h
++++ forkDstPrefix/vamp-hostsdk/PluginWrapper.h
+@@ -124,6 +124,10 @@ public:
+         return nullptr;
+     }
+ 
++    Plugin *getPlugin() {
++        return m_plugin;
++    }
++
+     /**
+      * Disown the wrapped plugin, so that we no longer delete it on
+      * our own destruction. The identity of the wrapped plugin is
+diff --git forkSrcPrefix/vamp-hostsdk/PluginLoader.h forkDstPrefix/vamp-hostsdk/PluginLoader.h
+index 0735e0cc18be9328c47dad65ef6dafe0d6fc5a1a..7acf9c018d26fc52e4595b4765d6131e24cb170a 100644
+--- forkSrcPrefix/vamp-hostsdk/PluginLoader.h
++++ forkDstPrefix/vamp-hostsdk/PluginLoader.h
+@@ -259,6 +259,20 @@ public:
+      * given plugin will be loaded (if available).
+      */
+     std::string getLibraryPathForPlugin(PluginKey plugin);
++    
++    /**
++     * Set the file path for the blacklist file
++     */
++    void setBlackListFile(std::string const& path);
++    
++    /**
++     * Return the file path to the blacklist file
++     */
++    std::string getBlackListFile() const;
++
++#ifdef __APPLE__
++    static void setIgnoreQuanrantineLibs(bool state);
++#endif
+ 
+ protected:
+     PluginLoader();
 diff --git forkSrcPrefix/src/vamp-hostsdk/Files.cpp forkDstPrefix/src/vamp-hostsdk/Files.cpp
 index 8dda7ff8b2f8a18358db54e80f83c913f92b13e8..bc4d9d8691932e3a39c177a47bb51575c6ff8141 100644
 --- forkSrcPrefix/src/vamp-hostsdk/Files.cpp
@@ -113,21 +228,21 @@ index 8dda7ff8b2f8a18358db54e80f83c913f92b13e8..bc4d9d8691932e3a39c177a47bb51575
      handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
      if (!handle) {
          cerr << "Vamp::HostExt: Unable to load library \""
-diff --git forkSrcPrefix/vamp-hostsdk/PluginLoader.h forkDstPrefix/vamp-hostsdk/PluginLoader.h
-index 0735e0cc18be9328c47dad65ef6dafe0d6fc5a1a..4ffee1eb34efe0197db8d2b6f16a2eb37db45c28 100644
---- forkSrcPrefix/vamp-hostsdk/PluginLoader.h
-+++ forkDstPrefix/vamp-hostsdk/PluginLoader.h
-@@ -260,6 +260,10 @@ public:
-      */
-     std::string getLibraryPathForPlugin(PluginKey plugin);
+diff --git forkSrcPrefix/vamp-hostsdk/PluginHostAdapter.h forkDstPrefix/vamp-hostsdk/PluginHostAdapter.h
+index 2ca1d6994943e75febcbbce5cdc6fe22a3aa9342..ddadf94fad83e1cbf1151f65d0eaf30de959a9d7 100644
+--- forkSrcPrefix/vamp-hostsdk/PluginHostAdapter.h
++++ forkDstPrefix/vamp-hostsdk/PluginHostAdapter.h
+@@ -107,6 +107,10 @@ public:
  
-+#ifdef __APPLE__
-+    static void setIgnoreQuanrantineLibs(bool state);
-+#endif
+     FeatureSet getRemainingFeatures();
+ 
++    VampPluginHandle getPluginHandle() {
++        return m_handle;
++    }
 +
  protected:
-     PluginLoader();
-     virtual ~PluginLoader();
+     void convertFeatures(VampFeatureList *, FeatureSet &);
+ 
 diff --git forkSrcPrefix/src/vamp-hostsdk/Files.h forkDstPrefix/src/vamp-hostsdk/Files.h
 index 65992e3072fc9e021dcedf050b1e94416f8f4874..55f0d82293208098ac332e99f5ad8e08f1fbc9a5 100644
 --- forkSrcPrefix/src/vamp-hostsdk/Files.h
@@ -142,18 +257,3 @@ index 65992e3072fc9e021dcedf050b1e94416f8f4874..55f0d82293208098ac332e99f5ad8e08
      static void *loadLibrary(std::string filename);
      static void unloadLibrary(void *);
      static void *lookupInLibrary(void *, const char *symbol);
-diff --git forkSrcPrefix/vamp-hostsdk/PluginWrapper.h forkDstPrefix/vamp-hostsdk/PluginWrapper.h
-index 45e68803f30c3d8b2d845812a7023daa3c08a6b4..70b90ed28e049b1630263e94ae741f3224cfcaf5 100644
---- forkSrcPrefix/vamp-hostsdk/PluginWrapper.h
-+++ forkDstPrefix/vamp-hostsdk/PluginWrapper.h
-@@ -124,6 +124,10 @@ public:
-         return nullptr;
-     }
- 
-+    Plugin *getPlugin() {
-+        return m_plugin;
-+    }
-+
-     /**
-      * Disown the wrapped plugin, so that we no longer delete it on
-      * our own destruction. The identity of the wrapped plugin is
