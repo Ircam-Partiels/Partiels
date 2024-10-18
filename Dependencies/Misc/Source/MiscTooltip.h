@@ -72,17 +72,6 @@ namespace Tooltip
         bool const mAcceptsMouseDown;
         juce::String mTooltip;
     };
-
-    class BasicWindow
-    : public juce::TooltipWindow
-    {
-    public:
-        using juce::TooltipWindow::TooltipWindow;
-        ~BasicWindow() override = default;
-
-        // juce::TooltipWindow
-        juce::String getTipFor(juce::Component& component) override;
-    };
 } // namespace Tooltip
 
 MISC_FILE_END

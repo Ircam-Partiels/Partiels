@@ -33,7 +33,6 @@ namespace Track
             private:
                 Table& mTable;
                 Accessor::Listener mListener{typeid(*this).name()};
-                juce::TooltipWindow mTooltip;
             };
 
         private:

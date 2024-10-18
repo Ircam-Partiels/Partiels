@@ -154,8 +154,6 @@ namespace Application
         KeyMappingsPanel mKeyMappingsPanel;
         TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;
-
-        Tooltip::BasicWindow mPanelTooltipWindow{this};
     };
 } // namespace Application
 

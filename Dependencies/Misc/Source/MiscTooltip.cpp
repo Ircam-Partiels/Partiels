@@ -157,13 +157,4 @@ void Tooltip::BubbleWindow::timerCallback()
     }
 }
 
-juce::String Tooltip::BasicWindow::getTipFor(juce::Component& component)
-{
-    if(dynamic_cast<BubbleClient*>(std::addressof(component)) != nullptr)
-    {
-        return {};
-    }
-    return juce::TooltipWindow::getTipFor(component);
-}
-
 MISC_FILE_END

@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
 : FloatingWindowContainer(juce::translate("Results"), table)
 , mTable(table)
-, mTooltip(&mTable)
 {
     mFloatingWindow.setResizable(true, false);
     mBoundsConstrainer.setMinimumWidth(420 + mTable.mTable.getVerticalScrollBar().getWidth());
