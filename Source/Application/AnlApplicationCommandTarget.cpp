@@ -391,7 +391,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::viewInfoBubble:
         {
-            result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggles the info bubble info"), "View", 0);
+            result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggles display of the information bubble"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
