@@ -73,7 +73,6 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         updateButtonsStates();
     };
 
-#if JUCE_MAC
     mOptionButton.onClick = [=, this]()
     {
         juce::PopupMenu menu;
@@ -87,35 +86,57 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
                          mUseEnvVariable = !mUseEnvVariable;
                          updateButtonsStates();
                      });
-        juce::PopupMenu submenu;
+        juce::PopupMenu blacklistSubmenu;
+        auto const blackListFile = getBlackListFile();
+        juce::StringArray blackListedPlugins;
+        blackListedPlugins.addTokens(blackListFile.loadFileAsString(), "\n", "\"");
+        blackListedPlugins.removeEmptyStrings();
+        for(auto& blackListedPlugin : blackListedPlugins)
+        {
+            juce::File const pluginFile(blackListedPlugin);
+            blacklistSubmenu.addItem(juce::translate("Clear FLNAME").replace("FLNAME", pluginFile.getFileName()), true, false, [=]
+                                     {
+                                         juce::StringArray newList;
+                                         newList.addTokens(blackListFile.loadFileAsString(), "\n", "\"");
+                                         newList.removeEmptyStrings();
+                                         newList.removeString(blackListedPlugin);
+                                         blackListFile.replaceWithText(newList.joinIntoString("\n"));
+                                     });
+        }
+        if(!blackListedPlugins.isEmpty())
+        {
+            blacklistSubmenu.addSeparator();
+        }
+        blacklistSubmenu.addItem(juce::translate("Clear all"), !blackListedPlugins.isEmpty(), false, [=]
+                                 {
+                                     blackListFile.deleteFile();
+                                 });
+        blacklistSubmenu.addItem(juce::translate("Show file"), !blackListedPlugins.isEmpty(), false, [=]
+                                 {
+                                     blackListFile.revealToUser();
+                                 });
+        menu.addSubMenu(juce::translate("Blacklisted plugins"), blacklistSubmenu);
+#if JUCE_MAC
+        juce::PopupMenu quarantineSubmenu;
         auto const addModeItem = [&](juce::String const& name, QuarantineMode mode)
         {
-            submenu.addItem(name, mQuarantineMode != mode, mQuarantineMode == mode, [=, this]()
-                            {
-                                if(safePointer.get() == nullptr)
-                                {
-                                    return;
-                                }
-                                mQuarantineMode = mode;
-                                updateButtonsStates();
-                            });
+            quarantineSubmenu.addItem(name, mQuarantineMode != mode, mQuarantineMode == mode, [=, this]()
+                                      {
+                                          if(safePointer.get() == nullptr)
+                                          {
+                                              return;
+                                          }
+                                          mQuarantineMode = mode;
+                                          updateButtonsStates();
+                                      });
         };
         addModeItem(juce::translate("Keep the default system mechanism"), QuarantineMode::system);
         addModeItem(juce::translate("Attemp to open quarantined libraries"), QuarantineMode::force);
         addModeItem(juce::translate("Ignore quarantined libraries"), QuarantineMode::ignore);
-        menu.addSubMenu(juce::translate("Quarantine management"), submenu);
+        menu.addSubMenu(juce::translate("Quarantine management"), quarantineSubmenu);
+#endif
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mOptionButton));
     };
-#else
-    mEnvVariableInfo.setText(juce::translate("Env. variable"), juce::NotificationType::dontSendNotification);
-    mEnvVariableInfo.setTooltip(juce::translate("Toggle the use of the VAMP_PATH environment variable"));
-    mEnvVariableInfo.setEditable(false);
-    mEnvVariableButton.setTooltip(juce::translate("Toggle the use of the VAMP_PATH environment variable"));
-    mEnvVariableButton.onClick = [=]()
-    {
-        updateButtonsStates();
-    };
-#endif
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
