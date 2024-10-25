@@ -231,7 +231,7 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             lines.add(name + ": -");
             return lines;
         }
-        auto it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>));
+        auto const it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>));
         auto const& binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
         auto const value = Zoom::Tools::getScaledValueFromHeight(binVisibleRange, component, y);
         auto binIndex = static_cast<size_t>(std::max(std::floor(value), 0.0));
@@ -243,13 +243,14 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             auto const startMidi = getHertzFromMidi(value / numBins * midiMax);
             binIndex = static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0));
         }
+        auto const frameIndex = std::distance(channelResults.cbegin(), it);
         auto const& column = std::get<2_z>(*it);
         if(binIndex >= column.size())
         {
             lines.add(name + ": -");
             return lines;
         }
-        lines.add(name + ": " + Format::valueToString(column.at(binIndex), 4) + unit);
+        lines.add(name + ": " + Format::valueToString(column.at(binIndex), 4) + unit + juce::translate(" (frame IDX)").replace("IDX", juce::String(frameIndex)));
         getExtraTooltip(std::get<3_z>(*it));
         return lines;
     }
