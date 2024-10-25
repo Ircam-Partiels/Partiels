@@ -171,7 +171,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
@@ -443,7 +443,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
@@ -649,7 +649,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
@@ -783,7 +783,7 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
@@ -911,7 +911,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
@@ -1081,11 +1081,7 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, Zoom::Range timeR
 
     if(timeRange.isEmpty())
     {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
-    }
-    if(timeRange.isEmpty())
-    {
-        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+        timeRange = {-1.0, std::numeric_limits<double>::max()};
     }
 
     auto const access = results.getReadAccess();
