@@ -154,9 +154,9 @@ void Application::Osc::Sender::sendTrack(Track::Accessor const& trackAcsr, doubl
                 while(channelIndex < endChannel)
                 {
                     auto const channelMakers = allMakers->at(channelIndex);
-                    auto const it = std::lower_bound(channelMakers.cbegin(), channelMakers.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Marker>);
-                    if(it != channelMakers.cend())
+                    if(!channelMakers.empty())
                     {
+                        auto const it = std::prev(std::upper_bound(std::next(channelMakers.cbegin()), channelMakers.cend(), time, Track::Result::upper_cmp<Track::Result::Data::Marker>));
                         sendResult(identifier, channelIndex, std::distance(channelMakers.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
                                    {
                                        message.addString(juce::String(std::get<2>(*iter)));
@@ -175,9 +175,9 @@ void Application::Osc::Sender::sendTrack(Track::Accessor const& trackAcsr, doubl
                 while(channelIndex < endChannel)
                 {
                     auto const channelPoints = allPoints->at(channelIndex);
-                    auto const it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Point>);
-                    if(it != channelPoints.cend())
+                    if(!channelPoints.empty())
                     {
+                        auto const it = std::prev(std::upper_bound(std::next(channelPoints.cbegin()), channelPoints.cend(), time, Track::Result::upper_cmp<Track::Result::Data::Point>));
                         sendResult(identifier, channelIndex, std::distance(channelPoints.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
                                    {
                                        if(std::get<2>(*iter).has_value())
@@ -203,9 +203,9 @@ void Application::Osc::Sender::sendTrack(Track::Accessor const& trackAcsr, doubl
                 while(channelIndex < endChannel)
                 {
                     auto const channelColmuns = allColumns->at(channelIndex);
-                    auto const it = std::lower_bound(channelColmuns.cbegin(), channelColmuns.cend(), time, Track::Result::lower_cmp<Track::Result::Data::Column>);
-                    if(it != channelColmuns.cend())
+                    if(!channelColmuns.empty())
                     {
+                        auto const it = std::prev(std::upper_bound(std::next(channelColmuns.cbegin()), channelColmuns.cend(), time, Track::Result::upper_cmp<Track::Result::Data::Column>));
                         if(!bin.has_value())
                         {
                             sendResult(identifier, channelIndex, std::distance(channelColmuns.cbegin(), it), it, [](juce::OSCMessage& message, auto iter)
