@@ -318,7 +318,7 @@ void Track::Graphics::performRendering(std::vector<Track::Result::Data::Columns>
                                 using diff_t = decltype(values.cbegin())::difference_type;
                                 auto const rval = *std::max_element(std::next(values.cbegin(), static_cast<diff_t>(startRow)), std::next(values.cbegin(), static_cast<diff_t>(endRow)));
                                 auto const value = std::round((rval - valueStart) * valueScale);
-                                auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
+                                auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
                                 reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
                             }
                             pixel -= lineStride;
