@@ -15,7 +15,15 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 
 void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce::MouseWheelDetails const& wheel)
 {
-    useMouseWheelMoveIfNeeded(e, wheel);
+    auto constexpr leftPart = Track::Section::getThumbnailOffset() + Track::Section::getThumbnailWidth();
+    auto const bounds = getMainSectionBorderSize().subtractedFrom(getLocalBounds()).withWidth(leftPart);
+    if(bounds.contains(getMouseXYRelative()))
+    {
+        if(!useMouseWheelMoveIfNeeded(e, wheel))
+        {
+            Component::mouseWheelMove(e, wheel);
+        }
+    }
 }
 
 Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
