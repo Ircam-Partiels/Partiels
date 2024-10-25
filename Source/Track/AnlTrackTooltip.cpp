@@ -231,13 +231,7 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             lines.add(name + ": -");
             return lines;
         }
-        auto it = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>);
-        if(it == channelResults.cbegin())
-        {
-            lines.add(name + ": -");
-            return lines;
-        }
-        it = std::prev(it);
+        auto it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>));
         auto const& binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
         auto const value = Zoom::Tools::getScaledValueFromHeight(binVisibleRange, component, y);
         auto binIndex = static_cast<size_t>(std::max(std::floor(value), 0.0));
