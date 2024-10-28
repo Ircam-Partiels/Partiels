@@ -1,4 +1,6 @@
 
+- Fix:  The time returned by OSC is shifted in relation to the position of the mouse
+- Fix: The sonogram frames are not synchronised with the values
 - Add: Blacklist system to manage plugins that have caused the application to crash
 - Fix: Ignore mouse wheel if not on the track or group thumbnails
 - Imp: Use the GitHub API/website instead of those of the IRCAM Forum 
