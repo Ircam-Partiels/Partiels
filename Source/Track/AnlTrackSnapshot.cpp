@@ -298,8 +298,8 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
         return;
     }
 
-    auto const images = accessor.getAttr<AttrType::graphics>();
-    if(images.empty() || images.size() <= channel || images.at(channel).empty())
+    auto const graph = accessor.getAttr<AttrType::graphics>();
+    if(graph.empty(channel))
     {
         return;
     }
@@ -369,7 +369,7 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
         Renderer::paintClippedImage(g, image, {std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
-    renderImage(images.at(channel).back(), time, timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
+    renderImage(graph.channels.at(channel).images.back(), time, timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
 }
 
 Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)

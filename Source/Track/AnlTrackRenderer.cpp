@@ -845,20 +845,23 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
 
 void Track::Renderer::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto const images = accessor.getAttr<AttrType::graphics>();
-    if(images.empty() || images.size() <= channel || images.at(channel).empty())
+    auto const graph = accessor.getAttr<AttrType::graphics>();
+    if(graph.empty(channel))
+    {
+        return;
+    }
+    auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
+    if(bounds.isEmpty() || clipBounds.isEmpty())
     {
         return;
     }
 
-    if(bounds.isEmpty() || g.getClipBounds().isEmpty())
+    auto const& binZoomAcsr = accessor.getAcsr<AcsrType::binZoom>();
+    if(timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty() || timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
     {
         return;
     }
-
-    auto const& globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-    auto const& visibleTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(globalTimeRange.isEmpty() || visibleTimeRange.isEmpty())
+    if(binZoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty() || binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
     {
         return;
     }
@@ -870,71 +873,38 @@ void Track::Renderer::paintColumns(Accessor const& accessor, size_t channel, juc
             return;
         }
 
-        using PixelRange = juce::Range<int>;
-        using ZoomRange = Zoom::Range;
-
-        // Gets the visible zoom range of a zoom accessor and inverses it if necessary
-        auto const getZoomRange = [](Zoom::Accessor const& zoomAcsr, bool inverted)
+        auto const scale = [](auto const& range, auto const& source, auto const& destination)
         {
-            if(!inverted)
+            if(static_cast<double>(source.getLength()) <= 0.0)
             {
-                return zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                return Zoom::Range(destination.getStart(), destination.getStart());
             }
-            auto const& globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            auto const& visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            return ZoomRange{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart() + globalRange.getStart()};
+            auto const ratio = static_cast<double>(destination.getLength()) / static_cast<double>(source.getLength());
+            auto const start = (static_cast<double>(range.getStart()) - static_cast<double>(source.getStart())) * ratio + static_cast<double>(destination.getStart());
+            auto const end = (static_cast<double>(range.getEnd()) - static_cast<double>(source.getStart())) * ratio + static_cast<double>(destination.getStart());
+            return Zoom::Range(start, end);
         };
 
-        // Gets the visible zoom range equivalent to the graphics clip bounds
-        auto const clipZoomRange = [](PixelRange const& global, PixelRange const& visible, ZoomRange const& zoom)
+        auto const reverse = [](Zoom::Range const& globalRange, Zoom::Range const& visibleRange)
         {
-            auto const ratio = zoom.getLength() / static_cast<double>(global.getLength());
-            auto const x1 = static_cast<double>(visible.getStart() - global.getStart()) * ratio + zoom.getStart();
-            auto const x2 = static_cast<double>(visible.getEnd() - global.getStart()) * ratio + zoom.getStart();
-            return ZoomRange{x1, x2};
+            return Zoom::Range{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart() + globalRange.getStart()};
         };
 
-        // Converts the visible zoom range to image range
-        auto toImageRange = [](ZoomRange const& globalRange, ZoomRange const& visibleRange, int imageSize)
-        {
-            auto const globalLength = globalRange.getLength();
-            anlStrongAssert(globalLength > 0.0);
-            if(globalLength <= 0.0)
-            {
-                return juce::Range<float>();
-            }
-            auto const scale = static_cast<float>(imageSize);
-            auto const scaleValue = [&](double value)
-            {
-                return static_cast<float>((value - globalRange.getStart()) / globalLength * scale);
-            };
-            return juce::Range<float>{scaleValue(visibleRange.getStart()), scaleValue(visibleRange.getEnd())};
-        };
+        auto const xClippedRange = scale(clipBounds.getHorizontalRange(), bounds.getHorizontalRange(), xZoomAcsr.getAttr<Zoom::AttrType::visibleRange>());
+        auto const xRange = scale(xClippedRange, graph.channels.at(channel).timeRange, juce::Range<int>{0, image.getWidth()});
 
-        auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
-
-        auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), getZoomRange(xZoomAcsr, false));
-        auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
-
-        auto const yClippedRange = clipZoomRange(bounds.getVerticalRange(), clipBounds.getVerticalRange(), getZoomRange(yZoomAcsr, true));
-        auto const yRange = toImageRange(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yClippedRange, image.getHeight());
+        auto const yClippedRange = scale(clipBounds.getVerticalRange(), bounds.getVerticalRange(), reverse(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yZoomAcsr.getAttr<Zoom::AttrType::visibleRange>()));
+        auto const yRange = scale(yClippedRange, yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), juce::Range<int>{0, image.getHeight()});
 
         g.setColour(juce::Colours::black);
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-        paintClippedImage(g, image, {xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()});
+        paintClippedImage(g, image, juce::Rectangle<double>{xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()}.toFloat());
     };
 
-    auto const getZoomRatio = [](Zoom::Accessor const& acsr)
-    {
-        return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
-    };
-
-    auto const& binZoomAcsr = accessor.getAcsr<AcsrType::binZoom>();
-
-    auto const timeZoomRatio = getZoomRatio(timeZoomAcsr);
-    auto const binZoomRatio = getZoomRatio(binZoomAcsr);
+    auto const timeZoomRatio = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength() / timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
+    auto const binZoomRatio = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength() / binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
     auto const boundsDimension = std::max(bounds.getWidth() * timeZoomRatio, bounds.getHeight() * binZoomRatio);
-    for(auto const& image : images.at(channel))
+    for(auto const& image : graph.channels.at(channel).images)
     {
         auto const imageDimension = std::max(image.getWidth(), image.getHeight());
         if(imageDimension >= boundsDimension)
@@ -943,7 +913,7 @@ void Track::Renderer::paintColumns(Accessor const& accessor, size_t channel, juc
             return;
         }
     }
-    renderImage(images.at(channel).back(), timeZoomAcsr, binZoomAcsr);
+    renderImage(graph.channels.at(channel).images.back(), timeZoomAcsr, binZoomAcsr);
 }
 
 ANALYSE_FILE_END

@@ -18,13 +18,26 @@ namespace Track
         bool isRunning() const;
         float getAdvancement() const;
 
-        std::function<void(Images images)> onRenderingUpdated = nullptr;
-        std::function<void(Images images)> onRenderingEnded = nullptr;
+        std::function<void(Graph graph)> onRenderingUpdated = nullptr;
+        std::function<void(Graph graph)> onRenderingEnded = nullptr;
         std::function<void(void)> onRenderingAborted = nullptr;
 
     private:
+        struct DrawInfo
+        {
+            int numColumns{0};
+            int numRows{0};
+            bool logScale{false};
+            double sampleRate{0.0};
+            juce::Range<double> range;
+            Ive::PluginWrapper* plugin{nullptr};
+            int featureIndex{0};
+            bool hasDuration{false};
+        };
+
         void abortRendering();
-        void performRendering(std::vector<Track::Result::Data::Columns> const columns, ColourMap const colourMap, juce::Range<double> const valueRange, bool logScale, double sampleRate, int width, int height, Ive::PluginWrapper* plugin, int featureIndex, bool hasDuration);
+        void performRendering(std::vector<Track::Result::Data::Columns> const& columns, ColourMap const colourMap, DrawInfo const& info);
+        juce::Image createImage(std::vector<Track::Result::Data::Columns> const& columns, size_t index, int imageWidth, int imageHeight, std::array<juce::PixelARGB, 256> const& colours, DrawInfo const& info, float& advancement, std::function<bool(void)> predicate);
 
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
@@ -40,7 +53,7 @@ namespace Track
         // clang-format on
 
         std::mutex mMutex;
-        Images mImages;
+        Graph mGraph;
         Result::Data mData;
         std::unique_ptr<Result::Access> mAccess;
         std::atomic<ProcessState> mRenderingState{ProcessState::available};
