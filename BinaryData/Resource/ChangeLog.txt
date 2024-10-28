@@ -1,4 +1,6 @@
 
+- Add: Blacklist system to manage plugins that have caused the application to crash
+- Fix: Ignore mouse wheel if not on the track or group thumbnails
 - Imp: Use the GitHub API/website instead of those of the IRCAM Forum 
 - Fix: Support for upper case file extension
 
