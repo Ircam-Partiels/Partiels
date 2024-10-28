@@ -82,7 +82,7 @@ Group::Section::~Section()
 
 juce::Rectangle<int> Group::Section::getPlotBounds() const
 {
-    return mPlot.getBounds();
+    return getLocalArea(&mPlot, mPlot.getBounds());
 }
 
 juce::String Group::Section::getIdentifier() const

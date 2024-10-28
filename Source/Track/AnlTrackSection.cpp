@@ -101,7 +101,7 @@ Track::Section::~Section()
 
 juce::Rectangle<int> Track::Section::getPlotBounds() const
 {
-    return mPlot.getBounds();
+    return getLocalArea(&mPlot, mPlot.getBounds());
 }
 
 juce::String Track::Section::getIdentifier() const
