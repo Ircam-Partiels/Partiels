@@ -30,9 +30,44 @@ namespace Track
 
     using Results = Result::Data;
     using FileInfo = Result::File;
-    using Images = std::vector<std::vector<juce::Image>>;
     using ColourMap = tinycolormap::ColormapType;
     using FocusInfo = std::bitset<static_cast<size_t>(512)>;
+
+    struct Graph
+    {
+        struct Channel
+        {
+            std::vector<juce::Image> images;
+            juce::Range<double> timeRange;
+
+            auto const tie() const
+            {
+                return std::tie(images, timeRange);
+            }
+
+            bool operator==(Channel const& rhs) const
+            {
+                return tie() == rhs.tie();
+            }
+        };
+
+        std::vector<Channel> channels;
+
+        bool empty() const
+        {
+            return channels.empty();
+        }
+
+        bool empty(size_t channel) const
+        {
+            return channels.empty() || channel >= channels.size() || channels.at(channel).images.empty();
+        }
+
+        bool operator==(Graph const& rhs) const
+        {
+            return channels == rhs.channels;
+        }
+    };
 
     struct Edition
     {
@@ -216,7 +251,7 @@ namespace Track
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     , Model::Attr<AttrType::extraThresholds, std::vector<std::optional<float>>, Model::Flag::basic>
     
-    , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
+    , Model::Attr<AttrType::graphics, Graph, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, FocusInfo, Model::Flag::notifying>

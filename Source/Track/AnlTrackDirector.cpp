@@ -344,7 +344,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
     mProcessor.onAnalysisAborted = [&]()
     {
         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-        mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(Graph{}, NotificationType::synchronous);
     };
 
     mLoader.onLoadingSucceeded = [&](Results const& results)
@@ -367,19 +367,19 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
     mLoader.onLoadingAborted = [&]()
     {
         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-        mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(Graph{}, NotificationType::synchronous);
     };
 
-    mGraphics.onRenderingUpdated = [&](Images images)
+    mGraphics.onRenderingUpdated = [&](Graph graph)
     {
-        mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(graph, NotificationType::synchronous);
     };
 
-    mGraphics.onRenderingEnded = [&](Images images)
+    mGraphics.onRenderingEnded = [&](Graph graph)
     {
         stopTimer();
         timerCallback();
-        mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(graph, NotificationType::synchronous);
     };
 
     mGraphics.onRenderingAborted = [&]()
