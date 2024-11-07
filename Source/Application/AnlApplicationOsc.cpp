@@ -352,14 +352,11 @@ Application::Osc::TransportDispatcher::TransportDispatcher(Sender& sender)
     {
         auto const sendTracks = [&](double time)
         {
-            if(accessor.getAttr<Transport::AttrType::playback>())
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+            for(auto const& trackAcsr : trackAcsrs)
             {
-                auto const& documentAcsr = Instance::get().getDocumentAccessor();
-                auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
-                for(auto const& trackAcsr : trackAcsrs)
-                {
-                    mSender.sendTrack(trackAcsr.get(), time, {}, {});
-                }
+                mSender.sendTrack(trackAcsr.get(), time, {}, {});
             }
         };
 
@@ -370,14 +367,26 @@ Application::Osc::TransportDispatcher::TransportDispatcher(Sender& sender)
                 juce::OSCMessage message("/playback");
                 message.addInt32(accessor.getAttr<Transport::AttrType::playback>() ? 1 : 0);
                 mSender.send(message);
-                sendTracks(accessor.getAttr<Transport::AttrType::startPlayhead>());
+                if(accessor.getAttr<Transport::AttrType::playback>())
+                {
+                    sendTracks(accessor.getAttr<Transport::AttrType::startPlayhead>());
+                }
                 break;
             }
             case Transport::AttrType::startPlayhead:
-                break;
+            {
+                if(!accessor.getAttr<Transport::AttrType::playback>())
+                {
+                    sendTracks(accessor.getAttr<Transport::AttrType::startPlayhead>());
+                }
+            }
+            break;
             case Transport::AttrType::runningPlayhead:
             {
-                sendTracks(accessor.getAttr<Transport::AttrType::runningPlayhead>());
+                if(accessor.getAttr<Transport::AttrType::playback>())
+                {
+                    sendTracks(accessor.getAttr<Transport::AttrType::runningPlayhead>());
+                }
                 break;
             }
             case Transport::AttrType::looping:
