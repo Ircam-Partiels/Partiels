@@ -1,4 +1,6 @@
 
+v2.0.6
+
 - Fix:  The time returned by OSC is shifted in relation to the position of the mouse
 - Fix: The sonogram frames are not synchronised with the values
 - Add: Blacklist system to manage plugins that have caused the application to crash
