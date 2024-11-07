@@ -1,331 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document MiscModelVersion="131078" viewport_x="0" viewport_y="0" path="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/VoiceAh.ptldoc"
+<document MiscModelVersion="131079" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/BinaryData/Patchs/Voice.ptldoc"
           grid="1" autoresize="1" samplerate="44100.0" channels="1">
   <reader>
-    <value file="/Users/guillot/Gitlab/IVP/partiels/BinaryData/Tests/VoiceAh.wav"
+    <value file="/Users/guillot/Git/Partiels/BinaryData/Patchs/Voice_ConsolidatedFiles/Audio/Voice.wav"
            channel="0"/>
   </reader>
   <layout value="a4d7b12bca894cb083e62a63534ca46a"/>
-  <timeZoom MiscModelVersion="131078" globalRange_start="0.0" globalRange_end="0.7237868480725623"
+  <timeZoom MiscModelVersion="131079" globalRange_start="0.0" globalRange_end="0.7237868480725623"
             minimumLength="0.01160997732426304" visibleRange_start="0.0"
-            visibleRange_end="0.1311384607962663">
-    <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="0"
+            visibleRange_end="0.7237868480725623">
+    <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131078" startPlayhead="0.008878318153287594"
-             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
-             autoScroll="1" gain="1.0" magnetize="0"/>
-  <groups MiscModelVersion="131078" identifier="a4d7b12bca894cb083e62a63534ca46a"
-          name="Group 1" height="34" colour="0" expanded="1" referenceid="">
+  <transport MiscModelVersion="131079" startPlayhead="0.4641789398686304"
+             looping="1" loopRange_start="0.0" loopRange_end="0.7237868480725623"
+             stopAtLoopEnd="0" autoScroll="1" gain="0.4779689349517937" magnetize="0"/>
+  <groups MiscModelVersion="131079" identifier="a4d7b12bca894cb083e62a63534ca46a"
+          name="Group 1" height="751" colour="0" expanded="0" referenceid="e0996805fc874a6d98e36e7cfa86ac1c">
+    <layout value="e0996805fc874a6d98e36e7cfa86ac1c"/>
     <layout value="03cb5fd936574caebd686efde3a70f32"/>
-    <layout value="9c0e3843c2ba4b4eb0e3c3812215b024"/>
-    <zoom MiscModelVersion="131078" globalRange_start="0.0" globalRange_end="1.0"
-          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.007064813079415362">
-      <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="3"
+    <zoom MiscModelVersion="131079" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <tracks MiscModelVersion="131078" identifier="9c0e3843c2ba4b4eb0e3c3812215b024"
-          name="Spectrogram" input="" sampleRate="44100.0" height="312"
-          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
-          sendViaOsc="1" zoomValueMode="1" zoomLogScale="0" zoomLink="1">
-    <file path="" commit="">
-      <args/>
-    </file>
-    <description name="Spectrogram" inputDomain="1" maker="Factory" version="1"
-                 category="" details="Display the spectrogram of the audio.&#10;Partiels factory plugin.">
-      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
-      <output identifier="energies" name="Energy" description="Energy from the input signal"
-              unit="dB" hasFixedBinCount="1" binCount="257" hasKnownExtents="1"
-              minValue="-120.0" maxValue="12.0" isQuantized="0" quantizeStep="0.0"
-              sampleType="0" sampleRate="0.0" hasDuration="0">
-        <binNames value="85.8Hz"/>
-        <binNames value="171.6Hz"/>
-        <binNames value="257.4Hz"/>
-        <binNames value="343.2Hz"/>
-        <binNames value="429.0Hz"/>
-        <binNames value="514.8Hz"/>
-        <binNames value="600.6Hz"/>
-        <binNames value="686.4Hz"/>
-        <binNames value="772.2Hz"/>
-        <binNames value="858.0Hz"/>
-        <binNames value="943.8Hz"/>
-        <binNames value="1029.6Hz"/>
-        <binNames value="1115.4Hz"/>
-        <binNames value="1201.2Hz"/>
-        <binNames value="1287.0Hz"/>
-        <binNames value="1372.8Hz"/>
-        <binNames value="1458.6Hz"/>
-        <binNames value="1544.4Hz"/>
-        <binNames value="1630.2Hz"/>
-        <binNames value="1716.0Hz"/>
-        <binNames value="1801.8Hz"/>
-        <binNames value="1887.5Hz"/>
-        <binNames value="1973.3Hz"/>
-        <binNames value="2059.1Hz"/>
-        <binNames value="2144.9Hz"/>
-        <binNames value="2230.7Hz"/>
-        <binNames value="2316.5Hz"/>
-        <binNames value="2402.3Hz"/>
-        <binNames value="2488.1Hz"/>
-        <binNames value="2573.9Hz"/>
-        <binNames value="2659.7Hz"/>
-        <binNames value="2745.5Hz"/>
-        <binNames value="2831.3Hz"/>
-        <binNames value="2917.1Hz"/>
-        <binNames value="3002.9Hz"/>
-        <binNames value="3088.7Hz"/>
-        <binNames value="3174.5Hz"/>
-        <binNames value="3260.3Hz"/>
-        <binNames value="3346.1Hz"/>
-        <binNames value="3431.9Hz"/>
-        <binNames value="3517.7Hz"/>
-        <binNames value="3603.5Hz"/>
-        <binNames value="3689.3Hz"/>
-        <binNames value="3775.1Hz"/>
-        <binNames value="3860.9Hz"/>
-        <binNames value="3946.7Hz"/>
-        <binNames value="4032.5Hz"/>
-        <binNames value="4118.3Hz"/>
-        <binNames value="4204.1Hz"/>
-        <binNames value="4289.9Hz"/>
-        <binNames value="4375.7Hz"/>
-        <binNames value="4461.5Hz"/>
-        <binNames value="4547.3Hz"/>
-        <binNames value="4633.1Hz"/>
-        <binNames value="4718.9Hz"/>
-        <binNames value="4804.7Hz"/>
-        <binNames value="4890.5Hz"/>
-        <binNames value="4976.3Hz"/>
-        <binNames value="5062.1Hz"/>
-        <binNames value="5147.9Hz"/>
-        <binNames value="5233.7Hz"/>
-        <binNames value="5319.5Hz"/>
-        <binNames value="5405.3Hz"/>
-        <binNames value="5491.1Hz"/>
-        <binNames value="5576.8Hz"/>
-        <binNames value="5662.6Hz"/>
-        <binNames value="5748.4Hz"/>
-        <binNames value="5834.2Hz"/>
-        <binNames value="5920.0Hz"/>
-        <binNames value="6005.8Hz"/>
-        <binNames value="6091.6Hz"/>
-        <binNames value="6177.4Hz"/>
-        <binNames value="6263.2Hz"/>
-        <binNames value="6349.0Hz"/>
-        <binNames value="6434.8Hz"/>
-        <binNames value="6520.6Hz"/>
-        <binNames value="6606.4Hz"/>
-        <binNames value="6692.2Hz"/>
-        <binNames value="6778.0Hz"/>
-        <binNames value="6863.8Hz"/>
-        <binNames value="6949.6Hz"/>
-        <binNames value="7035.4Hz"/>
-        <binNames value="7121.2Hz"/>
-        <binNames value="7207.0Hz"/>
-        <binNames value="7292.8Hz"/>
-        <binNames value="7378.6Hz"/>
-        <binNames value="7464.4Hz"/>
-        <binNames value="7550.2Hz"/>
-        <binNames value="7636.0Hz"/>
-        <binNames value="7721.8Hz"/>
-        <binNames value="7807.6Hz"/>
-        <binNames value="7893.4Hz"/>
-        <binNames value="7979.2Hz"/>
-        <binNames value="8065.0Hz"/>
-        <binNames value="8150.8Hz"/>
-        <binNames value="8236.6Hz"/>
-        <binNames value="8322.4Hz"/>
-        <binNames value="8408.2Hz"/>
-        <binNames value="8494.0Hz"/>
-        <binNames value="8579.8Hz"/>
-        <binNames value="8665.6Hz"/>
-        <binNames value="8751.4Hz"/>
-        <binNames value="8837.2Hz"/>
-        <binNames value="8923.0Hz"/>
-        <binNames value="9008.8Hz"/>
-        <binNames value="9094.6Hz"/>
-        <binNames value="9180.4Hz"/>
-        <binNames value="9266.1Hz"/>
-        <binNames value="9351.9Hz"/>
-        <binNames value="9437.7Hz"/>
-        <binNames value="9523.5Hz"/>
-        <binNames value="9609.3Hz"/>
-        <binNames value="9695.1Hz"/>
-        <binNames value="9780.9Hz"/>
-        <binNames value="9866.7Hz"/>
-        <binNames value="9952.5Hz"/>
-        <binNames value="10038.3Hz"/>
-        <binNames value="10124.1Hz"/>
-        <binNames value="10209.9Hz"/>
-        <binNames value="10295.7Hz"/>
-        <binNames value="10381.5Hz"/>
-        <binNames value="10467.3Hz"/>
-        <binNames value="10553.1Hz"/>
-        <binNames value="10638.9Hz"/>
-        <binNames value="10724.7Hz"/>
-        <binNames value="10810.5Hz"/>
-        <binNames value="10896.3Hz"/>
-        <binNames value="10982.1Hz"/>
-        <binNames value="11067.9Hz"/>
-        <binNames value="11153.7Hz"/>
-        <binNames value="11239.5Hz"/>
-        <binNames value="11325.3Hz"/>
-        <binNames value="11411.1Hz"/>
-        <binNames value="11496.9Hz"/>
-        <binNames value="11582.7Hz"/>
-        <binNames value="11668.5Hz"/>
-        <binNames value="11754.3Hz"/>
-        <binNames value="11840.1Hz"/>
-        <binNames value="11925.9Hz"/>
-        <binNames value="12011.7Hz"/>
-        <binNames value="12097.5Hz"/>
-        <binNames value="12183.3Hz"/>
-        <binNames value="12269.1Hz"/>
-        <binNames value="12354.9Hz"/>
-        <binNames value="12440.7Hz"/>
-        <binNames value="12526.5Hz"/>
-        <binNames value="12612.3Hz"/>
-        <binNames value="12698.1Hz"/>
-        <binNames value="12783.9Hz"/>
-        <binNames value="12869.6Hz"/>
-        <binNames value="12955.4Hz"/>
-        <binNames value="13041.2Hz"/>
-        <binNames value="13127.0Hz"/>
-        <binNames value="13212.8Hz"/>
-        <binNames value="13298.6Hz"/>
-        <binNames value="13384.4Hz"/>
-        <binNames value="13470.2Hz"/>
-        <binNames value="13556.0Hz"/>
-        <binNames value="13641.8Hz"/>
-        <binNames value="13727.6Hz"/>
-        <binNames value="13813.4Hz"/>
-        <binNames value="13899.2Hz"/>
-        <binNames value="13985.0Hz"/>
-        <binNames value="14070.8Hz"/>
-        <binNames value="14156.6Hz"/>
-        <binNames value="14242.4Hz"/>
-        <binNames value="14328.2Hz"/>
-        <binNames value="14414.0Hz"/>
-        <binNames value="14499.8Hz"/>
-        <binNames value="14585.6Hz"/>
-        <binNames value="14671.4Hz"/>
-        <binNames value="14757.2Hz"/>
-        <binNames value="14843.0Hz"/>
-        <binNames value="14928.8Hz"/>
-        <binNames value="15014.6Hz"/>
-        <binNames value="15100.4Hz"/>
-        <binNames value="15186.2Hz"/>
-        <binNames value="15272.0Hz"/>
-        <binNames value="15357.8Hz"/>
-        <binNames value="15443.6Hz"/>
-        <binNames value="15529.4Hz"/>
-        <binNames value="15615.2Hz"/>
-        <binNames value="15701.0Hz"/>
-        <binNames value="15786.8Hz"/>
-        <binNames value="15872.6Hz"/>
-        <binNames value="15958.4Hz"/>
-        <binNames value="16044.2Hz"/>
-        <binNames value="16130.0Hz"/>
-        <binNames value="16215.8Hz"/>
-        <binNames value="16301.6Hz"/>
-        <binNames value="16387.4Hz"/>
-        <binNames value="16473.2Hz"/>
-        <binNames value="16558.9Hz"/>
-        <binNames value="16644.7Hz"/>
-        <binNames value="16730.5Hz"/>
-        <binNames value="16816.3Hz"/>
-        <binNames value="16902.1Hz"/>
-        <binNames value="16987.9Hz"/>
-        <binNames value="17073.7Hz"/>
-        <binNames value="17159.5Hz"/>
-        <binNames value="17245.3Hz"/>
-        <binNames value="17331.1Hz"/>
-        <binNames value="17416.9Hz"/>
-        <binNames value="17502.7Hz"/>
-        <binNames value="17588.5Hz"/>
-        <binNames value="17674.3Hz"/>
-        <binNames value="17760.1Hz"/>
-        <binNames value="17845.9Hz"/>
-        <binNames value="17931.7Hz"/>
-        <binNames value="18017.5Hz"/>
-        <binNames value="18103.3Hz"/>
-        <binNames value="18189.1Hz"/>
-        <binNames value="18274.9Hz"/>
-        <binNames value="18360.7Hz"/>
-        <binNames value="18446.5Hz"/>
-        <binNames value="18532.3Hz"/>
-        <binNames value="18618.1Hz"/>
-        <binNames value="18703.9Hz"/>
-        <binNames value="18789.7Hz"/>
-        <binNames value="18875.5Hz"/>
-        <binNames value="18961.3Hz"/>
-        <binNames value="19047.1Hz"/>
-        <binNames value="19132.9Hz"/>
-        <binNames value="19218.7Hz"/>
-        <binNames value="19304.5Hz"/>
-        <binNames value="19390.3Hz"/>
-        <binNames value="19476.1Hz"/>
-        <binNames value="19561.9Hz"/>
-        <binNames value="19647.7Hz"/>
-        <binNames value="19733.5Hz"/>
-        <binNames value="19819.3Hz"/>
-        <binNames value="19905.1Hz"/>
-        <binNames value="19990.9Hz"/>
-        <binNames value="20076.7Hz"/>
-        <binNames value="20162.5Hz"/>
-        <binNames value="20248.2Hz"/>
-        <binNames value="20334.0Hz"/>
-        <binNames value="20419.8Hz"/>
-        <binNames value="20505.6Hz"/>
-        <binNames value="20591.4Hz"/>
-        <binNames value="20677.2Hz"/>
-        <binNames value="20763.0Hz"/>
-        <binNames value="20848.8Hz"/>
-        <binNames value="20934.6Hz"/>
-        <binNames value="21020.4Hz"/>
-        <binNames value="21106.2Hz"/>
-        <binNames value="21192.0Hz"/>
-        <binNames value="21277.8Hz"/>
-        <binNames value="21363.6Hz"/>
-        <binNames value="21449.4Hz"/>
-        <binNames value="21535.2Hz"/>
-        <binNames value="21621.0Hz"/>
-        <binNames value="21706.8Hz"/>
-        <binNames value="21792.6Hz"/>
-        <binNames value="21878.4Hz"/>
-        <binNames value="21964.2Hz"/>
-        <binNames value="22050.0Hz"/>
-      </output>
-      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
-             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
-             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
-             hasDuration="0"/>
-    </description>
-    <key identifier="partiels-vamp-plugins:partielsspectrogram" feature="energies"/>
-    <state blockSize="512" stepSize="256" windowType="3"/>
-    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
-             text="0" shadow="0"/>
-    <labelLayout position="12.0" justification="0"/>
-    <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="131078" globalRange_start="-120.0" globalRange_end="12.0"
-               minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
-               visibleRange_end="12.0">
-      <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="3"
-            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
-    </valueZoom>
-    <binZoom MiscModelVersion="131078" globalRange_start="0.0" globalRange_end="257.0"
-             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.815656961409748">
-      <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="3"
-            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
-    </binZoom>
-  </tracks>
-  <tracks MiscModelVersion="131078" identifier="03cb5fd936574caebd686efde3a70f32"
-          name="Fast Fourier Transform" input="" sampleRate="48000.0" height="319"
-          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
-          sendViaOsc="0" zoomValueMode="1" zoomLogScale="0" zoomLink="1">
-    <file path="" commit="">
+  <tracks MiscModelVersion="131079" identifier="03cb5fd936574caebd686efde3a70f32"
+          name="Matrix" input="" sampleRate="44100.0" height="119" font="Nunito Sans; 14.0 Regular"
+          lineWidth="1.0" showInGroup="1" sendViaOsc="1" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="/Users/guillot/Git/Partiels/BinaryData/Patchs/Voice_ConsolidatedFiles/Track/03cb5fd936574caebd686efde3a70f32-382bf69e9c2d4363aaf76fb9bda519ab.dat"
+          commit="382bf69e9c2d4363aaf76fb9bda519ab">
       <args/>
     </file>
     <description name="Fast Fourier Transform" inputDomain="0" maker="Ircam" version="6"
@@ -905,15 +611,76 @@
              text="0" shadow="0"/>
     <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
-    <valueZoom MiscModelVersion="131078" globalRange_start="-120.0" globalRange_end="0.0"
-               minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
+    <valueZoom MiscModelVersion="131079" globalRange_start="-120.0" globalRange_end="0.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-71.81349945068359"
                visibleRange_end="0.0">
-      <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="3"
+      <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom MiscModelVersion="131078" globalRange_start="0.0" globalRange_end="513.0"
-             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="3.624249109740081">
-      <grid MiscModelVersion="131078" tickReference="0.0" mainTickInterval="3"
+    <binZoom MiscModelVersion="131079" globalRange_start="0.0" globalRange_end="513.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="513.0">
+      <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="131079" identifier="e0996805fc874a6d98e36e7cfa86ac1c"
+          name="Point" input="" sampleRate="44100.0" height="136" font="Nunito Sans; 14.0 Regular"
+          lineWidth="3.0" showInGroup="1" sendViaOsc="1" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="/Users/guillot/Git/Partiels/BinaryData/Patchs/Voice_ConsolidatedFiles/Track/e0996805fc874a6d98e36e7cfa86ac1c-6180f3f79e7a4322897d4cb296e0c543.dat"
+          commit="6180f3f79e7a4322897d4cb296e0c543">
+      <args/>
+    </file>
+    <description name="Crepe" inputDomain="0" maker="Ircam" version="1" category="Pitch"
+                 details="Monophonic pitch tracker Crepe model.&#10;Crepe model by Jong Wook Kim, Justin Salamon, Peter Li &amp; Juan Pablo Bello. Crepe Vamp Plugin by Pierre Guillot. Copyright 2024 Ircam. All rights reserved.">
+      <defaultState blockSize="1024" stepSize="0" windowType="3">
+        <parameters key="modelcapacity" value="2.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="modelcapacity" name="Model Capacity" description="The size of the model used"
+               unit="" minValue="0.0" maxValue="4.0" defaultValue="2.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="Tiny"/>
+          <valueNames value="Small"/>
+          <valueNames value="Medium"/>
+          <valueNames value="Large"/>
+          <valueNames value="Full"/>
+        </value>
+      </parameters>
+      <output identifier="pitch" name="Pitch" description="Pitch estimated from the input signal"
+              unit="Hertz" hasFixedBinCount="1" binCount="1" hasKnownExtents="1"
+              minValue="0.0" maxValue="22050.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="0"/>
+      <extraOutputs>
+        <value identifier="confidence" name="Confidence" description="The confidence of the result"
+               unit="" hasKnownExtents="1" minValue="0.0" maxValue="1.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="ircamcrepe:crepe" feature="pitch"/>
+    <state blockSize="1024" stepSize="1024" windowType="3">
+      <parameters key="modelcapacity" value="0.0"/>
+    </state>
+    <colours map="7" background="0" foreground="ff1e00ff" duration="667e7a7d"
+             text="0" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <extraThresholds>
+      <value value="0.1462488919496536"/>
+    </extraThresholds>
+    <valueZoom MiscModelVersion="131079" globalRange_start="0.0" globalRange_end="22050.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
+               visibleRange_end="22050.0">
+      <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131079" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131079" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
