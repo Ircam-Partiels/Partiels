@@ -75,7 +75,7 @@ void Application::LoaderContent::FileTable::paintListBoxItem(int rowNumber, juce
     auto const text = fileName + (hasDuplicate ? " (" + files[index].getParentDirectory().getFileName() + ")" : "");
 
     g.setColour(mListBox.findColour(juce::ListBox::textColourId));
-    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
+    g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
     g.drawFittedText(text, 4, 0, width - 6, height, juce::Justification::centredLeft, 1, 1.f);
 }
 

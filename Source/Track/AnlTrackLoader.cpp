@@ -103,14 +103,14 @@ void Track::Loader::loadAnalysis(FileInfo const& fileInfo)
 
     mShouldAbort = false;
     mAdvancement.store(0.0f);
-    mLoadingProcess = std::async([this, fileInfo = fileInfo]() mutable -> std::variant<Results, juce::String>
+    mLoadingProcess = std::async([this, fi = fileInfo]() mutable -> std::variant<Results, juce::String>
                                  {
                                      if(mShouldAbort)
                                      {
                                          return {};
                                      }
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
-                                     auto results = loadFromFile(fileInfo, mShouldAbort, mAdvancement);
+                                     auto results = loadFromFile(fi, mShouldAbort, mAdvancement);
                                      triggerAsyncUpdate();
                                      return results;
                                  });

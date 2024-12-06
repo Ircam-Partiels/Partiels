@@ -378,7 +378,7 @@ void Group::PropertyGraphicalsSection::setFontName(juce::String const& name)
     }
 
     auto const font = trackAcsrs.front().get().getAttr<Track::AttrType::font>();
-    auto newFont = juce::Font(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
+    auto newFont = juce::Font(juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain));
     if(newFont.getAvailableStyles().contains(font.getTypefaceStyle()))
     {
         newFont.setTypefaceStyle(font.getTypefaceStyle());

@@ -225,7 +225,7 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
     auto const text = description.name + " - " + description.output.name;
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
     g.setColour(defaultTextColour);
-    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
+    g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
     g.drawText(text, 4, 0, width - 6, height, juce::Justification::centredLeft, false);
 }
 

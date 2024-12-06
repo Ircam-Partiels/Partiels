@@ -138,7 +138,7 @@ void Track::ProgressBar::paint(juce::Graphics& g)
         auto localBounds = getLocalBounds().reduced(2);
         auto const halfHeight = localBounds.getHeight() / 2;
         g.setColour(findColour(juce::Label::ColourIds::textColourId));
-        g.setFont(juce::Font(static_cast<float>(halfHeight)));
+        g.setFont(juce::Font(juce::FontOptions(static_cast<float>(halfHeight))));
         g.drawFittedText(mMessage, localBounds.withTrimmedLeft(4 + (mStateIcon.isVisible() ? halfHeight : 0)), juce::Justification::left, 2);
     }
 }

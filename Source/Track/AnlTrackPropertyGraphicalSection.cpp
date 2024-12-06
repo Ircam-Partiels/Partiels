@@ -149,7 +149,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mDirector.startAction();
                         auto const name = mPropertyFontName.entry.getText();
                         auto const font = mAccessor.getAttr<AttrType::font>();
-                        auto newFont = juce::Font(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
+                        auto newFont = juce::Font(juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain));
                         if(newFont.getAvailableStyles().contains(font.getTypefaceStyle()))
                         {
                             newFont.setTypefaceStyle(font.getTypefaceStyle());

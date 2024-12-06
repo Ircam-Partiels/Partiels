@@ -6,7 +6,7 @@ ColourSelector::Header::Header(ColourSelector& owner)
 : mOwner(owner)
 {
     addAndMakeVisible(mLabel);
-    mLabel.setFont(juce::Font(14));
+    mLabel.setFont(juce::Font(juce::FontOptions(14.0f)));
     mLabel.setJustificationType(juce::Justification::centred);
     mLabel.setEditable(true);
     mLabel.onEditorShow = [this]
@@ -153,12 +153,12 @@ ColourSelector::ComponentSlider::ComponentSlider(ColourSelector& owner, juce::St
 , mIndex(index)
 {
     mLabel.setEditable(false);
-    mLabel.setFont(juce::Font(14));
+    mLabel.setFont(juce::Font(juce::FontOptions(14.0f)));
     mLabel.setJustificationType(juce::Justification::centredLeft);
     mLabel.setText(label, juce::NotificationType::dontSendNotification);
     addAndMakeVisible(mLabel);
 
-    mValue.setFont(juce::Font(14));
+    mValue.setFont(juce::Font(juce::FontOptions(14.0f)));
     mValue.setJustificationType(juce::Justification::centred);
     mValue.setEditable(true);
     mValue.onEditorShow = [this]

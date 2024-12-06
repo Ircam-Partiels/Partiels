@@ -62,28 +62,28 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
             bool perform() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
-                                                                                     {
-                                                                                         if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
+                return Modifier::updateFrame < Data::Type::marker | Data::Type::point > (mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                                                          {
-                                                                                             std::get<0_z>(frame) = mNewTime;
-                                                                                             return true;
-                                                                                         }
-                                                                                         return false;
-                                                                                     });
+                                                                                             if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
+                                                                                             {
+                                                                                                 std::get<0_z>(frame) = mNewTime;
+                                                                                                 return true;
+                                                                                             }
+                                                                                             return false;
+                                                                                         });
             }
 
             bool undo() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
-                                                                                     {
-                                                                                         if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
+                return Modifier::updateFrame < Data::Type::marker | Data::Type::point > (mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                                                          {
-                                                                                             std::get<0_z>(frame) = mCurrentTime;
-                                                                                             return true;
-                                                                                         }
-                                                                                         return false;
-                                                                                     });
+                                                                                             if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
+                                                                                             {
+                                                                                                 std::get<0_z>(frame) = mCurrentTime;
+                                                                                                 return true;
+                                                                                             }
+                                                                                             return false;
+                                                                                         });
             }
 
         private:
@@ -103,7 +103,7 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
 void Track::Result::CellTime::resized()
 {
-    mHMSmsField.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mHMSmsField.setFont(juce::Font(juce::FontOptions(static_cast<float>(getHeight()) * 0.7f)));
     mHMSmsField.setBounds(getLocalBounds().withTrimmedLeft(2).withWidth(114));
 }
 
@@ -225,7 +225,7 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
 
 void Track::Result::CellDuration::resized()
 {
-    mHMSmsField.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mHMSmsField.setFont(juce::Font(juce::FontOptions(static_cast<float>(getHeight()) * 0.7f)));
     mHMSmsField.setBounds(getLocalBounds().withTrimmedLeft(2).withWidth(114));
 }
 
@@ -408,9 +408,9 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
 void Track::Result::CellValue::resized()
 {
-    mLabel.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mLabel.setFont(juce::Font(juce::FontOptions(static_cast<float>(getHeight()) * 0.7f)));
     mLabel.setBounds(getLocalBounds());
-    mNumberField.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mNumberField.setFont(juce::Font(juce::FontOptions(static_cast<float>(getHeight()) * 0.7f)));
     mNumberField.setBounds(getLocalBounds());
 }
 
@@ -604,7 +604,7 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
 
 void Track::Result::CellExtra::resized()
 {
-    mNumberField.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mNumberField.setFont(juce::Font(juce::FontOptions(static_cast<float>(getHeight()) * 0.7f)));
     mNumberField.setBounds(getLocalBounds());
 }
 
