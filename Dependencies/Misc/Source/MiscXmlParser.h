@@ -278,6 +278,13 @@ namespace XmlParser
         -> juce::Font;
 
     template <>
+    void toXml<juce::FontOptions>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::FontOptions const& value);
+
+    template <>
+    auto fromXml<juce::FontOptions>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::FontOptions const& defaultValue)
+        -> juce::FontOptions;
+
+    template <>
     void toXml<juce::Point<int>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Point<int> const& value);
 
     template <>

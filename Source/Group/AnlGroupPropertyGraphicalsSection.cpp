@@ -378,10 +378,10 @@ void Group::PropertyGraphicalsSection::setFontName(juce::String const& name)
     }
 
     auto const font = trackAcsrs.front().get().getAttr<Track::AttrType::font>();
-    auto newFont = juce::Font(juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain));
-    if(newFont.getAvailableStyles().contains(font.getTypefaceStyle()))
+    auto newFont = juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
+    if(juce::Font(newFont).getAvailableStyles().contains(font.getStyle()))
     {
-        newFont.setTypefaceStyle(font.getTypefaceStyle());
+        newFont = newFont.withStyle(font.getStyle());
     }
     for(auto& trackAcsr : trackAcsrs)
     {
@@ -404,9 +404,9 @@ void Group::PropertyGraphicalsSection::setFontStyle(juce::String const& style)
     for(auto& trackAcsr : trackAcsrs)
     {
         auto const font = trackAcsr.get().getAttr<Track::AttrType::font>();
-        if(font.getAvailableStyles().contains(style))
+        if(juce::Font(font).getAvailableStyles().contains(style))
         {
-            trackAcsr.get().setAttr<Track::AttrType::font>(font.withTypefaceStyle(style), NotificationType::synchronous);
+            trackAcsr.get().setAttr<Track::AttrType::font>(font.withStyle(style), NotificationType::synchronous);
         }
     }
     updateFont();
@@ -748,8 +748,8 @@ void Group::PropertyGraphicalsSection::updateFont()
             {
                 currentFont = font;
             }
-            fontNames.insert(font.getTypefaceName());
-            fontStyles.insert(font.getTypefaceStyle());
+            fontNames.insert(font.getName());
+            fontStyles.insert(font.getStyle());
             fontSizes.insert(font.getHeight());
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
