@@ -65,6 +65,19 @@ auto XmlParser::fromXml<juce::Font>(juce::XmlElement const& xml, juce::Identifie
 }
 
 template <>
+void XmlParser::toXml<juce::FontOptions>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::FontOptions const& value)
+{
+    xml.setAttribute(attributeName, Format::fontOptionsToString(value));
+}
+
+template <>
+auto XmlParser::fromXml<juce::FontOptions>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::FontOptions const& defaultValue)
+    -> juce::FontOptions
+{
+    return Format::fontOptionsFromString(xml.getStringAttribute(attributeName, Format::fontOptionsToString(defaultValue)));
+}
+
+template <>
 void XmlParser::toXml<juce::Point<int>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Point<int> const& value)
 {
     xml.setAttribute(attributeName + "_x", value.getX());

@@ -122,6 +122,40 @@ namespace Format
         }
         return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
     }
+
+    inline juce::String fontOptionsToString(juce::FontOptions const& options)
+    {
+        juce::String s;
+        juce::Font f(options);
+        if(f.getTypefaceName() != juce::Font::getDefaultSansSerifFontName())
+        {
+            s << f.getTypefaceName() << "; ";
+        }
+        s << juce::String(f.getHeight(), 1);
+        if(f.getTypefaceStyle() != juce::Font::getDefaultStyle())
+        {
+            s << ' ' << f.getTypefaceStyle();
+        }
+        return s;
+    }
+
+    inline juce::FontOptions fontOptionsFromString(juce::String const& description)
+    {
+        auto const separator = description.indexOfChar(';');
+        juce::String name;
+        if(separator > 0)
+        {
+            name = description.substring(0, separator).trim();
+        }
+        if(name.isEmpty())
+        {
+            name = juce::Font::getDefaultSansSerifFontName();
+        }
+        auto const sizeAndStyle(description.substring(separator + 1).trimStart());
+        auto const height = sizeAndStyle.getFloatValue();
+        auto const style(sizeAndStyle.fromFirstOccurrenceOf(" ", false, false));
+        return juce::FontOptions(name, style, height <= 0 ? 10 : height);
+    }
 } // namespace Format
 
 namespace App

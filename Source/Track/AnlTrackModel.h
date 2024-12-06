@@ -238,7 +238,7 @@ namespace Track
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
-    , Model::Attr<AttrType::font, juce::Font, Model::Flag::basic>
+    , Model::Attr<AttrType::font, juce::FontOptions, Model::Flag::basic>
     , Model::Attr<AttrType::lineWidth, float, Model::Flag::basic>
     , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::labelLayout, LabelLayout, Model::Flag::basic>
@@ -287,7 +287,7 @@ namespace Track
                                  
                                  , {120}
                                  , {}
-                                 , {juce::Font(juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain))}
+                                 , {juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)}
                                  , {1.0f}
                                  , {}
                                  , {}

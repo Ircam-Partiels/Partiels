@@ -149,10 +149,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mDirector.startAction();
                         auto const name = mPropertyFontName.entry.getText();
                         auto const font = mAccessor.getAttr<AttrType::font>();
-                        auto newFont = juce::Font(juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain));
-                        if(newFont.getAvailableStyles().contains(font.getTypefaceStyle()))
+                        auto newFont = juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
+                        if(juce::Font(newFont).getAvailableStyles().contains(font.getStyle()))
                         {
-                            newFont.setTypefaceStyle(font.getTypefaceStyle());
+                            newFont = newFont.withStyle(font.getStyle());
                         }
                         mAccessor.setAttr<AttrType::font>(newFont, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font name"));
@@ -161,7 +161,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                      {
                          mDirector.startAction();
                          auto const style = mPropertyFontStyle.entry.getText();
-                         auto const font = mAccessor.getAttr<AttrType::font>().withTypefaceStyle(style);
+                         auto const font = mAccessor.getAttr<AttrType::font>().withStyle(style);
                          mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font style"));
                      })
@@ -386,12 +386,12 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::font:
             {
                 auto const font = acsr.getAttr<AttrType::font>();
-                mPropertyFontName.entry.setText(font.getTypefaceName(), juce::NotificationType::dontSendNotification);
+                mPropertyFontName.entry.setText(font.getName(), juce::NotificationType::dontSendNotification);
                 mPropertyFontName.entry.setEnabled(mPropertyFontName.entry.getNumItems() > 1);
 
                 mPropertyFontStyle.entry.clear(juce::NotificationType::dontSendNotification);
-                mPropertyFontStyle.entry.addItemList(font.getAvailableStyles(), 1);
-                mPropertyFontStyle.entry.setText(font.getTypefaceStyle(), juce::NotificationType::dontSendNotification);
+                mPropertyFontStyle.entry.addItemList(juce::Font(font).getAvailableStyles(), 1);
+                mPropertyFontStyle.entry.setText(font.getStyle(), juce::NotificationType::dontSendNotification);
                 mPropertyFontStyle.entry.setEnabled(mPropertyFontStyle.entry.getNumItems() > 1);
 
                 auto const roundedHeight = std::round(font.getHeight());
