@@ -47,16 +47,16 @@ namespace nlohmann
     };
 
     template <>
-    struct adl_serializer<juce::Font>
+    struct adl_serializer<juce::FontOptions>
     {
-        static void to_json(json& j, juce::Font const& font)
+        static void to_json(json& j, juce::FontOptions const& option)
         {
-            j = font.toString().toStdString();
+            j = Misc::Format::fontOptionsToString(option).toStdString();
         }
 
-        static void from_json(json const& j, juce::Font& font)
+        static void from_json(json const& j, juce::FontOptions& option)
         {
-            font = juce::Font::fromString(juce::String(j.get<std::string>()));
+            option = Misc::Format::fontOptionsFromString(juce::String(j.get<std::string>()));
         }
     };
 
