@@ -141,7 +141,7 @@ void Document::TransportDisplay::resized()
     mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
     mPosition.setBounds(bounds);
-    mPosition.setFont(juce::Font(static_cast<float>(bounds.getHeight()) * 0.8f));
+    mPosition.setFont(juce::Font(juce::FontOptions(static_cast<float>(bounds.getHeight()) * 0.8f)));
 }
 
 void Document::TransportDisplay::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)

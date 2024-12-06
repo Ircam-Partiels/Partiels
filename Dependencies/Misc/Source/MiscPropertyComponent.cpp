@@ -26,7 +26,7 @@ void PropertyComponentBase::resized()
     auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
 
     auto bounds = getLocalBounds();
-    auto const textWidth = font.getStringWidth(title.getText());
+    auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, title.getText());
     auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
     title.setBounds(bounds.removeFromLeft(textSize));
     if(content != nullptr)
@@ -181,7 +181,7 @@ void PropertySlider::resized()
     {
         content->setBounds(bounds.removeFromBottom(bounds.getHeight() / 2));
     }
-    auto const textWidth = font.getStringWidth(title.getText());
+    auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, title.getText());
     auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
     title.setBounds(bounds.removeFromLeft(textSize));
     if(numberField.isVisible())
@@ -294,7 +294,7 @@ void PropertyRangeSlider::resized()
         content->setBounds(bounds.removeFromBottom(bounds.getHeight() / 2));
     }
     auto const width = bounds.getWidth();
-    auto const textWidth = font.getStringWidth(title.getText());
+    auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, title.getText());
     auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
     title.setBounds(bounds.removeFromLeft(textSize));
     if(numberFieldLow.isVisible() || numberFieldHigh.isVisible())

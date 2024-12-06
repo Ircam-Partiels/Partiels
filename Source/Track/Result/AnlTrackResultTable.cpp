@@ -464,7 +464,7 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
     auto const drawText = [&](juce::String const& text)
     {
         g.setColour(mTable.findColour(juce::ListBox::textColourId));
-        g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
+        g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
         juce::Rectangle<int> const bounds(4, 0, width - 14, height);
         auto constexpr justification = juce::Justification::centredLeft;
         g.drawFittedText(text, bounds, justification, 1, 1.0f);

@@ -220,7 +220,7 @@ void Application::BatcherContent::process()
                                   mAlertCatcher.clearMessages();
                                   mDocumentDirector.setAlertCatcher(&mAlertCatcher);
 
-                                  mProcess = std::async([=, copyAcsr = std::move(copyAcsr), this]() -> ProcessResult
+                                  mProcess = std::async([=, cAcsr = std::move(copyAcsr), this]() -> ProcessResult
                                                         {
                                                             juce::Thread::setCurrentThreadName("Batch");
                                                             juce::MessageManager::Lock lock;
@@ -239,7 +239,7 @@ void Application::BatcherContent::process()
 
                                                                 {
                                                                     Document::Accessor tempAcsr;
-                                                                    tempAcsr.copyFrom(*copyAcsr.get(), NotificationType::synchronous);
+                                                                    tempAcsr.copyFrom(*cAcsr.get(), NotificationType::synchronous);
                                                                     tempAcsr.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
                                                                     for(auto trackAcsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
                                                                     {

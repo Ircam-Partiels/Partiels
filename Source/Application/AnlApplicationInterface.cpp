@@ -123,7 +123,7 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
 
-    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font("Arial", 8.0, juce::Font::plain).toString());
+    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font(juce::FontOptions("Arial", 8.0, juce::Font::plain)).toString());
     mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
     mDocumentSection.pluginListButton.onClick = []()
     {

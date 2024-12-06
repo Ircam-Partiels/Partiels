@@ -162,8 +162,8 @@ namespace Track
             juce::Font const mFont;
             juce::String const mUnit;
             int const mNumDecimal;
-            float const mCharWidth{mFont.getStringWidthFloat("0")};
-            float const mUnitWidth{mFont.getStringWidthFloat(mUnit)};
+            float const mCharWidth{juce::GlyphArrangement::getStringWidth(mFont, "0")};
+            float const mUnitWidth{juce::GlyphArrangement::getStringWidth(mFont, mUnit)};
             LabelInfo mLowInfo{2.0f + mFont.getAscent()};
             LabelInfo mHighInfo{2.0f - mFont.getDescent()};
             float mLastValue = invalid_value;
@@ -472,7 +472,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
                 if(previousLabelLimit <= x)
                 {
                     auto const text = juce::String(std::get<2>(*it)) + unit;
-                    auto const textWidth = font.getStringWidth(text) + 2;
+                    auto const textWidth = juce::GlyphArrangement::getStringWidth(font, text) + 2;
                     auto const textX = static_cast<int>(std::round(x)) + 2;
                     labels.push_back(std::make_tuple(text, textX, textWidth));
                 }

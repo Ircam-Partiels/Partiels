@@ -287,7 +287,7 @@ namespace Track
                                  
                                  , {120}
                                  , {}
-                                 , {juce::Font("Nunito Sans", 14.0f, juce::Font::plain)}
+                                 , {juce::Font(juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain))}
                                  , {1.0f}
                                  , {}
                                  , {}
