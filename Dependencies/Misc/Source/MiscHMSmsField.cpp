@@ -189,16 +189,16 @@ void HMSmsField::resized()
     auto const fullwidth = std::accumulate(mFields.cbegin(), mFields.cend(), 0.0, [&](auto const& accum, auto const& rhs)
                                            {
                                                auto const text = rhs.entry.getText() + rhs.suffix.getText();
-                                               return accum + static_cast<double>(font.getStringWidthFloat(text)) + caretSize;
+                                               return accum + static_cast<double>(juce::GlyphArrangement::getStringWidth(font, text)) + caretSize;
                                            });
 
     auto bounds = getLocalBounds();
     auto const elementWidth = static_cast<double>(bounds.getWidth()) / fullwidth;
     for(auto& field : mFields)
     {
-        auto const ratioEntry = static_cast<double>(font.getStringWidthFloat(field.entry.getText())) + caretSize;
+        auto const ratioEntry = static_cast<double>(juce::GlyphArrangement::getStringWidth(font, field.entry.getText())) + caretSize;
         field.entry.setBounds(bounds.removeFromLeft(static_cast<int>(std::round(ratioEntry * elementWidth))));
-        auto const ratioSuffix = static_cast<double>(font.getStringWidthFloat(field.suffix.getText()));
+        auto const ratioSuffix = static_cast<double>(juce::GlyphArrangement::getStringWidth(font, field.suffix.getText()));
         field.suffix.setBounds(bounds.removeFromLeft(static_cast<int>(std::round(ratioSuffix * elementWidth))));
     }
 }

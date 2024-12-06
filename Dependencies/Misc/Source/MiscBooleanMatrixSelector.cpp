@@ -159,7 +159,7 @@ void BooleanMatrixSelector::setSize(size_t numRows, size_t numColumns)
         }
     }
 
-    auto const font = juce::Font("Arial", 10.0f, juce::Font::plain);
+    auto const font = juce::Font(juce::FontOptions("Arial", 10.0f, juce::Font::plain));
     mRowLabels.resize(numRows);
     for(auto i = 0_z; i < mRowLabels.size(); ++i)
     {

@@ -98,7 +98,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
     info.featureIndex = featureIndex;
     info.hasDuration = output.hasDuration;
     mChrono.start();
-    mRenderingProcess = std::thread([this, columns, plugin = std::move(plugin), colourMap, info]()
+    mRenderingProcess = std::thread([this, columns, plug = std::move(plugin), colourMap, info]()
                                     {
                                         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
                                         performRendering(*columns, colourMap, info);

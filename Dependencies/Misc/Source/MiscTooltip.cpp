@@ -86,7 +86,7 @@ void Tooltip::BubbleWindow::paint(juce::Graphics& g)
 {
     auto constexpr cornerSize = 5.0f;
     auto const bounds = getLocalBounds().toFloat();
-    auto const font = juce::Font(13.0f).withHorizontalScale(1.0f);
+    auto const font = juce::Font(juce::FontOptions(13.0f)).withHorizontalScale(1.0f);
 
     g.setColour(findColour(juce::TooltipWindow::ColourIds::backgroundColourId));
     g.fillRoundedRectangle(bounds, cornerSize);

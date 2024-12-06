@@ -125,7 +125,7 @@ void Document::Header::resized()
     }
 
     auto const font = mNameButton.getLookAndFeel().getTextButtonFont(mNameButton, 24);
-    auto const textWidth = font.getStringWidth(mNameButton.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
+    auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, mNameButton.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
     mNameButton.setVisible(leftPart.getWidth() >= textWidth);
     if(mNameButton.isVisible())
     {

@@ -169,7 +169,7 @@ std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const&
 
     auto description = processor->getDescription();
     mChrono.start();
-    mAnalysisProcess = std::async([this, processor = std::move(processor), input = std::move(input)]() -> Results
+    mAnalysisProcess = std::async([this, proc = std::move(processor), in = std::move(input)]() -> Results
                                   {
                                       anlDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
@@ -183,14 +183,14 @@ std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const&
                                       expected = ProcessState::running;
 
                                       std::vector<std::vector<Plugin::Result>> pluginResults;
-                                      if(!processor->prepareToAnalyze(pluginResults))
+                                      if(!proc->prepareToAnalyze(pluginResults))
                                       {
                                           mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
                                           triggerAsyncUpdate();
                                           return {};
                                       }
-                                      auto const inputs = Tools::convert(processor->getInput(), input);
-                                      if(!processor->setPrecomputingResults(inputs))
+                                      auto const inputs = Tools::convert(proc->getInput(), in);
+                                      if(!proc->setPrecomputingResults(inputs))
                                       {
                                           mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
                                           triggerAsyncUpdate();
@@ -198,14 +198,14 @@ std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const&
                                       }
                                       anlDebug("Track", "Processor prepared");
 
-                                      while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(pluginResults))
+                                      while(mAnalysisState.load() != ProcessState::aborted && proc->performNextAudioBlock(pluginResults))
                                       {
-                                          mAdvancement.store(processor->getAdvancement());
+                                          mAdvancement.store(proc->getAdvancement());
                                       }
 
                                       anlDebug("Track", "Processor performed");
 
-                                      auto const results = Tools::convert(processor->getOutput(), pluginResults, mShouldAbort);
+                                      auto const results = Tools::convert(proc->getOutput(), pluginResults, mShouldAbort);
                                       mAdvancement.store(1.0f);
 
                                       anlDebug("Track", "Results performed");

@@ -273,7 +273,7 @@ int LookAndFeel::getHeaderHeight(ConcertinaTable const& panel) const
 juce::Font LookAndFeel::getHeaderFont(ConcertinaTable const& panel, int headerHeight) const
 {
     juce::ignoreUnused(panel);
-    return juce::Font(static_cast<float>(headerHeight - 4));
+    return juce::Font(juce::FontOptions(static_cast<float>(headerHeight - 4)));
 }
 
 void LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
@@ -453,7 +453,7 @@ void LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComp
         g.fillPath(sortArrow, sortArrow.getTransformToScaleToFit(area.removeFromRight(height / 2).reduced(2).toFloat(), true));
     }
 
-    g.setFont(juce::Font(static_cast<float>(height) * 0.5f, juce::Font::bold));
+    g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.5f, juce::Font::bold)));
     g.drawText(columnName, area, juce::Justification::centredLeft, false);
 }
 
@@ -562,7 +562,7 @@ void LookAndFeel::drawTooltip(juce::Graphics& g, juce::String const& text, int w
 
     juce::AttributedString attributedString;
     attributedString.setJustification(juce::Justification::centredLeft);
-    attributedString.append(text, juce::Font(13.0f), findColour(juce::TooltipWindow::ColourIds::textColourId));
+    attributedString.append(text, juce::Font(juce::FontOptions(13.0f)), findColour(juce::TooltipWindow::ColourIds::textColourId));
 
     juce::TextLayout tl;
     tl.createLayout(attributedString, static_cast<float>(std::min(width, 500 - 8)));
@@ -573,7 +573,7 @@ juce::Rectangle<int> LookAndFeel::getTooltipBounds(juce::String const& tipText, 
 {
     juce::AttributedString s;
     s.setJustification(juce::Justification::centredLeft);
-    s.append(tipText, juce::Font(13.0f), juce::Colours::black);
+    s.append(tipText, juce::Font(juce::FontOptions(13.0f)), juce::Colours::black);
 
     juce::TextLayout tl;
     tl.createLayout(s, static_cast<float>(std::min(parentArea.getWidth() - 8, 500)));
@@ -680,7 +680,7 @@ juce::Font LookAndFeel::getTextButtonFont(juce::TextButton& textButtton, int but
     auto const fontDescription = textButtton.getProperties().getWithDefault("Font", {});
     if(!fontDescription.isString())
     {
-        return {std::min(16.0f, std::max(static_cast<float>(buttonHeight) * 0.6f, 12.0f))};
+        return {juce::FontOptions(std::min(16.0f, std::max(static_cast<float>(buttonHeight) * 0.6f, 12.0f)))};
     }
     return juce::Font::fromString(fontDescription);
 }
@@ -712,14 +712,14 @@ void LookAndFeel::drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics
 juce::Font LookAndFeel::getTabButtonFont(juce::TabBarButton& button, float height)
 {
     juce::ignoreUnused(button);
-    return {height * 0.8f};
+    return {juce::FontOptions(height * 0.8f)};
 }
 
 int LookAndFeel::getTabButtonBestWidth(juce::TabBarButton& button, int tabDepth)
 {
     auto const font = getTabButtonFont(button, static_cast<float>(button.getTabbedButtonBar().getHeight()));
     auto const extraSpace = std::max(getTabButtonOverlap(tabDepth), 0) * 2;
-    int width = font.getStringWidth(button.getButtonText().trim()) + extraSpace;
+    auto width = juce::GlyphArrangement::getStringWidthInt(font, button.getButtonText().trim()) + extraSpace;
 
     if(auto* extraComponent = button.getExtraComponent())
     {
