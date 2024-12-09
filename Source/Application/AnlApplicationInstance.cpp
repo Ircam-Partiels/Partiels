@@ -101,6 +101,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mDownloader = std::make_unique<Downloader>();
     AppQuitIfInvalidPointer(mDownloader);
 
+    mOscZoomDispatcher = std::make_unique<Osc::ZoomDispatcher>(getOscSender());
+    AppQuitIfInvalidPointer(mOscZoomDispatcher);
+
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     AppQuitIfInvalidPointer(mOscTransportDispatcher);
 
@@ -315,6 +318,7 @@ void Application::Instance::shutdown()
 
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
+    mOscZoomDispatcher.reset();
     mDownloader.reset();
     mMainMenuModel.reset();
     mWindow.reset();
