@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
-#include "../Track/AnlTrackModel.h"
+#include "../Document/AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -101,6 +100,26 @@ namespace Application
 
         private:
             SettingsContent mContent;
+        };
+
+        class ZoomDispatcher
+        : public juce::ChangeListener
+        {
+        public:
+            ZoomDispatcher(Sender& sender);
+            ~ZoomDispatcher() override;
+
+        private:
+            // juce::ChangeListener
+            void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+            void synchosize(bool connect);
+
+            Sender& mSender;
+            Document::LayoutNotifier mLayoutNotifier;
+            Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ZoomDispatcher)
         };
 
         class TransportDispatcher
