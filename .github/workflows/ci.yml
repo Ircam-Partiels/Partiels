@@ -25,7 +25,7 @@ jobs:
     - name: Check
       uses: jidicula/clang-format-action@v4.14.0
       with:
-        clang-format-version: '18'
+        clang-format-version: '19'
         check-path: ${{ matrix.path }}
   # Compiles, tests and packages the plugin for Ubuntu.
   Ubuntu:
