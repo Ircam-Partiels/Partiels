@@ -307,6 +307,7 @@ if(MDPDF_EXE)
 else()
     message(STATUS "Manual target cannot be generated because mdpdf is not found")
 endif()
+add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
 
 ### Format ###
 find_program(CLANG_FORMAT_EXE "clang-format" HINTS "C:/Program Files/LLVM/bin")
