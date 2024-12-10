@@ -180,7 +180,7 @@ When you click on the button to add analysis tracks via the interface for starti
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
-**Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
+> **💡 Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
 
 Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
 
@@ -188,7 +188,7 @@ You can select one or more plug-ins and then press the `Return ⏎` key (or you 
 
 > For further information about the plug-in management, please refer to the [Plug-ins settings](#12-plug-ins-settings) section.
 
-**Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
+> **💡 Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
 
 <br clear="left"/>
 
@@ -206,7 +206,7 @@ If you're importing a file in CSV format, the application will automatically try
 
 When importing markers in CSV format, it is recommended to escape the tags (with single or double quotes for example) to ensure that the numeric values of the labels are considered as text.
 
-**Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
+> **💡 Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
 
 If you are importing a file in SDIF format, , the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
 
@@ -214,7 +214,7 @@ If you are importing a file in SDIF format, , the `Load File...` window appears 
 <img src="Images/selection-import-new-result tracks.2-v1.0.7.png" width="232"/>
 </p>
 
-**Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
+> **💡 Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
 
 If you are importing a file in JSON  format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
@@ -550,6 +550,26 @@ When playback is paused, the information are sent when hovering over groups and 
     - Bin index (int) and value of the bin (float) for a vector
 8. List of numbers (float) for the extra values
 
+Track zoom information and extra value thresholds are also sent when they are modified, enabling the Partiels graphical representation to be synchronized with the OSC-controlled graphical representation or audio engine.
+
+Zoom information is sent only for point-type tracks (value zoom) and matrix-type tracks (value and bin zooms):
+
+1. Track address (string)
+2. "zoom" (string)
+3. Zoom type (string - value or bin)
+4. Global range - start (float)
+5. Global range - end (float)
+6. Visible range - start (float)
+7. Visible range - end (float)
+
+Extra value thresholds are only sent for tracks with extra values:
+
+1. Track address (string)
+2. "thresholds" (string)
+3. List of numbers (float) for the extra values
+
+> **💡 Tip**: A series of Pure Data and Max patches offering an alternative visualization of the results is distributed alongside the application.
+
 <div style="page-break-after: always;"></div>
 
 ## 9. Track properties
@@ -639,7 +659,7 @@ A color can be modified using the color selector that is prompted by clicking on
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 - Duration Color: The shadow color used to duration of the markers.
 
-**Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
+> **💡 Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
 
 #### 9.2.2. Font, Label and Line Width
 
