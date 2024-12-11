@@ -470,10 +470,11 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
     for(auto const& file : files)
     {
         auto const fileExtension = file.getFileExtension().toLowerCase();
-        anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension));
-        if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension))
+        anlWeakAssert(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension));
+        if(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension))
         {
             auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
+            MiscWeakAssert(reader != nullptr);
             if(reader != nullptr)
             {
                 for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
@@ -501,6 +502,26 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
                                                                }
                                                                mDocumentFileBased->setFile({});
                                                            });
+    }
+    juce::StringArray remainingFiles;
+    for(auto const& file : files)
+    {
+        if(std::none_of(readerLayout.cbegin(), readerLayout.cend(), [&](auto const& afl)
+                        {
+                            return afl.file == file;
+                        }))
+        {
+            remainingFiles.add(file.getFullPathName());
+        }
+    }
+    if(!remainingFiles.isEmpty())
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("File(s) cannot be open!"))
+                                 .withMessage(juce::translate("The file(s) cannot be open by the application:\n FILEPATHS\nEnsure the file(s) exist(s) and you have read access.").replace("FILEPATHS", remainingFiles.joinIntoString("\n")))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
 }
 
