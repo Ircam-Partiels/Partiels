@@ -26,6 +26,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::silentFileManagement:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
@@ -265,6 +266,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::silentFileManagement:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:

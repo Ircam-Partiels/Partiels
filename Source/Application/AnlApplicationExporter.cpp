@@ -36,7 +36,6 @@ Application::ExporterContent::ExporterContent()
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::windowState:
@@ -47,6 +46,7 @@ Application::ExporterContent::ExporterContent()
             case AttrType::showInfoBubble:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::silentFileManagement:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:

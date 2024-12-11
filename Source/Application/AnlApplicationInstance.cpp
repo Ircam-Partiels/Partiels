@@ -134,8 +134,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
 #ifdef JUCE_MAC
                 mMainMenuModel->updateAppleMenuItems();
 #endif
+                break;
             }
-            break;
             case AttrType::desktopGlobalScaleFactor:
             {
                 auto const windowState = acsr.getAttr<AttrType::windowState>();
@@ -146,13 +146,18 @@ void Application::Instance::initialise(juce::String const& commandLine)
                     mWindow->restoreWindowStateFromString(windowState);
                 }
                 mMainMenuModel->menuItemsChanged();
+                break;
             }
-            break;
             case AttrType::colourMode:
             {
                 updateLookAndFeel();
+                break;
             }
-            break;
+            case AttrType::silentFileManagement:
+            {
+                mDocumentDirector->setSilentResultsFileManagement(acsr.getAttr<AttrType::silentFileManagement>());
+                break;
+            }
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);

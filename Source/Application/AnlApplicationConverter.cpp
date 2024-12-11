@@ -159,6 +159,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::desktopGlobalScaleFactor:
+            case AttrType::silentFileManagement:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
