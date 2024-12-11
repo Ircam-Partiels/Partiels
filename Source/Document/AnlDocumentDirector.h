@@ -46,6 +46,7 @@ namespace Document
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
         void setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
         void setBackupDirectory(juce::File const& directory);
+        void setSilentResultsFileManagement(bool state);
 
     private:
         // FileWatcher
@@ -75,6 +76,7 @@ namespace Document
         std::function<void(bool)> mLoaderSelectorShowHideFn{nullptr};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         juce::File mBackupDirectory;
+        bool mSilentResultsFileManagement{false};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

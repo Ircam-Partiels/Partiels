@@ -102,6 +102,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
                     director->setLoaderSelector(mLoaderSelector, mLoaderSelectorShowHideFn);
                     director->setBackupDirectory(mBackupDirectory);
+                    director->setSilentResultsFileManagement(mSilentResultsFileManagement);
                     director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -1065,6 +1066,21 @@ void Document::Director::setBackupDirectory(juce::File const& directory)
             if(track != nullptr)
             {
                 track->setBackupDirectory(mBackupDirectory);
+            }
+        }
+    }
+}
+
+void Document::Director::setSilentResultsFileManagement(bool state)
+{
+    if(mSilentResultsFileManagement != state)
+    {
+        mSilentResultsFileManagement = state;
+        for(auto& track : mTracks)
+        {
+            if(track != nullptr)
+            {
+                track->setSilentResultsFileManagement(mSilentResultsFileManagement);
             }
         }
     }
