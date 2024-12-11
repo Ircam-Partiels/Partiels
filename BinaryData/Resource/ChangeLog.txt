@@ -1,4 +1,10 @@
 
+- Add: An option to reload without warning a results file modified from outside the application
+- Fix: Loading a file not downloaded from iCloud fails without warning
+- Imp: Input track management via group properties
+- Add: Pd and Max patchs for real-time visualisation via OSC
+- Add: Send track zoom information via OSC 
+- Add: Send track thresholds information via OSC
 - Add: Send OSC messages on mouse down
 
 v2.0.6
