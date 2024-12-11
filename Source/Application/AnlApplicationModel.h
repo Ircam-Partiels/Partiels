@@ -29,6 +29,7 @@ namespace Application
         , exportOptions
         , adaptationToSampleRate
         , autoLoadConvertedFile
+        , silentFileManagement
         , routingMatrix
         , autoUpdate
         , lastVersion
@@ -51,6 +52,7 @@ namespace Application
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Model::Flag::basic>
     , Model::Attr<AttrType::adaptationToSampleRate, bool, Model::Flag::basic>
     , Model::Attr<AttrType::autoLoadConvertedFile, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::silentFileManagement, bool, Model::Flag::basic>
     , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Model::Flag::basic>
     , Model::Attr<AttrType::autoUpdate, bool, Model::Flag::basic>
     , Model::Attr<AttrType::lastVersion, juce::String, Model::Flag::basic>
@@ -80,6 +82,7 @@ namespace Application
             , {true}
             , {}
             , {false}
+            , {true}
             , {true}
             , {{}}
             , {true}

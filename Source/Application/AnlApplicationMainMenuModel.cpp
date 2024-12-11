@@ -155,7 +155,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
-        addDefaultTemplateMenu(menu);
+        addGlobalSettingsMenu(menu);
 #endif
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpAutoUpdate);
@@ -175,10 +175,17 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
     juce::ignoreUnused(menuItemID, topLevelMenuIndex);
 }
 
-void Application::MainMenuModel::addDefaultTemplateMenu(juce::PopupMenu& menu)
+void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
 {
+    juce::PopupMenu globalSettingsMenu;
+    auto& accessor = Instance::get().getApplicationAccessor();
+    auto const silentFileManagement = accessor.getAttr<AttrType::silentFileManagement>();
+    globalSettingsMenu.addItem(juce::translate("Silent File Management"), true, silentFileManagement, []()
+                               {
+                                   Instance::get().getApplicationAccessor().setAttr<AttrType::silentFileManagement>(!Instance::get().getApplicationAccessor().getAttr<AttrType::silentFileManagement>(), NotificationType::synchronous);
+                               });
     juce::PopupMenu templateMenu;
-    auto const templateFile = Instance::get().getApplicationAccessor().getAttr<AttrType::defaultTemplateFile>();
+    auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
     templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()
                          {
                              Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
@@ -198,7 +205,8 @@ void Application::MainMenuModel::addDefaultTemplateMenu(juce::PopupMenu& menu)
                                  window->getInterface().selectDefaultTemplateFile();
                              }
                          });
-    menu.addSubMenu(juce::translate("Default Template"), templateMenu);
+    globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);
+    menu.addSubMenu(juce::translate("Global Settings"), globalSettingsMenu);
 }
 
 #ifdef JUCE_MAC
@@ -213,7 +221,7 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
-    addDefaultTemplateMenu(extraAppleMenuItems);
+    addGlobalSettingsMenu(extraAppleMenuItems);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 }
 #endif

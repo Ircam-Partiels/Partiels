@@ -53,6 +53,7 @@ Application::BatcherContent::BatcherContent()
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::silentFileManagement:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:

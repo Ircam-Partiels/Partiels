@@ -16,6 +16,7 @@ Application::CommandTarget::CommandTarget()
         {
             case AttrType::recentlyOpenedFilesList:
             case AttrType::defaultTemplateFile:
+            case AttrType::silentFileManagement:
             {
                 Instance::get().getApplicationCommandManager().commandStatusChanged();
             }
