@@ -488,7 +488,7 @@ void Group::PropertyProcessorsSection::updateInputTrack()
     juce::StringArray trackNames;
     std::set<juce::String> inputs;
     std::set<juce::String> identifiers;
-    std::vector<Track::HierarchyManager::TrackInfo> otherTracks;
+    std::map<juce::String, Track::HierarchyManager::TrackInfo> otherTracks;
 
     auto const& hierarchyManager = mDirector.getHierarchyManager();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
@@ -505,19 +505,9 @@ void Group::PropertyProcessorsSection::updateInputTrack()
             if(frameType.has_value())
             {
                 auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier, frameType.value());
-                if(otherTracks.empty())
+                for(auto const& inputTrack : inputTracks)
                 {
-                    otherTracks = inputTracks;
-                }
-                else
-                {
-                    std::erase_if(otherTracks, [&](Track::HierarchyManager::TrackInfo const& info)
-                                  {
-                                      return std::none_of(inputTracks.cbegin(), inputTracks.cend(), [&](Track::HierarchyManager::TrackInfo const& itrack)
-                                                          {
-                                                              return itrack.identifier == info.identifier;
-                                                          });
-                                  });
+                    otherTracks[inputTrack.identifier] = inputTrack;
                 }
             }
         }
@@ -533,19 +523,19 @@ void Group::PropertyProcessorsSection::updateInputTrack()
     mPropertyInputTrackList.clear();
     auto listId = 1;
     mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
-    mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
     mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), listId++);
     for(auto trackIt = otherTracks.crbegin(); trackIt != otherTracks.crend(); ++trackIt)
     {
-        if(!trackIt->group.isEmpty() && !trackIt->group.isEmpty())
+        if(!trackIt->second.group.isEmpty() && !trackIt->second.group.isEmpty())
         {
-            mPropertyInputTrackList[listId] = trackIt->identifier;
-            mPropertyInputTrack.entry.addItem(trackIt->group + ": " + trackIt->name, listId++);
+            mPropertyInputTrackList[listId] = trackIt->second.identifier;
+            mPropertyInputTrack.entry.addItem(trackIt->second.group + ": " + trackIt->second.name, listId++);
         }
     }
 
     if(inputs.size() == 1_z)
     {
+        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
         if(inputs.cbegin()->isEmpty())
         {
             mPropertyInputTrack.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
@@ -564,6 +554,7 @@ void Group::PropertyProcessorsSection::updateInputTrack()
     }
     else
     {
+        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Multiple Values"));
         mPropertyStepSize.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
 }
