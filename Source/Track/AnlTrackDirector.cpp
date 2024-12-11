@@ -623,6 +623,11 @@ void Track::Director::setBackupDirectory(juce::File const& directory)
     }
 }
 
+void Track::Director::setSilentResultsFileManagement(bool state)
+{
+    mSilentResultsFileManagement = state;
+}
+
 void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
 {
     mAlertCatcher = catcher;
@@ -838,6 +843,10 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
 void Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
+    if(mSilentResultsFileManagement)
+    {
+        return;
+    }
     mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     if(mAlertCatcher != nullptr)
     {
@@ -865,6 +874,11 @@ void Track::Director::fileHasBeenRemoved(juce::File const& file)
 
 void Track::Director::fileHasBeenRestored(juce::File const& file)
 {
+    if(mSilentResultsFileManagement)
+    {
+        runLoading();
+        return;
+    }
     if(mAlertCatcher != nullptr)
     {
         return;
@@ -890,6 +904,11 @@ void Track::Director::fileHasBeenRestored(juce::File const& file)
 
 void Track::Director::fileHasBeenModified(juce::File const& file)
 {
+    if(mSilentResultsFileManagement)
+    {
+        runLoading();
+        return;
+    }
     if(mAlertCatcher != nullptr)
     {
         return;
