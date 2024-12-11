@@ -338,22 +338,26 @@ void Document::Tools::resizeItems(Accessor& accessor, bool preserveRatio, int pa
     }
 
     auto remainder = 0.0f;
-    auto remainingHeight = parentHeight;
+    auto remainingHeight = std::max(parentHeight, minHeight);
     if(preserveRatio)
     {
         auto const followingRatio = static_cast<float>(parentHeight) / static_cast<float>(previousHeight);
+        auto const getNewHeight = [&](int currentHeight)
+        {
+            --numItems;
+            auto const maxHeight = std::max(remainingHeight - (numItems * minHeight), minHeight);
+            auto const scaledHeight = static_cast<float>(currentHeight) * followingRatio + remainder;
+            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, maxHeight);
+            remainingHeight = std::max(remainingHeight - effectiveHeight, minHeight);
+            remainder = scaledHeight - static_cast<float>(effectiveHeight);
+            return effectiveHeight;
+        };
         for(auto const& groupIdentifier : documentLayout)
         {
             if(hasGroupAcsr(accessor, groupIdentifier))
             {
                 auto& groupAcsr = getGroupAcsr(accessor, groupIdentifier);
-                {
-                    auto const scaledHeight = static_cast<float>(groupAcsr.getAttr<Group::AttrType::height>()) * followingRatio + remainder;
-                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
-                    remainder = scaledHeight - static_cast<float>(effectiveHeight);
-                    remainingHeight -= effectiveHeight;
-                    groupAcsr.setAttr<Group::AttrType::height>(effectiveHeight, NotificationType::synchronous);
-                }
+                groupAcsr.setAttr<Group::AttrType::height>(getNewHeight(groupAcsr.getAttr<Group::AttrType::height>()), NotificationType::synchronous);
                 if(groupAcsr.getAttr<Group::AttrType::expanded>())
                 {
                     auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackIdentifier)
@@ -363,13 +367,7 @@ void Document::Tools::resizeItems(Accessor& accessor, bool preserveRatio, int pa
                     for(auto const& trackIdentifier : groupLayout)
                     {
                         auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-                        {
-                            auto const scaledHeight = static_cast<float>(trackAcsr.getAttr<Track::AttrType::height>()) * followingRatio + remainder;
-                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
-                            remainder = scaledHeight - static_cast<float>(effectiveHeight);
-                            remainingHeight -= effectiveHeight;
-                            trackAcsr.setAttr<Track::AttrType::height>(effectiveHeight, NotificationType::synchronous);
-                        }
+                        trackAcsr.setAttr<Track::AttrType::height>(getNewHeight(trackAcsr.getAttr<Track::AttrType::height>()), NotificationType::synchronous);
                     }
                 }
             }
