@@ -136,7 +136,7 @@ If you have loaded one or more audio files, a second interface prompts you to ad
 
 <p align="center"><img src="Images/section-manage-documents.2-v1.3.2.png" alt="Example" width="412"/></p>
 
-You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the main menu `Partiels -> Default Template` (Mac) or `Help -> Default Template`.
+You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the main menu `Partiels → Global Settings → Default Template` (Mac) or `Help → Global Settings → Default Template`.
 
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
