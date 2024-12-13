@@ -351,7 +351,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Windows.zi
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Manuals.zip](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
 
 set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
-set(CREPE_TAG "1.0.0")
+set(CREPE_TAG "2.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Crepe Vamp Plugin\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Linux.tar.gz](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Linux.tar.gz)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-MacOS.pkg](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-MacOS.pkg)\n")
