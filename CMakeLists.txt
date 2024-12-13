@@ -342,13 +342,13 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- [Partiels-Patchs.
 
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins\n")
 
-set(IVP_URL "https://nubo.ircam.fr/index.php/s/4erMZk8agBwjZya")
-set(IVP_TAG "2.0.3")
+set(IVP_URL "https://github.com/Ircam-Partiels/ircam-vamp-plugins")
+set(IVP_TAG "2.1.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugin\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Linux.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Linux.zip)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-MacOS.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-MacOS.zip)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Windows.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Windows.zip)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Manuals.zip](${IVP_URL}/download?path=%2F&files=Ircam-Vamp-Plugins-v${IVP_TAG}-Manuals.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Linux.zip](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Linux.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-MacOS.zip](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-MacOS.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Windows.zip](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Windows.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [IVP-Manuals.zip](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
 
 set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
 set(CREPE_TAG "1.0.0")
