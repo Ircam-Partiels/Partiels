@@ -359,7 +359,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Windows.
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Crepe-Manual.zip](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Manual.zip)\n") 
 
 set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
-set(WHISPER_TAG "1.0.0")
+set(WHISPER_TAG "2.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-Linux.tar.gz](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "  - [Whisper-MacOS.pkg](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.pkg)\n")
