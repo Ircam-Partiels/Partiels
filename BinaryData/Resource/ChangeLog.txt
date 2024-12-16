@@ -1,4 +1,7 @@
 
+- Imp: Update Whisper plugin to 2.0.0
+- Imp: Update Crepe plugin to 2.0.0
+- Imp: Update IVP to 2.0.1
 - Add: An option to reload without warning a results file modified from outside the application
 - Fix: Loading a file not downloaded from iCloud fails without warning
 - Imp: Input track management via group properties
