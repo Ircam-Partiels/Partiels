@@ -127,7 +127,6 @@ target_compile_definitions(Partiels PRIVATE
     JUCE_USE_CURL=0
     JUCE_WEB_BROWSER=0
     JUCE_ENABLE_REPAINT_DEBUGGING=0
-    JUCE_JACK
     JUCE_ALSA
     JUCE_WASAPI
     JUCE_DIRECTSOUND
@@ -136,6 +135,9 @@ target_compile_definitions(Partiels PRIVATE
     PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
     PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
     )
+if(UNIX AND NOT APPLE)
+    target_compile_definitions(Partiels PRIVATE JUCE_JACK)
+endif()
 
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 if(WIN32)
