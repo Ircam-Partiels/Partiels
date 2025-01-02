@@ -29,7 +29,7 @@ jobs:
         check-path: ${{ matrix.path }}
   # Compiles, tests and packages the plugin for Ubuntu.
   Ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: Format
     steps:
     - uses: actions/checkout@v4
