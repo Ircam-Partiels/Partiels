@@ -59,9 +59,6 @@ if(NOT EXISTS ${VAMP_SDK_PATH})
         GIT_REPOSITORY      https://github.com/vamp-plugins/vamp-plugin-sdk.git
         GIT_TAG             ${VAMP_SDK_TAG}
         PATCH_COMMAND       ${GIT_EXECUTABLE} reset --hard && ${GIT_EXECUTABLE} clean -fxd && ${GIT_EXECUTABLE} apply ${VAMP_SDK_PATCH}
-        CONFIGURE_COMMAND   ""
-        BUILD_COMMAND       ""
-        INSTALL_COMMAND     ""
         UPDATE_DISCONNECTED TRUE
         EXCLUDE_FROM_ALL
     )
