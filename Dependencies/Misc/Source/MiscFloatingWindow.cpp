@@ -84,7 +84,7 @@ void FloatingWindow::paintOverChildren(juce::Graphics& g)
 void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 {
 #ifdef JUCE_LINUX
-    if(focusedComponent != nullptr || juce::Process::isForegroundProcess())
+    if(isVisible() && (focusedComponent != nullptr || juce::Process::isForegroundProcess()))
     {
         toFront(false);
     }
@@ -146,6 +146,7 @@ void FloatingWindowContainer::showAt(juce::Point<int> const& pt)
     }
     else
     {
+        mFloatingWindow.addToDesktop();
         mContent.setLookAndFeel(&getLookAndFeel());
         mFloatingWindow.setLookAndFeel(&getLookAndFeel());
         mFloatingWindow.setVisible(true);
@@ -156,6 +157,7 @@ void FloatingWindowContainer::showAt(juce::Point<int> const& pt)
 void FloatingWindowContainer::hide()
 {
     mFloatingWindow.setVisible(false);
+    mFloatingWindow.removeFromDesktop();
 }
 
 void FloatingWindowContainer::toFront()
