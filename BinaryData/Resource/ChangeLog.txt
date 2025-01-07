@@ -1,4 +1,10 @@
 
+- Fix: Floating windows appear under Linux even when they shouldn't be visible
+- Fix: Using a font not present on Linux crashes the application
+- Fix: Lower libc version on Linux to regain compatibility with older machines (use Ubuntu 22.04 on GitHub Action instead of latest)
+
+v2.0.7
+
 - Imp: Update Whisper plugin to 2.0.0
 - Imp: Update Crepe plugin to 2.0.0
 - Imp: Update IVP to 2.0.1
