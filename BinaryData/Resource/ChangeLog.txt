@@ -1,4 +1,6 @@
 
+v2.0.8
+
 - Fix: Floating windows appear under Linux even when they shouldn't be visible
 - Fix: Using a font not present on Linux crashes the application
 - Fix: Lower libc version on Linux to regain compatibility with older machines (use Ubuntu 22.04 on GitHub Action instead of latest)
