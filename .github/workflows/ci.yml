@@ -122,7 +122,7 @@ jobs:
         cp Application_Partiels.provisionprofile ~/Library/MobileDevice/Provisioning\ Profiles/$ppuuid.provisionprofile
         rm ./Application_Partiels.provisionprofile
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="Application Partiels" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PARTIELS_PROVISIONPROFILE_NAME }}" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
     - name: Build
       run: |
         security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
