@@ -127,6 +127,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
+    mDirector.setFileMapper(original, file);
     mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
