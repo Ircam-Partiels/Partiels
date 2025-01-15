@@ -18,20 +18,44 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             {
                 FileWatcher::clearAllFiles();
                 auto const reader = mAccessor.getAttr<AttrType::reader>();
-                for(auto const& channelLayout : reader)
-                {
-                    FileWatcher::addFile(channelLayout.file);
-                }
                 if(std::none_of(reader.cbegin(), reader.cend(), [](auto const& channelLayout)
                                 {
                                     auto const file = channelLayout.file;
                                     return file != juce::File{} && !file.existsAsFile();
                                 }))
                 {
+                    for(auto const& channelLayout : reader)
+                    {
+                        FileWatcher::addFile(channelLayout.file);
+                    }
                     initializeAudioReaders(notification);
                 }
                 else
                 {
+                    auto newReader = reader;
+                    if(mFileMapper.first != juce::File() && mFileMapper.second != juce::File())
+                    {
+                        for(auto& channelLayout : newReader)
+                        {
+                            if(!channelLayout.file.existsAsFile())
+                            {
+                                auto const relativePath = channelLayout.file.getRelativePathFrom(mFileMapper.first);
+                                auto const newPath = mFileMapper.second.getSiblingFile(relativePath);
+                                if(newPath.existsAsFile())
+                                {
+                                    channelLayout.file = newPath;
+                                }
+                            }
+                        }
+                    }
+                    mFileMapper.first = juce::File{};
+                    mFileMapper.second = juce::File{};
+                    if(newReader != reader)
+                    {
+                        mAccessor.setAttr<AttrType::reader>(newReader, notification);
+                        return;
+                    }
+
                     auto const options = juce::MessageBoxOptions()
                                              .withIconType(juce::AlertWindow::WarningIcon)
                                              .withTitle(juce::translate("Audio(s) files cannot be found!"))
@@ -422,6 +446,11 @@ void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
             }
         }
     }
+}
+
+void Document::Director::setFileMapper(juce::File const& saved, juce::File const& current)
+{
+    mFileMapper = std::make_pair(saved, current);
 }
 
 void Document::Director::setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn)

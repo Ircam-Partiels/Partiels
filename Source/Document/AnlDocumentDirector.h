@@ -43,6 +43,7 @@ namespace Document
         std::optional<juce::String> copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
+        void setFileMapper(juce::File const& saved, juce::File const& current);
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
         void setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
         void setBackupDirectory(juce::File const& directory);
@@ -77,6 +78,7 @@ namespace Document
         std::unique_ptr<juce::FileChooser> mFileChooser;
         juce::File mBackupDirectory;
         bool mSilentResultsFileManagement{false};
+        std::pair<juce::File, juce::File> mFileMapper;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)
