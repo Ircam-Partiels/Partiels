@@ -137,7 +137,7 @@ jobs:
         ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Export
       run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
-    - name: Notorize
+    - name: Notarize
       run: |
         ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.app" "${{ github.workspace }}/build/Partiels.zip"
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels.zip" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
