@@ -359,21 +359,53 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                 feature.timestamp = Vamp::RealTime::fromSeconds(std::get<0>(result));
                 feature.hasDuration = info.hasDuration;
                 feature.duration = Vamp::RealTime::fromSeconds(std::get<1>(result));
+                feature.values.reserve(std::get<2>(result).size() + std::get<3>(result).size());
                 feature.values = std::get<2>(result);
+                feature.values.insert(feature.values.end(), std::get<3>(result).cbegin(), std::get<3>(result).cend());
                 auto const colorMap = info.plugin->getColorMap(info.featureIndex, feature);
-                for(int j = 0; j < imageHeight; ++j)
+                if(info.logScale)
                 {
-                    auto const rowIndex = static_cast<size_t>(std::round(j * hd));
-                    if(rowIndex >= colorMap.size())
+                    auto const hertzRatio = static_cast<double>(imageHeight) / (info.sampleRate / 2.0);
+                    auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
+                    for(int j = 0; j < imageHeight; ++j)
                     {
-                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
+                        auto const startMidi = Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio);
+                        auto const startRow = static_cast<size_t>(std::max(std::round(startMidi * hertzRatio), 0.0));
+
+                        auto const endMidi = Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio);
+                        auto const endRow = static_cast<size_t>(std::max(std::round(endMidi * hertzRatio), 0.0));
+                        if(startRow >= colorMap.size())
+                        {
+                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
+                        }
+                        else
+                        {
+                            using diff_t = decltype(colorMap.cbegin())::difference_type;
+                            auto const rval = *std::max_element(std::next(colorMap.cbegin(), static_cast<diff_t>(startRow)), std::next(colorMap.cbegin(), static_cast<diff_t>(endRow)));
+                            auto const value = std::round((rval - valueStart) * valueScale);
+                            auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
+                            auto const colour = juce::Colour(colorMap.at(colorIndex));
+                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
+                        }
+                        pixel -= lineStride;
                     }
-                    else
+                }
+                else
+                {
+                    for(int j = 0; j < imageHeight; ++j)
                     {
-                        auto const colour = juce::Colour(colorMap.at(rowIndex));
-                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
+                        auto const rowIndex = static_cast<size_t>(std::round(j * hd));
+                        if(rowIndex >= colorMap.size())
+                        {
+                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
+                        }
+                        else
+                        {
+                            auto const colour = juce::Colour(colorMap.at(rowIndex));
+                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
+                        }
+                        pixel -= lineStride;
                     }
-                    pixel -= lineStride;
                 }
             }
             else
