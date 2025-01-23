@@ -112,11 +112,25 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             break;
             case AttrType::state:
             {
+                auto const& description = mAccessor.getAttr<AttrType::description>();
+                auto state = mAccessor.getAttr<AttrType::state>();
+                if(description.inputDomain == Plugin::InputDomain::TimeDomain && description.defaultState.blockSize != 0_z && state.blockSize != description.defaultState.blockSize)
+                {
+                    state.blockSize = description.defaultState.blockSize;
+                    mAccessor.setAttr<AttrType::state>(state, notification);
+                }
                 runAnalysis(notification);
             }
             break;
             case AttrType::description:
             {
+                auto const& description = mAccessor.getAttr<AttrType::description>();
+                auto state = mAccessor.getAttr<AttrType::state>();
+                if(description.inputDomain == Plugin::InputDomain::TimeDomain && description.defaultState.blockSize != 0_z && state.blockSize != description.defaultState.blockSize)
+                {
+                    state.blockSize = description.defaultState.blockSize;
+                    mAccessor.setAttr<AttrType::state>(state, notification);
+                }
                 sanitizeZooms(notification);
             }
             break;
