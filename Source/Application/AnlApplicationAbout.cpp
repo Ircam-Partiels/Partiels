@@ -19,7 +19,7 @@ void Application::AboutContent::paint(juce::Graphics& g)
 {
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
     juce::String const text(AnlResourceData::About_txt, AnlResourceData::About_txtSize);
-    g.drawFittedText(text, getLocalBounds().reduced(4), juce::Justification::left, 40);
+    g.drawFittedText(text, getLocalBounds().reduced(4), juce::Justification::topLeft, 40);
 }
 
 void Application::AboutContent::resized()
