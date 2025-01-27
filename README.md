@@ -41,7 +41,7 @@ Alongside Partiels, a wide range of analyses based on audio engines developed at
 
 <p align="center"><img src="BinaryData/Resource/Partiels-Endorsements.png", width=520></p>
 
-> For bug requests or reports, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
+> For bug reports or feature requests, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
 
 ## Compatibility
 
