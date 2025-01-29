@@ -392,6 +392,10 @@ set_tests_properties(ExportCue PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_D
 add_test(NAME ExportSdif COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/ --format=sdif --frame=1TST --matrix=1TST --colname=Column)
 set_tests_properties(ExportSdif PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
+add_test(NAME ExportFail COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template-Failure.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
+set_tests_properties(ExportFail PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+set_tests_properties(ExportFail PROPERTIES WILL_FAIL TRUE)
+
 add_test(NAME NewDocument COMMAND Partiels --new --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Document/new.ptldoc)
 set_tests_properties(NewDocument PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
