@@ -73,6 +73,7 @@ Application::CommandLine::CommandLine()
          "",
          [this](juce::ArgumentList const& args)
          {
+             mShouldWait = false;
              anlDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
 
@@ -206,12 +207,14 @@ Application::CommandLine::CommandLine()
              auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
              if(result.failed())
              {
+                 mShouldWait = false;
                  fail(result.getErrorMessage());
              }
 
              result = mExecutor->launch();
              if(result.failed())
              {
+                 mShouldWait = false;
                  fail(result.getErrorMessage());
              }
          }});
