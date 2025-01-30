@@ -87,11 +87,22 @@ juce_add_gui_app(Partiels
     NEEDS_WEB_BROWSER                   FALSE
     NEEDS_STORE_KIT                     FALSE
     HARDENED_RUNTIME_ENABLED            TRUE
-    HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.disable-library-validation"
+    HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.disable-library-validation" "com.apple.security.cs.debugger"
     PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string></dict></plist>"
     )
 
 juce_generate_juce_header(Partiels)
+if(DEFINED PARTIELS_PROVISIONING_PROFILE_SPECIFIER AND DEFINED PARTIELS_DEVELOPMENT_TEAM)
+    message(STATUS "Partiels Code-signing enabled")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${PARTIELS_DEVELOPMENT_TEAM}")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
+elseif(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER} AND DEFINED ENV{PARTIELS_DEVELOPMENT_TEAM})
+    message(STATUS "Partiels Code-signing enabled")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "$ENV{PARTIELS_DEVELOPMENT_TEAM}")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
+endif()
 
 set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
 target_misc_setup(Partiels MISC_ZOOM_ENABLED MISC_TRANSPORT_ENABLED)
@@ -189,17 +200,6 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_recommended_warning_flags
     )
 
-if(DEFINED PARTIELS_PROVISIONING_PROFILE_SPECIFIER AND DEFINED PARTIELS_DEVELOPMENT_TEAM)
-    message(STATUS "Partiels Code-signing enabled")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${PARTIELS_DEVELOPMENT_TEAM}")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
-elseif(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER} AND DEFINED ENV{PARTIELS_DEVELOPMENT_TEAM})
-    message(STATUS "Partiels Code-signing enabled")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "$ENV{PARTIELS_DEVELOPMENT_TEAM}")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
-    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
-endif()
 set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_COPY_PHASE_STRIP "NO")
 set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
 
