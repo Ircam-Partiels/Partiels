@@ -1,4 +1,17 @@
 
+- Fix: When there are many tracks in a group, the info bubble is too small to display all the information
+- Fix: The matrix bin index calculated for the tooltip is inconsistent
+- Add: Log scale and extra values support for plugins with IVE color map implementation
+- Fix: Block size initialization when the default block size has been updated by the plugin and is not equal to 0
+- Fix: Command line freezing indefinitely when export fails
+- Add: Support for user-specific installation on Linux (non-global)
+- Imp: Allow sharing of a document and its audio file without consolidating tracks
+- Fix: A typo in Readme.md file
+- Imp: Tidy up the links in release notes
+- Fix: URL of the vamp-plugin-tester
+- Fix: The macOS Developer ID certificate has expired
+- Imp: Update JUCE (8.0.6)
+
 v2.0.8
 
 - Fix: Floating windows appear under Linux even when they shouldn't be visible
