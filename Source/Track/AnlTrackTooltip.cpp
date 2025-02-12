@@ -37,25 +37,74 @@ juce::String Track::Tools::getExtraTooltip(Accessor const& acsr, size_t index)
     return juce::String(extraOutputs.at(index).description);
 }
 
+namespace Track
+{
+    namespace Tools
+    {
+        static double getScaledVerticalValue(Zoom::Accessor const& zoomAcsr, juce::Range<int> const& pixelRange, int y)
+        {
+            auto const zoomRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            if(pixelRange.isEmpty() || zoomRange.isEmpty())
+            {
+                return zoomRange.getStart();
+            }
+            auto const pixelLength = pixelRange.getLength();
+            auto const ratio = static_cast<double>(pixelLength - (y - pixelRange.getStart())) / static_cast<double>(pixelLength);
+            return ratio * zoomRange.getLength() + zoomRange.getStart();
+        }
+
+        static std::optional<double> getScaledVerticalValue(Accessor const& acsr, juce::Component const& component, int y)
+        {
+            auto const frameType = getFrameType(acsr);
+            if(frameType.has_value())
+            {
+                switch(frameType.value())
+                {
+                    case FrameType::label:
+                        return {};
+                    case FrameType::value:
+                    {
+                        auto const channelRange = getChannelVerticalRange(acsr, component.getLocalBounds(), y, false);
+                        if(!channelRange.has_value())
+                        {
+                            return {};
+                        }
+                        auto const value = getScaledVerticalValue(acsr.getAcsr<AcsrType::valueZoom>(), std::get<1_z>(channelRange.value()), y);
+                        if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                        {
+                            auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+                            auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+                            return getHertzFromMidi(value / nyquist * midiMax);
+                        }
+                        return value;
+                    }
+                    case FrameType::vector:
+                    {
+                        auto const channelRange = getChannelVerticalRange(acsr, component.getLocalBounds(), y, false);
+                        if(!channelRange.has_value())
+                        {
+                            return {};
+                        }
+                        auto const value = getScaledVerticalValue(acsr.getAcsr<AcsrType::binZoom>(), std::get<1_z>(channelRange.value()), y);
+                        if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                        {
+                            auto const numBins = acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+                            auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+                            auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+                            auto const midi = getHertzFromMidi(value / numBins * midiMax);
+                            return midi / nyquist * numBins;
+                        }
+                        return value;
+                    }
+                }
+            }
+            return {};
+        }
+    } // namespace Tools
+} // namespace Track
+
 juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component const& component, int y)
 {
-    auto const channelRange = getChannelVerticalRange(acsr, component.getLocalBounds(), y, false);
-    if(!channelRange.has_value())
-    {
-        return {};
-    }
-    auto const pixelRange = std::get<1_z>(channelRange.value());
-    auto const getScaledValue = [&](Zoom::Accessor const& zoomAcsr)
-    {
-        auto const zoomRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        if(pixelRange.isEmpty() || zoomRange.isEmpty())
-        {
-            return zoomRange.getStart();
-        }
-        auto const shiftY = y - pixelRange.getStart();
-        return static_cast<double>(pixelRange.getLength() - shiftY) / static_cast<double>(pixelRange.getLength()) * zoomRange.getLength() + zoomRange.getStart();
-    };
-
     auto const frameType = getFrameType(acsr);
     if(frameType.has_value())
     {
@@ -65,28 +114,23 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 return {};
             case FrameType::value:
             {
-                auto value = getScaledValue(acsr.getAcsr<AcsrType::valueZoom>());
-                if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                auto const value = getScaledVerticalValue(acsr, component, y);
+                if(value.has_value())
                 {
-                    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
-                    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
-                    value = static_cast<float>(getHertzFromMidi(static_cast<double>(value) / nyquist * midiMax));
+                    return Format::valueToString(value.value(), 4) + getUnit(acsr);
                 }
-                return Format::valueToString(value, 4) + getUnit(acsr);
+                break;
             }
             case FrameType::vector:
             {
-                auto const value = getScaledValue(acsr.getAcsr<AcsrType::binZoom>());
-                auto index = static_cast<size_t>(std::max(std::floor(value), 0.0));
-                if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
+                auto const value = getScaledVerticalValue(acsr, component, y);
+                if(value.has_value())
                 {
-                    auto const numBins = acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
-                    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
-                    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
-                    auto const startMidi = getHertzFromMidi(value / numBins * midiMax);
-                    index = static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0));
+                    auto const index = static_cast<size_t>(std::max(std::floor(value.value()), 0.0));
+                    auto const diff = value.value() - static_cast<double>(index);
+                    return juce::translate("Bin INDEX (+DIFF)").replace("INDEX", getBinName(acsr, index, true)).replace("DIFF", juce::String(diff, 2));
                 }
-                return juce::translate("Bin INDEX").replace("INDEX", getBinName(acsr, index, true));
+                break;
             }
         }
     }
