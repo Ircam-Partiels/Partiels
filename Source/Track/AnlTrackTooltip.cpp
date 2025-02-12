@@ -100,6 +100,28 @@ namespace Track
             }
             return {};
         }
+
+        [[nodiscard]] static juce::StringArray getExtraTooltip(Plugin::Description const& description, std::vector<float> const& extraValues)
+        {
+            juce::StringArray lines;
+            juce::StringArray extraTooltip;
+            auto const& extraOutputs = description.extraOutputs;
+            for(auto index = 0_z; index < extraValues.size(); ++index)
+            {
+                if(index < extraOutputs.size())
+                {
+                    auto const name = juce::String(extraOutputs.at(index).name);
+                    auto const unit = juce::String(extraOutputs.at(index).unit);
+                    lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4) + unit);
+                }
+                else
+                {
+                    auto const name = juce::translate("Extra INDEX").replace("INDEX", juce::String(index));
+                    lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4));
+                }
+            }
+            return lines;
+        }
     } // namespace Tools
 } // namespace Track
 
@@ -165,26 +187,6 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
     }
 
     auto const& description = accessor.getAttr<AttrType::description>();
-    auto const getExtraTooltip = [&](std::vector<float> const& extraValues)
-    {
-        juce::StringArray extraTooltip;
-        auto const& extraOutputs = description.extraOutputs;
-        for(auto index = 0_z; index < extraValues.size(); ++index)
-        {
-            if(index < extraOutputs.size())
-            {
-                auto const name = juce::String(extraOutputs.at(index).name);
-                auto const unit = juce::String(extraOutputs.at(index).unit);
-                lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4) + unit);
-            }
-            else
-            {
-                auto const name = juce::translate("Extra INDEX").replace("INDEX", juce::String(index));
-                lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4));
-            }
-        }
-    };
-
     auto const name = juce::String(description.output.name.empty() ? "Feature" : description.output.name);
     auto const unit = getUnit(accessor);
     auto const channel = std::get<0_z>(channelRange.value());
@@ -210,7 +212,7 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
         {
             lines.add(name + ": " + juce::String(std::get<2_z>(*it)) + unit);
         }
-        getExtraTooltip(std::get<3_z>(*it));
+        lines.addArray(getExtraTooltip(description, std::get<3_z>(*it)));
         return lines;
     }
     if(auto const points = results.getPoints())
@@ -260,7 +262,7 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
         if(value.has_value())
         {
             lines.add(name + ": " + Format::valueToString(value.value(), 4) + unit);
-            getExtraTooltip(std::get<3_z>(*it));
+            lines.addArray(getExtraTooltip(description, std::get<3_z>(*it)));
         }
         else
         {
@@ -281,18 +283,14 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             lines.add(name + ": -");
             return lines;
         }
-        auto const it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>));
-        auto const& binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
-        auto const value = Zoom::Tools::getScaledValueFromHeight(binVisibleRange, component, y);
-        auto binIndex = static_cast<size_t>(std::max(std::floor(value), 0.0));
-        if(accessor.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(accessor))
+        auto const value = getScaledVerticalValue(accessor, component, y);
+        if(!value.has_value())
         {
-            auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
-            auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
-            auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
-            auto const startMidi = getHertzFromMidi(value / numBins * midiMax);
-            binIndex = static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0));
+            lines.add(name + ": -");
+            return lines;
         }
+        auto const it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, Result::upper_cmp<Result::Data::Column>));
+        auto const binIndex = static_cast<size_t>(std::floor(value.value()));
         auto const frameIndex = std::distance(channelResults.cbegin(), it);
         auto const& column = std::get<2_z>(*it);
         if(binIndex >= column.size())
@@ -300,8 +298,10 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             lines.add(name + ": -");
             return lines;
         }
-        lines.add(name + ": " + Format::valueToString(column.at(binIndex), 4) + unit + juce::translate(" (frame IDX)").replace("IDX", juce::String(frameIndex)));
-        getExtraTooltip(std::get<3_z>(*it));
+        auto const binName = getBinName(accessor, binIndex);
+        auto const info = juce::translate("frame FIDX - bin BIDX").replace("FIDX", juce::String(frameIndex)).replace("BIDX", juce::String(binIndex)) + (binName.isNotEmpty() ? (" - " + binName) : "");
+        lines.add(name + ": " + Format::valueToString(column.at(binIndex), 4) + unit + " (" + info + ")");
+        lines.addArray(getExtraTooltip(description, std::get<3_z>(*it)));
         return lines;
     }
     return lines;
