@@ -127,8 +127,14 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 if(value.has_value())
                 {
                     auto const index = static_cast<size_t>(std::max(std::floor(value.value()), 0.0));
+#if JUCE_DEBUG
                     auto const diff = value.value() - static_cast<double>(index);
-                    return juce::translate("Bin INDEX (+DIFF)").replace("INDEX", getBinName(acsr, index, true)).replace("DIFF", juce::String(diff, 2));
+                    auto const name = getBinName(acsr, index);
+                    return juce::translate("Bin INDEX (+DIFF)").replace("INDEX", juce::String(index)).replace("DIFF", juce::String(diff, 2)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+#else
+                    auto const name = getBinName(acsr, index);
+                    return juce::translate("Bin INDEX").replace("INDEX", juce::String(index)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+#endif
                 }
                 break;
             }

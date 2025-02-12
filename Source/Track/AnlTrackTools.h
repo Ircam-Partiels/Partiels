@@ -32,7 +32,7 @@ namespace Track
         double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
 
         juce::String getUnit(Accessor const& acsr);
-        juce::String getBinName(Accessor const& acsr, size_t index, bool prependIndex);
+        juce::String getBinName(Accessor const& acsr, size_t index);
 
         std::optional<Zoom::Range> getResultRange(Accessor const& accessor);
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);

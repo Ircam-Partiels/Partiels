@@ -201,11 +201,10 @@ juce::String Track::Tools::getUnit(Accessor const& acsr)
     return acsr.getAttr<AttrType::unit>().value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
 }
 
-juce::String Track::Tools::getBinName(Accessor const& acsr, size_t index, bool prependIndex)
+juce::String Track::Tools::getBinName(Accessor const& acsr, size_t index)
 {
     auto const& output = acsr.getAttr<AttrType::description>().output;
-    auto const name = juce::String(index < output.binNames.size() ? output.binNames.at(index) : "");
-    return prependIndex && !name.isEmpty() ? juce::String(index) + " - " + name : name;
+    return juce::String(index < output.binNames.size() ? output.binNames.at(index) : "");
 }
 
 std::optional<Zoom::Range> Track::Tools::getResultRange(Accessor const& accessor)

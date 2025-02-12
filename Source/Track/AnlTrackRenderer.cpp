@@ -264,14 +264,18 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
                         return [&, numBins, nyquist, midiMax](double value)
                         {
                             auto const startMidi = Tools::getHertzFromMidi(value / numBins * midiMax);
-                            return Tools::getBinName(accessor, static_cast<size_t>(std::max(std::round(startMidi / nyquist * numBins), 0.0)), false);
+                            auto const index = static_cast<size_t>(std::floor(startMidi / nyquist * numBins));
+                            auto const name = Tools::getBinName(accessor, index);
+                            return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
                         };
                     }
                     else
                     {
                         return [&](double value)
                         {
-                            return Tools::getBinName(accessor, static_cast<size_t>(std::round(value)), false);
+                            auto const index = static_cast<size_t>(std::floor(value));
+                            auto const name = Tools::getBinName(accessor, index);
+                            return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
                         };
                     }
                 }
