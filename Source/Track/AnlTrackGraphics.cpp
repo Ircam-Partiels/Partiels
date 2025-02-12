@@ -369,11 +369,12 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                     auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
                     for(int j = 0; j < imageHeight; ++j)
                     {
-                        auto const startMidi = Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio);
-                        auto const startRow = static_cast<size_t>(std::max(std::round(startMidi * hertzRatio), 0.0));
+                        auto const startMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio), 0.0);
+                        auto const startRow = static_cast<size_t>(std::round(startMidi * hertzRatio));
 
-                        auto const endMidi = Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio);
-                        auto const endRow = static_cast<size_t>(std::max(std::round(endMidi * hertzRatio), 0.0));
+                        auto const endMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio), 0.0);
+                        auto const endRow = std::min(static_cast<size_t>(std::round(endMidi * hertzRatio)), colorMap.size());
+                        MiscWeakAssert(startRow < colorMap.size());
                         if(startRow >= colorMap.size())
                         {
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
@@ -381,9 +382,11 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                         else
                         {
                             using diff_t = decltype(colorMap.cbegin())::difference_type;
-                            auto const rval = *std::max_element(std::next(colorMap.cbegin(), static_cast<diff_t>(startRow)), std::next(colorMap.cbegin(), static_cast<diff_t>(endRow)));
+                            auto const startIt = std::next(colorMap.cbegin(), static_cast<diff_t>(startRow));
+                            auto const endIt = std::next(colorMap.cbegin(), static_cast<diff_t>(endRow));
+                            auto const rval = *std::max_element(startIt, endIt);
                             auto const value = std::round((rval - valueStart) * valueScale);
-                            auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
+                            auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
                             auto const colour = juce::Colour(colorMap.at(colorIndex));
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
                         }
@@ -395,6 +398,7 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                     for(int j = 0; j < imageHeight; ++j)
                     {
                         auto const rowIndex = static_cast<size_t>(std::round(j * hd));
+                        MiscWeakAssert(rowIndex < colorMap.size());
                         if(rowIndex >= colorMap.size())
                         {
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
@@ -417,11 +421,12 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                     auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
                     for(int j = 0; j < imageHeight; ++j)
                     {
-                        auto const startMidi = Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio);
-                        auto const startRow = static_cast<size_t>(std::max(std::round(startMidi * hertzRatio), 0.0));
+                        auto const startMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio), 0.0);
+                        auto const startRow = static_cast<size_t>(std::round(startMidi * hertzRatio));
 
-                        auto const endMidi = Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio);
-                        auto const endRow = static_cast<size_t>(std::max(std::round(endMidi * hertzRatio), 0.0));
+                        auto const endMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio), 0.0);
+                        auto const endRow = std::min(static_cast<size_t>(std::round(endMidi * hertzRatio)), values.size());
+                        MiscWeakAssert(startRow < values.size());
                         if(startRow >= values.size())
                         {
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
@@ -429,9 +434,11 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                         else
                         {
                             using diff_t = decltype(values.cbegin())::difference_type;
-                            auto const rval = *std::max_element(std::next(values.cbegin(), static_cast<diff_t>(startRow)), std::next(values.cbegin(), static_cast<diff_t>(endRow)));
+                            auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
+                            auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
+                            auto const rval = *std::max_element(startIt, endIt);
                             auto const value = std::round((rval - valueStart) * valueScale);
-                            auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
+                            auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
                         }
                         pixel -= lineStride;
@@ -442,7 +449,8 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                     for(int j = 0; j < imageHeight; ++j)
                     {
                         auto const startRow = static_cast<size_t>(std::round(j * hd));
-                        auto const endRow = static_cast<size_t>(std::round((j + 1) * hd));
+                        auto const endRow = std::min(static_cast<size_t>(std::round((j + 1) * hd)), values.size());
+                        MiscWeakAssert(startRow < values.size());
                         if(startRow >= values.size())
                         {
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
@@ -450,7 +458,9 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                         else
                         {
                             using diff_t = decltype(values.cbegin())::difference_type;
-                            auto const rval = *std::max_element(std::next(values.cbegin(), static_cast<diff_t>(startRow)), std::next(values.cbegin(), static_cast<diff_t>(endRow)));
+                            auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
+                            auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
+                            auto const rval = *std::max_element(startIt, endIt);
                             auto const value = std::round((rval - valueStart) * valueScale);
                             auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
