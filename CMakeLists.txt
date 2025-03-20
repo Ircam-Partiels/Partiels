@@ -343,7 +343,7 @@ set(VAX_TAG "1.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- VAX Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
 
 set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
-set(CREPE_TAG "2.0.0")
+set(CREPE_TAG "3.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Crepe Vamp Plugin: [Linux](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Linux.tar.gz) / [MacOS](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-MacOS.pkg) / [Windows](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Windows.exe) / [Manual](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Manual.zip)\n") 
 
 set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
