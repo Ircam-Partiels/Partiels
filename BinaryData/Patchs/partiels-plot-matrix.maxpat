@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 1052.0, 263.0, 393.0, 622.0 ],
+		"rect" : [ 807.0, 140.0, 393.0, 755.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
@@ -31,7 +31,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 276.0, 349.0, 29.5, 22.0 ],
+					"patching_rect" : [ 276.0, 345.0, 29.5, 22.0 ],
 					"text" : "$3"
 				}
 
@@ -69,8 +69,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 45.0, 481.0, 47.0, 22.0 ],
-					"text" : "size $1"
+					"patching_rect" : [ 45.0, 481.0, 81.0, 22.0 ],
+					"text" : "numpoints $1"
 				}
 
 			}
@@ -129,8 +129,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 100.0, 481.0, 100.0, 22.0 ],
-					"text" : "setminmax $3 $4"
+					"patching_rect" : [ 100.0, 428.0, 105.0, 22.0 ],
+					"text" : "definerange $3 $4"
 				}
 
 			}
@@ -141,8 +141,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 189.0, 277.5, 61.0, 22.0 ],
-					"text" : "list.slice 6"
+					"patching_rect" : [ 189.0, 277.5, 165.0, 22.0 ],
+					"text" : "list.slice 6 @zlmaxsize 16384"
 				}
 
 			}
@@ -370,7 +370,7 @@
 
 			}
  ],
-		"originid" : "pat-38"
+		"originid" : "pat-74"
 	}
 
 }

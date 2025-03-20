@@ -10,9 +10,43 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 754.0, 114.0, 575.0, 510.0 ],
+		"rect" : [ 754.0, 114.0, 604.0, 511.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-2",
+					"margins" : [ 0.0, 0.0, 0.0, 0.0 ],
+					"maxclass" : "plot~",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"numpoints" : 118,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 7.0, 311.0, 552.0, 157.0 ],
+					"subplots" : [ 						{
+							"color" : [ 0.400000005960464, 0.400000005960464, 0.75, 1.0 ],
+							"thickness" : 2.220000028610229,
+							"point_style" : "none",
+							"line_style" : "lines",
+							"number_style" : "none",
+							"filter" : "none",
+							"domain_start" : 0.0,
+							"domain_end" : 100.0,
+							"domain_style" : "linear",
+							"domain_markers" : [  ],
+							"domain_labels" : [  ],
+							"range_start" : -78.073471069335938,
+							"range_end" : -21.673870086669922,
+							"range_style" : "linear",
+							"range_markers" : [  ],
+							"range_labels" : [  ],
+							"origin_x" : 0.0,
+							"origin_y" : 0.0
+						}
+ ]
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-3",
 					"maxclass" : "comment",
@@ -59,28 +93,13 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-13",
-					"maxclass" : "multislider",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 7.0, 307.0, 552.0, 157.0 ],
-					"setminmax" : [ -116.751991271972656, 0.0 ],
-					"setstyle" : 1,
-					"size" : 250
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-11",
 					"linecount" : 4,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 7.0, 78.0, 500.0, 60.0 ],
-					"text" : "The partiels-plot-matrix abstraction stores and plots the OSC data received from a matrix track of the Partiels application into a multislider. Multislider size and value scales are automatically updated according to track zooms in the Partiels application. To run this patch, you should open the Partiels document Voice.ptldoc and enable the OSC."
+					"text" : "The partiels-plot-matrix abstraction stores and plots the OSC data received from a matrix track of the Partiels application into a plot~. The size and value scales are automatically updated according to track zooms in the Partiels application. To run this patch, you should open the Partiels document Voice.ptldoc and enable the OSC."
 				}
 
 			}
@@ -149,13 +168,13 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-13", 0 ],
+					"destination" : [ "obj-2", 0 ],
 					"source" : [ "obj-4", 0 ]
 				}
 
 			}
  ],
-		"originid" : "pat-148",
+		"originid" : "pat-16",
 		"dependency_cache" : [ 			{
 				"name" : "partiels-plot-matrix.maxpat",
 				"bootpath" : "~/Git/Partiels/BinaryData/Patchs",
