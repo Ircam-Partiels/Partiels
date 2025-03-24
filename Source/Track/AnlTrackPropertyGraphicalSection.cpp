@@ -354,9 +354,9 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyUnit.setVisible(true);
                             mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
                             mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
-                            mPropertyValueRangeMin.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                            mPropertyValueRangeMax.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                            mPropertyValueRange.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
+                            mPropertyValueRangeMin.setVisible(true);
+                            mPropertyValueRangeMax.setVisible(true);
+                            mPropertyValueRange.setVisible(true);
                             mPropertyNumBins.setVisible(true);
                             mPropertyRangeLink.setVisible(true);
                             mPropertyGrid.setVisible(true);

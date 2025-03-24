@@ -362,7 +362,7 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                 feature.values.reserve(std::get<2>(result).size() + std::get<3>(result).size());
                 feature.values = std::get<2>(result);
                 feature.values.insert(feature.values.end(), std::get<3>(result).cbegin(), std::get<3>(result).cend());
-                auto const colorMap = info.plugin->getColorMap(info.featureIndex, feature);
+                auto const colorMap = info.plugin->getColorMap(info.featureIndex, feature, std::make_tuple(info.range.getStart(), info.range.getEnd()));
                 if(info.logScale)
                 {
                     auto const hertzRatio = static_cast<double>(imageHeight) / (info.sampleRate / 2.0);
