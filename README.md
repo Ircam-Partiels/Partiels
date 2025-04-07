@@ -63,6 +63,7 @@ cmake --build build
 ctest -C Debug -VV --test-dir build
 ```
 
+> ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file `JUCE/docs/Linux Dependencies.md`.
 ## Credits
 
 - **[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** by Pierre Guillot at IRCAM IMR Department.
