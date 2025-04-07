@@ -106,7 +106,7 @@ void FloatingWindow::timerCallback()
 
 FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce::Component& content)
 : mContent(content)
-, mFloatingWindow(title, true, true)
+, mFloatingWindow(title, true, false)
 {
     MiscWeakAssert(std::addressof(content) != this);
     auto constexpr max = std::numeric_limits<int>::max();
