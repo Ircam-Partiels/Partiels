@@ -27,6 +27,7 @@ void FloatingWindow::highlight()
 
 void FloatingWindow::closeButtonPressed()
 {
+    removeFromDesktop();
     setVisible(false);
 }
 
@@ -88,14 +89,19 @@ void FloatingWindow::paintOverChildren(juce::Graphics& g)
 #ifndef JUCE_MAC
 void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 {
-#ifdef JUCE_LINUX
-    if(isVisible() && (focusedComponent != nullptr || juce::Process::isForegroundProcess()))
+    if(isOnDesktop())
     {
-        toFront(false);
-    }
+        auto const isForegroundProcess = juce::Process::isForegroundProcess() || focusedComponent != nullptr;
+#ifdef JUCE_LINUX
+        if(isVisible() && isForegroundProcess)
+        {
+            toFront(false);
+        }
 #elif JUCE_WINDOWS
-    setAlwaysOnTop(focusedComponent != nullptr || juce::Process::isForegroundProcess());
+        setAlwaysOnTop(isForegroundProcess);
+        setVisible(isForegroundProcess);
 #endif
+    }
 }
 #endif
 
@@ -151,9 +157,9 @@ void FloatingWindowContainer::showAt(juce::Point<int> const& pt)
     }
     else
     {
-        mFloatingWindow.addToDesktop();
         mContent.setLookAndFeel(&getLookAndFeel());
         mFloatingWindow.setLookAndFeel(&getLookAndFeel());
+        mFloatingWindow.addToDesktop();
         mFloatingWindow.setVisible(true);
         mFloatingWindow.toFront(false);
     }
@@ -161,8 +167,8 @@ void FloatingWindowContainer::showAt(juce::Point<int> const& pt)
 
 void FloatingWindowContainer::hide()
 {
-    mFloatingWindow.setVisible(false);
     mFloatingWindow.removeFromDesktop();
+    mFloatingWindow.setVisible(false);
 }
 
 void FloatingWindowContainer::toFront()
