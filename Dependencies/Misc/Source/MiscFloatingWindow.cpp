@@ -5,9 +5,7 @@ MISC_FILE_BEGIN
 FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersClose, bool addToDesktop)
 : juce::DialogWindow(name, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(ColourIds::backgroundColourId), escapeKeyTriggersClose, addToDesktop)
 {
-#ifdef JUCE_MAC
-    setFloatingProperty(*this, true);
-#else
+#ifndef JUCE_MAC
     juce::Desktop::getInstance().addFocusChangeListener(this);
 #endif
     lookAndFeelChanged();
@@ -54,11 +52,18 @@ void FloatingWindow::parentHierarchyChanged()
 {
     setBackgroundColour(findColour(ColourIds::backgroundColourId, true));
     juce::DialogWindow::parentHierarchyChanged();
+    visibilityChanged();
 }
 
 void FloatingWindow::visibilityChanged()
 {
     juce::DialogWindow::visibilityChanged();
+#ifdef JUCE_MAC
+    if(isVisible() && isOnDesktop())
+    {
+        FloatingWindow::setFloatingProperty(*this, true);
+    }
+#endif
 }
 
 void FloatingWindow::moved()
