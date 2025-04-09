@@ -608,11 +608,24 @@ std::optional<juce::String> Document::Director::addGroup(size_t position, Notifi
         return std::optional<juce::String>();
     }
 
+    auto const getNonExistingName = [this](auto groupIndex)
+    {
+        auto name = juce::String("Group ") + juce::String(groupIndex);
+        auto const& groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        while(std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&name](auto const& groupAcsr)
+                          {
+                              return groupAcsr.get().template getAttr<Group::AttrType::name>() == name;
+                          }))
+        {
+            name = juce::String("Group ") + juce::String(++groupIndex);
+        }
+        return name;
+    };
+
     auto const identifier = createNextUuid();
-    auto const name = juce::String("Group ") + juce::String(index + 1_z);
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
-    groupAcsr.setAttr<Group::AttrType::name>(name, notification);
+    groupAcsr.setAttr<Group::AttrType::name>(getNonExistingName(index + 1_z), notification);
 
     auto layout = mAccessor.getAttr<AttrType::layout>();
     anlStrongAssert(position <= layout.size());
