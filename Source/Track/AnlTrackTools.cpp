@@ -255,8 +255,12 @@ std::optional<Zoom::Range> Track::Tools::getExtraRange(Accessor const& accessor,
     return static_cast<bool>(access) ? results.getExtraRange(index) : std::optional<Zoom::Range>();
 }
 
-bool Track::Tools::isSelected(Accessor const& acsr)
+bool Track::Tools::isSelected(Accessor const& acsr, bool emptyTrackSupport)
 {
+    if(emptyTrackSupport && acsr.getAttr<AttrType::channelsLayout>().empty())
+    {
+        return acsr.getAttr<AttrType::focused>().size() >= 1_z && acsr.getAttr<AttrType::focused>()[0];
+    }
     return !getSelectedChannels(acsr).empty();
 }
 
