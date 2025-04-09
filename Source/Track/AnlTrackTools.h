@@ -39,7 +39,7 @@ namespace Track
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getExtraRange(Accessor const& accessor, size_t index);
 
-        bool isSelected(Accessor const& acsr);
+        bool isSelected(Accessor const& acsr, bool emptyTrackSupport);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
         std::optional<size_t> getChannel(Accessor const& acsr, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator);
         std::optional<std::tuple<size_t, juce::Range<int>>> getChannelVerticalRange(Accessor const& acsr, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator);
