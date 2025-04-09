@@ -184,7 +184,7 @@ bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t con
     if(!static_cast<bool>(access))
     {
         showAccessWarning();
-        return {};
+        return false;
     }
     if(auto markers = results.getMarkers())
     {
@@ -198,7 +198,7 @@ bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t con
     {
         return doContain(*columns);
     }
-    return {};
+    return false;
 }
 
 Track::Result::ChannelData Track::Result::Modifier::createFrame(Accessor const& accessor, size_t const channel, double const time)
