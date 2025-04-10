@@ -385,7 +385,7 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
                             auto const startIt = std::next(colorMap.cbegin(), static_cast<diff_t>(startRow));
                             auto const endIt = std::next(colorMap.cbegin(), static_cast<diff_t>(endRow));
                             auto const rval = *std::max_element(startIt, endIt);
-                            auto const value = std::round((rval - valueStart) * valueScale);
+                            auto const value = std::round((static_cast<float>(rval) - valueStart) * valueScale);
                             auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
                             auto const colour = juce::Colour(colorMap.at(colorIndex));
                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
