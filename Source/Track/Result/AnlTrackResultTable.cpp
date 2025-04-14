@@ -464,10 +464,11 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
     auto const drawText = [&](juce::String const& text)
     {
         g.setColour(mTable.findColour(juce::ListBox::textColourId));
-        g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
-        juce::Rectangle<int> const bounds(4, 0, width - 14, height);
-        auto constexpr justification = juce::Justification::centredLeft;
-        g.drawFittedText(text, bounds, justification, 1, 1.0f);
+        auto const font = juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f));
+        auto const charWidth = std::max(juce::GlyphArrangement::getStringWidth(font, "0"), 1.0f);
+        static auto constexpr extraSafeChars = 10;
+        auto const numChars = static_cast<int>(std::ceil(static_cast<float>(width - 14) / charWidth)) + extraSafeChars;
+        g.drawText(text.substring(0, numChars), 4, 0, width - 14, height, juce::Justification::centredLeft);
     };
 
     auto const drawExtra = [&](std::vector<float> const& extra, size_t index)
