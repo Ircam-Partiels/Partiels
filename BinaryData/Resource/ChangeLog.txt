@@ -1,4 +1,15 @@
 
+- Imp: Drawing performance of the results table
+- Imp: Patches to plot matrices in Pd and Max 
+- Imp: Support for the Snail plugin colour map (IVE update)
+- Fix: Update release notes (VAX plug-in added) 
+- Fix: Selection of an empty track (when plugin initialisation failed)
+- Fix: Floating window support on Linux, macOS and Windows
+- Fix: Ensure that new group name is unique
+- Fix: The description of the undo/redo actions is not displayed in the menu
+
+v2.0.9
+
 - Fix: When there are many tracks in a group, the info bubble is too small to display all the information
 - Fix: The matrix bin index calculated for the tooltip is inconsistent
 - Add: Log scale and extra values support for plugins with IVE color map implementation
