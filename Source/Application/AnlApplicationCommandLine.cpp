@@ -315,6 +315,26 @@ Application::CommandLine::CommandLine()
                  fail(result.getErrorMessage());
              }
          }});
+
+    addCommand(
+        {"--plugin-list",
+         "--plugin-list",
+         "Give an exaustive list of installed plugins.\n\t",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             float sampleRate = 44100.0f;
+             PluginList::Scanner scanner;
+             auto const& plugins = scanner.getPlugins(sampleRate);
+             auto const& list = std::get<0>(plugins);
+             std::string description;
+             size_t count = 0;
+             for(auto it = list.begin(); it != list.end(); ++it)
+             {
+                 std::cout << "[" << count++ << "]" << std::endl;
+                 std::cout << it->first << it->second << std::endl;
+             }
+         }});
 }
 
 Application::CommandLine::~CommandLine()
