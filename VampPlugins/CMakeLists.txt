@@ -13,7 +13,7 @@ target_compile_definitions(partiels-vamp-plugins PRIVATE PARTIELS_VAMP_PLUGINS_V
 ive_prepare_plugin_target(partiels-vamp-plugins)
 set_target_properties(partiels-vamp-plugins PROPERTIES XCODE_ATTRIBUTE_SKIP_INSTALL "YES")
 
-add_custom_command(TARGET partiels-vamp-plugins POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/partiels-vamp-plugins.cat "$<IF:$<CONFIG:Debug>,${CMAKE_CURRENT_BINARY_DIR}/Debug/partiels-vamp-plugins.cat,${CMAKE_CURRENT_BINARY_DIR}/Release/partiels-vamp-plugins.cat>")
+add_custom_command(TARGET partiels-vamp-plugins POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/partiels-vamp-plugins.cat "$<TARGET_FILE_DIR:partiels-vamp-plugins>")
 
 if(NOT IGNORE_VAMP_PLUGIN_TESTER)
   enable_testing()
