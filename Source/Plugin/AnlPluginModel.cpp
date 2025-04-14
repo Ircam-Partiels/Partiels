@@ -188,6 +188,17 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.programs = j.value("programs", description.programs);
 }
 
+std::ostream& Plugin::operator<<(std::ostream& os, Description const& description)
+{
+    os << "name: " << description.name << "\n"
+       // << "inputDomain: " << static_cast<int>(description.inputDomain) << "\n"
+       << "maker: " << description.maker << "\n"
+       << "version: " << static_cast<int>(description.version) << "\n"
+       << "category: " << description.category << "\n"
+       << "details: " << description.details << "\n";
+    return os;
+}
+
 template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {

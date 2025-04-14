@@ -178,6 +178,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Description const& description);
     void from_json(nlohmann::json const& j, Description& description);
+    std::ostream& operator<<(std::ostream& os, Description const& description);
 
     Description loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key);
 
