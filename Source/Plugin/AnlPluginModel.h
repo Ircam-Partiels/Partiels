@@ -40,7 +40,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Key const& key);
     void from_json(nlohmann::json const& j, Key& key);
-
+    std::ostream& operator<<(std::ostream& os, Key const& key);
     //! @brief The description of the output of a plugin
     //! @details The structure describes the results returned by a plugin and how to interprete
     //! them but it doesn't contain any effective result returned by the plugin.

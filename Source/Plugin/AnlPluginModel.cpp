@@ -188,6 +188,13 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.programs = j.value("programs", description.programs);
 }
 
+std::ostream& Plugin::operator<<(std::ostream& os, Key const& key)
+{
+    os << "identifier: " << key.identifier << "\n"
+       << "feature: " << key.feature << "\n";
+    return os;
+}
+
 std::ostream& Plugin::operator<<(std::ostream& os, Description const& description)
 {
     os << "name: " << description.name << "\n"
