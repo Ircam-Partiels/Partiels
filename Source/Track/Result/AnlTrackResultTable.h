@@ -68,11 +68,6 @@ namespace Track
             };
             // clang-format on
 
-            class Cell;
-            class TimeCell;
-            class DurationCell;
-            class ValueCell;
-
             Director& mDirector;
             Accessor& mAccessor{mDirector.getAccessor()};
             Accessor::Listener mListener{typeid(*this).name()};
