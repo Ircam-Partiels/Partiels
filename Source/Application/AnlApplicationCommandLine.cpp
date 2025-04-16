@@ -320,17 +320,23 @@ Application::CommandLine::CommandLine()
         {"--plugin-detail",
          "--plugin-detail [options]",
          "Provides all the details about a specified plugin.\n\t"
-         "--identifier Defines the identifier of the wanted plugin (required).\n\t"
+         "--identifier|-i Defines the identifier of the wanted plugin (required).\n\t"
+         "--feature|-f Defines the feature of the wanted plugin (required).\n\t",
          "",
          []([[maybe_unused]] juce::ArgumentList const& args)
          {
-             args.failIfOptionIsMissing("--identifier");
-             auto const identifier = args.getValueForOption("--identifier");
-             PluginList::Scanner scanner;
-             float sampleRate = 44100.0f;
-             auto* plugin = scanner.loadPlugin(identifier, static_cast<float>(sampleRate));
-
-             std::cout << "Plugin detail" << std::endl;
+             args.failIfOptionIsMissing("-i|--identifier");
+             args.failIfOptionIsMissing("-f|--feature");
+             auto const identifier = args.getValueForOption("-i|--identifier");
+             auto const feature = args.getValueForOption("-f|--feature");
+             double sampleRate = 44100.0;
+             auto plugin_key = Misc::Plugin::Key();
+             plugin_key.identifier = identifier.toStdString();
+             plugin_key.feature = feature.toStdString();
+             Plugin::Description description = PluginList::Scanner::loadDescription(plugin_key, sampleRate);
+             std::cout <<"Plugin key:\n\n" << plugin_key << std::endl;
+             std::cout << "\nPlugin description:\n" << std::endl;
+             description.print_details(std::cout, description);
          }});
 
     addCommand(
@@ -344,13 +350,8 @@ Application::CommandLine::CommandLine()
              PluginList::Scanner scanner;
              auto const& plugins = scanner.getPlugins(sampleRate);
              auto const& list = std::get<0>(plugins);
-             std::string description;
-             size_t count = 0;
              for(auto it = list.begin(); it != list.end(); ++it)
-             {
-                 std::cout << "[" << count++ << "]" << std::endl;
                  std::cout << it->first << it->second << std::endl;
-             }
          }});
 }
 
