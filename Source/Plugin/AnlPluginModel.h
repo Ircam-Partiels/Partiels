@@ -63,6 +63,7 @@ namespace Plugin
     using Input = Output;
     void to_json(nlohmann::json& j, Output const& output);
     void from_json(nlohmann::json const& j, Output& output);
+    std::ostream& operator<<(std::ostream& os, Output const& output);
 
     struct OutputExtra
     : public Ive::PluginExtension::OutputExtraDescriptor
@@ -85,7 +86,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, OutputExtra const& outputExtra);
     void from_json(nlohmann::json const& j, OutputExtra& outputExtra);
-
+    std::ostream& operator<<(std::ostream& os, OutputExtra const& outputExtra);
     //! @brief The description of a parameter of a plugin
     //! @details The structure describes the parameters accepted by a plugin and how to
     //! represent and control them but it doesn't contain any effective value of the state of the
@@ -108,7 +109,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Parameter const& parameter);
     void from_json(nlohmann::json const& j, Parameter& parameter);
-
+    std::ostream& operator<<(std::ostream& os, Parameter const& parameter);
     //! @brief The state of a plugin
     //! @details The type of data returned by a plugin.
     struct State
@@ -134,6 +135,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, State const& state);
     void from_json(nlohmann::json const& j, State& state);
+    std::ostream& operator<<(std::ostream& os, State const& state);
 
     //! @brief The full description of a plugin
     //! @details The structure contains all the informations to represent and to describe how to control
@@ -174,6 +176,9 @@ namespace Plugin
         {
             return !(*this == rhd);
         }
+        
+        void print_details(std::ostream& os, Description const& description);
+
     };
 
     void to_json(nlohmann::json& j, Description const& description);

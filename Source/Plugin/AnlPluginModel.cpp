@@ -198,13 +198,99 @@ std::ostream& Plugin::operator<<(std::ostream& os, Key const& key)
 std::ostream& Plugin::operator<<(std::ostream& os, Description const& description)
 {
     os << "name: " << description.name << "\n"
-       // << "inputDomain: " << static_cast<int>(description.inputDomain) << "\n"
        << "maker: " << description.maker << "\n"
        << "version: " << static_cast<int>(description.version) << "\n"
        << "category: " << description.category << "\n"
        << "details: " << description.details << "\n";
     return os;
 }
+
+std::ostream& Plugin::operator<<(std::ostream& os, State const& state)
+{
+    os << "blockSize: " << state.blockSize << "\n"
+       << "stepSize: " << state.stepSize << "\n"
+       << "windowType: " << state.windowType << "\n";
+    for(auto const& parameter : state.parameters)
+    {
+        os << parameter.first << ": " << parameter.second << "\n";
+    }
+    return os;
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, Parameter const& parameter)
+{
+    os << "identifier: " << parameter.identifier << "\n"
+       << "name: " << parameter.name << "\n"
+       << "description: " << parameter.description << "\n"
+       << "unit: " << parameter.unit << "\n"
+       << "minValue: " << parameter.minValue << "\n"
+       << "maxValue: " << parameter.maxValue << "\n"
+       << "defaultValue: " << parameter.defaultValue << "\n"
+       << "isQuantized: " << parameter.isQuantized << "\n"
+       << "quantizeStep: " << parameter.quantizeStep << "\n";
+    return os;
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, Output const& output)
+{
+    os << "identifier: " << output.identifier << "\n"
+       << "name: " << output.name << "\n"
+       << "description: " << output.description << "\n"
+       << "unit: " << output.unit << "\n"
+       << "hasFixedBinCount: " << output.hasFixedBinCount << "\n"
+       << "binCount: " << output.binCount << "\n"
+       << "binNames: ";
+    for(auto const& name : output.binNames)
+    {
+        os << name << ", ";
+    }
+    os << "\nhasKnownExtents: " << output.hasKnownExtents
+       << "\nminValue: " << output.minValue
+       << "\nmaxValue: " << output.maxValue
+       << "\nisQuantized: " << output.isQuantized
+       << "\nquantizeStep: " << output.quantizeStep
+       << "\nsampleType: " << static_cast<int>(output.sampleType)
+       << "\nsampleRate: " << output.sampleRate
+       << "\nhasDuration: " << output.hasDuration;
+    return os;
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, OutputExtra const& outputExtra)
+{
+    os << "identifier: " << outputExtra.identifier << "\n"
+       << "name: " << outputExtra.name << "\n"
+       << "description: " << outputExtra.description << "\n"
+       << "unit: " << outputExtra.unit << "\n"
+       << "hasKnownExtents: " << outputExtra.hasKnownExtents
+       << "\nminValue: " << outputExtra.minValue
+       << "\nmaxValue: " << outputExtra.maxValue
+       << "\nisQuantized: " << outputExtra.isQuantized
+       << "\nquantizeStep: " << outputExtra.quantizeStep;
+    return os;
+}
+
+void Plugin::Description::print_details(std::ostream& os, Description const& description)
+{
+    os << "name: " << description.name << "\n"
+       << "inputDomain: " << description.inputDomain << "\n"
+       << "maker: " << description.maker << "\n"
+       << "version: " << static_cast<int>(description.version) << "\n"
+       << "category: " << description.category << "\n"
+       << "details: " << description.details << "\n";
+    os << "\n\nDefault state:\n\n" << description.defaultState;
+    os << "\n\nParameters:\n\n";
+    for(auto const& parameter : description.parameters)
+    {
+        os << parameter << "\n";
+    }
+    os << "\nOutput:\n\n" << description.output << "\n";
+    /*os << "\n\nExtra outputs:\n\n";
+    for(auto const& extraOutput : description.extraOutputs)
+    {
+        os << extraOutput << "\n";
+    }*/
+}
+
 
 template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
