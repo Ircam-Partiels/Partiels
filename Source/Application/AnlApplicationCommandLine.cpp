@@ -317,9 +317,26 @@ Application::CommandLine::CommandLine()
          }});
 
     addCommand(
+        {"--plugin-detail",
+         "--plugin-detail [options]",
+         "Provides all the details about a specified plugin.\n\t"
+         "--identifier Defines the identifier of the wanted plugin (required).\n\t"
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("--identifier");
+             auto const identifier = args.getValueForOption("--identifier");
+             PluginList::Scanner scanner;
+             float sampleRate = 44100.0f;
+             auto* plugin = scanner.loadPlugin(identifier, static_cast<float>(sampleRate));
+
+             std::cout << "Plugin detail" << std::endl;
+         }});
+
+    addCommand(
         {"--plugin-list",
          "--plugin-list",
-         "Give an exaustive list of installed plugins.\n\t",
+         "Gives an exaustive list of installed plugins.\n\t",
          "",
          []([[maybe_unused]] juce::ArgumentList const& args)
          {
