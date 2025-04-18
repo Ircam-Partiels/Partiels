@@ -277,20 +277,21 @@ void Plugin::Description::print_details(std::ostream& os, Description const& des
        << "version: " << static_cast<int>(description.version) << "\n"
        << "category: " << description.category << "\n"
        << "details: " << description.details << "\n";
-    os << "\n\nDefault state:\n\n" << description.defaultState;
+    os << "\n\nDefault state:\n\n"
+       << description.defaultState;
     os << "\n\nParameters:\n\n";
     for(auto const& parameter : description.parameters)
     {
         os << parameter << "\n";
     }
-    os << "\nOutput:\n\n" << description.output << "\n";
+    os << "\nOutput:\n\n"
+       << description.output << "\n";
     /*os << "\n\nExtra outputs:\n\n";
     for(auto const& extraOutput : description.extraOutputs)
     {
         os << extraOutput << "\n";
     }*/
 }
-
 
 template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)

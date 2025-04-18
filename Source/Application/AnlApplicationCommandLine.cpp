@@ -334,8 +334,10 @@ Application::CommandLine::CommandLine()
              plugin_key.identifier = identifier.toStdString();
              plugin_key.feature = feature.toStdString();
              Plugin::Description description = PluginList::Scanner::loadDescription(plugin_key, sampleRate);
-             std::cout <<"Plugin key:\n\n" << plugin_key << std::endl;
-             std::cout << "\nPlugin description:\n" << std::endl;
+             std::cout << "Plugin key:\n\n"
+                       << plugin_key << std::endl;
+             std::cout << "\nPlugin description:\n"
+                       << std::endl;
              description.print_details(std::cout, description);
          }});
 

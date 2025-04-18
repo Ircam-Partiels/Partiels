@@ -176,9 +176,8 @@ namespace Plugin
         {
             return !(*this == rhd);
         }
-        
-        void print_details(std::ostream& os, Description const& description);
 
+        void print_details(std::ostream& os, Description const& description);
     };
 
     void to_json(nlohmann::json& j, Description const& description);
