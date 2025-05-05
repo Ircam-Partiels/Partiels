@@ -431,7 +431,7 @@ Each track and group offers two representations of the analysis results. The mai
 
 Partiels offers the possibility of navigating and zooming on the horizontal axis corresponding to the time range, and on the vertical axis corresponding to the value (or frequency) range.
 
-Click and drag without modifier on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
+Click and drag without modifier on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **N**).
 
 #### 8.2.1 Horizontal  
 
@@ -819,7 +819,7 @@ The audio settings window allows you to control device management and channels r
 - Driver (**A1**): The dropdown menu allows to select the audio driver from those available on the computer (typically, CoreAudio on Mac, WASAPI, DirectSound, and ASIO on Windows, ALSA, and Jack on Linux).  
 - Output Device (**A2**): The dropdown menu allows to select the audio output device from those connected to the computer and supported by the driver.
 - Sample Rate (**A3**): The dropdown menu allows to select the sample rate from those supported by the output device. Higher sample rates increase the audio quality in high frequencies at the expense of increased CPU drain.
-- Buffer Size (**A4**): The dropdown menu (Mac) or the number entry (Windows & Linux) allows selecting the buffer size from those supported by the output device. Lower buffer size reduces the latency at the expense of increased CPU drain. If dropouts or crackle occur during playback, the buffer size should be reduced.
+- Buffer Size (**A4**): The dropdown menu (Mac) or the number entry (Windows & Linux) allows selecting the buffer size from those supported by the output device. Lower buffer size reduces the latency at the expense of increased CPU drain. If dropouts or crackle occur during playback, the buffer size should be increased.
 - Channels Routing (**A5**): The button matrix allows you to configure to which output channels the application's channels are sent. The number of application channels depends on the [audio files layout](#audio-files-layout). The number of output channels depends on the selected audio device. The matrix can be used to mute some channels of the audio files layout.
 - Audio Device Panel (**A6**): The Audio Device Panel button opens the audio device panel of the manufacturer if supported by the audio driver.
 
