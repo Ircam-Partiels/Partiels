@@ -28,6 +28,7 @@ namespace Application
 
     private:
         void addGlobalSettingsMenu(juce::PopupMenu& menu);
+        void addTranslationsMenu(juce::PopupMenu& menu);
 #ifndef JUCE_MAC
         juce::DocumentWindow& mWindow;
 #endif
