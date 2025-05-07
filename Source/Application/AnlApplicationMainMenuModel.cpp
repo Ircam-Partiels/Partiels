@@ -263,6 +263,8 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
     addGlobalSettingsMenu(extraAppleMenuItems);
+    // This is a hack to update the main menu when the translation changes
+    juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 }
 #endif
