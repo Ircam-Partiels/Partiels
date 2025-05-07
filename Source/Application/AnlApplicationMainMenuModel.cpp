@@ -206,7 +206,47 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                              }
                          });
     globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);
+    addTranslationsMenu(globalSettingsMenu);
     menu.addSubMenu(juce::translate("Global Settings"), globalSettingsMenu);
+}
+
+void Application::MainMenuModel::addTranslationsMenu(juce::PopupMenu& menu)
+{
+    juce::PopupMenu languagesMenu;
+    auto const& currentTranslationFile = Instance::get().getApplicationAccessor().getAttr<AttrType::currentTranslationFile>();
+    auto const addTranslationsFromDirectory = [&](juce::File const& folder)
+    {
+        auto const files = folder.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.txt", juce::File::FollowSymlinks::no);
+        if(!files.isEmpty())
+        {
+            languagesMenu.addSeparator();
+        }
+
+        for(auto const& file : files)
+        {
+            auto const localisedStrings = juce::LocalisedStrings(file, false);
+            auto const languageName = localisedStrings.getLanguageName();
+            auto const hasDuplicate = std::count_if(files.begin(), files.end(), [&](auto const& f)
+                                                    {
+                                                        return languageName == juce::LocalisedStrings(f, false).getLanguageName();
+                                                    }) > 1l;
+            auto const itemName = languageName + (hasDuplicate ? " (" + file.getFileNameWithoutExtension() + ")" : "");
+            languagesMenu.addItem(itemName, currentTranslationFile != file, currentTranslationFile == file, [=]()
+                                  {
+                                      Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(file, NotificationType::synchronous);
+                                  });
+        }
+    };
+
+    auto const systemTranslation = juce::LocalisedStrings(Accessor::getUserTranslationsDirectory(), false);
+    auto const defaultItemName = juce::translate("Default") + " (" + systemTranslation.getLanguageName() + ")";
+    languagesMenu.addItem(defaultItemName, currentTranslationFile != juce::File(), currentTranslationFile == juce::File(), [=]()
+                          {
+                              Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(juce::File(), NotificationType::synchronous);
+                          });
+    addTranslationsFromDirectory(Accessor::getEmbeddedTranslationsDirectory());
+    addTranslationsFromDirectory(Accessor::getUserTranslationsDirectory());
+    menu.addSubMenu(juce::translate("Translations"), languagesMenu);
 }
 
 #ifdef JUCE_MAC
