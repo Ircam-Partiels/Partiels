@@ -212,7 +212,9 @@ add_dependencies(Partiels partiels-vamp-plugins)
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
 else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
@@ -222,6 +224,7 @@ else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ "$<TARGET_FILE_DIR:Partiels>/Translations/"
     )
 endif()
 
@@ -241,10 +244,12 @@ if(WIN32)
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR})
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/PlugIns)
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Templates)
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Translations)
     file(COPY ${CMAKE_CURRENT_BINARY_DIR}/Install.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Translations/ DESTINATION ${PARTIELS_PACKAGE_TEMPDIR}/Translations/)
 
     find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6" REQUIRED)
     cmake_path(NATIVE_PATH ISCC_EXE ISCC_EXE_NAT)
@@ -277,6 +282,7 @@ elseif(UNIX AND NOT APPLE)
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp $PARTIELS_BINARY_PATH/Partiels ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/PlugIns ${PARTIELS_PACKAGE_DIR}/PlugIns\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Templates ${PARTIELS_PACKAGE_DIR}/Templates\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Translations ${PARTIELS_PACKAGE_DIR}/Translations\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${PARTIELS_PACKAGE_DIR}\n")
