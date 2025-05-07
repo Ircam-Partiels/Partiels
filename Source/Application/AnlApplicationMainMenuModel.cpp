@@ -29,7 +29,7 @@ Application::MainMenuModel::~MainMenuModel()
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Frame", "Transport", "View", "Help"};
+    return {juce::translate("File"), juce::translate("Edit"), juce::translate("Frame"), juce::translate("Transport"), juce::translate("View"), juce::translate("Help")};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -39,7 +39,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     using CommandIDs = CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
-    if(menuName == "File")
+    if(menuName == juce::translate("File"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::documentNew);
         menu.addCommandItem(&commandManager, CommandIDs::documentOpen);
@@ -61,7 +61,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
                                     });
         }
 
-        menu.addSubMenu("Open Recent", recentFilesMenu);
+        menu.addSubMenu(juce::translate("Open Recent"), recentFilesMenu);
         menu.addCommandItem(&commandManager, CommandIDs::documentSave);
         menu.addCommandItem(&commandManager, CommandIDs::documentDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::documentConsolidate);
@@ -71,7 +71,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::documentBatch);
         menu.addSeparator();
     }
-    else if(menuName == "Edit")
+    else if(menuName == juce::translate("Edit"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::editUndo);
         menu.addCommandItem(&commandManager, CommandIDs::editRedo);
@@ -80,7 +80,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::editNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::editNewGroup);
     }
-    else if(menuName == "Frame")
+    else if(menuName == juce::translate("Frame"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::frameSelectAll);
         menu.addCommandItem(&commandManager, CommandIDs::frameDelete);
@@ -95,7 +95,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameToggleDrawing);
     }
-    else if(menuName == "Transport")
+    else if(menuName == juce::translate("Transport"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::transportTogglePlayback);
         menu.addCommandItem(&commandManager, CommandIDs::transportToggleLooping);
@@ -106,7 +106,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadBackward);
         menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadForward);
     }
-    else if(menuName == "View")
+    else if(menuName == juce::translate("View"))
     {
         juce::PopupMenu colourModeMenu;
         auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
@@ -143,7 +143,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewShowItemProperties);
     }
-    else if(menuName == "Help")
+    else if(menuName == juce::translate("Help"))
     {
 #ifndef JUCE_MAC
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
