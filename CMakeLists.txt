@@ -227,6 +227,7 @@ else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
+        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ "$<TARGET_FILE_DIR:Partiels>/Translations/"
     )
 endif()
 
