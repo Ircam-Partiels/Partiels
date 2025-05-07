@@ -38,6 +38,7 @@ Source: "{#MyBinaryDir}\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\Templates\FactoryTemplate.ptldoc"; DestDir: "{app}\Templates"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\Translations\*"; DestDir: "{app}\Translations"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\About.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
 
