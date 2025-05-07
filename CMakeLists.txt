@@ -212,7 +212,9 @@ add_dependencies(Partiels partiels-vamp-plugins)
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
 else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
