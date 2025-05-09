@@ -24,6 +24,7 @@ namespace Application
         , recentlyOpenedFilesList
         , currentDocumentFile
         , defaultTemplateFile
+        , currentTranslationFile
         , colourMode
         , showInfoBubble
         , exportOptions
@@ -47,6 +48,7 @@ namespace Application
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Model::Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::defaultTemplateFile, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::currentTranslationFile, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::colourMode, ColourMode, Model::Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Model::Flag::basic>
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Model::Flag::basic>
@@ -78,6 +80,7 @@ namespace Application
             , {std::vector<juce::File>{}}
             , {juce::File{}}
             , {getFactoryTemplateFile()}
+            , {juce::File{}}
             , {ColourMode::automatic}
             , {true}
             , {}
