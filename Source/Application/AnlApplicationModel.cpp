@@ -2,6 +2,16 @@
 
 ANALYSE_FILE_BEGIN
 
+juce::File Application::Accessor::getEmbeddedTranslationsDirectory()
+{
+    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+    return exeFile.getParentDirectory().getSiblingFile("Resources").getChildFile("Translations");
+#else
+    return exeFile.getSiblingFile("Translations");
+#endif
+}
+
 juce::File Application::Accessor::getFactoryTemplateFile()
 {
     auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
