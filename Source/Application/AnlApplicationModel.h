@@ -117,6 +117,7 @@ namespace Application
         void setRecentlyOpenedFilesList(std::vector<juce::File> const& value, NotificationType notification);
         void setDesktopGlobalScaleFactor(float const& value, NotificationType notification);
         static juce::File getEmbeddedTranslationsDirectory();
+        static juce::File getUserTranslationsDirectory();
         static juce::File getFactoryTemplateFile();
     };
 } // namespace Application

@@ -12,6 +12,11 @@ juce::File Application::Accessor::getEmbeddedTranslationsDirectory()
 #endif
 }
 
+juce::File Application::Accessor::getUserTranslationsDirectory()
+{
+    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory).getChildFile("Translations");
+}
+
 juce::File Application::Accessor::getFactoryTemplateFile()
 {
     auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
