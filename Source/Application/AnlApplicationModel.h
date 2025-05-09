@@ -116,6 +116,7 @@ namespace Application
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
         void setRecentlyOpenedFilesList(std::vector<juce::File> const& value, NotificationType notification);
         void setDesktopGlobalScaleFactor(float const& value, NotificationType notification);
+        static juce::File getEmbeddedTranslationsFolder();
         static juce::File getFactoryTemplateFile();
     };
 } // namespace Application
