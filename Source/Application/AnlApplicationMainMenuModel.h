@@ -22,6 +22,8 @@ namespace Application
         void updateAppleMenuItems();
 #endif
 
+        static juce::File getEmbeddedTranslationsDirectory();
+
     private:
         void addGlobalSettingsMenu(juce::PopupMenu& menu);
 #ifndef JUCE_MAC
