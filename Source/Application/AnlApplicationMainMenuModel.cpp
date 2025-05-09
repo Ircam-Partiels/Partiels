@@ -226,4 +226,14 @@ void Application::MainMenuModel::updateAppleMenuItems()
 }
 #endif
 
+juce::File Application::MainMenuModel::getEmbeddedTranslationsDirectory()
+{
+    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+    return exeFile.getParentDirectory().getSiblingFile("Resources").getChildFile("Translations");
+#else
+    return exeFile.getSiblingFile("Translations");
+#endif
+}
+
 ANALYSE_FILE_END
