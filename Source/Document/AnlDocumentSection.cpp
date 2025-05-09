@@ -35,9 +35,14 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 , mExpandLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize))
 , mResizeLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::unlocksize_png, AnlIconsData::unlocksize_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::locksize_png, AnlIconsData::locksize_pngSize))
 , mMagnetizeButton(juce::ImageCache::getFromMemory(AnlIconsData::magnet_png, AnlIconsData::magnet_pngSize))
-, mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
+, mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [this](double value)
              {
-                 return Format::secondsToString(value, {":", ":", ":", ""});
+                 auto const endTime = mAccessor.getAcsr<AcsrType::timeZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+                 auto const hours = endTime > 3600.0 ? ":" : "";
+                 auto const minutes = endTime > 60.0 ? ":" : "";
+                 auto const seconds = endTime > 1.0 ? (endTime > 60.0 ? ":" : "s") : "";
+                 auto const milliseconds = endTime > 0.001 ? (endTime > 60.0 ? "" : "ms") : "";
+                 return Format::secondsToString(value, {hours, minutes, seconds, milliseconds});
              })
 , mLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                   {
