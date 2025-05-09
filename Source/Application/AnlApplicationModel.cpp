@@ -12,6 +12,22 @@ juce::File Application::Accessor::getEmbeddedTranslationsFolder()
 #endif
 }
 
+juce::File Application::Accessor::getSystemTranslationsFolder()
+{
+#if JUCE_MAC
+    // MacOS
+    return juce::File("/Library/Partiels/Translations");
+#else
+#if JUCE_WINDOWS
+    // Windows
+    return juce::File("C:\\Program Data\\Partiels\\Translations");
+#else
+    // Linux & others
+    return juce::File("/opt/Partiels/Translations");
+#endif
+#endif
+}
+
 juce::File Application::Accessor::getFactoryTemplateFile()
 {
     auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
