@@ -7,7 +7,6 @@
 #include "AnlApplicationMainMenuModel.h"
 #include "AnlApplicationModel.h"
 #include "AnlApplicationProperties.h"
-#include "AnlApplicationTranslationManager.h"
 #include "AnlApplicationWindow.h"
 
 #include "../Document/AnlDocumentDirector.h"
