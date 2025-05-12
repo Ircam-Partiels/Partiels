@@ -484,7 +484,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::helpOpenKeyMappings:
         {
-            result.setInfo(juce::translate("Key Mapping..."), juce::translate("Shows the key mapping panel"), "Application", 0);
+            result.setInfo(juce::translate("Key Mappings..."), juce::translate("Shows the key mappings panel"), "Application", 0);
             result.setActive(true);
         }
         break;
