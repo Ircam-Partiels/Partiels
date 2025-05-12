@@ -1,6 +1,5 @@
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
-#include <TranslationsData.h>
 
 ANALYSE_FILE_BEGIN
 
