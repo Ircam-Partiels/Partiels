@@ -1,0 +1,2 @@
+language: English
+countries: en uk us au
