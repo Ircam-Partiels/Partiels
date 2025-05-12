@@ -1,6 +1,5 @@
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
-#include <TranslationsData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -40,7 +39,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     }
 
     anlDebug("Application", "Running with GUI");
-    TranslationManager::loadFromBinaries();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 

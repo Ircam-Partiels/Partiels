@@ -145,8 +145,6 @@ if(WIN32)
 endif()
 
 set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
-file(GLOB TranslationsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/*.txt)
-juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
 file(GLOB PartielsResourceDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
@@ -175,7 +173,6 @@ target_link_libraries(Partiels PRIVATE
     ive_host_static
     sdif
     MiscData
-    TranslationsData
     TestResultsData
     AnlResourceData
     AnlIconsData
