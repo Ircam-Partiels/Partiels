@@ -878,47 +878,47 @@ The Partiels executable can be used as a command line tool. The command line too
 Usage:
  Partiels --help|-h              Prints the list of commands
  Partiels --version|-v           Prints the current version number
+ Partiels [file(s)]              Loads the document or creates a new document with the audio files specified as arguments.
  Partiels --new|-n [options]     Creates a new document with a template and an audio file.
-	--input|-i <audiofile> Defines the path to the audio file to analyze (required).
-	--template|-t <templatefile> Defines the path to the template file (required).
-	--output|-o <outputfile> Defines the path of the output file (required).
-	--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
-	
- Partiels --export|-e [options]  Analyzes an audio file and exports the results.
-	--input|-i <audiofile> Defines the path to the audio file to analyze (required).
-	--template|-t <templatefile> Defines the path to the template file (required).
-	--output|-o <outputdirectory> Defines the path of the output folder (required).
-	--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue or sdif) (required).
-	--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).
-	--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).
-	--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
-	--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).
-	--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).
-	--header Includes header row before the data rows (optional with the csv format).
-	--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').
-	--description Includes the plugin description (optional with the json format).
-	--frame <framesignature> Defines the 4 characters frame signaturer (required with the sdif format).
-	--matrix <matrixsignature> Defines the 4 characters matrix signaturer (required with the sdif format).
-	--colname <string> Defines the name of the column (optional with the sdif format).
-	
- Partiels --sdif2json [options]  Converts a SDIF file to a JSON file.
-	--input|-i <sdiffile> Defines the path to the input SDIF file to convert (required).
-	--output|-o <jsonfile> Defines the path of the output JSON file (required).
-	--frame|-f <framesignature> The 4 characters frame signature (required).
-	--matrix|-m <matrixsignature> The 4 characters matrix signature (required).
-	--row|-r <rowindex> The index of the row (optional - all rows if not defined).
-	--column|-c <columindex> The index of the column (optional - all columns if not defined).
-	--unit <unit> The unit of the results (optional).
-	--min <value> The minimum possible value of the results (required if max defined).
-	--max <value> The maximum possible value of the results (required if max defined).
-	
- Partiels --json2sdif [options]  Converts a JSON file to a SDIF file.
-	--input|-i <jsonfile> Defines the path to the input JSON file to convert (required).
-	--output|-o <sdiffile> Defines the path of the output SDIF file (required).
-	--frame|-f <framesignature> The 4 characters frame signature (required).
-	--matrix|-m <matrixsignature> The 4 characters matrix signature (required).
+        --input|-i <audiofile> Defines the path to the audio file to analyze (required).
+        --template|-t <templatefile> Defines the path to the template file (required).
+        --output|-o <outputfile> Defines the path of the output file (required).
+        --adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
 
-Partiels [file(s)]              Loads the document or creates a new document with the audio files specified as arguments.
+ Partiels --export|-e [options]  Analyzes an audio file and exports the results.
+        --input|-i <audiofile> Defines the path to the audio file to analyze (required).
+        --template|-t <templatefile> Defines the path to the template file (required).
+        --output|-o <outputdirectory> Defines the path of the output folder (required).
+        --format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).
+        --width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).
+        --height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).
+        --adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
+        --groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).
+        --nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).
+        --header Includes header row before the data rows (optional with the csv format).
+        --separator <character> Defines the separator character between columns (optional with the csv format, default is ',').
+        --reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').
+        --description Includes the plugin description (optional with the json format).
+        --frame <framesignature> Defines the 4 characters frame signature (required with the sdif format).
+        --matrix <matrixsignature> Defines the 4 characters matrix signature (required with the sdif format).
+        --colname <string> Defines the name of the column (optional with the sdif format).
+
+ Partiels --sdif2json [options]  Converts a SDIF file to a JSON file.
+        --input|-i <sdiffile> Defines the path to the input SDIF file to convert (required).
+        --output|-o <jsonfile> Defines the path of the output JSON file (required).
+        --frame|-f <framesignature> The 4 characters frame signature (required).
+        --matrix|-m <matrixsignature> The 4 characters matrix signature (required).
+        --row|-r <rowindex> The index of the row (optional - all rows if not defined).
+        --column|-c <columindex> The index of the column (optional - all columns if not defined).
+        --unit <unit> The unit of the results (optional).
+        --min <value> The minimum possible value of the results (required if max defined).
+        --max <value> The maximum possible value of the results (required if max defined).
+
+ Partiels --json2sdif [options]  Converts a JSON file to a SDIF file.
+        --input|-i <jsonfile> Defines the path to the input JSON file to convert (required).
+        --output|-o <sdiffile> Defines the path of the output SDIF file (required).
+        --frame|-f <framesignature> The 4 characters frame signature (required).
+        --matrix|-m <matrixsignature> The 4 characters matrix signature (required).
 ```
 
 It is recommended to add the path to the executable in the paths of your command line tool environment. 
