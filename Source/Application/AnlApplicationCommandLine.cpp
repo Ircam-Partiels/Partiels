@@ -117,11 +117,11 @@ Application::CommandLine::CommandLine()
              {
                  if(!args.containsOption("--width"))
                  {
-                     fail("Width not specified! Specifiy the width of the image in pixels.");
+                     fail("Width not specified! Specify the width of the image in pixels.");
                  }
                  if(!args.containsOption("--height"))
                  {
-                     fail("Height not specified! Specifiy the height of the image in pixels.");
+                     fail("Height not specified! Specify the height of the image in pixels.");
                  }
 
                  options.format = format == "jpeg" ? Options::Format::jpeg : Options::Format::png;
@@ -230,7 +230,7 @@ Application::CommandLine::CommandLine()
          "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t"
          "--unit <unit> The unit of the results (optional).\n\t"
          "--min <value> The minimum possible value of the results (required if max defined).\n\t"
-         "--max <value> The maximum possible value of the results (required if max defined).\n\t",
+         "--max <value> The maximum possible value of the results (required if min defined).\n\t",
          "",
          [](juce::ArgumentList const& args)
          {
