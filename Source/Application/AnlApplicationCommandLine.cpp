@@ -57,8 +57,8 @@ Application::CommandLine::CommandLine()
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
          "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).\n\t"
-         "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
-         "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
@@ -115,18 +115,18 @@ Application::CommandLine::CommandLine()
              }
              else if(format == "jpeg" || format == "png")
              {
-                 if(!args.containsOption("-w|--width"))
+                 if(!args.containsOption("--width"))
                  {
                      fail("Width not specified! Specifiy the width of the image in pixels.");
                  }
-                 if(!args.containsOption("-h|--height"))
+                 if(!args.containsOption("--height"))
                  {
                      fail("Height not specified! Specifiy the height of the image in pixels.");
                  }
 
                  options.format = format == "jpeg" ? Options::Format::jpeg : Options::Format::png;
-                 options.imageWidth = args.getValueForOption("-w|--width").getIntValue();
-                 options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
+                 options.imageWidth = args.getValueForOption("--width").getIntValue();
+                 options.imageHeight = args.getValueForOption("--height").getIntValue();
                  options.useGroupOverview = args.containsOption("--groups");
              }
              else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif")
