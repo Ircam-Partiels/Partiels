@@ -21,6 +21,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::windowState:
             case AttrType::currentDocumentFile:
             case AttrType::defaultTemplateFile:
+            case AttrType::currentTranslationFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
@@ -262,6 +263,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::windowState:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
+            case AttrType::currentTranslationFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
