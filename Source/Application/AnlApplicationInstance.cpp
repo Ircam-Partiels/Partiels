@@ -123,6 +123,16 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
                 break;
+            case AttrType::currentTranslationFile:
+            {
+                auto const file = acsr.getAttr<AttrType::currentTranslationFile>();
+                juce::LocalisedStrings::setCurrentMappings(std::make_unique<juce::LocalisedStrings>(file.existsAsFile() ? file : MainMenuModel::getSystemDefaultTranslationFile(), false).release());
+                mMainMenuModel->menuItemsChanged();
+#ifdef JUCE_MAC
+                mMainMenuModel->updateAppleMenuItems();
+#endif
+                break;
+            }
             case AttrType::autoUpdate:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::defaultTemplateFile:
