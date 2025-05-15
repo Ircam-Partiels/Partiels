@@ -29,7 +29,7 @@ Application::MainMenuModel::~MainMenuModel()
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Frame", "Transport", "View", "Help"};
+    return {juce::translate("File"), juce::translate("Edit"), juce::translate("Frame"), juce::translate("Transport"), juce::translate("View"), juce::translate("Help")};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -39,7 +39,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     using CommandIDs = CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
-    if(menuName == "File")
+    if(menuName == juce::translate("File"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::documentNew);
         menu.addCommandItem(&commandManager, CommandIDs::documentOpen);
@@ -61,7 +61,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
                                     });
         }
 
-        menu.addSubMenu("Open Recent", recentFilesMenu);
+        menu.addSubMenu(juce::translate("Open Recent"), recentFilesMenu);
         menu.addCommandItem(&commandManager, CommandIDs::documentSave);
         menu.addCommandItem(&commandManager, CommandIDs::documentDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::documentConsolidate);
@@ -71,7 +71,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::documentBatch);
         menu.addSeparator();
     }
-    else if(menuName == "Edit")
+    else if(menuName == juce::translate("Edit"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::editUndo);
         menu.addCommandItem(&commandManager, CommandIDs::editRedo);
@@ -80,7 +80,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::editNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::editNewGroup);
     }
-    else if(menuName == "Frame")
+    else if(menuName == juce::translate("Frame"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::frameSelectAll);
         menu.addCommandItem(&commandManager, CommandIDs::frameDelete);
@@ -95,7 +95,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameToggleDrawing);
     }
-    else if(menuName == "Transport")
+    else if(menuName == juce::translate("Transport"))
     {
         menu.addCommandItem(&commandManager, CommandIDs::transportTogglePlayback);
         menu.addCommandItem(&commandManager, CommandIDs::transportToggleLooping);
@@ -106,7 +106,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadBackward);
         menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadForward);
     }
-    else if(menuName == "View")
+    else if(menuName == juce::translate("View"))
     {
         juce::PopupMenu colourModeMenu;
         auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
@@ -143,7 +143,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewShowItemProperties);
     }
-    else if(menuName == "Help")
+    else if(menuName == juce::translate("Help"))
     {
 #ifndef JUCE_MAC
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
@@ -206,7 +206,47 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                              }
                          });
     globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);
+    addTranslationsMenu(globalSettingsMenu);
     menu.addSubMenu(juce::translate("Global Settings"), globalSettingsMenu);
+}
+
+void Application::MainMenuModel::addTranslationsMenu(juce::PopupMenu& menu)
+{
+    juce::PopupMenu languagesMenu;
+    auto const& currentTranslationFile = Instance::get().getApplicationAccessor().getAttr<AttrType::currentTranslationFile>();
+    auto const addTranslationsFromDirectory = [&](juce::File const& folder)
+    {
+        auto const files = folder.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.txt", juce::File::FollowSymlinks::no);
+        if(!files.isEmpty())
+        {
+            languagesMenu.addSeparator();
+        }
+
+        for(auto const& file : files)
+        {
+            auto const localisedStrings = juce::LocalisedStrings(file, false);
+            auto const languageName = localisedStrings.getLanguageName();
+            auto const hasDuplicate = std::count_if(files.begin(), files.end(), [&](auto const& f)
+                                                    {
+                                                        return languageName == juce::LocalisedStrings(f, false).getLanguageName();
+                                                    }) > 1l;
+            auto const itemName = languageName + (hasDuplicate ? " (" + file.getFileNameWithoutExtension() + ")" : "");
+            languagesMenu.addItem(itemName, currentTranslationFile != file, currentTranslationFile == file, [=]()
+                                  {
+                                      Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(file, NotificationType::synchronous);
+                                  });
+        }
+    };
+
+    auto const systemTranslation = juce::LocalisedStrings(Accessor::getUserTranslationsDirectory(), false);
+    auto const defaultItemName = juce::translate("Default") + " (" + systemTranslation.getLanguageName() + ")";
+    languagesMenu.addItem(defaultItemName, currentTranslationFile != juce::File(), currentTranslationFile == juce::File(), [=]()
+                          {
+                              Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(juce::File(), NotificationType::synchronous);
+                          });
+    addTranslationsFromDirectory(Accessor::getEmbeddedTranslationsDirectory());
+    addTranslationsFromDirectory(Accessor::getUserTranslationsDirectory());
+    menu.addSubMenu(juce::translate("Translations"), languagesMenu);
 }
 
 #ifdef JUCE_MAC
@@ -222,6 +262,8 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
     addGlobalSettingsMenu(extraAppleMenuItems);
+    // This is a hack to update the main menu when the translation changes
+    juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 }
 #endif
