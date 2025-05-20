@@ -236,4 +236,9 @@ juce::File Application::MainMenuModel::getEmbeddedTranslationsDirectory()
 #endif
 }
 
+juce::File Application::MainMenuModel::getUserTranslationsDirectory()
+{
+    return Properties::getFile("").getSiblingFile("Partiels").getChildFile("Translations");
+}
+
 ANALYSE_FILE_END

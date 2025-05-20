@@ -23,6 +23,7 @@ namespace Application
 #endif
 
         static juce::File getEmbeddedTranslationsDirectory();
+        static juce::File getUserTranslationsDirectory();
 
     private:
         void addGlobalSettingsMenu(juce::PopupMenu& menu);
