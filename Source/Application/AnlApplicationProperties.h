@@ -18,6 +18,7 @@ namespace Application
         ~Properties() override;
 
         static void askToRestoreDefaultAudioSettings(juce::String const& error);
+        static juce::File getFile(juce::StringRef const& fileName);
 
     private:
         // juce::ChangeListener
@@ -32,7 +33,6 @@ namespace Application
         };
         // clang-format on
 
-        static juce::File getFile(juce::StringRef const& fileName);
         void saveToFile(PropertyType type);
         void loadFromFile(PropertyType type);
 
