@@ -729,4 +729,13 @@ countries: fr be
 "You can drag the items above and drop them onto a toolbar to add them." = "Vous pouvez faire glisser les éléments ci-dessus et les déposer sur une barre d'outils pour les ajouter."
 "Choose a new directory" = "Choisir un nouveau répertoire"
 "Shows the key mappings panel" = "Affiche le panneau de correspondance des touches"
+"File" = "Fichier"
+"Edit" = "Edition"
+"Frame" = "Trame"
+"Transport" = "Transport"
+"View" = "Vue"
+"Help" = "Aide"
+"Open Recent" = "Ouvrir récent"
+"Translations" = "Traductions"
+"Default (TRLANGUAGE)" = "Par défaut (TRLANGUAGE)"
 
