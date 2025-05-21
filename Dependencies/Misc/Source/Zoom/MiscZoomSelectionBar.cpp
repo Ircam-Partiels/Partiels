@@ -6,9 +6,8 @@ MISC_FILE_BEGIN
 Zoom::SelectionBar::SelectionBar(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType const attribute)
+    mListener.onAttrChanged = [&]([[maybe_unused]] Accessor const& acsr, AttrType const attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::minimumLength:
