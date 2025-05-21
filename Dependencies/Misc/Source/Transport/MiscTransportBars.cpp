@@ -285,9 +285,18 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
 
     mSelectionBar.onDoubleClick = [this](double value)
     {
-        auto const& markers = mAccessor.getAttr<AttrType::markers>();
-        auto const range = Zoom::Tools::getNearestRange(mZoomAccessor, value, markers);
-        mSelectionBar.setRange(range, Anchor::start, juce::NotificationType::sendNotificationSync);
+        if(juce::ModifierKeys::currentModifiers.isCommandDown())
+        {
+            auto const range = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+            mSelectionBar.setRange(range, Anchor::start, juce::NotificationType::sendNotificationSync);
+        }
+        else
+        {
+            auto const& markers = mAccessor.getAttr<AttrType::markers>();
+            auto const range = Zoom::Tools::getNearestRange(mZoomAccessor, value, markers);
+            mSelectionBar.setRange(range, Anchor::start, juce::NotificationType::sendNotificationSync);
+        }
+        auto const range = std::get<0_z>(mSelectionBar.getRange());
         mAccessor.setAttr<AttrType::startPlayhead>(range.getStart(), NotificationType::synchronous);
     };
 
