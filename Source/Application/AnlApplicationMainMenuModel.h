@@ -24,6 +24,7 @@ namespace Application
 
         static juce::File getEmbeddedTranslationsDirectory();
         static juce::File getUserTranslationsDirectory();
+        static juce::File getSystemDefaultTranslationFile();
 
     private:
         void addGlobalSettingsMenu(juce::PopupMenu& menu);
