@@ -45,9 +45,8 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
         }
     };
 
-    mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
+    mZoomListener.onAttrChanged = [&]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
@@ -167,9 +166,8 @@ Transport::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& zoomAc
         mAccessor.setAttr<AttrType::selection>(juce::Range<double>::emptyRange(value), NotificationType::synchronous);
     };
 
-    mSelectionBar.onMouseUp = [this](double value)
+    mSelectionBar.onMouseUp = [this]([[maybe_unused]] double value)
     {
-        juce::ignoreUnused(value);
         auto const range = std::get<0_z>(mSelectionBar.getRange());
         mAccessor.setAttr<AttrType::startPlayhead>(range.getStart(), NotificationType::synchronous);
     };
@@ -279,9 +277,8 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
         mAccessor.setAttr<AttrType::startPlayhead>(value, NotificationType::synchronous);
     };
 
-    mSelectionBar.onMouseUp = [this](double value)
+    mSelectionBar.onMouseUp = [this]([[maybe_unused]] double value)
     {
-        juce::ignoreUnused(value);
         auto const range = std::get<0_z>(mSelectionBar.getRange());
         mAccessor.setAttr<AttrType::startPlayhead>(range.getStart(), NotificationType::synchronous);
     };
