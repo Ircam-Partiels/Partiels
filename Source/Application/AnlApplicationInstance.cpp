@@ -299,8 +299,6 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
-    juce::Desktop::getInstance().removeDarkModeSettingListener(this);
-
     anlDebug("Application", "Begin...");
     if(mCommandLine != nullptr)
     {
@@ -308,6 +306,7 @@ void Application::Instance::shutdown()
         return;
     }
 
+    juce::Desktop::getInstance().removeDarkModeSettingListener(this);
     if(mApplicationAccessor != nullptr)
     {
         mApplicationAccessor->removeListener(*mApplicationListener.get());
