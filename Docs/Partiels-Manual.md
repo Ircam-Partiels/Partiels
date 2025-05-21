@@ -497,7 +497,8 @@ The actions to move the start position of the playback head and control the play
   - Click on the borders of the existing loop range without any keyboard modifier and dragging to resize the starting or the ending of the loop range.
   - Click and drag anywhere else without any keyboard modifier to select a new loop range.
   - Click and drag with `⇧ Shift` on the loop range to shift the loop range over the time.
-  - Double click on the loop bar to select the range between the two closest markers.
+  - Double click on the loop bar to select the range between the two closest markers (or the global range when there is no marker).
+  - Double click with `⌘` (Mac) or `Ctrl` (Linux/Windows) on the loop bar to select the global range.
 - Stop the playback automatically at the end of the loop: Use the main menu `Transport → Toggle Stop Playback at Loop End` to enable or disable the option.
 - Rewind playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` (Linux/Windows) to move the playhead to the beginning of the audio files or the beginning of the play loop if the loop is enabled.  
 - Move playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ Cmd + ←` (Mac) or `Ctrl + ←` (Linux/Windows) to move the playhead to the previous marker when the magnetize option is enabled.  
