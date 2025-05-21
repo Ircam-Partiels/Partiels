@@ -241,4 +241,19 @@ juce::File Application::MainMenuModel::getUserTranslationsDirectory()
     return Properties::getFile("").getSiblingFile("Partiels").getChildFile("Translations");
 }
 
+juce::File Application::MainMenuModel::getSystemDefaultTranslationFile()
+{
+    auto const userLanguage = juce::SystemStats::getUserLanguage();
+    auto translations = getEmbeddedTranslationsDirectory().findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.txt", juce::File::FollowSymlinks::no);
+    getUserTranslationsDirectory().findChildFiles(translations, juce::File::TypesOfFileToFind::findFiles, false, "*.txt", juce::File::FollowSymlinks::no);
+    for(auto const& file : translations)
+    {
+        if(juce::LocalisedStrings(file, false).getCountryCodes().contains(userLanguage))
+        {
+            return file;
+        }
+    }
+    return juce::File();
+}
+
 ANALYSE_FILE_END
