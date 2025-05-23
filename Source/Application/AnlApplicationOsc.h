@@ -113,7 +113,7 @@ namespace Application
             // juce::ChangeListener
             void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
-            void synchosize(bool connect);
+            void synchronize(bool connect);
 
             Sender& mSender;
             Document::LayoutNotifier mLayoutNotifier;

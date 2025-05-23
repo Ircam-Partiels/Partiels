@@ -346,7 +346,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
 : mSender(sender)
 , mLayoutNotifier(typeid(*this).name(), Instance::get().getDocumentAccessor(), [this]()
                   {
-                      synchosize(mSender.isConnected());
+                      synchronize(mSender.isConnected());
                   },
                   {}, {Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
 {
@@ -453,22 +453,22 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
         }
     };
 
-    synchosize(mSender.isConnected());
+    synchronize(mSender.isConnected());
 }
 
 Application::Osc::TrackDispatcher::~TrackDispatcher()
 {
     mSender.removeChangeListener(this);
-    synchosize(false);
+    synchronize(false);
 }
 
 void Application::Osc::TrackDispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(mSender));
-    synchosize(mSender.isConnected());
+    synchronize(mSender.isConnected());
 }
 
-void Application::Osc::TrackDispatcher::synchosize(bool connect)
+void Application::Osc::TrackDispatcher::synchronize(bool connect)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
