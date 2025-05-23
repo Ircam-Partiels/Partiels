@@ -54,7 +54,8 @@
   * [11.3. Audio files recovery](#113-audio-files-recovery)
 * [12. Audio settings](#12-audio-settings)
 * [13. Plug-ins settings](#13-plug-ins-settings)
-* [14. Command-line tools](#14-command-line-tools)
+* [14. Translations](#14-translations)
+* [15. Command-line tools](#15-command-line-tools)
 
 <div style="page-break-after: always;"></div>
 
@@ -871,7 +872,24 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 <div style="page-break-after: always;"></div>
 
-## 14. Command-line tools
+## 14. Translations
+
+Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now only the French version is available).
+By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back with English).
+
+It is also possible to dynamically add new translations by adding the translation files in the directory:
+- Mac: `~/Library/Application Support/Ircam/Partiels/Translations`
+- Linux: `~/Ircam/Partiels/Translations`
+- Windows: `C:\Users\"username"\AppData\Roaming\Ircam\Partiels\Translations` (with `C:` corresponding to your installation drive)
+
+If you want to create your own custom translations, you can get inspiration from the French translations. You can find it in one of the following directories depending on your system:
+- Mac: `/Applications/Partiels.app/Resources/Translations`
+- Linux: `/opt/Partiels/Translations` or `~/opt/Partiels/Translations`
+- Windows: `C:\Program Files\Partiels\Translations` or `C:\Program Files (x86)\Partiels\Translations` on older devices (with `C:` corresponding to your installation drive)
+
+> **💡 Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
+
+## 15. Command-line tools
 
 The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
 
