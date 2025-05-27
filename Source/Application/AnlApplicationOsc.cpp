@@ -348,7 +348,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
                   {
                       synchronize(mSender.isConnected());
                   },
-                  {}, {Track::AttrType::identifier, Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
+                  {Group::AttrType::layout}, {Track::AttrType::identifier, Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
 {
     mSender.addChangeListener(this);
 
@@ -472,6 +472,35 @@ void Application::Osc::TrackDispatcher::changeListenerCallback([[maybe_unused]] 
 void Application::Osc::TrackDispatcher::synchronize(bool connect)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
+
+    juce::OSCMessage message("/tracks");
+    auto documentLayout = documentAcsr.getAttr<Document::AttrType::layout>();
+    std::reverse(documentLayout.begin(), documentLayout.end());
+    for(auto const& groupId : documentLayout)
+    {
+        if(Document::Tools::hasGroupAcsr(documentAcsr, groupId))
+        {
+            auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupId);
+            auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+            std::reverse(groupLayout.begin(), groupLayout.end());
+            for(auto const& trackId : groupLayout)
+            {
+                if(Document::Tools::hasTrackAcsr(documentAcsr, trackId))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                    if(connect && trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
+                    {
+                        if(Track::Tools::getFrameType(trackAcsr).value_or(Track::FrameType::label) == Track::FrameType::vector)
+                        {
+                            message.addString(trackAcsr.getAttr<Track::AttrType::identifier>());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    mSender.send(message);
+
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
     {
         auto trackConnected = connect && trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>();
