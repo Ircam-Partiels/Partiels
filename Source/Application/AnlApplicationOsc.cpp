@@ -348,7 +348,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
                   {
                       synchronize(mSender.isConnected());
                   },
-                  {}, {Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
+                  {}, {Track::AttrType::identifier, Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
 {
     mSender.addChangeListener(this);
 
@@ -403,6 +403,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
         switch(attribute)
         {
             case Track::AttrType::identifier:
+            case Track::AttrType::sendViaOsc:
             case Track::AttrType::name:
             case Track::AttrType::file:
             case Track::AttrType::results:
@@ -420,7 +421,6 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
             case Track::AttrType::labelLayout:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
-            case Track::AttrType::sendViaOsc:
             case Track::AttrType::zoomValueMode:
             case Track::AttrType::zoomLogScale:
             case Track::AttrType::zoomLink:
@@ -459,6 +459,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
 Application::Osc::TrackDispatcher::~TrackDispatcher()
 {
     mSender.removeChangeListener(this);
+    mLayoutNotifier.onLayoutUpdated = nullptr;
     synchronize(false);
 }
 
@@ -476,21 +477,19 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
         auto trackConnected = connect && trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>();
         auto& valueZoom = trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>();
         auto& binZoom = trackAcsr.get().getAcsr<Track::AcsrType::binZoom>();
+        trackAcsr.get().removeListener(mTrackListener);
+        valueZoom.removeListener(mZoomListener);
+        binZoom.removeListener(mZoomListener);
         if(trackConnected)
         {
             trackAcsr.get().addListener(mTrackListener, NotificationType::synchronous);
             switch(Track::Tools::getFrameType(trackAcsr.get()).value_or(Track::FrameType::label))
             {
                 case Track::FrameType::label:
-                {
-                    valueZoom.removeListener(mZoomListener);
-                    binZoom.removeListener(mZoomListener);
                     break;
-                }
                 case Track::FrameType::value:
                 {
                     valueZoom.addListener(mZoomListener, NotificationType::synchronous);
-                    binZoom.removeListener(mZoomListener);
                     break;
                 }
                 case Track::FrameType::vector:
@@ -500,12 +499,6 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                     break;
                 }
             }
-        }
-        else
-        {
-            valueZoom.removeListener(mZoomListener);
-            binZoom.removeListener(mZoomListener);
-            trackAcsr.get().removeListener(mTrackListener);
         }
     }
 }
