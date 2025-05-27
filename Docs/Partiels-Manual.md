@@ -181,7 +181,7 @@ When you click on the button to add analysis tracks via the interface for starti
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
-> **💡 Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
+> 💡 **Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
 
 Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
 
@@ -189,7 +189,7 @@ You can select one or more plug-ins and then press the `Return ⏎` key (or you 
 
 > For further information about the plug-in management, please refer to the [Plug-ins settings](#12-plug-ins-settings) section.
 
-> **💡 Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
+> 💡 **Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
 
 <br clear="left"/>
 
@@ -207,7 +207,7 @@ If you're importing a file in CSV format, the application will automatically try
 
 When importing markers in CSV format, it is recommended to escape the tags (with single or double quotes for example) to ensure that the numeric values of the labels are considered as text.
 
-> **💡 Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
+> 💡 **Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
 
 If you are importing a file in SDIF format, , the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
 
@@ -215,7 +215,7 @@ If you are importing a file in SDIF format, , the `Load File...` window appears 
 <img src="Images/selection-import-new-result tracks.2-v1.0.7.png" width="232"/>
 </p>
 
-> **💡 Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
+> 💡 **Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
 
 If you are importing a file in JSON  format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
@@ -243,7 +243,7 @@ Move tracks and groups by clicking on the track or group header to select it and
 
 Use the keyboard modifier `Ctrl` during the move action of the selected track or group to duplicate it and move the copy of the item to the desired location.
 
-> Selecting a track or a group with the keyboard modifier `Ctrl` without moving it allows you to quickly create a copy of the item that will be placed just above it. Then you can modify the analysis parameters of the copy to compare the results, for example.
+> 💡 **Tip**: Selecting a track or a group with the keyboard modifier `Ctrl` without moving it allows you to quickly create a copy of the item that will be placed just above it. Then you can modify the analysis parameters of the copy to compare the results, for example.
 
 Select a group or track by clicking on the item's header (or multiple tracks in a group by using the keyboard modifier `⇧ Shift`), then use the keyboard shortcuts `⌦ Delete` or `⌫ Backspace` to delete it.
 
@@ -263,7 +263,7 @@ In constrained mode, the height of tracks and groups will adapt perfectly to the
 
 In free mode, the height of tracks and groups is not constrained by the size of the main window. If the overall cumulative height of groups and tracks exceeds the height of the main window, some groups and tracks may be hidden. Use the vertical scroll mouse over their header or the scroll bar at the right of the interface to move the view and display the hidden groups and tracks.
 
-> You can optimize the height of tracks and groups to the height of the main window by clicking the button (**K3**) with the keyboard modifier `⇧ Shift`.
+> 💡 **Tip**: You can optimize the height of tracks and groups to the height of the main window by clicking the button (**K3**) with the keyboard modifier `⇧ Shift`.
 
 Use the `⇥ Tab` key to move the selection to the next visible track or group. 
 
@@ -279,7 +279,7 @@ Following editing, you can use the keyboard shortcuts `⌘ Cmd + Z` (Mac) or `Ct
 
 On the graphical plot, markers are represented by vertical lines on the timeline, points by a succession of segments - which can be interrupted - and vectors by a sonogram-like matrix.  Markers and points can be created, deleted, copied, pasted, and duplicated. Markers can also be moved over time.
 
-> Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+> 💡 **Tip**: Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
 
 Interactions on a group's graphical plot modify the results of the group's reference track. The reference track can be accessed via the group's properties window or via the popup menu displayed by right-clicking on the graphical plot.
 
@@ -452,7 +452,7 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 - Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-Tip: When zooming in time, the anchor may correspond to the position of the mouse or the position of the start playhead. You can change the mode via the menu `View → Anchor Time Zoom on Playhead`.
+> 💡 **Tip**: When zooming in time, the anchor may correspond to the position of the mouse or the position of the start playhead. You can change the mode via the menu `View → Anchor Time Zoom on Playhead`.
 
 #### 8.2.2 Vertical
 
@@ -473,14 +473,14 @@ The interface of each point or matrix track contains a vertical ruler for each c
 
 #### 8.2.3 Plot
 
-When the navigation mode is enabled, the graphical plots of the groups and the tracks  allow you to navigate and zoom horizontally and vertically. 
-
-> Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+When the navigation mode is enabled, the graphical plots of the groups and the tracks allow you to navigate and zoom horizontally and vertically. 
 
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag to select the time and value ranges to zoom to.
 - Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag from top-left to bottom-right to zoom in on time and value ranges, and conversely, from bottom-right to top-left to zoom out on time and value ranges.
 - Click with `⇧ Shift` and drag to shift the time and value ranges backwards and forwards.
 - Double-click with `⇧ Shift`, `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) or `⎇ Option` (Mac) or `Alt` (Linux/Windows) to zoom on the entire time and value ranges.
+
+> 💡 **Tip**: Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
 
 ### 8.3. Transport
 
@@ -507,8 +507,7 @@ The actions to move the start position of the playback head and control the play
 - Set playhead position: Use the time entry (**T6**) when the the playback is stopped to define the start playhead position. When the playback is started, the time entry displays the running playhead position. Click on an analysis to move the start playhead position at the corresponding time position, if the magnetize option is enabled, the position moves to the closest marker. 
 - Control the volume: Cick and drag the volume slider (**T7**) to control the volume of the audio output.
 
-
-> Refer to these sections to configure the [audio files layout](#10-audio-files-layout) and the [audio settings](#11-audio-settings).
+> 💡 **Tip**: Refer to these sections to configure the [audio files layout](#10-audio-files-layout) and the [audio settings](#11-audio-settings).
 
 ### 8.4. OSC
 
@@ -570,7 +569,7 @@ Extra value thresholds are only sent for tracks with extra values:
 2. "thresholds" (string)
 3. List of numbers (float) for the extra values
 
-> **💡 Tip**: A series of Pure Data and Max patches offering an alternative visualization of the results is distributed alongside the application.
+> 💡 **Tip**: A series of Pure Data and Max patches offering an alternative visualization of the results is distributed alongside the application.
 
 <div style="page-break-after: always;"></div>
 
@@ -661,7 +660,7 @@ A color can be modified using the color selector that is prompted by clicking on
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 - Duration Color: The shadow color used to duration of the markers.
 
-> **💡 Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
+> 💡 **Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
 
 #### 9.2.2. Font, Label and Line Width
 
@@ -752,7 +751,7 @@ The first entries correpond to exclusive properties of the group :
 
 The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
-> The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
+> 💡 **Tip**: The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
 
 ## 11. Audio files layout
 
@@ -770,7 +769,7 @@ Select an audio file by clicking on its name in section (**S1**) to display its 
 
 The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated. 
 
-> If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).  
+> 💡 **Tip**: If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).  
 
 An item of the audio files layout in section (**S1**) is defined by an index, an audio file and a channel configuration. Each item corresponds to a channel of the audio files layout. So different audio files can be assigned to the different channels of the audio files layout using for each a specific channel layout. 
 
@@ -887,7 +886,7 @@ If you want to create your own custom translations, you can get inspiration from
 - Linux: `/opt/Partiels/Translations` or `~/opt/Partiels/Translations`
 - Windows: `C:\Program Files\Partiels\Translations` or `C:\Program Files (x86)\Partiels\Translations` on older devices (with `C:` corresponding to your installation drive)
 
-> **💡 Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
+> 💡 **Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
 
 ## 15. Command-line tools
 
