@@ -352,7 +352,36 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
 {
     mSender.addChangeListener(this);
 
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& accessor, Zoom::AttrType attribute)
+    auto const documentAcsrUpdate = [this]([[maybe_unused]] Document::Accessor const& documentAcsr, Document::AcsrType type, [[maybe_unused]] auto const& acsr)
+    {
+        if(type == Document::AcsrType::tracks)
+        {
+            synchronize(mSender.isConnected());
+        }
+    };
+    mDocumentListener.onAccessorInserted = documentAcsrUpdate;
+    mDocumentListener.onAccessorErased = documentAcsrUpdate;
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
+    synchronize(mSender.isConnected());
+}
+
+Application::Osc::TrackDispatcher::~TrackDispatcher()
+{
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
+    mSender.removeChangeListener(this);
+    mLayoutNotifier.onLayoutUpdated = nullptr;
+    synchronize(false);
+}
+
+void Application::Osc::TrackDispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
+{
+    MiscWeakAssert(source == std::addressof(mSender));
+    synchronize(mSender.isConnected());
+}
+
+void Application::Osc::TrackDispatcher::synchronize(bool connect)
+{
+    auto const zoomAttrChanged = [this](Zoom::Accessor const& accessor, Zoom::AttrType attribute)
     {
         switch(attribute)
         {
@@ -398,7 +427,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
         }
     };
 
-    mTrackListener.onAttrChanged = [this](Track::Accessor const& accessor, Track::AttrType attribute)
+    auto const trackAttrChanged = [this](Track::Accessor const& accessor, Track::AttrType attribute)
     {
         switch(attribute)
         {
@@ -460,26 +489,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
         }
     };
 
-    synchronize(mSender.isConnected());
-}
-
-Application::Osc::TrackDispatcher::~TrackDispatcher()
-{
-    mSender.removeChangeListener(this);
-    mLayoutNotifier.onLayoutUpdated = nullptr;
-    synchronize(false);
-}
-
-void Application::Osc::TrackDispatcher::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
-{
-    MiscWeakAssert(source == std::addressof(mSender));
-    synchronize(mSender.isConnected());
-}
-
-void Application::Osc::TrackDispatcher::synchronize(bool connect)
-{
     auto& documentAcsr = Instance::get().getDocumentAccessor();
-
     juce::OSCMessage message("/tracks");
     auto documentLayout = documentAcsr.getAttr<Document::AttrType::layout>();
     std::reverse(documentLayout.begin(), documentLayout.end());
@@ -508,31 +518,48 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
     }
     mSender.send(message);
 
+    mZoomListeners.clear();
+    mTrackListeners.clear();
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
     {
-        auto trackConnected = connect && trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>();
-        auto& valueZoom = trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>();
-        auto& binZoom = trackAcsr.get().getAcsr<Track::AcsrType::binZoom>();
-        trackAcsr.get().removeListener(mTrackListener);
-        valueZoom.removeListener(mZoomListener);
-        binZoom.removeListener(mZoomListener);
+        auto const trackConnected = connect && trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>() && Document::Tools::hasItem(documentAcsr, trackAcsr.get().getAttr<Track::AttrType::identifier>());
         if(trackConnected)
         {
-            trackAcsr.get().addListener(mTrackListener, NotificationType::synchronous);
-            switch(Track::Tools::getFrameType(trackAcsr.get()).value_or(Track::FrameType::label))
+            auto trackListener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), trackAttrChanged);
+            MiscWeakAssert(trackListener != nullptr);
+            if(trackListener != nullptr)
             {
-                case Track::FrameType::label:
-                    break;
-                case Track::FrameType::value:
+                mTrackListeners.push_back(std::move(trackListener));
+                switch(Track::Tools::getFrameType(trackAcsr.get()).value_or(Track::FrameType::label))
                 {
-                    valueZoom.addListener(mZoomListener, NotificationType::synchronous);
-                    break;
-                }
-                case Track::FrameType::vector:
-                {
-                    valueZoom.addListener(mZoomListener, NotificationType::synchronous);
-                    binZoom.addListener(mZoomListener, NotificationType::synchronous);
-                    break;
+                    case Track::FrameType::label:
+                        break;
+                    case Track::FrameType::value:
+                    {
+                        auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>(), zoomAttrChanged);
+                        MiscWeakAssert(valueZoomListener != nullptr);
+                        if(valueZoomListener != nullptr)
+                        {
+                            mZoomListeners.push_back(std::move(valueZoomListener));
+                        }
+                        break;
+                    }
+                    case Track::FrameType::vector:
+                    {
+                        auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>(), zoomAttrChanged);
+                        MiscWeakAssert(valueZoomListener != nullptr);
+                        if(valueZoomListener != nullptr)
+                        {
+                            mZoomListeners.push_back(std::move(valueZoomListener));
+                        }
+                        auto binZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::binZoom>(), zoomAttrChanged);
+                        MiscWeakAssert(binZoomListener != nullptr);
+                        if(binZoomListener != nullptr)
+                        {
+                            mZoomListeners.push_back(std::move(binZoomListener));
+                        }
+                        break;
+                    }
                 }
             }
         }
