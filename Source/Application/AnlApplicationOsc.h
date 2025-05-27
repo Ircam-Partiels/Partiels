@@ -116,9 +116,10 @@ namespace Application
             void synchronize(bool connect);
 
             Sender& mSender;
+            Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
             Document::LayoutNotifier mLayoutNotifier;
-            Track::Accessor::Listener mTrackListener{typeid(*this).name()};
-            Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+            std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
+            std::vector<std::unique_ptr<Zoom::Accessor::SmartListener>> mZoomListeners;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TrackDispatcher)
         };
