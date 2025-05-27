@@ -404,7 +404,6 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
         {
             case Track::AttrType::identifier:
             case Track::AttrType::sendViaOsc:
-            case Track::AttrType::name:
             case Track::AttrType::file:
             case Track::AttrType::results:
             case Track::AttrType::edit:
@@ -450,6 +449,14 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
                 }
                 break;
             };
+            case Track::AttrType::name:
+            {
+                juce::OSCMessage message("/" + accessor.getAttr<Track::AttrType::identifier>());
+                message.addString("name");
+                message.addString(accessor.getAttr<Track::AttrType::name>());
+                mSender.send(message);
+                break;
+            }
         }
     };
 
