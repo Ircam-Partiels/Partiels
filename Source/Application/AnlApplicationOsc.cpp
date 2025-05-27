@@ -362,21 +362,21 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                auto const getZoomInfo = [&]() -> std::tuple<juce::String, bool>
+                auto const getZoomInfo = [&]() -> std::tuple<juce::String, Track::FrameType>
                 {
                     auto const& documentAcsr = Instance::get().getDocumentAccessor();
                     for(auto const& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
                     {
                         if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>()))
                         {
-                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), false};
+                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::value};
                         }
                         if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>()))
                         {
-                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), true};
+                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::vector};
                         }
                     }
-                    return {"", false};
+                    return {"", Track::FrameType::label};
                 };
 
                 auto const info = getZoomInfo();
@@ -384,7 +384,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
                 {
                     juce::OSCMessage message("/" + std::get<0>(info));
                     message.addString("zoom");
-                    message.addString(std::get<1>(info) ? "bin" : "value");
+                    message.addString(std::get<1>(info) == Track::FrameType::vector ? "bin" : "value");
                     auto const globalRange = accessor.getAttr<Zoom::AttrType::globalRange>();
                     message.addFloat32(static_cast<float>(globalRange.getStart()));
                     message.addFloat32(static_cast<float>(globalRange.getEnd()));
