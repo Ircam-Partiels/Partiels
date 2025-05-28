@@ -13,11 +13,12 @@
 ## Table of contents
 
 * [1. Introduction](#1-introduction)
-  * [1.1. Features](#11-features)
-  * [1.2. System requirements](#12-system-requirements)
-  * [1.3. Third-party](#13-third-party)
-  * [1.4. Updates](#14-updates)
-  * [1.5. Credits](#15-credits)
+  * [1.1. Main Features](#11-main-features)
+  * [1.2. Third-party](#12-third-party)
+  * [1.3. System requirements](#13-system-requirements)
+  * [1.4. Versions and updates](#14-versions-and-updates)
+  * [1.5. Feedback](#15-feedback)
+  * [1.6. Credits](#16-credits)
 * [2. Overview](#2-overview)
 * [3. Manage documents](#3-manage-documents)
   * [3.1. Create and open](#31-create-and-open)
@@ -61,11 +62,11 @@
 
 ## 1. Introduction
 
-**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is a **digital audio file analysis application** for signal processing *researchers*, *musicologists*, *composers*, *sound designers*, etc., offering a dynamic interface for **exploring the content and characteristics of sounds**.
+**[Partiels](https://github.com/Ircam-Partiels/partiels)** is a **digital audio file analysis application** for signal processing *researchers*, *musicologists*, *composers*, *sound designers*, etc., offering a dynamic interface for **exploring the content and characteristics of sounds**.
 
-### 1.1. Features
+### 1.1. Main Features
 
-Partiels allows **analyzing** one or several audio files using *Vamp* plugins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files.
+Partiels allows **analysis** of one or several audio files using Vamp plugins **loading** data files, **visualizing**, **editing**, **organizing**, and **exporting** the results as images or text files that can be used in other applications such as Max, Pure Data, Open Music, etc.
 
 - Versions for *Windows*, *Mac* & *Linux*  
 - Multiformat & multichannel support  
@@ -82,30 +83,50 @@ Partiels allows **analyzing** one or several audio files using *Vamp* plugins, *
 - Consolidating documents (useful to share documents/analysis with other users across different platforms)  
 - Audio playback with loop  
 
-### 1.2. System Requirements
+<p align="center"><img src="../BinaryData/Resource/Partiels-Endorsements.png", width=320></p>
 
-- MacOS 10.13* and higher (64bit - Universal Intel/Silicon) - except the FCN plugin which requires MacOS 10.15
-- Linux (64 bit)
-- Windows 10 and 11 (64 bit)
+### 1.2. Third-party
 
-### 1.3. Third-party
+Alongside [Partiels](https://github.com/Ircam-Partiels/partiels/releases/latest), a wide range of analyses based on audio engines developed at IRCAM and outside are ported to Vamp plugins. These plugins allow you to perform FFT, LPC, transient, fundamental, formant, tempo, speech-to-text, text-to-audio synchronisation and many other analyses. You can also find a large number of analysis plugins on the [Vamp plugins website](https://www.vamp-plugins.org/).
 
-Alongside Partiels, a set of analyses based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plugins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, PM2 and FCN.
+### 1.3. System Requirements
 
-You will find a large number of analysis plugins on the [Vamp plugin](https://www.vamp-plugins.org/) website.
+Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
 
-### 1.4. Updates
+<p align="center"><img src="../BinaryData/Resource/Partiels-Compatibility.png"></p>
 
-At startup, Partiels checks for the release of a new version on the Ircam forum. If a new version has been released, you can either go to the Partiels website to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
+> ⚠️ Some Vamp plugins may not support the same configurations and may have other restrictions.
 
-If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`.
+### 1.4. Versions and Updates
 
-### 1.5. Credits
+At startup, Partiels checks for the release of a new version on the project page. If a new version has been released, you can either go to the Partiels project page to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
 
-**Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
-**Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
+If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`.
 
-<div style="page-break-after: auto;"></div>
+<p align="left">
+<strong><a href="https://github.com/Ircam-Partiels/partiels/releases">👉 All versions of Partiels and the plugin collection</a></strong>
+</p>
+
+### 1.6. Feedback
+
+For bug reports or feature requests, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
+
+### 1.6. Credits
+
+**[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.
+Contributions to development by Thomas Barbé and Nolan Dupont.  
+Copyright 2025 IRCAM. All rights reserved.
+
+#### Dependencies:
+- **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
+- **[Ircam Vamp Extension](https://github.com/Ircam-Partiels/ircam-vamp-extension)** by Pierre Guillot at IRCAM IMR department.  
+- **[JUCE](https://juce.com/)** by Raw Material Software Limited.
+- **[tinycolormap](https://github.com/yuki-koyama/tinycolormap)** by Yuki Koyama.
+- **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
+- **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
+- **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
+
+<div style="page-break-after: always;"></div>
 
 ## 2. Overview
 
@@ -949,5 +970,5 @@ It is recommended to add the path to the executable in the paths of your command
 
 <div style="page-break-after: always;"></div>
 
-*[Partiels](https://forum.ircam.fr/projects/detail/partiels/) Manual by Pierre Guillot*  
+*[Partiels](https://github.com/Ircam-Partiels/partiels/releases/latest) Manual by Pierre Guillot*  
 *[www.ircam.fr]("www.ircam.fr)*
