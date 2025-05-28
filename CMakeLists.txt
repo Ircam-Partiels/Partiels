@@ -327,9 +327,12 @@ if(CLANG_FORMAT_EXE)
     )
     add_custom_target(PartielsCheckFormat ${CLANG_FORMAT_EXE} --Werror --dry-run --verbose -style=file ${ClangFormatSources})
     add_custom_target(PartielsApplyFormat ${CLANG_FORMAT_EXE} -i -style=file ${ClangFormatSources})
+   
 else()
     message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
 endif()
+
+add_custom_target(TestTarget COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/test.cmake)
 
 ### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
