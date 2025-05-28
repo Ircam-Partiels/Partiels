@@ -66,7 +66,7 @@ ctest -C Debug -VV --test-dir build
 > ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file `JUCE/docs/Linux Dependencies.md`.
 ## Credits
 
-**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
+**[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
 Contributions to development by Thomas Barbé and Nolan Dupont.  
 Copyright 2025 IRCAM. All rights reserved.
 
