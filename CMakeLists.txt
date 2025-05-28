@@ -333,6 +333,10 @@ else()
     message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
 endif()
 
+### Translation Key Extraction ###
+add_custom_target(PartielsExtractTranslationKeys COMMAND ${CMAKE_COMMAND} -DTRANSLATION_KEY_FILE="${CMAKE_CURRENT_BINARY_DIR}/Scripts/TranslationKeys.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysExtractor.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_dependencies(Partiels PartielsExtractTranslationKeys)
+
 ### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
