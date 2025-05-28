@@ -66,7 +66,11 @@ ctest -C Debug -VV --test-dir build
 > ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file `JUCE/docs/Linux Dependencies.md`.
 ## Credits
 
-- **[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** by Pierre Guillot at IRCAM IMR Department.
+**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
+Contributions to development by Thomas Barbé and Nolan Dupont.  
+Copyright 2025 IRCAM. All rights reserved.
+
+### Dependencies:
 - **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
 - **[Ircam Vamp Extension](https://github.com/Ircam-Partiels/ircam-vamp-extension)** by Pierre Guillot at IRCAM IMR department.  
 - **[JUCE](https://juce.com/)** by Raw Material Software Limited.
