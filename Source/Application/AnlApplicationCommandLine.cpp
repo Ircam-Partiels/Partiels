@@ -315,6 +315,69 @@ Application::CommandLine::CommandLine()
                  fail(result.getErrorMessage());
              }
          }});
+    addCommand(
+        {"--plugin-details",
+         "--plugin-details [options]",
+         "Provides all the details about a specified plugin.\n\t"
+         "--identifier|-i Defines the identifier of the wanted plugin (required).\n\t"
+         "--feature|-f Defines the feature of the wanted plugin (required).\n\t"
+         "--format Defines the output format (optional, default is raw. Formats are raw or json).\n\t",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("-i|--identifier");
+             args.failIfOptionIsMissing("-f|--feature");
+             auto const identifier = args.getValueForOption("-i|--identifier");
+             auto const feature = args.getValueForOption("-f|--feature");
+             auto const format = args.getValueForOption("--format");
+
+             double sampleRate = 44100.0;
+             auto plugin_key = Misc::Plugin::Key();
+             plugin_key.identifier = identifier.toStdString();
+             plugin_key.feature = feature.toStdString();
+             nlohmann::json json;
+             Plugin::Description description = PluginList::Scanner::loadDescription(plugin_key, sampleRate);
+             if(format == "json")
+             {
+                 Plugin::to_json(json, description);
+                 std::cout << json;
+             }
+             else if(format == "raw" || format.isEmpty())
+             {
+                 description.print_details(std::cout, description);
+             }
+         }});
+    addCommand(
+        {"--plugin-list",
+         "--plugin-list",
+         "Gives an exaustive list of installed plugins.\n\t"
+         "--format Defines the output format (optional, default is raw. Formats are raw or json).\n\t",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             auto const format = args.getValueForOption("--format");
+             float sampleRate = 44100.0f;
+             PluginList::Scanner scanner;
+             auto const& plugins = scanner.getPlugins(sampleRate);
+             if(format == "json")
+             {
+                 nlohmann::json json;
+                 auto& plugins_json = json["plugins"];
+                 for(auto const& plugin : std::get<0>(plugins))
+                 {
+                     nlohmann::json plugin_json;
+                     Plugin::to_json(plugin_json, plugin.first);
+                     plugins_json.push_back(plugin_json);
+                 }
+                 std::cout << json.dump(4) << std::endl;
+             }
+             else if(format == "raw" || format.isEmpty())
+             {
+                 auto const& list = std::get<0>(plugins);
+                 for(auto it = list.begin(); it != list.end(); ++it)
+                     std::cout << it->first << it->second << std::endl;
+             }
+         }});
 }
 
 Application::CommandLine::~CommandLine()
