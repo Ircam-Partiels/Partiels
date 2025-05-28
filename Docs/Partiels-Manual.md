@@ -3,7 +3,7 @@
 <p align="center">
 <i>Version APPVERSION for Windows, Mac & Linux</i><br>
 <i>Manual by Pierre Guillot</i><br>
-<a href="www.ircam.fr">www.ircam.fr</a><br><br>
+<a href="https://www.ircam.fr">www.ircam.fr</a><br><br>
 
 <img src="Images/overview-v2.0.4.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
 </p>
@@ -13,7 +13,7 @@
 ## Table of contents
 
 * [1. Introduction](#1-introduction)
-  * [1.1. Features](#12-system-requirements)
+  * [1.1. Features](#11-features)
   * [1.2. System requirements](#12-system-requirements)
   * [1.3. Third-party](#13-third-party)
   * [1.4. Updates](#14-updates)
@@ -34,12 +34,12 @@
   * [6.2. Table](#62-table)
 * [7. Export analyses](#7-export-analyses)
   * [7.1. General options](#71-general-options)
-  * [7.2. Image options](#72-images-options)
+  * [7.2. Image options](#72-image-options)
   * [7.3. Text and binary options](#73-text-and-binary-options)
   * [7.4. Batch processing](#74-batch-processing)
 * [8. View, navigation, and transport](#8-view-navigation-and-transport)
   * [8.1. View](#81-view)
-  * [8.2. Zoom](#82-navigation)
+  * [8.2. Navigation](#82-navigation)
   * [8.3. Transport](#83-transport)
   * [8.4. OSC](#84-osc)
 * [9. Track properties](#9-track-properties)
@@ -53,7 +53,7 @@
   * [11.2. Audio files configuration](#112-audio-files-configuration)
   * [11.3. Audio files recovery](#113-audio-files-recovery)
 * [12. Audio settings](#12-audio-settings)
-* [13. Plug-ins settings](#13-plug-ins-settings)
+* [13. Plugins settings](#13-plugins-settings)
 * [14. Translations](#14-translations)
 * [15. Command-line tools](#15-command-line-tools)
 
@@ -65,12 +65,12 @@
 
 ### 1.1. Features
 
-Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files.
+Partiels allows **analyzing** one or several audio files using *Vamp* plugins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files.
 
 - Versions for *Windows*, *Mac* & *Linux*  
 - Multiformat & multichannel support  
 - Multifile support (useful to compare audio files)  
-- Analyzing audio with *Vamp* plug-ins  
+- Analyzing audio with *Vamp* plugins  
 - Visualizing results as *spectrogram*, *lines*, and *markers*  
 - Drawing and editing results (copy/cut/paste/delete/duplicate/etc.)  
 - Organizing and ordering analyses in groups  
@@ -84,15 +84,15 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 
 ### 1.2. System Requirements
 
-- MacOS 10.13* and higher (64bit - Universal Intel/Silicon) - except the FCN plug-in which requires MacOS 10.15
+- MacOS 10.13* and higher (64bit - Universal Intel/Silicon) - except the FCN plugin which requires MacOS 10.15
 - Linux (64 bit)
 - Windows 10 and 11 (64 bit)
 
 ### 1.3. Third-party
 
-Alongside Partiels, a set of analyses based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plug-ins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, PM2 and FCN.
+Alongside Partiels, a set of analyses based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plugins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, PM2 and FCN.
 
-You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
+You will find a large number of analysis plugins on the [Vamp plugin](https://www.vamp-plugins.org/) website.
 
 ### 1.4. Updates
 
@@ -105,7 +105,7 @@ If you don't want Partiels to check for a new release on startup, you can toggle
 **Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
 **Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
 
-<div style="page-break-after: always;"></div>
+<div style="page-break-after: auto;"></div>
 
 ## 2. Overview
 
@@ -141,7 +141,7 @@ You can define a default template to be used when loading an audio file using th
 
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
-If you add a new track with an analysis plugin, you can refer to the [corresponding section](#add-new-plugin-tracks) of this manual.
+If you add a new track with an analysis plugin, you can refer to the [corresponding section](#41-analysis-tracks) of this manual.
 
 ### 3.2. Save and consolidate
 
@@ -149,7 +149,7 @@ A document can be saved as a file with the extension *.ptldoc* on your system vi
 
 A document file is a text file describing its contents, such as audio files, analysis tracks, organization by groups. Audio files and analysis files used in a document are not embedded directly in the text file but saved as absolute paths to the files. If you delete or move these files on your system, the application will not be able to load the data and run the analyses properly and will prompt you to find or replace them. 
 
-If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plug-ins are no longer available.
+If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plugins are no longer available.
 
 You can reveal the current document file in the file browser of your operating system by clicking on the corresponding [text button](#2-overview) (**K5**) of the main interface.
 
@@ -171,33 +171,33 @@ A track contains and displays data from a sound analysis. This data can be of th
 - Marker: A time point with a duration, and potentially a text label (e.g. data generated by a transient detection). Each marker is represented by a vertical line whose horizontal position depends on the time and thickness of the duration with potentially the adjacent label text (**2**). 
 - Point: a time point with a duration, and potentially a numerical value (e.g. the data generated by an estimation of the fundamental frequency). The points define segments whose horizontal position depends on the time and vertical position depends on the numerical value. A point with a non-zero duration defines a horizontal line whose length depends on the duration. A point without numerical value stops the succession of segments (**3**).  
 
-Tracks can be created in two ways, from the analysis of a Vamp plug-in or from a result file.
+Tracks can be created in two ways, from the analysis of a Vamp plugin or from a result file.
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plug-ins installed on your computer are listed in the interface. 
+When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface. 
 
 <p><img src="Images/section-add-new-plugin-tracks.1-v2.0.3.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
-You can also search for specific plug-ins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
+You can also search for specific plugins by clicking on the text filter entry (**P1**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plugins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer). 
 
-> 💡 **Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plug-ins.
+> 💡 **Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plugins.
 
-Information on the selected plug-in (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
+Information on the selected plugin (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
 
-You can select one or more plug-ins and then press the `Return ⏎` key (or you can simply double click on a plug-in) to add a new track for each plug-in in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+You can select one or more plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
 
-> For further information about the plug-in management, please refer to the [Plug-ins settings](#12-plug-ins-settings) section.
+> For further information about the plugin management, please refer to the [Plug-ins settings](#13-plugins-settings) section.
 
-> 💡 **Tip**: Click on the settings button (**P5**) to open the plug-ins settings panel.
+> 💡 **Tip**: Click on the settings button (**P5**) to open the plugins settings panel.
 
 <br clear="left"/>
 
-If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#track-properties) section.
+If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#9-track-properties) section.
 
 ### 4.2. File tracks
 
-A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), LAB (*.lab*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + Shift + I` (Linux/Windows). 
+A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), LAB (*.lab*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + ⇧ Shift + I` (Linux/Windows). 
 
 If you're importing a file in CSV format, the application will automatically try to determine the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). The Reaper-specific CSV format is also automatically detected and supported. If the application fails to automatically determine the separator, the `Load File...` window appears, allowing you to select the separator character. 
 
@@ -209,7 +209,7 @@ When importing markers in CSV format, it is recommended to escape the tags (with
 
 > 💡 **Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
 
-If you are importing a file in SDIF format, , the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
+If you are importing a file in SDIF format, the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
 
 <p align="center">
 <img src="Images/selection-import-new-result tracks.2-v1.0.7.png" width="232"/>
@@ -217,7 +217,7 @@ If you are importing a file in SDIF format, , the `Load File...` window appears 
 
 > 💡 **Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
 
-If you are importing a file in JSON  format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
+If you are importing a file in JSON format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
 If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
 
@@ -304,11 +304,13 @@ The results table displays data in three columns, the first corresponding to tim
 - Use the keyboard shortcut `⌘ Cmd + C` (Mac) or `Ctrl + C` (Linux/Windows) to copy markers or points of the selected rows to the clipboard.
 - Use the keyboard shortcut `⌘ Cmd + X` (Mac) or `Ctrl + X` (Linux/Windows) to cut markers or points of the selected rows to the clipboard.
 - Use the keyboard shortcut `⌘ Cmd + V` (Mac) or `Ctrl + V` (Linux/Windows) to paste markers or points saved in the clipboard at the start of the selected rows.
-- Use the keyboard shortcut `⌘ Cmd + D` (Mac) or `Ctrl + V` (Linux/Windows) to duplicate markers or points of the selected rows.
+- Use the keyboard shortcut `⌘ Cmd + D` (Mac) or `Ctrl + D` (Linux/Windows) to duplicate markers or points of the selected rows.
+
+<div style="page-break-after: always;"></div>
 
 ## 7. Export analyses
 
-The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
+The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + ⇧ Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
 
 <p align="center">
 <img src="Images/section-export-analyses.1-v1.0.7.png" width="232"/>
@@ -318,7 +320,7 @@ Once you have selected the desired configuration, click on the `Export` button (
 
 ### 7.1. General options
 
-The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Text and binary options](#63-text-and-binary-options)). 
+The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Text and binary options](#73-text-and-binary-options)). 
 
 <p align="center">
 <img src="Images/section-export-analyses.2-v1.0.6.png" width="210"/>
@@ -340,7 +342,7 @@ You can also define the time range with the text entries `Time Start`, `Time End
 
 The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV*, *LAB*, *CUE*, *REAPER*, or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
-### 7.2. Images options
+### 7.2. Image options
 
 Exporting to an image format (*JPEG* or *PNG*) offers two rendering options:
 
@@ -376,7 +378,7 @@ Export to SDIF format offers three options:
 
 ### 7.4. Batch processing
 
-You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + Shift + B` (Linux/Windows). 
+You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + ⇧ Shift + B` (Linux/Windows). 
 
 <p align="center">
 <img src="Images/section-export-analyses.5-v1.0.7.png" width="232"/>
@@ -393,9 +395,9 @@ This window top section (**B1**) allows you to select audio files and configure 
 <img src="Images/section-export-analyses.6.a-v1.0.5.png" width="243"/>
 </p>
 
-- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item at the desired position.
 
-- Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*all* analyses all channels separetily, *mono* sums all channels into one channel).  
+- Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*all* analyzes all channels separately, *mono* sums all channels into one channel).  
 <p align="center">
 <img src="Images/section-export-analyses.6.b-v1.0.6.png" width="243"/>
 </p>
@@ -412,118 +414,118 @@ Once you have selected the desired configuration, click on the `Process` button 
 
 ## 8. View, navigation, and transport
 
-This section covers aspects related to viewing, navigation and audio playback in the application.
+This section covers aspects related to visualization, navigation, and audio playback in the application.
 
-Change the general theme of the application, by default the automatic mode adapts to the theme changes (light and dark) of your operating system via the menu `View → Theme`.
+You can change the general theme of the application via the `View → Theme` menu. By default, the automatic mode adapts to your operating system's theme changes (light and dark).
 
-Change the global scale of the application via the menu `View → Scale` to enlarge the global view of the application.
+Modify the global scale of the application via the `View → Scale` menu to enlarge the overall view of the application.
 
-Toggle the magnetize option by clicking on the button `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. If the magnetize option is enabled the position moves to the closest markers of all the tracks of the document. 
+Enable or disable the magnetize option by clicking the `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. When the magnetize option is enabled, the position snaps to the nearest markers of all tracks in the document.
 
 ### 8.1. View
 
-Each track and group offers two representations of the analysis results. The main representation shows the results over time ([Overview](#2-overview) **V2**) as vertical lines for the markers, points (connected in segments) for the values and images for the matrices. The secondary display shows an instantaneous value of the results at the time of the playhead ([Overview](#2-overview) **V1**).
+Each track and group offers two representations of analysis results. The main representation shows the results over time ([Overview](#2-overview) **V2**) as vertical lines for markers, points (connected into segments) for values, and images for matrices. The secondary display shows an instantaneous value of the results at the playhead position ([Overview](#2-overview) **V1**).
 
-- Activate the info bubble window with the `Info Bubble` button ([Overview](#2-overview) **K7**), via the main menu `View → Info Bubble` or the keyboard shorcut `⌘ Cmd + I` (Mac) or `Ctrl + I` (Linux/Windows) to display the values of the analysis results when you hover the mouse over these representations.
+- Enable the info bubble window with the `Info Bubble` button ([Overview](#2-overview) **K7**), via the main menu `View → Info Bubble` or the keyboard shortcut `⌘ Cmd + I` (Mac) or `Ctrl + I` (Linux/Windows) to display the values of the analysis results when hovering over these representations with the mouse.
 
-- Modify the display of track and group grids with the `Grid` button ([Overview](#2-overview) **K8**): hidden, ticks, full.
+- Change the display of track and group grids with the `Grid` button ([Overview](#2-overview) **K8**): hidden, ticks, or full.
 
 ### 8.2. Navigation
 
-Partiels offers the possibility of navigating and zooming on the horizontal axis corresponding to the time range, and on the vertical axis corresponding to the value (or frequency) range.
+Partiels offers the ability to navigate and zoom on the horizontal axis corresponding to the time range, and on the vertical axis corresponding to the value (or frequency) range.
 
-Click and drag without modifier on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **N**).
+Click and drag without modifiers on a track or group to select a time range. If the magnetize option is enabled, the position snaps to the nearest marker. The time selection can be visualized and modified with the time fields in the header of the main interface ([Overview](#2-overview) - **N**).
 
 #### 8.2.1 Horizontal  
 
-The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
+The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control time zoom. You can also use mouse and trackpad interactions or keyboard shortcuts to navigate and zoom.
 
-- Click and drag on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to shift the time range backwards and forwards.
-- Click with `⇧ Shift` and drag to the left and right on the horizontal ruler ([Overview](#2-overview) **Z1**) to shift the time range backwards and forwards. 
-- Click with `Alt` and drag up and down on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom out and in of the time range.
-- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the horizontal ruler ([Overview](#2-overview) **Z1**)to select a time range to zoom to.
-- Right-click or click with `Ctrl` (Mac) on the horizontal ruler ([Overview](#2-overview) **Z1**) to show a floating window that allows to textually specify the zoom range. 
-- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom on the entire time range.
-- Click on the horizontal bar ([Overview](#2-overview) **Z2**) to shift the time range backwards and forwards.
+- Click and drag on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to move the time range forward and backward.
+- Click with `⇧ Shift` and drag left and right on the horizontal ruler ([Overview](#2-overview) **Z1**) to move the time range forward and backward.
+- Click with `Alt` and drag up and down on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom out and in on the time range.
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the horizontal ruler ([Overview](#2-overview) **Z1**) to select a time range to zoom in on.
+- Right-click or click with `Ctrl` (Mac) on the horizontal ruler ([Overview](#2-overview) **Z1**) to display a floating window that allows you to textually specify the zoom range.
+- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom out to the entire time range.
+- Click on the horizontal bar ([Overview](#2-overview) **Z2**) to move the time range forward and backward.
 - Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to reset the time zoom to the global time range.
-- Scroll vertically with `⇧ Shift` (or scroll horizontally) using the mouse-wheel to shift the time range backwards and forwards.
-- Scroll vertically using the mouse-wheel to zoom in and out of the time range.
-- Use the pitch-zoom to zoom in and out of the time range.
+- Scroll vertically with `⇧ Shift` (or horizontally) using the mouse wheel to move the time range forward and backward.
+- Scroll vertically using the mouse wheel to zoom in and out on the time range.
+- Use pinch zoom to zoom in and out on the time range.
 - Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-> 💡 **Tip**: When zooming in time, the anchor may correspond to the position of the mouse or the position of the start playhead. You can change the mode via the menu `View → Anchor Time Zoom on Playhead`.
+> 💡 **Tip**: During time zooming, the anchor point can correspond to the mouse position or the playhead starting position. You can change the mode via the menu `View → Anchor Time Zoom on Playhead`.
 
 #### 8.2.2 Vertical
 
-The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value (or frequency) zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
+The interface of each point or matrix track contains a vertical ruler for each channel and a vertical bar for all channels ([Overview](#2-overview) **Z3** and **Z4**) to control value (or frequency) zooms. Marker tracks do not have vertical zoom. The corresponding rulers and bars also appear on groups if the group's zoom reference is a point or matrix track. You can also use mouse and trackpad interactions or keyboard shortcuts to navigate and zoom.
 
--- Click and drag on the vertical ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to shift the value or frequency range backwards and forwards.
-- Click with `⇧ Shift` and drag up and down on the vertical ruler ([Overview](#2-overview) **Z3**) to shift the value or frequency range backwards and forwards.
-- Click with `Alt` and drag left and right on the vertical ruler ([Overview](#2-overview) **Z1**) to zoom out and in of the value or frequency range.
-- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to select a value or frequency range to zoom to.
-- Right-click or click with `Ctrl` (Mac) on the vertical ruler  ([Overview](#2-overview) **Z3**) to show a floating window that allows to textually specify the zoom range. 
-- Double-click on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom on the entire value or frequency range.
-- Click on the vertical bar ([Overview](#2-overview) **Z4**) to shift the value or frequency range backwards and forwards.
-- Scroll vertically or horizontally with `Ctrl` using the mouse-wheel to zoom in and out of the value or frequency range.
-- Scroll vertically with `Ctrl` and `⇧ Shift` using the mouse-wheel to shift the value or frequency range backwards and forwards.
-- Use the pitch-zoom with `Ctrl` to zoom in and out of the value or frequency range.
+- Click and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom in and out and to move the value or frequency range up and down.
+- Click with `⇧ Shift` and drag up and down on the vertical ruler ([Overview](#2-overview) **Z3**) to move the value or frequency range up and down.
+- Click with `Alt` and drag left and right on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom out and in on the value or frequency range.
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to select a value or frequency range to zoom in on.
+- Right-click or click with `Ctrl` (Mac) on the vertical ruler ([Overview](#2-overview) **Z3**) to display a floating window that allows you to textually specify the zoom range.
+- Double-click on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom out to the entire value or frequency range.
+- Click on the vertical bar ([Overview](#2-overview) **Z4**) to move the value or frequency range up and down.
+- Scroll vertically or horizontally with `Ctrl` using the mouse wheel to zoom in and out on the value or frequency range.
+- Scroll vertically with `Ctrl` and `⇧ Shift` using the mouse wheel to move the value or frequency range up and down.
+- Use pinch zoom with `Ctrl` to zoom in and out on the value or frequency range.
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
 #### 8.2.3 Plot
 
-When the navigation mode is enabled, the graphical plots of the groups and the tracks allow you to navigate and zoom horizontally and vertically. 
+When navigation mode is enabled, the group and track plots allow navigating and zooming horizontally and vertically.
 
-- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag to select the time and value ranges to zoom to.
-- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag from top-left to bottom-right to zoom in on time and value ranges, and conversely, from bottom-right to top-left to zoom out on time and value ranges.
-- Click with `⇧ Shift` and drag to shift the time and value ranges backwards and forwards.
-- Double-click with `⇧ Shift`, `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) or `⎇ Option` (Mac) or `Alt` (Linux/Windows) to zoom on the entire time and value ranges.
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag to select the time and value ranges to zoom in on.
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag from the top left to the bottom right corner to zoom in on the time and value ranges, and conversely, from the bottom right to the top left corner to zoom out on the time and value ranges.
+- Click with `⇧ Shift` and drag to move the time and value ranges forward and backward.
+- Double-click with `⇧ Shift`, `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) or `⎇ Option` (Mac) or `Alt` (Linux/Windows) to zoom out to the entire time and value ranges.
 
-> 💡 **Tip**: Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+> 💡 **Tip**: Toggle between navigation mode and edit mode with the edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
 
 ### 8.3. Transport
 
-Partiels provides basic audio playback capabilities to allow listening to audio files while viewing analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) in the center of the main interface header.
+Partiels offers basic audio playback features allowing you to listen to audio files while viewing the analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) at the center of the main interface header.
 
 <p align="center">
 <img src="Images/section-navigation-zoom-and-transport.1-v1.3.2.png" alt="AudioTransport" width="280"/>
 </p>
 
-The actions to move the start position of the playback head and control the playback loop depend on the magnetize option that sticks the positions to the markers of the analysis tracks.
+Actions for moving the playhead starting position and controlling the playback loop depend on the magnetize option which locks positions to markers of the analysis tracks.
 
-- Toogle the audio playback: Click the playback button (**T1**), use the main menu `Transport → Toggle Playback` or the space bar `⎵` to start or stop audio playback at the playhead's starting position. 
-- Toogle the audio loop: Click on the loop button (**T2**), use the main menu `Transport → Toggle Loop` or the keyboard shortcut `⌘ Cmd + L` (Mac) or `Ctrl + L` (Linux/Windows) to enable or disable the audio loop.
-- Control the loop range: Use the loop bar (**T4**) to control le loop range, if the the magnetize option is enabled, the positions move to the closest markers.
-  - Click on the borders of the existing loop range without any keyboard modifier and dragging to resize the starting or the ending of the loop range.
+- Enable/disable audio playback: Click the play button (**T1**), use the main menu `Transport → Toggle Playback` or the space bar `⎵` to start or stop audio playback at the playhead starting position.
+- Enable/disable audio loop: Click the loop button (**T2**), use the main menu `Transport → Toggle Loop` or the keyboard shortcut `⌘ Cmd + L` (Mac) or `Ctrl + L` (Linux/Windows) to enable or disable audio loop.
+- Control the loop range: Use the loop bar (**T4**) to control the loop range. If the magnetize option is enabled, positions snap to the nearest markers.
+  - Click on the borders of the existing loop range without any keyboard modifier and drag to resize the start or end of the loop range.
   - Click and drag anywhere else without any keyboard modifier to select a new loop range.
-  - Click and drag with `⇧ Shift` on the loop range to shift the loop range over the time.
-  - Double click on the loop bar to select the range between the two closest markers (or the global range when there is no marker).
-  - Double click with `⌘` (Mac) or `Ctrl` (Linux/Windows) on the loop bar to select the global range.
-- Stop the playback automatically at the end of the loop: Use the main menu `Transport → Toggle Stop Playback at Loop End` to enable or disable the option.
-- Rewind playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` (Linux/Windows) to move the playhead to the beginning of the audio files or the beginning of the play loop if the loop is enabled.  
-- Move playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ Cmd + ←` (Mac) or `Ctrl + ←` (Linux/Windows) to move the playhead to the previous marker when the magnetize option is enabled.  
-- Move playhead forward: Use the main menu `Transport → Move the Playhead Forward` or the keyboard shortcut `⌘ Cmd + →` (Mac) or `Ctrl + →` (Linux/Windows) to move the playhead to the next marker when the magnetize option is enabled.  
-- Set playhead position: Use the time entry (**T6**) when the the playback is stopped to define the start playhead position. When the playback is started, the time entry displays the running playhead position. Click on an analysis to move the start playhead position at the corresponding time position, if the magnetize option is enabled, the position moves to the closest marker. 
-- Control the volume: Cick and drag the volume slider (**T7**) to control the volume of the audio output.
+  - Click and drag with `⇧ Shift` on the loop range to move the loop range over time.
+  - Double-click on the loop bar to select the range between the two closest markers (or the global range when there is no marker).
+  - Double-click with `⌘` (Mac) or `Ctrl` (Linux/Windows) on the loop bar to select the global range.
+- Automatically stop playback at the end of the loop: Use the main menu `Transport → Toggle Stop Playback at Loop End` to enable or disable the option.
+- Rewind the playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` (Linux/Windows) to move the playhead to the beginning of the audio files or to the beginning of the playback loop if the loop is enabled.
+- Move the playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ Cmd + ←` (Mac) or `Ctrl + ←` (Linux/Windows) to move the playhead to the previous marker when the magnetize option is enabled.
+- Move the playhead forward: Use the main menu `Transport → Move the Playhead Forward` or the keyboard shortcut `⌘ Cmd + →` (Mac) or `Ctrl + →` (Linux/Windows) to move the playhead to the next marker when the magnetize option is enabled.
+- Set the playhead position: Use the time field (**T6**) when playback is stopped to set the playhead starting position. When playback is started, the time field displays the running playhead position. Click on an analysis to move the playhead starting position to the corresponding time position. If the magnetize option is enabled, the position snaps to the nearest marker.
+- Control the volume: Click and drag the volume slider (**T7**) to control the audio output volume.
 
-> 💡 **Tip**: Refer to these sections to configure the [audio files layout](#10-audio-files-layout) and the [audio settings](#11-audio-settings).
+> 💡 **Tip**: See these sections to configure the [audio files layout](#11-audio-files-layout) and [audio settings](#12-audio-settings).
 
 ### 8.4. OSC
 
-Partiels offers the option of sending analysis track values via OSC (Open Sound Control) during playback or when hovering over tracks and groups with the mouse with the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). Information can be retrieved from other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of results. 
+Partiels offers the possibility to send track analysis values via OSC (Open Sound Control) during playback or when hovering over tracks and groups with the mouse using the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The information can be retrieved by other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of the results.
 
-Connection to the host is configured via the OSC property panel, accessible via the menu `Partiels → OSC Settings...` (Mac) or `Help → OSC Settings...` on (Linux/Windows), or by clicking on the OSC button ([Overview](#2-overview) **O**) in the center of the main interface header (when OSC is connected, button turns green.).
+The host connection is configured via the OSC properties panel, accessible via the menu `Partiels → OSC Settings...` (Mac) or `Help → OSC Settings...` (Linux/Windows), or by clicking on the OSC button ([Overview](#2-overview) **O**) at the center of the main interface header (when OSC is connected, the button turns green).
 
 <p align="center">
 <img src="Images/section-navigation-zoom-and-transport.2-v2.0.4.png" alt="OSC Settings" width="280"/>
 </p>
 
-To enable a track's results to be sent via OSC, the corresponding option must be enabled in the [track's properties](#93-osc).  
+To allow the sending of a track's results via OSC, the corresponding option must be enabled in the [track properties](#93-osc).
 
-To ensure compatibility with as many applications as possible, results are sent in the form of messages (no bundles). 
+To ensure compatibility with the maximum number of applications, results are sent as messages (not bundles).
 
-When playback starts and stops, the OSC messages `playback 1` and `playback 0` are sent. During playback, OSC messages are sent each time the playhead advances. For each channel of each track whose OSC is activated, a message corresponding to the result whose time is greater than or equal to the playback time is sent:
+When playback starts and stops, the OSC messages `playback 1` and `playback 0` are sent. During playback, OSC messages are sent each time the playhead advances. For each channel of each track with OSC enabled, a message corresponding to the result with time greater than or equal to the playback time is sent:
 
 1. Track address (string)
 2. Channel index (int)
@@ -532,12 +534,12 @@ When playback starts and stops, the OSC messages `playback 1` and `playback 0` a
 5. Result time (float)
 6. Result duration (float)
 7. Result values:
-    - Label string for a marker (string)
-    - Value number for a value (float) or "-" label for a break (string)
+    - Character string for a marker (string)
+    - Numerical value for a value (float) or label "-" for a break (string)
     - Size (int) and list of numbers (float) for a vector
-8. List of numbers (float) for the extra values
+8. List of numbers (float) for additional values
 
-When playback is paused, the information are sent when hovering over groups and tracks with the mouse and the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The OSC messages `mouseover 1` and `mouseover 0` are sent when messages start or stop being sent. Each time the mouse is moved, and for each track under the cursor, a message containing the results is sent with the address corresponding to the track identifier followed by:
+When playback is paused, information is sent when you hover over groups and tracks with the mouse and the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The OSC messages `mouseover 1` and `mouseover 0` are sent when message sending starts or stops. With each mouse movement, and for each track under the cursor, a message containing the results is sent with the address corresponding to the track ID followed by:
 
 1. Track address (string)
 2. Channel index (int)
@@ -546,12 +548,12 @@ When playback is paused, the information are sent when hovering over groups and 
 5. Result time (float)
 6. Result duration (float)
 7. Result values:
-    - Label string for a marker (string)
-    - Value number for a value (float) or "-" label for a break (string)
-    - Bin index (int) and value of the bin (float) for a vector
-8. List of numbers (float) for the extra values
+    - Character string for a marker (string)
+    - Numerical value for a value (float) or label "-" for a break (string)
+    - Bin index (int) and bin value (float) for a vector
+8. List of numbers (float) for additional values
 
-Track zoom information and extra value thresholds are also sent when they are modified, enabling the Partiels graphical representation to be synchronized with the OSC-controlled graphical representation or audio engine.
+Track zoom information and additional value thresholds are also sent when they are modified, allowing synchronization of Partiels' graphical representation with the graphical representation or audio engine controlled by OSC.
 
 Zoom information is sent only for point-type tracks (value zoom) and matrix-type tracks (value and bin zooms):
 
@@ -563,89 +565,89 @@ Zoom information is sent only for point-type tracks (value zoom) and matrix-type
 6. Visible range - start (float)
 7. Visible range - end (float)
 
-Extra value thresholds are only sent for tracks with extra values:
+Additional value thresholds are sent only for tracks with additional values:
 
 1. Track address (string)
 2. "thresholds" (string)
-3. List of numbers (float) for the extra values
+3. List of numbers (float) for additional values
 
-> 💡 **Tip**: A series of Pure Data and Max patches offering an alternative visualization of the results is distributed alongside the application.
+> 💡 **Tip**: A series of Pure Data and Max patches offering alternative visualization of the results is distributed with the application.
 
 <div style="page-break-after: always;"></div>
 
 ## 9. Track properties
 
-The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**), the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
+The track properties panel allows you to access information about a track and modify the processor and graphical properties. You can display a track's properties panel by clicking on the corresponding button in the track header ([Overview](#2-overview) - **K2**), the corresponding entry in the dropdown menu displayed by the properties button of the header of the group containing the track ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-track-properties.1-v2.0.4.png" width="242"/>
 </p>
 
-The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, osc, plugin.  
+The first property of a track is its name. The default name of the track corresponds either to the name of the analysis plugin if a plugin was used to create the track, or to the name of the results file if a results file was used to create the track. The track name can be modified using the corresponding text field. The properties of a track are then organized into four categories: processor, graphical, osc, plugin.
 
 ### 9.1. Processor
 
-The processor section allows you to modify all the properties that control the analysis engine or the loading of the results file of the track. Thus, the properties are related to the result file, the plugin parameters and the track state.
+The processor section allows you to modify all the properties that control the analysis engine or result file loading for the track. Thus, the properties are related to the result file, the plugin parameters, and the state of the track.
 
 #### 9.1.1. File
 
-The results file information is displayed if the analysis results have been loaded from a file. Note that, if the analysis results were loaded from a JSON file containing plugin information or a file resulting from the consolidated track, the processor's parameters can still be accessible and used to update the analysis results.
+The result file information is displayed if the analysis results were loaded from a file. Note that if the analysis results were loaded from a JSON file containing information about the plugin or from a file resulting from the consolidated track, the processor parameters may still be accessible and used to update the analysis results.
 
 <p align="center">
 <img src="Images/section-track-properties.2-v1.0.5.png" width="232"/>
 </p>
 
-- The results file can be revealed in the operating system's file browser by clicking on the text button. 
+- The result file can be revealed in the operating system's file explorer by clicking on the text button.
 
-- The results file can be detached from the track (only if the track contains plugin information) by clicking on the text button with the `shift` keys pressed. In this case, the track will use the plugin information to run the analysis and produce new results.
+- The result file can be detached from the track (only if the track contains information about the plugin) by clicking on the text button with the `shift` keys pressed. In this case, the track will use the plugin information to run the analysis and produce new results.
 
 #### 9.1.2. Parameters 
 
-Depending on the characteristics of the plugin, the section allows accessing the default plugin parameters. If the plugin expects frequency domain input signal, the section gives access to the window type, the block size and the step size in order to transform the time domain signal into a frequency domain signal with a Fast Fourier Transform. Otherwise, if the plugin expects time domain input signal, the section gives access to the block type if the plugin doesn't have a preferred block size, the step size if the plugin doesn't have a preferred step size or doesn't expect the step size to  be equal to the block size.
+Depending on the plugin characteristics, the section provides access to the default plugin parameters. If the plugin expects a frequency domain input signal, the section gives access to the window type, block size, and step size in order to transform the time domain signal into a frequency domain signal with a Fast Fourier Transform. Otherwise, if the plugin expects a time domain input signal, the section gives access to the block type if the plugin has no preferred block size, to the step size if the plugin has no preferred step size or doesn't expect the step size to be equal to the block size.
 
 <p align="center">
 <img src="Images/section-track-properties.3-v1.0.5.png" width="232"/>
 </p>
 
-- Window Type: The window function of the FFT in order to transform the time domain signal into a frequency domain signal if the plugin expects frequency domain input signal.
+- Window Type: The FFT windowing function to transform the time domain signal into a frequency domain signal if the plugin expects a frequency domain input signal.
 
-- Block Size: The window size of the FFT in order to transform the time domain signal into a frequency domain signal signal if the plugin expects frequency domain input data or the size of the blocks of samples if the plugin expects time domain input signal. 
+- Block Size: The size of the FFT window to transform the time domain signal into a frequency domain signal if the plugin expects frequency domain input data, or the size of the blocks of samples if the plugin expects a time domain input signal.
 
-- Step Size: The step size of the FFT in order to transform the time domain signal into a frequency domain signal if the plugin expects frequency domain signal or the size between each block of samples if the plugin expects time domain input signal. 
+- Step Size: The FFT step size to transform the time domain signal into a frequency domain signal if the plugin expects a signal in the frequency domain, or the size between each block of samples if the plugin expects a time domain input signal.
 
 <p align="center">
 <img src="Images/section-track-properties.3.b-v1.1.0.png" width="232"/>
 </p>
 
-- Input Track: The input track property allows you to use another document analysis track as input to the current analysis track. To do this, the analysis plugin must allow it, and the input data type must correspond to the data type expected by the plugin. Changing the input track or modifying the results of this track automatically triggers a re-analysis of the current track.
+- Input Track: The input track property allows you to use another document analysis track as the input for the current analysis track. To do this, the analysis plugin must allow it, and the input data type must match the data type expected by the plugin. Changing the input track or changing the results of this track automatically triggers a new analysis of the current track.
 
-The section allows accessing the plugin-specific parameters that are used to perform the analysis. Depending on their specifications, the values of the parameters can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been edited, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking you if you want to proceed (you can still undo the operation to retrieve the previous analysis results). 
+The section provides access to the plugin-specific parameters that are used to perform the analysis. According to their specifications, parameter values can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been modified, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking if you wish to continue (you can always cancel the operation to recover the previous analysis results).
 
 <p align="center">
 <img src="Images/section-track-properties.4-v1.0.5.png" width="196"/>
 </p>
 
-The preset menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters in a file on your operating system and load this file to restore the state (the file can be used in any other track that used the same plugin).
+The presets menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters to a file on your operating system and load this file to restore the state (the file can be used in any other track using the same plugin).
 
 #### 9.1.3. State
 
-The current state of the plugin is displayed at the bottom of the section informing if the analysis or loading succeeded or failed and if the results have been edited.
+The current state of the plugin is displayed at the bottom of the section, indicating whether the analysis or loading succeeded or failed and whether the results have been modified.
 
 <p align="center">
 <img src="Images/section-track-properties.5-v1.0.5.png" width="196"/>
 </p>
 
-If the analysis or loading failed, clicking on the warning icon prompts a dialog window offering to solve the problem when possible (by loading another plugin or another file if it is not found or by restoring the default state of the plugin if its initialization failed).
+If analysis or loading failed, clicking on the warning icon displays a dialog window offering to resolve the issue when possible (by loading another plugin or another file if it is not found, or by restoring the default state of the plugin if its initialization failed).
 
-If the analysis results have been edited, clicking on the warning icon prompts a dialog window offering to cancel the changes and relaunch the analysis.
+If the analysis results have been modified, clicking on the warning icon displays a dialog window offering to cancel the modifications and restart the analysis.
 
 ### 9.2. Graphical
 
-The graphical section allows modifying all the properties that control the rendering of the analysis results of the track. The properties depend on the type of analysis results: markers (e.g. beat detection), points (e.g. energy estimation), or columns (e.g. spectrogram).
+The graphical section allows you to modify all the properties that control the rendering of the track's analysis results. The properties depend on the type of analysis results: markers (e.g., beat detection), points (e.g., energy estimation), or columns (e.g., spectrogram).
 
 #### 9.2.1. Colors
 
-A color can be modified using the color selector that is prompted by clicking on the colored button. You can drag and drop a colored button on another one, to copy the color from one property to another. The color map can be modified using the dropdown menu. 
+A color can be modified using the color picker that appears when clicking on the colored button. You can drag and drop a colored button onto another to copy the color from one property to another. The color map can be modified using the dropdown menu.
 
 <p align="center">
 <img src="Images/section-track-properties.6.a-v1.0.5.png" width="196"/><br>
@@ -653,28 +655,28 @@ A color can be modified using the color selector that is prompted by clicking on
 <img src="Images/section-track-properties.6.e-v2.0.3.png" width="196"/>
 </p>
 
-- Color Map: The color map used to render the columns.
-- Foreground Color: The color used to render the markers or the segments between points.
-- Background Color: The color used to render the background behind the markers or the segments between points.
-- Text Color: The color used to render the labels of the markers or the points values.
-- Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
-- Duration Color: The shadow color used to duration of the markers.
+- Color Map: The color map used to render columns.
+- Foreground Color: The color used to render markers or segments between points.
+- Background Color: The color used to render the background behind markers or segments between points.
+- Text Color: The color used to render marker labels or point values.
+- Shadow Color: The shadow color used to render the shadow of markers or segments between points.
+- Duration Color: The shadow color used for marker durations.
 
-> 💡 **Tip**: The plugin can support its own color mapping. In this case, the color map property is not accessible. 
+> 💡 **Tip**: The plugin may support its own color mapping. In this case, the color map property is not accessible.
 
 #### 9.2.2. Font, Label and Line Width
 
-The font properties are only available for marker or point type analyses. By default, the font *Nunito Sans* with a size of 14 and a regular style is used. You can change the font according to the ones available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if some characters are not supported.
+Font properties are only available for marker or point type analyses. By default, the *Nunito Sans* font with a size of 14 and a regular style is used. You can change the font depending on those available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if certain characters are not supported.
 
 <p align="center">
 <img src="Images/section-track-properties.6.c-v1.0.5.png" width="196"/>
 </p>
 
-- Font Name: The name of the font used to render the labels of the markers or the  values of the points.
-- Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
-- Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
+- Font Name: The name of the font used to render marker labels or point values.
+- Font Style: The style of the font used to render marker labels or point values. The list of available styles depends on the font family (name).
+- Font Size: The size of the font used to render marker labels or point values. You can click on the text to textually set a size that would not be accessible in the list.
 
-* Line Width: The line width used to render the the segments and markers.
+* Line Width: The line thickness used to render segments and markers.
 
 Label properties are only available for marker analyses. They allow you to adapt the position of marker labels on the graphical representation.
 
@@ -682,76 +684,78 @@ Label properties are only available for marker analyses. They allow you to adapt
 <img src="Images/section-track-properties.6.d-v2.0.3.png" width="196"/>
 </p>
 
-- Label Justification: Vertical label anchoring (top, center, bottom). 
-- Label Position: Vertical positioning in pixels of labels in relation to the justification.
+- Label Justification: Vertical anchoring of the label (top, center, bottom).
+- Label Position: Vertical positioning in pixels of the labels relative to the justification.
 
 #### 9.2.3. Ranges
 
-The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axis for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
+The value range of point and column results can be adapted to optimize the graphical rendering. It corresponds to the vertical axis range for point rendering or to the color mapping for column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results, but it can also be modified manually.
 
 <p align="center">
 <img src="Images/section-track-properties.7-v1.3.2.png" width="196"/>
 </p>
 
-- Value Range Mode: Select the value range mode: default (if available), results, manual (selected automatically when the range doesn't match one of the two other mode)
-- Value Log. Scale: If the value range is frequency (the unit corresponds to hertz), this parameter allows you to use a logorithmic display scale centred on the note A 440Hertz.
-- Minimum Range Value: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
-- Maximum Range Value: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
-- Value Range Link: If the visible value range of the points corresponding to the vertical axis is linked to the the vertical axis of the group containing the track.  
-- Value Range: The visible value range for the column rendering (the range controls the color mapping).
-- Num. Bins: The maximum number of bins (of values) by column (the value is fixed). 
-- Bin Range Link: If the visible bin range of the columns corresponding to the vertical axis is linked to the the vertical axis of the group containing the track. 
+- Value Range Mode: Selects the value range mode: default (if available), results, manual (automatically selected when the range does not match one of the other two modes).
+- Value Log. Scale: If the value range is a frequency (the unit corresponds to hertz), this parameter allows you to use a logarithmic display scale centered on note A 440 Hertz.
+- Minimum Range Value: The minimum possible value for the results (the value differs from the visible value which corresponds to the zoom on the vertical axis for point rendering or to the color mapping for column rendering).
+- Maximum Range Value: The maximum possible value for the results (the value differs from the visible value which corresponds to the zoom on the vertical axis for point rendering or to the color mapping for column rendering).
+- Value Range Link: Whether the visible value range of points corresponding to the vertical axis is linked to the vertical axis of the group containing the track.
+- Value Range: The visible value range for column rendering (the range controls the color mapping).
+- Num. Bins: The maximum number of bins (of values) per column (the value is fixed).
+- Bin Range Link: Whether the visible bin range of columns corresponding to the vertical axis is linked to the vertical axis of the group containing the track.
   
 </br>
 <p align="center">
 <img src="Images/section-track-properties.8-v1.3.2.png" width="196"/>
 </p>
 
-- Grid: Prompt a dialog window to control the grid properties of the track
-  - Tick Reference Value: The reference value from which the ticks are distributed.
-  - Main Tick Interval: The number of small ticks between main ticks. 
-  - Power Base: The power base used to compute the tick distribution.
-  - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.  
+- Grid: Displays a dialog window to control the track grid properties
+  - Tick Reference Value: The reference value from which ticks are distributed.
+  - Main Tick Interval: The number of small ticks between main ticks.
+  - Power Base: The power base used to calculate the tick distribution.
+  - Ruler Mode: A set of presets for the main tick interval and power base that can be used to easily match an amplitude range, frequency range, etc.
 
 </br>
 <p align="center">
 <img src="Images/section-track-properties.9-v1.3.2.png" width="196"/>
 </p>
 
-- Extra Output Threshold: Some plug-ins support additional outputs. For these plug-ins, it is possible to define a threshold below which results are not displayed.
+- Extra Output Threshold: Some plugins support additional outputs. For these plugins, it is possible to define a threshold below which results are not displayed.
 
 #### 9.2.4. Visibility 
 
-- Show in the group overlay view: The toggle button allows to show or hide the track in the group overlay view. This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
+- Show in the group overlay view: The toggle button allows showing or hiding the track in the group's overlay view. This property can also be modified with the other groups via the [group properties](#10-group-properties) window.
 
-- Channel Layout: The channel layout button allows to show or hide channels of the analysis results. This channel layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section). This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
+- Channel Layout: The channel layout button allows showing or hiding the channels of analysis results. This channel layout is only graphical and does not change the audio analysis or the audio playback (please refer to the audio files layout section). This property can also be modified with the other groups via the [group properties](#10-group-properties) window.
 
 ### 9.3. OSC
 
-The OSC properties of a track allow you to retrieve the track's unique identifier used when sending OSC messages, by clicking on the corresponding button to copy it to the system clipboard. And enable or disable OSC support for the track.
+A track's OSC properties allow you to retrieve the unique ID of the track used when sending OSC messages, by clicking on the corresponding button to copy it to the system clipboard. And to enable or disable OSC support for the track.
 
 ### 9.4. Plugin
 
-The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
+The plugin section displays information about the plugin such as name, feature, maker, version, markers, category, description, and copyright.
 
 <div style="page-break-after: always;"></div>
 
 ## 10. Group properties
 
-The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel using the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
+The group properties panel allows you to access information about a group and modify the processor and graphical properties of its tracks. You can display a group's properties panel by using the corresponding entry in the dropdown menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-group-properties.1-v2.0.4.png" width="242"/>
 </p>
 
-The first entries correpond to exclusive properties of the group :
-- Name: The property defined the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
+The first entries correspond to exclusive properties of the group:
+- Name: The property defines the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
 - Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent.
-- Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay.  By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
+- Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay. By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
 
 The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
 > 💡 **Tip**: The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
+
+<div style="page-break-after: always;"></div>
 
 ## 11. Audio files layout
 
@@ -767,13 +771,13 @@ Select an audio file by clicking on its name in section (**S1**) to display its 
 
 ### 11.2. Audio files configuration
 
-The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated. 
+The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated.
 
-> 💡 **Tip**: If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).  
+> 💡 **Tip**: If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).
 
-An item of the audio files layout in section (**S1**) is defined by an index, an audio file and a channel configuration. Each item corresponds to a channel of the audio files layout. So different audio files can be assigned to the different channels of the audio files layout using for each a specific channel layout. 
+An item of the audio files layout in section (**S1**) is defined by an index, an audio file and a channel configuration. Each item corresponds to a channel of the audio files layout. So different audio files can be assigned to the different channels of the audio files layout using for each a specific channel layout.
 
-- Add items: Click on the `+` button to select one or several files using the file browser window or drag and drop one or several from the operating system's file browser. A new item is created for each channel of a new file,  (so adding a stereo audio file, creates two new items assigned to channels one and two of the audio file). ⚠️ Using audio files with different sample rates is not supported and may lead to invalid analysis results and poor audio playback, the app will warn you to avoid such issues.
+- Add items: Click on the `+` button to select one or several files using the file browser window or drag and drop one or several from the operating system's file browser. A new item is created for each channel of a new file (so adding a stereo audio file creates two new items assigned to channels one and two of the audio file). ⚠️ Using audio files with different sample rates is not supported and may lead to invalid analysis results and poor audio playback, the app will warn you to avoid such issues.
 
 - Delete items: Select one or several items (with the `Ctrl` or `⇧ Shift` keys) by clicking on the name part of the item and press the `Delete ⌫` key to remove items from the audio files layout.
 
@@ -782,9 +786,9 @@ An item of the audio files layout in section (**S1**) is defined by an index, an
 <img src="Images/section-audio-files-layout.2-v1.0.5.png" width="243"/>
 </p>
 
-- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item at the desired position.
 
-- Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*mono* sums all channels into one channel).  
+- Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*mono* sums all channels into one channel).
 <p align="center">
 <img src="Images/section-audio-files-layout.3-v1.0.5.png" width="243"/>
 </p>
@@ -795,33 +799,33 @@ An item of the audio files layout in section (**S1**) is defined by an index, an
 
 - Apply changes: If the audio files layout differs from the one currently used by the document, click the `Apply` text button in section (**S3**) to apply the new audio files layout to the document. Note that when the changes are applied to the document, the undo/redo mechanism can be used in the document to restore the previous state of the audio files layout.
 
-- Reset changes: If the audio files layout differs from the one currently used by the document, click the `Reset` text button in section (**S3**) to restore the audio files layout of the document. 
+- Reset changes: If the audio files layout differs from the one currently used by the document, click the `Reset` text button in section (**S3**) to restore the audio files layout of the document.
 
 ### 11.3. Audio files recovery
 
-If audio files cannot be found (files have been moved or deleted for example), the item names corresponding to the missing files are greyed out and a warning appears at the bottom of the (**S1**) section. 
+If audio files cannot be found (files have been moved or deleted for example), the item names corresponding to the missing files are greyed out and a warning appears at the bottom of the (**S1**) section.
 
 <p align="center">
 <img src="Images/section-audio-files-layout.4-v1.0.5.png" width="232"/>
 </p>
 
-Click on an item's name to display a dialog window asking you to recover the missing audio file using the operating system's file browser. 
+Click on an item's name to display a dialog window asking you to recover the missing audio file using the operating system's file browser.
 
 <div style="page-break-after: always;"></div>
 
 ## 12. Audio settings
 
-The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partiels → Audio Settings...` (Mac) or `Help → Audio Settings...` on (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
+The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partiels → Audio Settings...` (Mac) or `Help → Audio Settings...` (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-audio-settings.1-v1.0.6.png" width="255"/>
 </p>
 
-- Driver (**A1**): The dropdown menu allows to select the audio driver from those available on the computer (typically, CoreAudio on Mac, WASAPI, DirectSound, and ASIO on Windows, ALSA, and Jack on Linux).  
+- Driver (**A1**): The dropdown menu allows to select the audio driver from those available on the computer (typically, CoreAudio on Mac, WASAPI, DirectSound, and ASIO on Windows, ALSA, and Jack on Linux).
 - Output Device (**A2**): The dropdown menu allows to select the audio output device from those connected to the computer and supported by the driver.
 - Sample Rate (**A3**): The dropdown menu allows to select the sample rate from those supported by the output device. Higher sample rates increase the audio quality in high frequencies at the expense of increased CPU drain.
 - Buffer Size (**A4**): The dropdown menu (Mac) or the number entry (Windows & Linux) allows selecting the buffer size from those supported by the output device. Lower buffer size reduces the latency at the expense of increased CPU drain. If dropouts or crackle occur during playback, the buffer size should be increased.
-- Channels Routing (**A5**): The button matrix allows you to configure to which output channels the application's channels are sent. The number of application channels depends on the [audio files layout](#audio-files-layout). The number of output channels depends on the selected audio device. The matrix can be used to mute some channels of the audio files layout.
+- Channels Routing (**A5**): The button matrix allows you to configure to which output channels the application's channels are sent. The number of application channels depends on the [audio files layout](#11-audio-files-layout). The number of output channels depends on the selected audio device. The matrix can be used to mute some channels of the audio files layout.
 - Audio Device Panel (**A6**): The Audio Device Panel button opens the audio device panel of the manufacturer if supported by the audio driver.
 
 When changed, the audio settings are saved automatically on the computer and restored when reopening the application. The audio settings can be deleted manually to restore the default configuration when reopening the application. The audio settings are located:
@@ -831,11 +835,11 @@ When changed, the audio settings are saved automatically on the computer and res
 
 <div style="page-break-after: always;"></div>
 
-## 13. Plug-ins settings
+## 13. Plugins settings
 
-The application uses [Vamp plug-in technology](https://www.vamp-plugins.org/), an audio processing plug-in system that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London. 
+The application uses [Vamp plugin technology](https://www.vamp-plugins.org/), an audio processing plugin system that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London.
 
-At startup, the application scans for the Vamp plug-ins installed on your machine. You can control the folders in which the application should look using the Plugin Settings window that can be displayed via the main menu `Partiels → Plugins Settings...` (Mac) or `Help → Plugins Settings...` on (Linux/Windows). 
+At startup, the application scans for the Vamp plugins installed on your machine. You can control the folders in which the application should look using the Plugin Settings window that can be displayed via the main menu `Partiels → Plugins Settings...` (Mac) or `Help → Plugins Settings...` (Linux/Windows).
 
 <p align="center">
 <img src="Images/section-plug-in-settings.1-v1.0.6.png" width="302"/>
@@ -849,17 +853,17 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 - Move an item: Click on the index part of the item (**I1**), drag the item to a new position above or below and drop the item to reorder the audio file configuration and update the indices.
 
-- Copy an item: Click on the index part of the item (**I1**) with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+- Copy an item: Click on the index part of the item (**I1**) with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item at the desired position.
 
 - Modify the folder: Click on the `Change` button (**I3**) to display a file browser window and select another folder.
 
-- Reveal the folder: Click on the `Folder` button (**I4**) to reveal the folder in   operating system's file browser.
+- Reveal the folder: Click on the `Folder` button (**I4**) to reveal the folder in the operating system's file browser.
 
 - Undo changes: Use the undo key command `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
 - Redo changes: Use the redo key commands `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
-- Apply changes: Click on the `Apply` button (**P2**) to save the changes. If you modify the folders, you will be asked to restart the application to scan for plug-ins.
+- Apply changes: Click on the `Apply` button (**P2**) to save the changes. If you modify the folders, you will be asked to restart the application to scan for plugins.
 
 - Reset changes: Click on the `Reset` button (**P3**) to reset the settings to the saved state.
 
@@ -867,14 +871,14 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 - Use environment variable: Enable or disable the use of the `VAMP_PATH` environment variable to define the extra folders. On MacOS, the option is accessible by clicking on the `Option` button (**P5**). On Windows and Linux, a toggle button replaces the button.
 
-- Quarantine management: Control the quarantine management when plug-ins are not notarized. Either it "Keep the default system mechanism", the system will probably suggest you to delete the plug-ins in question. Or it "Attemp to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or it "Ignore quarantined libraries", the application will ignore the plug-ins.
+- Quarantine management: Control the quarantine management when plugins are not notarized. Either "Keep the default system mechanism", the system will probably suggest you delete the plugins in question. Or "Attempt to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or "Ignore quarantined libraries", the application will ignore the plugins.
 
 <div style="page-break-after: always;"></div>
 
 ## 14. Translations
 
 Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now only the French version is available).
-By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back with English).
+By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back to English).
 
 It is also possible to dynamically add new translations by adding the translation files in the directory:
 - Mac: `~/Library/Application Support/Ircam/Partiels/Translations`
@@ -887,6 +891,8 @@ If you want to create your own custom translations, you can get inspiration from
 - Windows: `C:\Program Files\Partiels\Translations` or `C:\Program Files (x86)\Partiels\Translations` on older devices (with `C:` corresponding to your installation drive)
 
 > 💡 **Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
+
+<div style="page-break-after: auto;"></div>
 
 ## 15. Command-line tools
 
