@@ -40,6 +40,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Key const& key);
     void from_json(nlohmann::json const& j, Key& key);
+    std::ostream& operator<<(std::ostream& os, Key const& key);
 
     //! @brief The description of the output of a plugin
     //! @details The structure describes the results returned by a plugin and how to interprete
@@ -63,6 +64,7 @@ namespace Plugin
     using Input = Output;
     void to_json(nlohmann::json& j, Output const& output);
     void from_json(nlohmann::json const& j, Output& output);
+    std::ostream& operator<<(std::ostream& os, Output const& output);
 
     struct OutputExtra
     : public Ive::PluginExtension::OutputExtraDescriptor
@@ -85,6 +87,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, OutputExtra const& outputExtra);
     void from_json(nlohmann::json const& j, OutputExtra& outputExtra);
+    std::ostream& operator<<(std::ostream& os, OutputExtra const& outputExtra);
 
     //! @brief The description of a parameter of a plugin
     //! @details The structure describes the parameters accepted by a plugin and how to
@@ -108,6 +111,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Parameter const& parameter);
     void from_json(nlohmann::json const& j, Parameter& parameter);
+    std::ostream& operator<<(std::ostream& os, Parameter const& parameter);
 
     //! @brief The state of a plugin
     //! @details The type of data returned by a plugin.
@@ -134,6 +138,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, State const& state);
     void from_json(nlohmann::json const& j, State& state);
+    std::ostream& operator<<(std::ostream& os, State const& state);
 
     //! @brief The full description of a plugin
     //! @details The structure contains all the informations to represent and to describe how to control
@@ -178,6 +183,7 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Description const& description);
     void from_json(nlohmann::json const& j, Description& description);
+    std::ostream& operator<<(std::ostream& os, Description const& description);
 
     Description loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key);
 

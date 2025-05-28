@@ -48,6 +48,13 @@ void Plugin::from_json(nlohmann::json const& j, Key& key)
     key.feature = j.value("feature", key.feature);
 }
 
+std::ostream& Plugin::operator<<(std::ostream& os, Key const& key)
+{
+    os << "identifier: " << key.identifier << "\n"
+       << "feature: " << key.feature << "\n";
+    return os;
+}
+
 void Plugin::to_json(nlohmann::json& j, Output const& output)
 {
     j["identifier"] = output.identifier;
@@ -86,6 +93,31 @@ void Plugin::from_json(nlohmann::json const& j, Output& output)
     output.hasDuration = j.value("hasDuration", output.hasDuration);
 }
 
+std::ostream& Plugin::operator<<(std::ostream& os, Output const& output)
+{
+    os << "identifier: " << output.identifier << "\n"
+       << "name: " << output.name << "\n"
+       << "description: " << output.description << "\n"
+       << "unit: " << output.unit << "\n"
+       << "hasFixedBinCount: " << output.hasFixedBinCount << "\n"
+       << "binCount: " << output.binCount << "\n"
+       << "binNames: ";
+    for(auto const& name : output.binNames)
+    {
+        os << name << ", ";
+    }
+    os << "\n";
+    os << "\nhasKnownExtents: " << output.hasKnownExtents << "\n"
+       << "minValue: " << output.minValue << "\n"
+       << "maxValue: " << output.maxValue << "\n"
+       << "isQuantized: " << output.isQuantized << "\n"
+       << "quantizeStep: " << output.quantizeStep << "\n"
+       << "sampleType: " << static_cast<int>(output.sampleType) << "\n"
+       << "sampleRate: " << output.sampleRate << "\n"
+       << "hasDuration: " << output.hasDuration;
+    return os;
+}
+
 void Plugin::to_json(nlohmann::json& j, OutputExtra const& outputExtra)
 {
     j["identifier"] = outputExtra.identifier;
@@ -110,6 +142,20 @@ void Plugin::from_json(nlohmann::json const& j, OutputExtra& outputExtra)
     outputExtra.maxValue = j.value("maxValue", outputExtra.maxValue);
     outputExtra.isQuantized = j.value("isQuantized", outputExtra.isQuantized);
     outputExtra.quantizeStep = j.value("quantizeStep", outputExtra.quantizeStep);
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, OutputExtra const& outputExtra)
+{
+    os << "identifier: " << outputExtra.identifier << "\n"
+       << "name: " << outputExtra.name << "\n"
+       << "description: " << outputExtra.description << "\n"
+       << "unit: " << outputExtra.unit << "\n"
+       << "hasKnownExtents: " << outputExtra.hasKnownExtents << "\n"
+       << "minValue: " << outputExtra.minValue << "\n"
+       << "maxValue: " << outputExtra.maxValue << "\n"
+       << "isQuantized: " << outputExtra.isQuantized << "\n"
+       << "quantizeStep: " << outputExtra.quantizeStep;
+    return os;
 }
 
 void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
@@ -140,6 +186,25 @@ void Plugin::from_json(nlohmann::json const& j, Parameter& parameter)
     parameter.valueNames = j.value("valueNames", parameter.valueNames);
 }
 
+std::ostream& Plugin::operator<<(std::ostream& os, Parameter const& parameter)
+{
+    os << "identifier: " << parameter.identifier << "\n"
+       << "name: " << parameter.name << "\n"
+       << "description: " << parameter.description << "\n"
+       << "unit: " << parameter.unit << "\n"
+       << "minValue: " << parameter.minValue << "\n"
+       << "maxValue: " << parameter.maxValue << "\n"
+       << "defaultValue: " << parameter.defaultValue << "\n"
+       << "isQuantized: " << parameter.isQuantized << "\n"
+       << "quantizeStep: " << parameter.quantizeStep << "\n"
+       << "valueNames:";
+    for(auto const& names : parameter.valueNames)
+    {
+        os << " " << names;
+    }
+    return os;
+}
+
 void Plugin::to_json(nlohmann::json& j, State const& state)
 {
     j["blockSize"] = state.blockSize;
@@ -154,6 +219,18 @@ void Plugin::from_json(nlohmann::json const& j, State& state)
     state.stepSize = j.value("stepSize", state.stepSize);
     state.windowType = j.value("windowType", state.windowType);
     state.parameters = j.value("parameters", state.parameters);
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, State const& state)
+{
+    os << "blockSize: " << state.blockSize << "\n"
+       << "stepSize: " << state.stepSize << "\n"
+       << "windowType: " << state.windowType << "\n";
+    for(auto const& parameter : state.parameters)
+    {
+        os << parameter.first << ": " << parameter.second << "\n";
+    }
+    return os;
 }
 
 void Plugin::to_json(nlohmann::json& j, Description const& description)
@@ -186,6 +263,32 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.extraOutputs = j.value("extraOutputs", description.extraOutputs);
     description.input = j.value("input", description.output);
     description.programs = j.value("programs", description.programs);
+}
+
+std::ostream& Plugin::operator<<(std::ostream& os, Description const& description)
+{
+    os << "name: " << description.name << "\n"
+       << "inputDomain: " << description.inputDomain << "\n"
+       << "maker: " << description.maker << "\n"
+       << "version: " << static_cast<int>(description.version) << "\n"
+       << "category: " << description.category << "\n"
+       << "details: " << description.details << "\n";
+    if(os.flags() & std::ios::scientific)
+    {
+        os << "\n[defaultState]\n"
+           << description.defaultState;
+
+        os << "\n[parameters]\n";
+        for(auto const& parameter : description.parameters)
+            os << parameter << "\n";
+
+        os << "[output]\n"
+           << description.output << "\n";
+
+        os << "\n[input]\n"
+           << description.input << "\n";
+    }
+    return os;
 }
 
 template <>
