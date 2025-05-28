@@ -1,11 +1,15 @@
 Partiels is software intended for the analysis of digital audio files. Partiels aims to offer a set of dynamic and ergonomic tools that meet the expectations of research in signal processing, musicology as well as compositional practices. Partiels allows to carry out, load, visualize, edit and export audio analyzes.
 
-Design & development by Pierre Guillot at IRCAM IMR Department.
-Copyright 2024 Ircam. All rights reserved.
+Partiels: Design, architecture and development by Pierre Guillot at IRCAM IMR department. 
+Contributions to development by Thomas Barbé and Nolan Dupont.
+Copyright 2025 IRCAM. All rights reserved.
 https://www.ircam.fr/
 
-Credits:
-Vamp plugin format is developed at the Centre for Digital Music, Queen Mary, University of London.
-ASIO is a registered trademark of Steinberg Media Technologies GmbH.
-Nunito Sans Font by The Nunito Project Authors.
-Icons made by Pierre Guillot.
+Dependencies:
+Vamp SDK by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
+Ircam Vamp Extension by Pierre Guillot at IRCAM IMR department.
+JUCE by Raw Material Software Limited.
+tinycolormap by Yuki Koyama.
+JSON C++ by Niels Lohmann.
+Magic Enum by Daniil Goncharov.
+ASIO SDK by Steinberg Media Technologies GmbH.
