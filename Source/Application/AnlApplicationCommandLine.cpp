@@ -315,6 +315,38 @@ Application::CommandLine::CommandLine()
                  fail(result.getErrorMessage());
              }
          }});
+    addCommand(
+        {"--plugin-description",
+         "--plugin-description [options]",
+         "Prints the plugin description.\n\t"
+         "--identifier Defines the identifier of the wanted plugin (required).\n\t"
+         "--feature Defines the feature of the wanted plugin (required).\n\t"
+         "--format Defines the output format (raw, json) (optional - default: raw).\n\t",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("--identifier");
+             args.failIfOptionIsMissing("--feature");
+             auto const identifier = args.getValueForOption("--identifier");
+             auto const feature = args.getValueForOption("--feature");
+             auto const format = args.containsOption("--format") ? args.getValueForOption("--format") : juce::String("raw");
+             if(format != "raw" && format != "json")
+             {
+                 fail("Invalid format '" + format + "'! Available formats are raw or json.");
+             }
+
+             auto const description = PluginList::Scanner::loadDescription({identifier.toStdString(), feature.toStdString()}, 44100.0);
+             if(format == "json")
+             {
+                 nlohmann::json json = description;
+                 std::cout << json.dump(4) << std::endl;
+             }
+             else
+             {
+                 auto const savedflag = std::cout.flags();
+                 std::cout << std::scientific << description << savedflag << std::endl;
+             }
+         }});
 }
 
 Application::CommandLine::~CommandLine()
