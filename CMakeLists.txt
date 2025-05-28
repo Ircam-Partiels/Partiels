@@ -340,10 +340,10 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins:\n
 
 set(IVP_URL "https://github.com/Ircam-Partiels/ircam-vamp-plugins")
 set(IVP_TAG "2.1.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Manuals.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugin-Manuals.zip)\n")
 
 set(VAX_TAG "1.0.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- VAX Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- VAX Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugins-v${VAX_TAG}-Manuals.zip)\n")
 
 set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
 set(CREPE_TAG "3.0.0")
