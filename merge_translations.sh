@@ -20,10 +20,12 @@ original_file=$1
 translated_file=$2
 output_file=$3
 
-content=$(paste -d '" = "' "$original_file" /dev/null /dev/null /dev/null /dev/null "$translated_file")
-content=$(echo "$content" | sed -e 's/^/\"/' | sed -e 's/$/\"/')
+content="language:
+countries:
 
-if [[ "$output_file" == ""]]
+"$(paste -d '" = "' "$original_file" /dev/null /dev/null /dev/null /dev/null "$translated_file" | sed -e 's/^/\"/' | sed -e 's/$/\"/')
+
+if [[ "$output_file" == "" ]]
 then
     echo "$content"
 else
