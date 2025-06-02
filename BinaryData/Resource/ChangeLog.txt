@@ -1,4 +1,14 @@
 
+- Imp: Manual, release notes and to credits
+- Add: Support for track layout in OSC and the Matrix Manager patch for Pd
+- Add: Translation menu and a rewrite of the translation system
+- Imp: Use the cmd/trl modifier key to force the loop to the global range, even if there are markers, when double-clicking the loop bar
+- Imp: Shutdown when used in CLI mode
+- Imp: Display of the time on the timeline ruler according to the duration of audio files
+- Fix: Duplication of the -h shortcut for the help command and the height option in favour of help
+
+v2.0.10
+
 - Imp: Drawing performance of the results table
 - Imp: Patches to plot matrices in Pd and Max 
 - Imp: Support for the Snail plugin colour map (IVE update)
