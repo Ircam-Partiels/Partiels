@@ -41,6 +41,7 @@ Source: "{#MyBinaryDir}\Templates\FactoryTemplate.ptldoc"; DestDir: "{app}\Templ
 Source: "{#MyBinaryDir}\Translations\*"; DestDir: "{app}\Translations"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\About.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\generate-translation-file.ps1"; DestDir: "{app}\Scripts"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

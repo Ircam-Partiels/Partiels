@@ -257,6 +257,7 @@ if(WIN32)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/generate-translation-file.ps1 DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Translations/ DESTINATION ${PARTIELS_PACKAGE_TEMPDIR}/Translations/)
 
     find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6" REQUIRED)
