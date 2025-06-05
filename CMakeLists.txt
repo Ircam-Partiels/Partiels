@@ -217,8 +217,10 @@ endif()
 
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
+    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
+    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
 else()
@@ -228,6 +230,7 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
+        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh "$<TARGET_FILE_DIR:Partiels>/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ "$<TARGET_FILE_DIR:Partiels>/Translations/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARTIELS_BINARYDATA_DIRECTORY}/Scripts/ "$<TARGET_FILE_DIR:Partiels>/Scripts/"
     )
