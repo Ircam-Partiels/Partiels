@@ -80,20 +80,24 @@ else
     if [ "$HasRootAccess" = "1" ]; then
     	mkdir -p $InstallPath
     	mkdir -p $InstallPath/PlugIns
+    	mkdir -p $InstallPath/Scripts
     	cp -r $ThisPath/Partiels $InstallPath/
     	cp -rf $ThisPath/PlugIns $InstallPath/
     	cp -rf $ThisPath/Templates $InstallPath/
     	cp -rf $ThisPath/Translations $InstallPath/
+    	cp -rf $ThisPath/generate-translation-file.sh $InstallPath/Scripts/
     	cp -f $ThisPath/icon.png $InstallPath/
         ln -sf $InstallPath/Partiels /usr/bin/Partiels
         cp -f $ThisPath/Partiels.desktop /usr/share/applications
     elif [ "$HasRootAccess" = "2" ]; then
     	sudo mkdir -p $InstallPath
     	sudo mkdir -p $InstallPath/PlugIns
+    	sudo mkdir -p $InstallPath/Scripts
     	sudo cp -r $ThisPath/Partiels $InstallPath/
     	sudo cp -rf $ThisPath/PlugIns $InstallPath/
     	sudo cp -rf $ThisPath/Templates $InstallPath/
     	sudo cp -rf $ThisPath/Translations $InstallPath/
+    	sudo cp -rf $ThisPath/generate-translation-file.sh $InstallPath/Scripts/
     	sudo cp -f $ThisPath/icon.png $InstallPath/
         sudo ln -sf $InstallPath/Partiels /usr/bin/Partiels
         sudo cp -f $ThisPath/Partiels.desktop /usr/share/applications
