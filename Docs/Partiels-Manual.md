@@ -56,6 +56,7 @@
 * [12. Audio settings](#12-audio-settings)
 * [13. Plugins settings](#13-plugins-settings)
 * [14. Translations](#14-translations)
+  * [14.1. Translation creation tools](#141-translation-creation-tools)
 * [15. Command-line tools](#15-command-line-tools)
 
 <div style="page-break-after: always;"></div>
@@ -914,6 +915,39 @@ If you want to create your own custom translations, you can get inspiration from
 > 💡 **Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
 
 <div style="page-break-after: auto;"></div>
+
+### 14.1. Translation creation tools
+
+Partiels also comes with a translation keys file and a script file that facilitates the creation of translation files.
+The translation keys file is already generated from the last build and can be found in one of the following locations:
+- Mac: `/Applications/Partiels.app/Resources/Scripts/TranslationKeys.txt`
+- Linux: `/opt/Partiels/Scripts/TranslationKeys.txt` or `~/opt/Partiels/Scripts/TranslationKeys.txt`
+- Windows: `C:\Program Files\Partiels\Scripts\TranslationKeys.txt` or `C:\Program Files (x86)\Partiels\Scripts\TranslationKeys.txt` on older devices (with `C:` corresponding to your installation drive)
+
+The script file is written in both `bash` and `PowerShell` and you can use either depending on your system.
+The `bash` version is packaged with the MacOS and Linux versions of Partiels, while the `PowerShell` version is packaged with the Windows version.
+The script file can be found here:
+- Mac: `/Applications/Partiels.app/Resources/Scripts/generate-translation-file.sh`
+- Linux: `/opt/Partiels/Scripts/generate-translation-file.sh` or `~/opt/Partiels/Scripts/generate-translation-file.sh`
+- Windows: `C:\Program Files\Partiels\Scripts\generate-translation-file.ps1` or `C:\Program Files (x86)\Partiels\Scripts\generate-translation-file.ps1` on older devices (with `C:` corresponding to your installation drive)
+
+Both scripts takes two inputs:
+1. the relative or absolute path to a file containing only the translation keys (phrases that need translations),
+2. the relative or absolute path to a file containing only the translations (phrases that are translated).
+
+The two files are merged line by line and each key and its translation are surrounded by quotes, and separated by an equal sign.
+Make sure that each line of the translations file correspond to the translation of the same line in the keys file.
+The output is send to the standard output, which by default is the terminal. You can however redirect the standard output to a file.
+
+Example using `bash`:
+```sh
+./generate-transation-file.sh my_keys.txt my_translations.txt > translation.txt
+```
+
+Example using `PowerShell`:
+```powershell
+.\generate-transation-file.ps1 -keys my_keys.txt -translations my_translations.txt > translation.txt
+```
 
 ## 15. Command-line tools
 
