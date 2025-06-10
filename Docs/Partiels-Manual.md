@@ -909,9 +909,49 @@ It is also possible to dynamically add new translations by adding the translatio
 If you want to create your own custom translations, you can get inspiration from the French translations. You can find it in one of the following directories depending on your system:
 - Mac: `/Applications/Partiels.app/Resources/Translations`
 - Linux: `/opt/Partiels/Translations` or `~/opt/Partiels/Translations`
-- Windows: `C:\Program Files\Partiels\Translations` or `C:\Program Files (x86)\Partiels\Translations` on older devices (with `C:` corresponding to your installation drive)
+- Windows: `C:\Program Files\Partiels\Translations` or `C:\Program Files (x86)\Partiels\Translations` (with `C:` corresponding to your installation drive)
 
 > 💡 **Tip**: If you create or improve some translations, do not hesitate to contribute to the project's translations on the [GitHub](https://github.com/Ircam-Partiels/Partiels) repository.
+
+**Translation creation tools**
+
+Partiels includes tools to help you create custom translations for the application:
+
+- The **translation keys file** contains all phrases that need translation and can be found at:
+  - Mac: `/Applications/Partiels.app/Resources/Scripts/TranslationKeys.txt`
+  - Linux: `/opt/Partiels/Scripts/TranslationKeys.txt` or `~/opt/Partiels/Scripts/TranslationKeys.txt`
+  - Windows: `C:\Program Files\Partiels\Scripts\TranslationKeys.txt` or `C:\Program Files (x86)\Partiels\Scripts\TranslationKeys.txt` (with `C:` corresponding to your installation drive)
+
+- The **generator script** helps create properly formatted translation files:
+  - Mac: `/Applications/Partiels.app/Resources/Scripts/generate-translation-file.sh`
+  - Linux: `/opt/Partiels/Scripts/generate-translation-file.sh` or `~/opt/Partiels/Scripts/generate-translation-file.sh`
+  - Windows: `C:\Program Files\Partiels\Scripts\generate-translation-file.ps1` or `C:\Program Files (x86)\Partiels\Scripts\generate-translation-file.ps1` (with `C:` corresponding to your installation drive)
+
+Follow these steps to create your own language file:
+
+1. **Translate the keys file**:
+  - Make a copy of the translation keys file
+  - Translate each line in your copy (manually and/or using a translation service), keeping the same line order
+  - Save this file (e.g., `SpanishTranslation.txt`)
+2. **Generate the translation file**:  
+  - *Mac/Linux (Bash):*
+    ```sh
+    ./generate-translation-file.sh TranslationKeys.txt TranslatedKeys.txt Language.txt
+    ```
+  - *Windows (PowerShell):*
+    ```powershell
+    .\generate-translation-file.ps1 -keys TranslationKeys.txt -translations TranslatedKeys.txt -output Language.txt
+    ```
+3. **Define the translation metadata**:
+  - Add the language name to the translation file: (e.g., `language: Spanish`)
+  - Add the applicable country codes: (e.g., `countries: es es-mx`)
+4. **Install your translation file**:
+  - Place the generated file in your user's translation directory as mentioned above
+  - Restart Partiels to see your translation appear in the language options
+
+> ⚠️ **Important**: Ensure each line in your translations file corresponds exactly to the same line in the keys file to maintain proper key-value pairing.
+
+> 💡 **Tip**: If you create a high-quality translation, consider contributing it to the Partiels project on [GitHub](https://github.com/Ircam-Partiels/Partiels) so other users can benefit from it.
 
 <div style="page-break-after: auto;"></div>
 
