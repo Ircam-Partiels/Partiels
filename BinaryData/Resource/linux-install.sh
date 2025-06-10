@@ -79,21 +79,21 @@ else
     fi
     if [ "$HasRootAccess" = "1" ]; then
     	mkdir -p $InstallPath
-    	mkdir -p $InstallPath/PlugIns
     	cp -r $ThisPath/Partiels $InstallPath/
     	cp -rf $ThisPath/PlugIns $InstallPath/
     	cp -rf $ThisPath/Templates $InstallPath/
     	cp -rf $ThisPath/Translations $InstallPath/
+    	cp -rf $ThisPath/Scripts $InstallPath/
     	cp -f $ThisPath/icon.png $InstallPath/
         ln -sf $InstallPath/Partiels /usr/bin/Partiels
         cp -f $ThisPath/Partiels.desktop /usr/share/applications
     elif [ "$HasRootAccess" = "2" ]; then
     	sudo mkdir -p $InstallPath
-    	sudo mkdir -p $InstallPath/PlugIns
     	sudo cp -r $ThisPath/Partiels $InstallPath/
     	sudo cp -rf $ThisPath/PlugIns $InstallPath/
     	sudo cp -rf $ThisPath/Templates $InstallPath/
     	sudo cp -rf $ThisPath/Translations $InstallPath/
+    	sudo cp -rf $ThisPath/Scripts $InstallPath/
     	sudo cp -f $ThisPath/icon.png $InstallPath/
         sudo ln -sf $InstallPath/Partiels /usr/bin/Partiels
         sudo cp -f $ThisPath/Partiels.desktop /usr/share/applications
