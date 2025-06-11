@@ -235,7 +235,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
     };
 
     auto const& selection = transportAcsr.getAttr<Transport::AttrType::selection>();
-    auto const isModeActive = mAccessor.getAttr<AttrType::drawingState>() && mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
+    auto const isModeActive = mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
     switch(commandID)
     {
         case CommandIDs::frameSelectAll:
@@ -307,7 +307,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         }
         case CommandIDs::frameToggleDrawing:
         {
-            result.setInfo(juce::translate("Toggle Edit Mode"), juce::translate("Switch between edition mode and navigation mode"), "Edit", 0);
+            result.setInfo(juce::translate("Toggle Drawing Mode"), juce::translate("Switch between drawing mode and navigation mode"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier, 0));
             result.setTicked(mAccessor.getAttr<AttrType::drawingState>());
             result.setActive(true);
