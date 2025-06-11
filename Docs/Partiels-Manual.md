@@ -300,12 +300,18 @@ Following editing, you can use the keyboard shortcuts `⌘ Cmd + Z` (Mac) or `Ct
 
 On the graphical plot, markers are represented by vertical lines on the timeline, points by a succession of segments - which can be interrupted - and vectors by a sonogram-like matrix.  Markers and points can be created, deleted, copied, pasted, and duplicated. Markers can also be moved over time.
 
-> 💡 **Tip**: Toggle the navigation and the edition modes with edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
-
 Interactions on a group's graphical plot modify the results of the group's reference track. The reference track can be accessed via the group's properties window or via the popup menu displayed by right-clicking on the graphical plot.
 
+Editing actions with the mouse require drawing mode:
+
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker track to create a new marker at the corresponding time.  
-- Click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a point track to create new points at the corresponding times and values.  
+- Click on a marker and drag it to move it to the desired time.
+- Click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a point track to create new points at the corresponding times and values. 
+
+> 💡 **Tip**: Toggle between navigation mode and drawing mode with the edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Drawing mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+
+Other editing actions can be performed at any time:
+
 - Press the `Delete ⌫` key to delete markers or points within the selected time range and on selected tracks and channels.
 - Use the keyboard shortcut `⌘ Cmd + C` (Mac) or `Ctrl + C` (Linux/Windows) to copy markers or points in the selected time range and on selected tracks and channels to the clipboard.
 - Use the keyboard shortcut `⌘ Cmd + X` (Mac) or `Ctrl + X` (Linux/Windows) to cut markers or points in the selected time range and on selected tracks and channels to the clipboard.
@@ -313,7 +319,6 @@ Interactions on a group's graphical plot modify the results of the group's refer
 - Use the keyboard shortcut `⌘ Cmd + D` (Mac) or `Ctrl + D` (Linux/Windows) to duplicate markers or points in the selected time range and on selected tracks and channels at the end of the selected time range.
 - Use the keyboard shortcut `i` to insert markers or points at the playhead position (if the playback is running) or at the start and end of the selected time range (if the playback is not running). 
 - Use the keyboard shortcut `b` to insert a point with no value (to break the continuity of the segments) at the playhead position (if the playback is running) or at the start of the selected time range (if the playback is not running). 
-- Click and drag a marker to move it to the desired time.
 - Double-click on a marker to display the results table, focusing on the selected element.
 
 ### 6.2. Table
@@ -503,7 +508,7 @@ When navigation mode is enabled, the group and track plots allow navigating and 
 - Click with `⇧ Shift` and drag to move the time and value ranges forward and backward.
 - Double-click with `⇧ Shift`, `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) or `⎇ Option` (Mac) or `Alt` (Linux/Windows) to zoom out to the entire time and value ranges.
 
-> 💡 **Tip**: Toggle between navigation mode and edit mode with the edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Edit mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
+> 💡 **Tip**: Toggle between navigation mode and drawing mode with the edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Drawing mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
 
 ### 8.3. Transport
 
