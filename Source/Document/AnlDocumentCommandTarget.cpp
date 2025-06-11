@@ -240,7 +240,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
     {
         case CommandIDs::frameSelectAll:
         {
-            result.setInfo(juce::translate("Select All"), juce::translate("Select all frame(s)"), "Select", 0);
+            result.setInfo(juce::translate("Select All Frames"), juce::translate("Select all frame(s)"), "Select", 0);
             result.defaultKeypresses.add(juce::KeyPress('a', juce::ModifierKeys::commandModifier, 0));
             result.setActive(isModeActive && timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() != selection);
             break;
