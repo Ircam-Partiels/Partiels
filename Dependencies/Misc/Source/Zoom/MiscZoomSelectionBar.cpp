@@ -122,6 +122,11 @@ void Zoom::SelectionBar::paint(juce::Graphics& g)
 
 void Zoom::SelectionBar::mouseMove(juce::MouseEvent const& event)
 {
+    if(!mActive || event.mods.isPopupMenu())
+    {
+        setMouseCursor(mDefaultMouseCursor);
+        return;
+    }
     auto constexpr pixelEpsilon = 2.0;
     auto const value = Tools::getScaledValueFromWidth(mAccessor, *this, event.x);
     auto const valueRange = mAccessor.getAttr<Zoom::AttrType::visibleRange>();
@@ -142,6 +147,10 @@ void Zoom::SelectionBar::mouseMove(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDown(juce::MouseEvent const& event)
 {
+    if(!mActive || event.mods.isPopupMenu())
+    {
+        return;
+    }
     auto constexpr pixelEpsilon = 2.0;
     auto const value = Tools::getScaledValueFromWidth(mAccessor, *this, event.x);
     auto const valueRange = mAccessor.getAttr<Zoom::AttrType::visibleRange>();
@@ -177,7 +186,7 @@ void Zoom::SelectionBar::mouseDown(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDrag(juce::MouseEvent const& event)
 {
-    if(!event.mouseWasDraggedSinceMouseDown())
+    if(!mActive || event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
     {
         return;
     }
@@ -191,7 +200,7 @@ void Zoom::SelectionBar::mouseDrag(juce::MouseEvent const& event)
 void Zoom::SelectionBar::mouseUp(juce::MouseEvent const& event)
 {
     setMouseCursor(mDefaultMouseCursor);
-    if(!event.mouseWasDraggedSinceMouseDown())
+    if(!mActive || event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
     {
         return;
     }
@@ -204,6 +213,10 @@ void Zoom::SelectionBar::mouseUp(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDoubleClick(juce::MouseEvent const& event)
 {
+    if(!mActive || event.mods.isPopupMenu())
+    {
+        return;
+    }
     auto const time = Tools::getScaledValueFromWidth(mAccessor, *this, event.x);
     if(onDoubleClick != nullptr)
     {
