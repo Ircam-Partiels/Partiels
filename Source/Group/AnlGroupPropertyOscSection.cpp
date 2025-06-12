@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 Group::PropertyOscSection::PropertyOscSection(Director& director)
 : mDirector(director)
-, mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle tracks' results to be sent via OSC."), [this](bool state)
+, mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle tracks' results to be sent via OSC"), [this](bool state)
                       {
                           mDirector.startAction(true);
                           for(auto& trackAcsr : Tools::getTrackAcsrs(mAccessor))
@@ -47,7 +47,7 @@ void Group::PropertyOscSection::updateContent()
         trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         sentViaOsc.insert(trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>());
     }
-    mPropertySendViaOsc.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("Toggle tracks' results to be sent via OSC."));
+    mPropertySendViaOsc.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("Toggle tracks' results to be sent via OSC"));
     mPropertySendViaOsc.setVisible(!sentViaOsc.empty());
     if(!sentViaOsc.empty())
     {

@@ -794,7 +794,7 @@ void Application::Instance::checkPluginsQuarantine()
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Some plugins may not be loaded due to macOS quarantine!"))
-                             .withMessage(juce::translate("Partiels can attemp to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
+                             .withMessage(juce::translate("Partiels can attempt to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
                              .withButton(juce::translate("Proceed"))
                              .withButton(juce::translate("Ignore"));
     mIsPluginListReady = false;

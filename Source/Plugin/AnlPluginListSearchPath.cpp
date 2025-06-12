@@ -25,7 +25,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::InfoIcon)
                                  .withTitle(juce::translate("The plugin search paths have been modified!"))
-                                 .withMessage(juce::translate("The pugin search paths have been modified. Restart the application in order to rescan the plugins."))
+                                 .withMessage(juce::translate("The plugin search paths have been modified. Restart the application in order to rescan the plugins."))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
     };
@@ -199,7 +199,7 @@ void PluginList::SearchPath::warnBeforeClosing()
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::QuestionIcon)
                                  .withTitle(juce::translate("Apply plugin settings modification?"))
-                                 .withMessage(juce::translate("The pugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                 .withMessage(juce::translate("The plugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
                                  .withButton(juce::translate("Apply"))
                                  .withButton(juce::translate("Discard"));
 

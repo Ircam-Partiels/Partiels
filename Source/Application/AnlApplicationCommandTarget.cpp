@@ -296,7 +296,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::transportToggleMagnetism:
         {
-            result.setInfo(juce::translate("Toggle Magnetize"), juce::translate("Enables or disables the magnetism mechanism with markers"), "Transport", 0);
+            result.setInfo(juce::translate("Toggle Magnetize"), juce::translate("Toggles the magnetism mechanism with markers"), "Transport", 0);
             result.setActive(!transportAcsr.getAttr<Transport::AttrType::markers>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::magnetize>());
         }

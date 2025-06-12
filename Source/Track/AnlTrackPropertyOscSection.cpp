@@ -14,7 +14,7 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
                               startTimer(500);
                           }
                       })
-, mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle track results to be sent via OSC."), [&](bool state)
+, mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle track results to be sent via OSC"), [&](bool state)
                       {
                           mDirector.startAction();
                           mAccessor.setAttr<AttrType::sendViaOsc>(state, NotificationType::synchronous);
