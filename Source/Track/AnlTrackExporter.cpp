@@ -51,7 +51,7 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
     auto xml = juce::XmlDocument::parse(file);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The file FLNAME cannot be parsed to preset format.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The preset file FLNAME cannot be parsed.").replace("FLNAME", file.getFullPathName()));
     }
     if(!xml->hasTagName("preset"))
     {
@@ -76,7 +76,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to preset format.").replace("ANLNAME", name));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed.").replace("ANLNAME", name));
     }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
