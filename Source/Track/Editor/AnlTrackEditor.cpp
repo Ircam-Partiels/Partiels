@@ -173,6 +173,12 @@ void Track::Editor::mouseDown(juce::MouseEvent const& event)
     {
         onMouseDown(event);
     }
+    else if(event.mods.isPopupMenu())
+    {
+        juce::PopupMenu menu;
+        fillPopupMenu(menu);
+        menu.showMenuAsync(juce::PopupMenu::Options().withDeletionCheck(*this));
+    }
 }
 
 void Track::Editor::mouseEnter(juce::MouseEvent const& event)
@@ -235,6 +241,35 @@ void Track::Editor::editionUpdated()
         mWriter.removeMouseListener(this);
         mNavigator.removeMouseListener(this);
     }
+}
+
+void Track::Editor::fillPopupMenu(juce::PopupMenu& menu)
+{
+    using CommandIDs = ApplicationCommandIDs;
+    menu.addCommandItem(&mApplicationCommandManager, CommandIDs::editUndo);
+    menu.addCommandItem(&mApplicationCommandManager, CommandIDs::editRedo);
+    menu.addSeparator();
+    // clang-format off
+    static auto constexpr commandIds =
+    {
+          CommandIDs::frameSelectAll
+        , CommandIDs::frameDelete
+        , CommandIDs::frameCopy
+        , CommandIDs::frameCut
+        , CommandIDs::framePaste
+        , CommandIDs::frameDuplicate
+        , CommandIDs::frameInsert
+        , CommandIDs::frameBreak
+    };
+    // clang-format on
+    for(auto const& commandId : commandIds)
+    {
+        menu.addCommandItem(&mApplicationCommandManager, commandId);
+    }
+    menu.addSeparator();
+    menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameSystemCopy);
+    menu.addSeparator();
+    menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameToggleDrawing);
 }
 
 ANALYSE_FILE_END
