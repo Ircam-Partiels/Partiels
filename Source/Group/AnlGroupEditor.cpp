@@ -211,6 +211,16 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
             mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
         }
     }
+
+    if(mTrackEditor != nullptr)
+    {
+        if(mainMenu.getNumItems() > 0)
+        {
+            mainMenu.addSeparator();
+        }
+        mTrackEditor->fillPopupMenu(mainMenu);
+    }
+
     auto const options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position)).withVisibleSubMenu(visibleItemId);
     mainMenu.showMenuAsync(options, [=](int result)
                            {
