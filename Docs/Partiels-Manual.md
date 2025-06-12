@@ -321,6 +321,8 @@ Other editing actions can be performed at any time:
 - Use the keyboard shortcut `b` to insert a point with no value (to break the continuity of the segments) at the playhead position (if the playback is running) or at the start of the selected time range (if the playback is not running). 
 - Double-click on a marker to display the results table, focusing on the selected element.
 
+> 💡 **Tip**: The actions are also available via the main menu `Frame`, or by right-clicking on the group or track graphical plots to display the popup menu.
+
 ### 6.2. Table
 
 The results table displays data in three columns, the first corresponding to time, the second to duration, and the third to the label for markers, the numerical value for points, and the list of values for vectors. Markers and points can be deleted, copied, pasted, and duplicated. The time, duration, label, or value of markers and points can be edited.
