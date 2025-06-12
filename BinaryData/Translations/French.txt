@@ -585,7 +585,7 @@ countries: fr be
 "Change track minimum and maximum values" = "Modifier les valeurs minimales et maximales de la piste"
 "Font Name" = "Nom de la police"
 "Audio file(s) cannot be found. Would you like to use the audio files layout panel to restore the file(s)?" = "Le(s) fichier(s) audio est(sont) introuvable(s). Souhaitez-vous utiliser le panneau de présentation des fichiers audio pour restaurer le(s) fichier(s) ?"
-"Select All" = "Sélectionner tout"
+"Select All Frames" = "Sélectionner toutes les trames"
 "Consolidate Document" = "Consolider le document"
 "Line Width" = "Largeur de ligne"
 "The number of bins." = "Le nombre de cellules."
