@@ -22,7 +22,7 @@ namespace Group
     private:
         void updateContent();
         void updateTrackEditor();
-        void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition());
+        void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition(), int visibleItemId = 0);
         juce::String getBubbleTooltip(juce::Point<int> const& pt);
 
         // clang-format off
