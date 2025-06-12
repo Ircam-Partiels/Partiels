@@ -248,9 +248,10 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         case CommandIDs::frameDelete:
         {
             result.setInfo(juce::translate("Delete Frame(s)"), juce::translate("Delete the selected frame(s)"), "Edit", 0);
-            result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
+#ifndef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
+#endif
             result.setActive(isModeActive && !isSelectionEmpty(selection));
             break;
         }
@@ -265,7 +266,9 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             result.setInfo(juce::translate("Cut Frame(s)"), juce::translate("Cut the selected frame(s) to the application clipboard"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('x', juce::ModifierKeys::commandModifier, 0));
+#ifndef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::shiftModifier, 0));
+#endif
             result.setActive(isModeActive && !isSelectionEmpty(selection));
             break;
         }
@@ -273,7 +276,9 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             result.setInfo(juce::translate("Paste Frame(s)"), juce::translate("Paste frame(s) from the application clipboard"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('v', juce::ModifierKeys::commandModifier, 0));
+#ifndef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::insertKey, juce::ModifierKeys::shiftModifier, 0));
+#endif
             result.setActive(isModeActive && !isClipboardEmpty());
             break;
         }
