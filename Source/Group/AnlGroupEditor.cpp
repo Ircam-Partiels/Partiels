@@ -108,7 +108,7 @@ void Group::Editor::updateTrackEditor()
     }
 }
 
-void Group::Editor::showPopupMenu(juce::Point<int> const position)
+void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleItemId)
 {
     auto const switchAction = [this](PopupMenuAction const nextAction)
     {
@@ -143,6 +143,9 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             }
         }
     };
+
+    auto static constexpr trackReferenceId = 100000;
+    auto static constexpr trackLayoutId = 200000;
     juce::PopupMenu mainMenu;
     {
         juce::PopupMenu subMenu;
@@ -151,7 +154,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
                         {
                             switchAction(PopupMenuAction::referenceTrack);
                             mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
-                            showPopupMenu(position);
+                            showPopupMenu(position, trackReferenceId);
                         });
         subMenu.addSeparator();
         auto const layout = mAccessor.getAttr<AttrType::layout>();
@@ -167,13 +170,13 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
                                 {
                                     switchAction(PopupMenuAction::referenceTrack);
                                     mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
-                                    showPopupMenu(position);
+                                    showPopupMenu(position, trackReferenceId);
                                 });
             }
         }
         if(subMenu.getNumItems() > 2)
         {
-            mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu);
+            mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu, true, nullptr, false, trackReferenceId);
         }
     }
     {
@@ -185,11 +188,11 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             },
             [=, this]()
             {
-                showPopupMenu(position);
+                showPopupMenu(position, trackLayoutId);
             });
         if(subMenu.getNumItems() > 0)
         {
-            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu);
+            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu, true, nullptr, false, trackLayoutId);
         }
     }
     {
@@ -208,7 +211,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position)
             mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
         }
     }
-    auto options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position));
+    auto const options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position)).withVisibleSubMenu(visibleItemId);
     mainMenu.showMenuAsync(options, [=](int result)
                            {
                                if(result == 0)
