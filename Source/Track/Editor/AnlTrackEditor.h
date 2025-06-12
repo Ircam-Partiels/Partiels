@@ -31,6 +31,8 @@ namespace Track
         void mouseEnter(juce::MouseEvent const& event) override;
         void mouseExit(juce::MouseEvent const& event) override;
 
+        void fillPopupMenu(juce::PopupMenu& menu);
+
     private:
         // ComponentSnapshot
         void takeSnapshot() override;
