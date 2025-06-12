@@ -146,6 +146,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
 
     auto static constexpr trackReferenceId = 100000;
     auto static constexpr trackLayoutId = 200000;
+    auto static constexpr channelLayoutId = 300000;
     juce::PopupMenu mainMenu;
     {
         juce::PopupMenu subMenu;
@@ -204,11 +205,11 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
             },
             [=, this]()
             {
-                showPopupMenu(position);
+                showPopupMenu(position, channelLayoutId);
             });
         if(subMenu.getNumItems() > 1)
         {
-            mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu);
+            mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu, true, nullptr, false, channelLayoutId);
         }
     }
 
