@@ -450,9 +450,9 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         }
         case CommandIDs::frameCut:
         {
-            undoManager.beginNewTransaction(juce::translate("Cut Frame(s)"));
             perform({CommandIDs::frameCopy});
             perform({CommandIDs::frameDelete});
+            undoManager.setCurrentTransactionName(juce::translate("Cut Frame(s)"));
             return true;
         }
         case CommandIDs::framePaste:
@@ -482,6 +482,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             perform({CommandIDs::frameCopy});
             transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboardRange.getEnd(), NotificationType::synchronous);
             perform({CommandIDs::framePaste});
+            undoManager.setCurrentTransactionName(juce::translate("Duplicate Frame(s)"));
             return true;
         }
         case CommandIDs::frameInsert:
