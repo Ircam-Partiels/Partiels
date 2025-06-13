@@ -10,6 +10,12 @@ namespace Track
     {
         namespace Modifier
         {
+            enum class DurationResetMode
+            {
+                toZero,
+                toFull
+            };
+
             juce::Range<double> getTimeRange(ChannelData const& data);
             std::optional<double> getTime(Accessor const& accessor, size_t const channel, size_t index);
 
@@ -22,6 +28,7 @@ namespace Track
             ChannelData duplicateFrames(ChannelData const& data, double const destinationTime);
             bool eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit);
             bool insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, juce::String const& commit);
+            bool resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double timeEnd, juce::String const& commit);
 
             template <int D, typename T>
             bool updateFrame(Accessor& accessor, size_t const channel, size_t const index, juce::String const& commit, T const fn)
@@ -133,6 +140,23 @@ namespace Track
             private:
                 ChannelData const mSavedData;
                 ChannelData const mChannelData;
+            };
+
+            class ActionResetDuration
+            : public ActionBase
+            {
+            public:
+                ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double timeEnd);
+                ~ActionResetDuration() override = default;
+
+                // juce::UndoableAction
+                bool perform() override;
+                bool undo() override;
+
+            private:
+                ChannelData const mSavedData;
+                DurationResetMode const mResetMode;
+                double const mEndTime;
             };
 
             class FocusRestorer
