@@ -315,6 +315,30 @@ Application::CommandLine::CommandLine()
                  fail(result.getErrorMessage());
              }
          }});
+    addCommand(
+        {"--plugin-list",
+         "--plugin-list [options]",
+         "Prints an exhaustive list of installed plugins.\n\t"
+         "--description Includes the descriptions of the plugins (optional).",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             auto const includeDescription = args.containsOption("--description");
+             PluginList::Scanner scanner;
+             auto const plugins = scanner.getPlugins(48000.0);
+             nlohmann::json json;
+             for(auto const& plugin : std::get<0>(plugins))
+             {
+                 nlohmann::json plug;
+                 plug["key"] = plugin.first;
+                 if(includeDescription)
+                 {
+                     plug["description"] = plugin.second;
+                 }
+                 json.push_back(plug);
+             }
+             std::cout << json.dump(4) << std::endl;
+         }});
 }
 
 Application::CommandLine::~CommandLine()
