@@ -347,6 +347,39 @@ Application::CommandLine::CommandLine()
                  std::cout << std::scientific << description << savedflag << std::endl;
              }
          }});
+    addCommand(
+        {"--plugin-list",
+         "--plugin-list",
+         "Prints an exaustive list of installed plugins.\n\t"
+         "--format Defines the output format (raw, json) (optional - default: raw).\n\t",
+         "",
+         []([[maybe_unused]] juce::ArgumentList const& args)
+         {
+             auto const format = args.containsOption("--format") ? args.getValueForOption("--format") : juce::String("raw");
+             if(format != "raw" && format != "json")
+             {
+                 fail("Invalid format '" + format + "'! Available formats are raw or json.");
+             }
+             PluginList::Scanner scanner;
+             auto const plugins = scanner.getPlugins(44100.0);
+             if(format == "json")
+             {
+                 nlohmann::json json;
+                 auto& plugins_json = json["plugins"];
+                 for(auto const& plugin : std::get<0>(plugins))
+                 {
+                     plugins_json.push_back({plugin.first});
+                 }
+                 std::cout << json.dump(4) << std::endl;
+             }
+             else
+             {
+                 for(auto const& plugin : std::get<0>(plugins))
+                 {
+                     std::cout << plugin.first << plugin.second << std::endl;
+                 }
+             }
+         }});
 }
 
 Application::CommandLine::~CommandLine()
