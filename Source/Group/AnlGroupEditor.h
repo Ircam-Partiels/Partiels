@@ -20,20 +20,20 @@ namespace Group
         void paint(juce::Graphics& g) override;
 
     private:
-        void updateContent();
-        void updateTrackEditor();
-        void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition(), int visibleItemId = 0);
-        juce::String getBubbleTooltip(juce::Point<int> const& pt);
-
         // clang-format off
-        enum class PopupMenuAction
+        enum class PopupSubmenuId : int
         {
-              none
-            , referenceTrack
-            , trackLayout
-            , channelLayout
+              none = 0
+            , trackReference = 100000
+            , trackLayout = 200000
+            , channelLayout = 300000
         };
         // clang-format on
+
+        void updateContent();
+        void updateTrackEditor();
+        void showPopupMenu(juce::Point<int> position = juce::Desktop::getMousePosition(), PopupSubmenuId visibleItemId = PopupSubmenuId::none);
+        juce::String getBubbleTooltip(juce::Point<int> const& pt);
 
         juce::Component& mContent;
         Director& mDirector;
@@ -46,7 +46,7 @@ namespace Group
         std::unique_ptr<Track::Editor> mTrackEditor;
         juce::String mTrackIdentifier;
         LayoutNotifier mLayoutNotifier;
-        PopupMenuAction mPopupMenuAction = PopupMenuAction::none;
+        PopupSubmenuId mPopupMenuAction = PopupSubmenuId::none;
     };
 } // namespace Group
 
