@@ -53,17 +53,22 @@ Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), 
 
 ## Compilation
 
-The compilation system is based on [CMake](https://cmake.org/), for example:
+The compilation system is based on [CMake](https://cmake.org/). On macOS, you can use the XCode generator with the command `cmake -G Xcode`. On Windows, you can use the Visual Studio generator with the command `cmake -G "Visual Studio 17 2022"`. On Linux, you can use the Makefile or Ninja generators with the commands `cmake -G "Unix Makefiles"` or `cmake -G Ninja`, using Clang or GCC as the compiler.
+
+Here is an example:
 
 ```
 git clone --recursive https://github.com/Ircam-Partiels/Partiels.git
 cd partiels
-cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug # Example using Ninja generator; use XCode on macOS or Visual Studio on Windows.
 cmake --build build
-ctest -C Debug -VV --test-dir build
+ctest -C Debug -VV --test-dir build # Note: The `-VV` flag is optional and provides verbose output for debugging purposes.
 ```
 
-> ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file `JUCE/docs/Linux Dependencies.md`.
+> ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file [JUCE/docs/Linux Dependencies.md](<JUCE/docs/Linux Dependencies.md>).
+
+> 💡 You can refer to the [GitHub Actions workflow](.github/workflows/ci.yml) for compilation instructions. 
+
 ## Credits
 
 **[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
