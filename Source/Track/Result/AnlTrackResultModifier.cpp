@@ -446,6 +446,69 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
     return false;
 }
 
+bool Track::Result::Modifier::resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double timeEnd, juce::String const& commit)
+{
+    auto const doReset = [&](auto& results)
+    {
+        using result_type = typename std::remove_reference<decltype(results)>::type;
+        using data_type = typename result_type::value_type::value_type;
+        if(channel >= results.size())
+        {
+            return false;
+        }
+        auto& channelFrames = results[channel];
+        auto const start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
+        auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
+        for(auto it = start; it != end; ++it)
+        {
+            if(mode == DurationResetMode::toZero)
+            {
+                std::get<1_z>(*it) = 0.0;
+            }
+            else if(mode == DurationResetMode::toFull)
+            {
+                auto const nextEnd = (std::next(it) != channelFrames.end()) ? std::get<0_z>(*std::next(it)) : timeEnd;
+                std::get<1_z>(*it) = nextEnd - std::get<0_z>(*it);
+            }
+        }
+        return true;
+    };
+
+    auto const getAccessAndParse = [&](auto& results)
+    {
+        auto const access = results.getWriteAccess();
+        if(!static_cast<bool>(access))
+        {
+            showAccessWarning();
+            return false;
+        }
+        if(auto markers = results.getMarkers())
+        {
+            return doReset(*markers);
+        }
+        if(auto points = results.getPoints())
+        {
+            return doReset(*points);
+        }
+        if(auto columns = results.getColumns())
+        {
+            return doReset(*columns);
+        }
+        return false;
+    };
+
+    auto results(accessor.getAttr<AttrType::results>());
+    if(getAccessAndParse(results))
+    {
+        auto file = accessor.getAttr<AttrType::file>();
+        file.commit = commit;
+        accessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        accessor.setAttr<AttrType::file>(file, NotificationType::synchronous);
+        return true;
+    }
+    return false;
+}
+
 Track::Result::Modifier::ActionBase::ActionBase(std::function<Accessor&()> fn, size_t const channel)
 : mGetAccessorFn(fn)
 , mChannel(channel)
@@ -520,6 +583,34 @@ bool Track::Result::Modifier::ActionPaste::undo()
     {
         MiscWeakAssert(false);
     }
+    return false;
+}
+
+Track::Result::Modifier::ActionResetDuration::ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double timeEnd)
+: ActionBase(fn, channel)
+, mSavedData(copyFrames(mGetAccessorFn(), channel, selection))
+, mResetMode(mode)
+, mEndTime(timeEnd)
+{
+}
+
+bool Track::Result::Modifier::ActionResetDuration::perform()
+{
+    if(resetFrameDurations(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mResetMode, mEndTime, mNewCommit))
+    {
+        return true;
+    }
+    MiscWeakAssert(false);
+    return false;
+}
+
+bool Track::Result::Modifier::ActionResetDuration::undo()
+{
+    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, mCurrentCommit))
+    {
+        return true;
+    }
+    MiscWeakAssert(false);
     return false;
 }
 
