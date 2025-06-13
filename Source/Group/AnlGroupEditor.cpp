@@ -108,36 +108,36 @@ void Group::Editor::updateTrackEditor()
     }
 }
 
-void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleItemId)
+void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuId visibleItemId)
 {
-    auto const switchAction = [this](PopupMenuAction const nextAction)
+    auto const switchAction = [this](PopupSubmenuId const nextAction)
     {
         auto const action = std::exchange(mPopupMenuAction, nextAction);
         if(action != nextAction)
         {
             switch(action)
             {
-                case PopupMenuAction::none:
+                case PopupSubmenuId::none:
                     break;
-                case PopupMenuAction::referenceTrack:
+                case PopupSubmenuId::trackReference:
                     mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
                     break;
-                case PopupMenuAction::trackLayout:
+                case PopupSubmenuId::trackLayout:
                     mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change track reference of the group"));
                     break;
-                case PopupMenuAction::channelLayout:
+                case PopupSubmenuId::channelLayout:
                     mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the channels of the group"));
                     break;
             }
             switch(nextAction)
             {
-                case PopupMenuAction::none:
+                case PopupSubmenuId::none:
                     break;
-                case PopupMenuAction::referenceTrack:
+                case PopupSubmenuId::trackReference:
                     mDirector.startAction(false);
                     break;
-                case PopupMenuAction::trackLayout:
-                case PopupMenuAction::channelLayout:
+                case PopupSubmenuId::trackLayout:
+                case PopupSubmenuId::channelLayout:
                     mDirector.startAction(true);
                     break;
             }
@@ -153,9 +153,9 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
         auto const referenceId = mAccessor.getAttr<AttrType::referenceid>();
         subMenu.addItem(juce::translate("Front"), !referenceId.isEmpty(), referenceId.isEmpty(), [=, this]()
                         {
-                            switchAction(PopupMenuAction::referenceTrack);
+                            switchAction(PopupSubmenuId::trackReference);
                             mAccessor.setAttr<AttrType::referenceid>(juce::String(), NotificationType::synchronous);
-                            showPopupMenu(position, trackReferenceId);
+                            showPopupMenu(position, PopupSubmenuId::trackReference);
                         });
         subMenu.addSeparator();
         auto const layout = mAccessor.getAttr<AttrType::layout>();
@@ -169,9 +169,9 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
                 auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
                 subMenu.addItem(itemLabel, trackId != referenceId, trackId == referenceId, [=, this]()
                                 {
-                                    switchAction(PopupMenuAction::referenceTrack);
+                                    switchAction(PopupSubmenuId::trackReference);
                                     mAccessor.setAttr<AttrType::referenceid>(trackId, NotificationType::synchronous);
-                                    showPopupMenu(position, trackReferenceId);
+                                    showPopupMenu(position, PopupSubmenuId::trackReference);
                                 });
             }
         }
@@ -185,11 +185,11 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
         Tools::fillMenuForTrackVisibility(
             mAccessor, subMenu, [=]()
             {
-                switchAction(PopupMenuAction::trackLayout);
+                switchAction(PopupSubmenuId::trackLayout);
             },
             [=, this]()
             {
-                showPopupMenu(position, trackLayoutId);
+                showPopupMenu(position, PopupSubmenuId::trackLayout);
             });
         if(subMenu.getNumItems() > 0)
         {
@@ -201,11 +201,11 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
         Tools::fillMenuForChannelVisibility(
             mAccessor, subMenu, [=]()
             {
-                switchAction(PopupMenuAction::channelLayout);
+                switchAction(PopupSubmenuId::channelLayout);
             },
             [=, this]()
             {
-                showPopupMenu(position, channelLayoutId);
+                showPopupMenu(position, PopupSubmenuId::channelLayout);
             });
         if(subMenu.getNumItems() > 1)
         {
@@ -222,12 +222,12 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, int visibleIt
         mTrackEditor->fillPopupMenu(mainMenu);
     }
 
-    auto const options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position)).withVisibleSubMenu(visibleItemId);
+    auto const options = juce::PopupMenu::Options().withDeletionCheck(*this).withTargetScreenArea(juce::Rectangle<int>{}.withPosition(position)).withVisibleSubMenu(static_cast<int>(visibleItemId));
     mainMenu.showMenuAsync(options, [=](int result)
                            {
                                if(result == 0)
                                {
-                                   switchAction(PopupMenuAction::none);
+                                   switchAction(PopupSubmenuId::none);
                                }
                            });
 }
