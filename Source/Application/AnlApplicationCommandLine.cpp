@@ -15,8 +15,7 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputfile> Defines the path of the output file (required).\n\t"
-         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
-         "",
+         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).",
          "",
          [this](juce::ArgumentList const& args)
          {
@@ -68,8 +67,7 @@ Application::CommandLine::CommandLine()
          "--description Includes the plugin description (optional with the json format).\n\t"
          "--frame <framesignature> Defines the 4 characters frame signature (required with the sdif format).\n\t"
          "--matrix <matrixsignature> Defines the 4 characters matrix signature (required with the sdif format).\n\t"
-         "--colname <string> Defines the name of the column (optional with the sdif format).\n\t"
-         "",
+         "--colname <string> Defines the name of the column (optional with the sdif format).",
          "",
          [this](juce::ArgumentList const& args)
          {
@@ -230,7 +228,7 @@ Application::CommandLine::CommandLine()
          "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t"
          "--unit <unit> The unit of the results (optional).\n\t"
          "--min <value> The minimum possible value of the results (required if max defined).\n\t"
-         "--max <value> The maximum possible value of the results (required if min defined).\n\t",
+         "--max <value> The maximum possible value of the results (required if min defined).",
          "",
          [](juce::ArgumentList const& args)
          {
@@ -289,8 +287,8 @@ Application::CommandLine::CommandLine()
          "--input|-i <jsonfile> Defines the path to the input JSON file to convert (required).\n\t"
          "--output|-o <sdiffile> Defines the path of the output SDIF file (required).\n\t"
          "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
-         "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t",
-         "--colname <name> The name of the column (optional).\n\t"
+         "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t"
+         "--colname <name> The name of the column (optional).",
          "",
          [](juce::ArgumentList const& args)
          {
