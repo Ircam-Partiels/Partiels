@@ -90,6 +90,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::frameDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::frameInsert);
         menu.addCommandItem(&commandManager, CommandIDs::frameBreak);
+        menu.addCommandItem(&commandManager, CommandIDs::frameResetDurationToZero);
+        menu.addCommandItem(&commandManager, CommandIDs::frameResetDurationToFull);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameSystemCopy);
         menu.addSeparator();
