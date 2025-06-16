@@ -76,6 +76,8 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
         , CommandIDs::frameDuplicate
         , CommandIDs::frameInsert
         , CommandIDs::frameBreak
+        , CommandIDs::frameResetDurationToZero
+        , CommandIDs::frameResetDurationToFull
         , CommandIDs::frameSystemCopy
         , CommandIDs::frameToggleDrawing
     });
@@ -301,6 +303,18 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setInfo(juce::translate("Break Frame(s)"), juce::translate("Break frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::noModifiers, 0));
             result.setActive(isModeActive && canBreak(selection.getStart()));
+            break;
+        }
+        case CommandIDs::frameResetDurationToZero:
+        {
+            result.setInfo(juce::translate("Reset Frame(s) duration to zero"), juce::translate("Reset the selected frame(s) duration to zero"), "Edit", 0);
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
+            break;
+        }
+        case CommandIDs::frameResetDurationToFull:
+        {
+            result.setInfo(juce::translate("Reset Frame(s) duration to full"), juce::translate("Reset the selected frame(s) duration to full"), "Edit", 0);
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
             break;
         }
         case CommandIDs::frameSystemCopy:
@@ -556,6 +570,39 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                 });
             undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            return true;
+        }
+        case CommandIDs::frameResetDurationToZero:
+        {
+            undoManager.beginNewTransaction(juce::translate("Reset Frame(s) duration to zero"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        undoManager.perform(std::make_unique<ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toZero, 0.0).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            return true;
+        }
+        case CommandIDs::frameResetDurationToFull:
+        {
+            undoManager.beginNewTransaction(juce::translate("Reset Frame(s) duration to full"));
+            auto const timeEnd = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        undoManager.perform(std::make_unique<ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
             return true;
         }
         case CommandIDs::frameSystemCopy:
