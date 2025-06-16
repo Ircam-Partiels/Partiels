@@ -260,6 +260,8 @@ void Track::Editor::fillPopupMenu(juce::PopupMenu& menu)
         , CommandIDs::frameDuplicate
         , CommandIDs::frameInsert
         , CommandIDs::frameBreak
+        , CommandIDs::frameResetDurationToZero
+        , CommandIDs::frameResetDurationToFull
     };
     // clang-format on
     for(auto const& commandId : commandIds)
