@@ -104,6 +104,8 @@ enum ApplicationCommandIDs : int
     , frameDuplicate
     , frameInsert
     , frameBreak
+    , frameResetDurationToZero
+    , frameResetDurationToFull
     , frameSystemCopy
     , frameToggleDrawing
     
