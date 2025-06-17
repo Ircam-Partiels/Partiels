@@ -1,0 +1,80 @@
+[
+    {
+        "key": {
+            "feature": "amplitude",
+            "identifier": "vamp-example-plugins:amplitudefollower"
+        }
+    },
+    {
+        "key": {
+            "feature": "acf",
+            "identifier": "vamp-example-plugins:fixedtempo"
+        }
+    },
+    {
+        "key": {
+            "feature": "candidates",
+            "identifier": "vamp-example-plugins:fixedtempo"
+        }
+    },
+    {
+        "key": {
+            "feature": "detectionfunction",
+            "identifier": "vamp-example-plugins:fixedtempo"
+        }
+    },
+    {
+        "key": {
+            "feature": "filtered_acf",
+            "identifier": "vamp-example-plugins:fixedtempo"
+        }
+    },
+    {
+        "key": {
+            "feature": "tempo",
+            "identifier": "vamp-example-plugins:fixedtempo"
+        }
+    },
+    {
+        "key": {
+            "feature": "detectionfunction",
+            "identifier": "vamp-example-plugins:percussiononsets"
+        }
+    },
+    {
+        "key": {
+            "feature": "onsets",
+            "identifier": "vamp-example-plugins:percussiononsets"
+        }
+    },
+    {
+        "key": {
+            "feature": "powerspectrum",
+            "identifier": "vamp-example-plugins:powerspectrum"
+        }
+    },
+    {
+        "key": {
+            "feature": "linearcentroid",
+            "identifier": "vamp-example-plugins:spectralcentroid"
+        }
+    },
+    {
+        "key": {
+            "feature": "logcentroid",
+            "identifier": "vamp-example-plugins:spectralcentroid"
+        }
+    },
+    {
+        "key": {
+            "feature": "counts",
+            "identifier": "vamp-example-plugins:zerocrossing"
+        }
+    },
+    {
+        "key": {
+            "feature": "zerocrossings",
+            "identifier": "vamp-example-plugins:zerocrossing"
+        }
+    }
+]
