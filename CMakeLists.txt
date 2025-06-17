@@ -427,6 +427,21 @@ set_tests_properties(CompareFilesSV PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_F
 add_test(NAME CompareFilesFailure COMMAND Partiels --compare-files ${EXPECTED_CSV_FILE_FAILURE} ${GENERATED_CSV_FILE})
 set_tests_properties(CompareFilesFailure PROPERTIES WILL_FAIL TRUE)
 
+file(READ "${TESTS_DIRECTORY}/PluginList.json" PLUGIN_LIST_CONTENT)
+string(REPLACE "\[" "\\[" PLUGIN_LIST_CONTENT "${PLUGIN_LIST_CONTENT}")
+string(REPLACE "\]" "\\]" PLUGIN_LIST_CONTENT "${PLUGIN_LIST_CONTENT}")
+add_test(NAME PluginList COMMAND Partiels --plugin-list)
+set_tests_properties(PluginList PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+set_tests_properties(PluginList PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_CONTENT}")
+
+file(READ "${TESTS_DIRECTORY}/PluginListDescription.json" PLUGIN_LIST_DESCRIPTION_CONTENT)
+string(REPLACE "\[" "\\[" PLUGIN_LIST_DESCRIPTION_CONTENT "${PLUGIN_LIST_DESCRIPTION_CONTENT}")
+string(REPLACE "\]" "\\]" PLUGIN_LIST_DESCRIPTION_CONTENT "${PLUGIN_LIST_DESCRIPTION_CONTENT}")
+string(REGEX REPLACE "\"details\":.*" "\"details\":.*" PLUGIN_LIST_DESCRIPTION_CONTENT "${PLUGIN_LIST_DESCRIPTION_CONTENT}")
+add_test(NAME PluginListDescription COMMAND Partiels --plugin-list --description)
+set_tests_properties(PluginListDescription PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+set_tests_properties(PluginListDescription PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_DESCRIPTION_CONTENT}")
+
 add_test(NAME ConvToSdifMarkers COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Markers.json --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Markers.sdif --frame=1MKR --matrix=1MKR)
 add_test(NAME ConvFromSdifMarkers COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Markers.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Markers.json --frame=1MKR --matrix=1MKR)
 set_tests_properties(ConvFromSdifMarkers PROPERTIES DEPENDS "ConvToSdifMarkers")
