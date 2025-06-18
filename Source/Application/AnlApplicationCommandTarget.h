@@ -35,7 +35,9 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
+        Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
         std::unique_ptr<juce::FileChooser> mFileChooser;
+        Document::Tools::Clipboard mClipboard;
 
         JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
     };
