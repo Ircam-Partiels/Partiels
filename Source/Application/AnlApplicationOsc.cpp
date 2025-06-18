@@ -352,6 +352,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
 {
     mSender.addChangeListener(this);
 
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
     auto const documentAcsrUpdate = [this]([[maybe_unused]] Document::Accessor const& documentAcsr, Document::AcsrType type, [[maybe_unused]] auto const& acsr)
     {
         if(type == Document::AcsrType::tracks)
@@ -361,7 +362,6 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
     };
     mDocumentListener.onAccessorInserted = documentAcsrUpdate;
     mDocumentListener.onAccessorErased = documentAcsrUpdate;
-    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
     synchronize(mSender.isConnected());
 }
 
@@ -381,51 +381,12 @@ void Application::Osc::TrackDispatcher::changeListenerCallback([[maybe_unused]] 
 
 void Application::Osc::TrackDispatcher::synchronize(bool connect)
 {
-    auto const zoomAttrChanged = [this](Zoom::Accessor const& accessor, Zoom::AttrType attribute)
+    mZoomListeners.clear();
+    mTrackListeners.clear();
+    if(!connect)
     {
-        switch(attribute)
-        {
-            case Zoom::AttrType::minimumLength:
-            case Zoom::AttrType::anchor:
-                break;
-            case Zoom::AttrType::globalRange:
-            case Zoom::AttrType::visibleRange:
-            {
-                auto const getZoomInfo = [&]() -> std::tuple<juce::String, Track::FrameType>
-                {
-                    auto const& documentAcsr = Instance::get().getDocumentAccessor();
-                    for(auto const& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
-                    {
-                        if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>()))
-                        {
-                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::value};
-                        }
-                        if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>()))
-                        {
-                            return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::vector};
-                        }
-                    }
-                    return {"", Track::FrameType::label};
-                };
-
-                auto const info = getZoomInfo();
-                if(std::get<0>(info).isNotEmpty())
-                {
-                    juce::OSCMessage message("/" + std::get<0>(info));
-                    message.addString("zoom");
-                    message.addString(std::get<1>(info) == Track::FrameType::vector ? "bin" : "value");
-                    auto const globalRange = accessor.getAttr<Zoom::AttrType::globalRange>();
-                    message.addFloat32(static_cast<float>(globalRange.getStart()));
-                    message.addFloat32(static_cast<float>(globalRange.getEnd()));
-                    auto const visibleRange = accessor.getAttr<Zoom::AttrType::visibleRange>();
-                    message.addFloat32(static_cast<float>(visibleRange.getStart()));
-                    message.addFloat32(static_cast<float>(visibleRange.getEnd()));
-                    mSender.send(message);
-                }
-                break;
-            }
-        }
-    };
+        return;
+    }
 
     auto const trackAttrChanged = [this](Track::Accessor const& accessor, Track::AttrType attribute)
     {
@@ -505,7 +466,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                 if(Document::Tools::hasTrackAcsr(documentAcsr, trackId))
                 {
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
-                    if(connect && trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
+                    if(trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
                     {
                         if(Track::Tools::getFrameType(trackAcsr).value_or(Track::FrameType::label) == Track::FrameType::vector)
                         {
@@ -518,11 +479,62 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
     }
     mSender.send(message);
 
-    mZoomListeners.clear();
-    mTrackListeners.clear();
+    auto const addZoomListener = [this](Zoom::Accessor& zoomAcsr)
+    {
+        auto const zoomAttrChanged = [this](Zoom::Accessor const& accessor, Zoom::AttrType attribute)
+        {
+            switch(attribute)
+            {
+                case Zoom::AttrType::minimumLength:
+                case Zoom::AttrType::anchor:
+                    break;
+                case Zoom::AttrType::globalRange:
+                case Zoom::AttrType::visibleRange:
+                {
+                    auto const info = std::invoke([&]() -> std::tuple<juce::String, Track::FrameType>
+                                                  {
+                                                      for(auto const& trackAcsr : Instance::get().getDocumentAccessor().getAcsrs<Document::AcsrType::tracks>())
+                                                      {
+                                                          if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>()))
+                                                          {
+                                                              return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::value};
+                                                          }
+                                                          if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>()))
+                                                          {
+                                                              return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::vector};
+                                                          }
+                                                      }
+                                                      return {"", Track::FrameType::label};
+                                                  });
+                    if(std::get<0>(info).isNotEmpty())
+                    {
+                        juce::OSCMessage oscMessage("/" + std::get<0>(info));
+                        oscMessage.addString("zoom");
+                        oscMessage.addString(std::get<1>(info) == Track::FrameType::vector ? "bin" : "value");
+                        auto const globalRange = accessor.getAttr<Zoom::AttrType::globalRange>();
+                        oscMessage.addFloat32(static_cast<float>(globalRange.getStart()));
+                        oscMessage.addFloat32(static_cast<float>(globalRange.getEnd()));
+                        auto const visibleRange = accessor.getAttr<Zoom::AttrType::visibleRange>();
+                        oscMessage.addFloat32(static_cast<float>(visibleRange.getStart()));
+                        oscMessage.addFloat32(static_cast<float>(visibleRange.getEnd()));
+                        mSender.send(oscMessage);
+                    }
+                    break;
+                }
+            }
+        };
+
+        auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), zoomAcsr, zoomAttrChanged);
+        MiscWeakAssert(valueZoomListener != nullptr);
+        if(valueZoomListener != nullptr)
+        {
+            mZoomListeners.push_back(std::move(valueZoomListener));
+        }
+    };
+
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
     {
-        auto const trackConnected = connect && trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>() && Document::Tools::hasItem(documentAcsr, trackAcsr.get().getAttr<Track::AttrType::identifier>());
+        auto const trackConnected = trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>() && Document::Tools::hasItem(documentAcsr, trackAcsr.get().getAttr<Track::AttrType::identifier>());
         if(trackConnected)
         {
             auto trackListener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), trackAttrChanged);
@@ -536,28 +548,13 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                         break;
                     case Track::FrameType::value:
                     {
-                        auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>(), zoomAttrChanged);
-                        MiscWeakAssert(valueZoomListener != nullptr);
-                        if(valueZoomListener != nullptr)
-                        {
-                            mZoomListeners.push_back(std::move(valueZoomListener));
-                        }
+                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
                         break;
                     }
                     case Track::FrameType::vector:
                     {
-                        auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>(), zoomAttrChanged);
-                        MiscWeakAssert(valueZoomListener != nullptr);
-                        if(valueZoomListener != nullptr)
-                        {
-                            mZoomListeners.push_back(std::move(valueZoomListener));
-                        }
-                        auto binZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get().getAcsr<Track::AcsrType::binZoom>(), zoomAttrChanged);
-                        MiscWeakAssert(binZoomListener != nullptr);
-                        if(binZoomListener != nullptr)
-                        {
-                            mZoomListeners.push_back(std::move(binZoomListener));
-                        }
+                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
+                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>());
                         break;
                     }
                 }
