@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Document/AnlDocumentFileBased.h"
+#include "../Document/AnlDocumentTools.h"
 #include "../Plugin/AnlPluginListScanner.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlApplicationExporter.h"
