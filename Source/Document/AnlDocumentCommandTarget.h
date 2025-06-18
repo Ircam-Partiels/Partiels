@@ -21,15 +21,12 @@ namespace Document
 
     private:
         using CommandIDs = ApplicationCommandIDs;
-        using ChannelData = Track::Result::ChannelData;
-        using MultiChannelData = std::map<size_t, ChannelData>;
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-        std::map<juce::String, MultiChannelData> mClipboardData;
-        juce::Range<double> mClipboardRange;
+        Tools::Clipboard mClipboard;
 
     protected:
         juce::ApplicationCommandManager& mCommandManager;
