@@ -203,57 +203,57 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("New..."), juce::translate("Creates a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.isEquivalentTo(Instance::get().getDocumentFileBased().getDefaultAccessor()));
+            break;
         }
-        break;
         case CommandIDs::documentOpen:
         {
             result.setInfo(juce::translate("Open..."), juce::translate("Opens a document or audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('o', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentSave:
         {
             result.setInfo(juce::translate("Save"), juce::translate("Saves the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentDuplicate:
         {
             result.setInfo(juce::translate("Duplicate..."), juce::translate("Saves the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentConsolidate:
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidates the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::documentExport:
         {
             result.setInfo(juce::translate("Export..."), juce::translate("Exports the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
+            break;
         }
-        break;
         case CommandIDs::documentImport:
         {
             result.setInfo(juce::translate("Import..."), juce::translate("Imports to the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::documentBatch:
         {
             result.setInfo(juce::translate("Batch..."), juce::translate("Batch processes a set of audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
+            break;
         }
-        break;
 
         case CommandIDs::editUndo:
         {
@@ -262,8 +262,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Undo") + actionName, juce::translate("Undoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
             result.setActive(undoManager.canUndo());
+            break;
         }
-        break;
         case CommandIDs::editRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
@@ -271,23 +271,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Redo") + actionName, juce::translate("Redoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(undoManager.canRedo());
+            break;
         }
-        break;
 
         case CommandIDs::editSelectNextItem:
         {
             result.setInfo(juce::translate("Select Next Item"), juce::translate("Select Next Item"), "Select", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::tabKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::editNewGroup:
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::editNewTrack:
         {
             auto const* window = Instance::get().getWindow();
@@ -295,8 +295,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(hidePanel ? juce::translate("Hide New Track Panel") : juce::translate("Show New Track Panel"), juce::translate("Shows or hides the list of plugins to add a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::editRemoveItem:
         {
             auto selectedItems = Document::Selection::getItems(documentAcsr);
@@ -317,14 +317,14 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #ifndef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
 #endif
+            break;
         }
-        break;
         case CommandIDs::editLoadTemplate:
         {
             result.setInfo(juce::translate("Load Template..."), juce::translate("Loads a template"), "Edit", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
 
         case CommandIDs::frameSelectAll:
         {
@@ -425,61 +425,61 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enables or disables the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleStopAtLoopEnd:
         {
             result.setInfo(juce::translate("Toggle Stop Playback at Loop End"), juce::translate("Enables or disables the stop playback at the end of loop if repeat disabled"), "Transport", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleMagnetism:
         {
             result.setInfo(juce::translate("Toggle Magnetize"), juce::translate("Toggles the magnetism mechanism with markers"), "Transport", 0);
             result.setActive(!transportAcsr.getAttr<Transport::AttrType::markers>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::magnetize>());
+            break;
         }
-        break;
         case CommandIDs::transportRewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Moves the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             result.setActive(hasReader && Transport::Tools::canRewindPlayhead(transportAcsr));
+            break;
         }
-        break;
         case CommandIDs::transportMovePlayHeadBackward:
         {
             result.setInfo(juce::translate("Move the Playhead Backward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::leftKey, juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             result.setActive(hasReader && Transport::Tools::canMovePlayheadBackward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+            break;
         }
-        break;
         case CommandIDs::transportMovePlayHeadForward:
         {
             result.setInfo(juce::translate("Move the Playhead Forward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::rightKey, juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             result.setActive(hasReader && Transport::Tools::canMovePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+            break;
         }
-        break;
         case CommandIDs::transportOscConnected:
         {
             result.setInfo(juce::translate("OSC connected"), juce::translate("State of the OSC connection"), "Transport", 0);
             result.setTicked(Instance::get().getOscSender().isConnected());
             result.setActive(true);
+            break;
         }
-        break;
 
         case CommandIDs::viewTimeZoomIn:
         {
@@ -487,16 +487,16 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Time Zoom In"), juce::translate("Zooms in on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(Zoom::Tools::canZoomIn(zoomAcsr));
+            break;
         }
-        break;
         case CommandIDs::viewTimeZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Time Zoom Out"), juce::translate("Zooms out on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(Zoom::Tools::canZoomOut(zoomAcsr));
+            break;
         }
-        break;
         case CommandIDs::viewVerticalZoomIn:
         {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
@@ -511,8 +511,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Vertical Zoom In"), juce::translate("Zooms in on the vertical range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(canZoom);
+            break;
         }
-        break;
         case CommandIDs::viewVerticalZoomOut:
         {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
@@ -527,23 +527,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Vertical Zoom Out"), juce::translate("Zooms out on the vertical range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(canZoom);
+            break;
         }
-        break;
         case CommandIDs::viewTimeZoomAnchorOnPlayhead:
         {
             result.setInfo(juce::translate("Anchor Time Zoom on Playhead"), juce::translate("Anchors the time zoom on the start playhead"), "View", 0);
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::timeZoomAnchorOnPlayhead>());
+            break;
         }
-        break;
         case CommandIDs::viewInfoBubble:
         {
             result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggles display of the information bubble"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
+            break;
         }
-        break;
         case CommandIDs::viewShowItemProperties:
         {
             auto const groups = Document::Selection::getGroups(documentAcsr);
@@ -562,8 +562,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             }
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
             result.setActive(!groups.empty() || !tracks.empty());
+            break;
         }
-        break;
 
         case CommandIDs::helpOpenAudioSettings:
         {
@@ -574,8 +574,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Shows the audio settings panel"), "Help", 0);
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier, 0));
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenOscSettings:
         {
 #if JUCE_MAC
@@ -583,8 +583,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("OSC Settings..."), juce::translate("Shows the OSC settings panel"), "Help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenPluginSettings:
         {
 #if JUCE_MAC
@@ -592,8 +592,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenAbout:
         {
 #if JUCE_MAC
@@ -601,39 +601,39 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("About Partiels"), juce::translate("Shows the information about the application"), "help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenProjectPage:
         {
             result.setInfo(juce::translate("Proceed to Project Page"), juce::translate("Opens the project page of the Ircam Forum in a web browser"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpAutoUpdate:
         {
             result.setInfo(juce::translate("Automatic Check for New Version"), juce::translate("Toggles the automatic check for a new version"), "Help", 0);
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>());
+            break;
         }
-        break;
         case CommandIDs::helpCheckForUpdate:
         {
             result.setInfo(juce::translate("Check for New Version"), juce::translate("Checks for a new version"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpOpenKeyMappings:
         {
             result.setInfo(juce::translate("Key Mappings..."), juce::translate("Shows the key mappings panel"), "Application", 0);
             result.setActive(true);
+            break;
         }
-        break;
     }
 
     Instance::get().getCommandInfo(commandID, result);
