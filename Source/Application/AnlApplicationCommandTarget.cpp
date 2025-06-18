@@ -1,5 +1,4 @@
 #include "AnlApplicationCommandTarget.h"
-#include "../Document/AnlDocumentCommandTarget.h"
 #include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
 #include "../Track/AnlTrackExporter.h"

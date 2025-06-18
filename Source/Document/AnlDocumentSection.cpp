@@ -27,8 +27,7 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
 }
 
 Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
-: CommandTarget(director, commandManager)
-, mDirector(director)
+: mDirector(director)
 , mApplicationCommandManager(commandManager)
 , mHeader(director, commandManager)
 , mGridButton(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize))
@@ -366,12 +365,10 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAccessor.addReceiver(mReceiver);
     mApplicationCommandManager.addListener(this);
     applicationCommandListChanged();
-    addKeyListener(mCommandManager.getKeyMappings());
 }
 
 Document::Section::~Section()
 {
-    removeKeyListener(mCommandManager.getKeyMappings());
     mApplicationCommandManager.removeListener(this);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
@@ -765,11 +762,6 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
 void Document::Section::dragOperationEnded([[maybe_unused]] juce::DragAndDropTarget::SourceDetails const& details)
 {
     handleAsyncUpdate();
-}
-
-juce::ApplicationCommandTarget* Document::Section::getNextCommandTarget()
-{
-    return findFirstTargetParentComponent();
 }
 
 void Document::Section::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
