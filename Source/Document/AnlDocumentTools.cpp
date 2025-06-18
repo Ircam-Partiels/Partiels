@@ -1,5 +1,7 @@
 #include "AnlDocumentTools.h"
 #include "../Group/AnlGroupTools.h"
+#include "../Track/AnlTrackTools.h"
+#include "../Track/Result/AnlTrackResultModifier.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -411,6 +413,173 @@ void Document::Tools::resizeItems(Accessor& accessor, bool preserveRatio, int pa
     }
 }
 
+bool Document::Tools::containsFrames(Accessor const& accessor, juce::Range<double> const& selection)
+{
+    for(auto const& trackAcsr : accessor.getAcsrs<AcsrType::tracks>())
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+        {
+            auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::containFrames(trackAcsr.get(), channel, selection))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+        {
+            auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::containFrames(referenceTrack.value().get(), channel, selection))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool Document::Tools::matchesFrame(Accessor const& accessor, double const time)
+{
+    for(auto const& trackAcsr : accessor.getAcsrs<AcsrType::tracks>())
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+        {
+            auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::matchFrame(trackAcsr.get(), channel, time))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+        {
+            auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::matchFrame(referenceTrack.value().get(), channel, time))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool Document::Tools::canBreak(Accessor const& accessor, double time)
+{
+    for(auto const& trackAcsr : accessor.getAcsrs<AcsrType::tracks>())
+    {
+        // Only value frame type tracks can be interrupted.
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::value)
+        {
+            auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::canBreak(trackAcsr.get(), channel, time))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        // Only value frame type tracks can be interrupted.
+        if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) == Track::FrameType::value)
+        {
+            auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+            for(auto const& channel : selectedChannels)
+            {
+                if(Track::Result::Modifier::canBreak(referenceTrack.value().get(), channel, time))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool Document::Tools::isClipboardEmpty(Accessor const& accessor, Clipboard const& clipboard)
+{
+    for(auto const& trackAcsr : accessor.getAcsrs<AcsrType::tracks>())
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+        {
+            auto const trackId = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            auto const trackIt = clipboard.data.find(trackId);
+            if(trackIt != clipboard.data.cend())
+            {
+                auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    auto const channelIt = trackIt->second.find(channel);
+                    if(channelIt != trackIt->second.cend() && !Track::Result::Modifier::isEmpty(channelIt->second))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        if(referenceTrack.has_value() && Track::Tools::getFrameType(referenceTrack.value().get()) != Track::FrameType::vector)
+        {
+            auto const trackId = referenceTrack.value().get().getAttr<Track::AttrType::identifier>();
+            auto const trackIt = clipboard.data.find(trackId);
+            if(trackIt != clipboard.data.cend())
+            {
+                auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    auto const channelIt = trackIt->second.find(channel);
+                    if(channelIt != trackIt->second.cend() && !Track::Result::Modifier::isEmpty(channelIt->second))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+std::set<size_t> Document::Tools::getEffectiveSelectedChannelsForTrack(Accessor const& accessor, Track::Accessor const& trackAcsr)
+{
+    // If the track is the reference track of a group, it adds the selected channels
+    // of the group.
+    auto trackSelectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        if(referenceTrack.has_value() && std::addressof(trackAcsr) == std::addressof(referenceTrack.value().get()))
+        {
+            auto const groupSelectedChannels = Group::Tools::getSelectedChannels(groupAcsr);
+            trackSelectedChannels.insert(groupSelectedChannels.cbegin(), groupSelectedChannels.cend());
+        }
+    }
+    return trackSelectedChannels;
+}
+
 std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& accessor)
 {
     class RangeEditor
@@ -589,6 +758,50 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
 Document::LayoutNotifier::~LayoutNotifier()
 {
     mAccessor.removeListener(mListener);
+}
+
+Document::FocusRestorer::FocusRestorer(Accessor& accessor)
+: mAccessor(accessor)
+{
+    for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
+    {
+        auto const& identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+        mTrackFocus[identifier] = trackAcsr.get().getAttr<Track::AttrType::focused>();
+    }
+    for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const& identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+        mGroupFocus[identifier] = groupAcsr.get().getAttr<Group::AttrType::focused>();
+    }
+}
+
+bool Document::FocusRestorer::perform()
+{
+    for(auto const& trackAcsr : mAccessor.getAcsrs<AcsrType::tracks>())
+    {
+        auto const& identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+        auto const it = mTrackFocus.find(identifier);
+        if(it != mTrackFocus.cend())
+        {
+            trackAcsr.get().setAttr<Track::AttrType::focused>(it->second, NotificationType::synchronous);
+        }
+    }
+    for(auto const& groupAcsr : mAccessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const& identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+        auto const it = mGroupFocus.find(identifier);
+        if(it != mGroupFocus.cend())
+        {
+            groupAcsr.get().setAttr<Group::AttrType::focused>(it->second, NotificationType::synchronous);
+        }
+    }
+    return true;
+}
+
+bool Document::FocusRestorer::undo()
+{
+    // Undo and redo apply the same changes.
+    return perform();
 }
 
 ANALYSE_FILE_END
