@@ -117,9 +117,9 @@ namespace Application
 
             Sender& mSender;
             Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
-            Document::LayoutNotifier mLayoutNotifier;
             std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
             std::vector<std::unique_ptr<Zoom::Accessor::SmartListener>> mZoomListeners;
+            Document::LayoutNotifier mLayoutNotifier;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TrackDispatcher)
         };
