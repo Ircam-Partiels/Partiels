@@ -1,5 +1,4 @@
 #include "AnlApplicationCommandTarget.h"
-#include "../Document/AnlDocumentCommandTarget.h"
 #include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
 #include "../Track/AnlTrackExporter.h"
@@ -61,16 +60,55 @@ Application::CommandTarget::CommandTarget()
         }
     };
 
+    mDocumentListener.onAccessorInserted = []([[maybe_unused]] Document::Accessor const& acsr, Document::AcsrType type, [[maybe_unused]] size_t index)
+    {
+        switch(type)
+        {
+            case Document::AcsrType::tracks:
+            case Document::AcsrType::groups:
+            {
+                Instance::get().getApplicationCommandManager().commandStatusChanged();
+            }
+            break;
+            case Document::AcsrType::timeZoom:
+            case Document::AcsrType::transport:
+                break;
+        }
+    };
+
+    mDocumentListener.onAccessorErased = []([[maybe_unused]] Document::Accessor const& acsr, Document::AcsrType type, [[maybe_unused]] size_t index)
+    {
+        switch(type)
+        {
+            case Document::AcsrType::tracks:
+            case Document::AcsrType::groups:
+            {
+                Instance::get().getApplicationCommandManager().commandStatusChanged();
+            }
+            break;
+            case Document::AcsrType::timeZoom:
+            case Document::AcsrType::transport:
+                break;
+        }
+    };
+
+    mDocumentListener.onAttrChanged = []([[maybe_unused]] Document::Accessor const& acsr, [[maybe_unused]] Document::AttrType attribute)
+    {
+        Instance::get().getApplicationCommandManager().commandStatusChanged();
+    };
+
     Instance::get().getDocumentFileBased().addChangeListener(this);
     Instance::get().getUndoManager().addChangeListener(this);
     Instance::get().getOscSender().addChangeListener(this);
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
 }
 
 Application::CommandTarget::~CommandTarget()
 {
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().removeListener(mTransportListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getOscSender().removeChangeListener(this);
@@ -104,6 +142,19 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::editNewTrack
         , CommandIDs::editRemoveItem
         , CommandIDs::editLoadTemplate
+        
+        , CommandIDs::frameSelectAll
+        , CommandIDs::frameDelete
+        , CommandIDs::frameCopy
+        , CommandIDs::frameCut
+        , CommandIDs::framePaste
+        , CommandIDs::frameDuplicate
+        , CommandIDs::frameInsert
+        , CommandIDs::frameBreak
+        , CommandIDs::frameResetDurationToZero
+        , CommandIDs::frameResetDurationToFull
+        , CommandIDs::frameSystemCopy
+        , CommandIDs::frameToggleDrawing
         
         , CommandIDs::transportTogglePlayback
         , CommandIDs::transportToggleLooping
@@ -140,7 +191,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
+    auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+    auto const& selection = transportAcsr.getAttr<Transport::AttrType::selection>();
     auto const isItemMode = documentAcsr.getAttr<Document::AttrType::editMode>() == Document::EditMode::items;
+    auto const isFrameMode = documentAcsr.getAttr<Document::AttrType::editMode>() == Document::EditMode::frames;
     switch(commandID)
     {
         case CommandIDs::documentNew:
@@ -148,57 +202,57 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("New..."), juce::translate("Creates a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.isEquivalentTo(Instance::get().getDocumentFileBased().getDefaultAccessor()));
+            break;
         }
-        break;
         case CommandIDs::documentOpen:
         {
             result.setInfo(juce::translate("Open..."), juce::translate("Opens a document or audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('o', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentSave:
         {
             result.setInfo(juce::translate("Save"), juce::translate("Saves the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentDuplicate:
         {
             result.setInfo(juce::translate("Duplicate..."), juce::translate("Saves the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::documentConsolidate:
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidates the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::documentExport:
         {
             result.setInfo(juce::translate("Export..."), juce::translate("Exports the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
+            break;
         }
-        break;
         case CommandIDs::documentImport:
         {
             result.setInfo(juce::translate("Import..."), juce::translate("Imports to the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::documentBatch:
         {
             result.setInfo(juce::translate("Batch..."), juce::translate("Batch processes a set of audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
+            break;
         }
-        break;
 
         case CommandIDs::editUndo:
         {
@@ -207,8 +261,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Undo") + actionName, juce::translate("Undoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
             result.setActive(undoManager.canUndo());
+            break;
         }
-        break;
         case CommandIDs::editRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
@@ -216,23 +270,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Redo") + actionName, juce::translate("Redoes the last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(undoManager.canRedo());
+            break;
         }
-        break;
 
         case CommandIDs::editSelectNextItem:
         {
             result.setInfo(juce::translate("Select Next Item"), juce::translate("Select Next Item"), "Select", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::tabKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::editNewGroup:
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::editNewTrack:
         {
             auto const* window = Instance::get().getWindow();
@@ -240,8 +294,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(hidePanel ? juce::translate("Hide New Track Panel") : juce::translate("Show New Track Panel"), juce::translate("Shows or hides the list of plugins to add a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
         case CommandIDs::editRemoveItem:
         {
             auto selectedItems = Document::Selection::getItems(documentAcsr);
@@ -262,14 +316,107 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #ifndef JUCE_MAC
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
 #endif
+            break;
         }
-        break;
         case CommandIDs::editLoadTemplate:
         {
             result.setInfo(juce::translate("Load Template..."), juce::translate("Loads a template"), "Edit", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            break;
         }
-        break;
+
+        case CommandIDs::frameSelectAll:
+        {
+            result.setInfo(juce::translate("Select All Frames"), juce::translate("Select all frame(s)"), "Select", 0);
+            result.defaultKeypresses.add(juce::KeyPress('a', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(isFrameMode && timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() != selection);
+            break;
+        }
+        case CommandIDs::frameDelete:
+        {
+            result.setInfo(juce::translate("Delete Frame(s)"), juce::translate("Delete the selected frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
+#ifndef JUCE_MAC
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
+#endif
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameCopy:
+        {
+            result.setInfo(juce::translate("Copy Frame(s)"), juce::translate("Copy the selected frame(s) to the application clipboard"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameCut:
+        {
+            result.setInfo(juce::translate("Cut Frame(s)"), juce::translate("Cut the selected frame(s) to the application clipboard"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('x', juce::ModifierKeys::commandModifier, 0));
+#ifndef JUCE_MAC
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::shiftModifier, 0));
+#endif
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::framePaste:
+        {
+            result.setInfo(juce::translate("Paste Frame(s)"), juce::translate("Paste frame(s) from the application clipboard"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('v', juce::ModifierKeys::commandModifier, 0));
+#ifndef JUCE_MAC
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::insertKey, juce::ModifierKeys::shiftModifier, 0));
+#endif
+            result.setActive(isFrameMode && !Document::Tools::isClipboardEmpty(documentAcsr, mClipboard));
+            break;
+        }
+        case CommandIDs::frameDuplicate:
+        {
+            result.setInfo(juce::translate("Duplicate Frame(s)"), juce::translate("Duplicate the selected frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('d', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameInsert:
+        {
+            result.setInfo(juce::translate("Insert Frame(s)"), juce::translate("Insert frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::noModifiers, 0));
+            result.setActive(isFrameMode && (!Document::Tools::matchesFrame(documentAcsr, selection.getStart()) || !Document::Tools::matchesFrame(documentAcsr, selection.getEnd())));
+            break;
+        }
+        case CommandIDs::frameBreak:
+        {
+            result.setInfo(juce::translate("Break Frame(s)"), juce::translate("Break frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::noModifiers, 0));
+            result.setActive(isFrameMode && Document::Tools::canBreak(documentAcsr, selection.getStart()));
+            break;
+        }
+        case CommandIDs::frameResetDurationToZero:
+        {
+            result.setInfo(juce::translate("Reset Frame(s) duration to zero"), juce::translate("Reset the selected frame(s) duration to zero"), "Edit", 0);
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameResetDurationToFull:
+        {
+            result.setInfo(juce::translate("Reset Frame(s) duration to full"), juce::translate("Reset the selected frame(s) duration to full"), "Edit", 0);
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameSystemCopy:
+        {
+            result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy frame(s) to system clipboard"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
+            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameToggleDrawing:
+        {
+            result.setInfo(juce::translate("Toggle Drawing Mode"), juce::translate("Switch between drawing mode and navigation mode"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier, 0));
+            result.setTicked(documentAcsr.getAttr<Document::AttrType::drawingState>());
+            result.setActive(true);
+            break;
+        }
 
         case CommandIDs::transportTogglePlayback:
         {
@@ -277,63 +424,61 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enables or disables the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleStopAtLoopEnd:
         {
             result.setInfo(juce::translate("Toggle Stop Playback at Loop End"), juce::translate("Enables or disables the stop playback at the end of loop if repeat disabled"), "Transport", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>());
+            break;
         }
-        break;
         case CommandIDs::transportToggleMagnetism:
         {
             result.setInfo(juce::translate("Toggle Magnetize"), juce::translate("Toggles the magnetism mechanism with markers"), "Transport", 0);
             result.setActive(!transportAcsr.getAttr<Transport::AttrType::markers>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::magnetize>());
+            break;
         }
-        break;
         case CommandIDs::transportRewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Moves the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             result.setActive(hasReader && Transport::Tools::canRewindPlayhead(transportAcsr));
+            break;
         }
-        break;
         case CommandIDs::transportMovePlayHeadBackward:
         {
             result.setInfo(juce::translate("Move the Playhead Backward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::leftKey, juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
-            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setActive(hasReader && Transport::Tools::canMovePlayheadBackward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+            break;
         }
-        break;
         case CommandIDs::transportMovePlayHeadForward:
         {
             result.setInfo(juce::translate("Move the Playhead Forward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::rightKey, juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
-            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setActive(hasReader && Transport::Tools::canMovePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+            break;
         }
-        break;
         case CommandIDs::transportOscConnected:
         {
             result.setInfo(juce::translate("OSC connected"), juce::translate("State of the OSC connection"), "Transport", 0);
             result.setTicked(Instance::get().getOscSender().isConnected());
             result.setActive(true);
+            break;
         }
-        break;
 
         case CommandIDs::viewTimeZoomIn:
         {
@@ -341,16 +486,16 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Time Zoom In"), juce::translate("Zooms in on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(Zoom::Tools::canZoomIn(zoomAcsr));
+            break;
         }
-        break;
         case CommandIDs::viewTimeZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Time Zoom Out"), juce::translate("Zooms out on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(Zoom::Tools::canZoomOut(zoomAcsr));
+            break;
         }
-        break;
         case CommandIDs::viewVerticalZoomIn:
         {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
@@ -365,8 +510,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Vertical Zoom In"), juce::translate("Zooms in on the vertical range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(canZoom);
+            break;
         }
-        break;
         case CommandIDs::viewVerticalZoomOut:
         {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
@@ -381,23 +526,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Vertical Zoom Out"), juce::translate("Zooms out on the vertical range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(canZoom);
+            break;
         }
-        break;
         case CommandIDs::viewTimeZoomAnchorOnPlayhead:
         {
             result.setInfo(juce::translate("Anchor Time Zoom on Playhead"), juce::translate("Anchors the time zoom on the start playhead"), "View", 0);
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::timeZoomAnchorOnPlayhead>());
+            break;
         }
-        break;
         case CommandIDs::viewInfoBubble:
         {
             result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggles display of the information bubble"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
+            break;
         }
-        break;
         case CommandIDs::viewShowItemProperties:
         {
             auto const groups = Document::Selection::getGroups(documentAcsr);
@@ -416,8 +561,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             }
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
             result.setActive(!groups.empty() || !tracks.empty());
+            break;
         }
-        break;
 
         case CommandIDs::helpOpenAudioSettings:
         {
@@ -428,8 +573,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Shows the audio settings panel"), "Help", 0);
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier, 0));
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenOscSettings:
         {
 #if JUCE_MAC
@@ -437,8 +582,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("OSC Settings..."), juce::translate("Shows the OSC settings panel"), "Help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenPluginSettings:
         {
 #if JUCE_MAC
@@ -446,8 +591,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenAbout:
         {
 #if JUCE_MAC
@@ -455,39 +600,39 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #else
             result.setInfo(juce::translate("About Partiels"), juce::translate("Shows the information about the application"), "help", 0);
 #endif
+            break;
         }
-        break;
         case CommandIDs::helpOpenProjectPage:
         {
             result.setInfo(juce::translate("Proceed to Project Page"), juce::translate("Opens the project page of the Ircam Forum in a web browser"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpAutoUpdate:
         {
             result.setInfo(juce::translate("Automatic Check for New Version"), juce::translate("Toggles the automatic check for a new version"), "Help", 0);
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>());
+            break;
         }
-        break;
         case CommandIDs::helpCheckForUpdate:
         {
             result.setInfo(juce::translate("Check for New Version"), juce::translate("Checks for a new version"), "Help", 0);
             result.setActive(true);
+            break;
         }
-        break;
         case CommandIDs::helpOpenKeyMappings:
         {
             result.setInfo(juce::translate("Key Mappings..."), juce::translate("Shows the key mappings panel"), "Application", 0);
             result.setActive(true);
+            break;
         }
-        break;
     }
 
     Instance::get().getCommandInfo(commandID, result);
@@ -502,9 +647,31 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         return result.description;
     };
 
+    auto const getTransportAcsr = []() -> Transport::Accessor&
+    {
+        return Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>();
+    };
+
+    auto const performForAllTracks = [](std::function<void(Track::Accessor&, std::set<size_t>)> fn)
+    {
+        for(auto const& trackAcsr : Instance::get().getDocumentAccessor().getAcsrs<Document::AcsrType::tracks>())
+        {
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+            {
+                fn(trackAcsr.get(), Document::Tools::getEffectiveSelectedChannelsForTrack(Instance::get().getDocumentAccessor(), trackAcsr.get()));
+            }
+        }
+    };
+
+    auto& undoManager = Instance::get().getUndoManager();
     auto& fileBased = Instance::get().getDocumentFileBased();
     auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& documentDir = Instance::get().getDocumentDirector();
     auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
+    auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+
+    auto const playhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
+    auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
     switch(info.commandID)
     {
         case CommandIDs::documentNew:
@@ -638,7 +805,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editNewGroup:
         {
-            auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
 
             auto const position = Tools::getNewGroupPosition();
@@ -687,13 +853,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" from the project? This will also remove all the contained tracks!").replace("GROUPNAMES", names.joinIntoString(", ")))
                                          .withButton(juce::translate("Remove"))
                                          .withButton(juce::translate("Cancel"));
-                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
                                                  {
                                                      return;
                                                  }
-                                                 auto& documentDir = Instance::get().getDocumentDirector();
                                                  documentDir.startAction();
                                                  for(auto const& groupId : std::get<0_z>(selectedItems))
                                                  {
@@ -718,13 +883,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withMessage(juce::translate("Are you sure you want to remove the track(s) \"TRACKNAMES\" from the project?").replace("TRACKNAMES", names.joinIntoString(", ")))
                                          .withButton(juce::translate("Remove"))
                                          .withButton(juce::translate("Cancel"));
-                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
                                                  {
                                                      return;
                                                  }
-                                                 auto& documentDir = Instance::get().getDocumentDirector();
                                                  documentDir.startAction();
                                                  for(auto const& trackId : std::get<1_z>(selectedItems))
                                                  {
@@ -754,13 +918,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" and the from the project and the track(s) \"TRACKNAMES\"?").replace("GROUPNAMES", groupNames.joinIntoString(", ")).replace("TRACKNAMES", trackNames.joinIntoString(", ")))
                                          .withButton(juce::translate("Remove"))
                                          .withButton(juce::translate("Cancel"));
-                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
                                                  {
                                                      return;
                                                  }
-                                                 auto& documentDir = Instance::get().getDocumentDirector();
                                                  documentDir.startAction();
                                                  for(auto const& groupId : std::get<0_z>(selectedItems))
                                                  {
@@ -786,7 +949,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
-            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, &documentDir](juce::FileChooser const& fileChooser)
                                       {
                                           auto const results = fileChooser.getResults();
                                           if(results.isEmpty())
@@ -794,7 +957,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               return;
                                           }
 
-                                          auto& documentDir = Instance::get().getDocumentDirector();
                                           documentDir.startAction();
                                           auto const adaptation = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
                                           auto const loadResults = Instance::get().getDocumentFileBased().loadTemplate(results.getFirst(), adaptation);
@@ -813,6 +975,210 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
                                           }
                                       });
+            return true;
+        }
+
+        case CommandIDs::frameSelectAll:
+        {
+            transportAcsr.setAttr<Transport::AttrType::selection>(timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::frameDelete:
+        {
+            undoManager.beginNewTransaction(juce::translate("Delete Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                                    for(auto const& index : selectedChannels)
+                                    {
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionErase>(fn, index, selection).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            return true;
+        }
+        case CommandIDs::frameCopy:
+        {
+            mClipboard = Document::Tools::Clipboard();
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto& trackData = mClipboard.data[trackId];
+                                    for(auto const& index : selectedChannels)
+                                    {
+                                        trackData[index] = Track::Result::Modifier::copyFrames(trackAcsr, index, selection);
+                                    }
+                                });
+            return true;
+        }
+        case CommandIDs::frameCut:
+        {
+            perform({CommandIDs::frameCopy});
+            perform({CommandIDs::frameDelete});
+            undoManager.setCurrentTransactionName(juce::translate("Cut Frame(s)"));
+            return true;
+        }
+        case CommandIDs::framePaste:
+        {
+            undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, [[maybe_unused]] std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const trackIt = mClipboard.data.find(trackId);
+                                    if(trackIt == mClipboard.data.cend())
+                                    {
+                                        return;
+                                    }
+                                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                                    auto const trackData = trackIt->second;
+                                    for(auto const& data : trackData)
+                                    {
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, data.first, data.second, playhead).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            return true;
+        }
+        case CommandIDs::frameDuplicate:
+        {
+            perform({CommandIDs::frameCopy});
+            transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboard.range.getEnd(), NotificationType::synchronous);
+            perform({CommandIDs::framePaste});
+            undoManager.setCurrentTransactionName(juce::translate("Duplicate Frame(s)"));
+            return true;
+        }
+        case CommandIDs::frameInsert:
+        {
+            auto const insertFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
+            {
+                if(!Track::Result::Modifier::matchFrame(trackAcsr, channel, time))
+                {
+                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                    auto const data = Track::Result::Modifier::createFrame(trackAcsr, channel, time);
+                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time).release());
+                }
+            };
+            auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
+            auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+            undoManager.beginNewTransaction(juce::translate("Insert Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        if(isPlaying)
+                                        {
+                                            insertFrame(trackAcsr, channel, runningPlayhead);
+                                        }
+                                        else
+                                        {
+                                            insertFrame(trackAcsr, channel, selection.getStart());
+                                            if(!selection.isEmpty())
+                                            {
+                                                insertFrame(trackAcsr, channel, selection.getEnd());
+                                            }
+                                        }
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            return true;
+        }
+        case CommandIDs::frameBreak:
+        {
+            auto const breakFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
+            {
+                if(Track::Result::Modifier::canBreak(trackAcsr, channel, time))
+                {
+                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                    Track::Result::ChannelData const data = std::vector<Track::Result::Data::Point>{{time, 0.0, std::optional<float>{}, std::vector<float>{}}};
+                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time).release());
+                }
+            };
+            auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
+            auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+            undoManager.beginNewTransaction(juce::translate("Break Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    if(Track::Tools::getFrameType(trackAcsr) == Track::FrameType::value)
+                                    {
+                                        for(auto const& channel : selectedChannels)
+                                        {
+                                            if(isPlaying)
+                                            {
+                                                breakFrame(trackAcsr, channel, runningPlayhead);
+                                            }
+                                            else
+                                            {
+                                                breakFrame(trackAcsr, channel, selection.getStart());
+                                            }
+                                        }
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            return true;
+        }
+        case CommandIDs::frameResetDurationToZero:
+        {
+            undoManager.beginNewTransaction(juce::translate("Reset Frame(s) duration to zero"));
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toZero, 0.0).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            return true;
+        }
+        case CommandIDs::frameResetDurationToFull:
+        {
+            undoManager.beginNewTransaction(juce::translate("Reset Frame(s) duration to full"));
+            auto const timeEnd = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
+                                {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                                    }
+                                });
+            undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            return true;
+        }
+        case CommandIDs::frameSystemCopy:
+        {
+            auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+            for(auto const& trackAcsr : trackAcsrs)
+            {
+                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+                {
+                    std::atomic<bool> shouldAbort{false};
+                    auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                    if(!selectedChannels.empty())
+                    {
+                        juce::String clipboardResults;
+                        Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
+                        juce::SystemClipboard::copyTextToClipboard(clipboardResults);
+                        return true;
+                    }
+                }
+            }
+            return true;
+        }
+        case CommandIDs::frameToggleDrawing:
+        {
+            documentAcsr.setAttr<Document::AttrType::drawingState>(!documentAcsr.getAttr<Document::AttrType::drawingState>(), NotificationType::synchronous);
             return true;
         }
 
@@ -879,13 +1245,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::transportMovePlayHeadBackward:
         {
-            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             Transport::Tools::movePlayheadBackward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::transportMovePlayHeadForward:
         {
-            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             Transport::Tools::movePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
             return true;
         }
@@ -899,7 +1263,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const& accessor = Instance::get().getApplicationAccessor();
             if(accessor.getAttr<AttrType::timeZoomAnchorOnPlayhead>())
             {
-                auto const playhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
                 Zoom::Tools::zoomIn(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.05, playhead, NotificationType::synchronous);
             }
             else
@@ -913,7 +1276,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const& accessor = Instance::get().getApplicationAccessor();
             if(accessor.getAttr<AttrType::timeZoomAnchorOnPlayhead>())
             {
-                auto const playhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
                 Zoom::Tools::zoomOut(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.05, playhead, NotificationType::synchronous);
             }
             else

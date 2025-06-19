@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Group/AnlGroupStretchableSection.h"
-#include "AnlDocumentCommandTarget.h"
 #include "AnlDocumentHeader.h"
 #include "AnlDocumentSelection.h"
 #include "AnlDocumentTools.h"
@@ -13,7 +12,6 @@ namespace Document
     class Section
     : public juce::Component
     , public juce::DragAndDropContainer
-    , public CommandTarget
     , private juce::ApplicationCommandManagerListener
     , private juce::AsyncUpdater
     {
@@ -43,9 +41,6 @@ namespace Document
     private:
         // juce::DragAndDropContainer
         void dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details) override;
-
-        // juce::ApplicationCommandTarget
-        juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
         // juce::ApplicationCommandManagerListener
         void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;

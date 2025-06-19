@@ -8,6 +8,15 @@ namespace Document
 {
     namespace Tools
     {
+        struct Clipboard
+        {
+            using ChannelData = Track::Result::ChannelData;
+            using MultiChannelData = std::map<size_t, ChannelData>;
+
+            std::map<juce::String, MultiChannelData> data;
+            juce::Range<double> range;
+        };
+
         bool hasItem(Accessor const& accessor, juce::String const& identifier);
         bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         bool hasGroupAcsr(Accessor const& accessor, juce::String const& identifier);
@@ -27,6 +36,12 @@ namespace Document
 
         void resizeItem(Accessor& accessor, juce::String const& itemIdentifier, int newHeight, int parentHeight);
         void resizeItems(Accessor& accessor, bool preserveRatio, int parentHeight);
+
+        bool containsFrames(Accessor const& accessor, juce::Range<double> const& selection);
+        bool matchesFrame(Accessor const& accessor, double const time);
+        bool canBreak(Accessor const& accessor, double time);
+        bool isClipboardEmpty(Accessor const& accessor, Clipboard const& clipboard);
+        std::set<size_t> getEffectiveSelectedChannelsForTrack(Accessor const& accessor, Track::Accessor const& trackAcsr);
 
         std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& accessor);
     } // namespace Tools
@@ -50,6 +65,24 @@ namespace Document
         std::set<Track::AttrType> mTrackAttributes;
         std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
         std::set<Group::AttrType> mGroupAttributes;
+    };
+
+    class FocusRestorer
+    : public juce::UndoableAction
+    {
+    public:
+        FocusRestorer(Accessor& accessor);
+
+        ~FocusRestorer() override = default;
+
+        // juce::UndoableAction
+        bool perform() override;
+        bool undo() override;
+
+    protected:
+        Accessor& mAccessor;
+        std::map<juce::String, Track::FocusInfo> mTrackFocus;
+        std::map<juce::String, Group::FocusInfo> mGroupFocus;
     };
 } // namespace Document
 
