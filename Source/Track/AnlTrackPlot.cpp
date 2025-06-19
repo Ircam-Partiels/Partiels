@@ -92,7 +92,7 @@ Track::Plot::~Plot()
 
 void Track::Plot::paint(juce::Graphics& g)
 {
-    Renderer::paint(mAccessor, mTimeZoomAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId));
+    Renderer::paint(mAccessor, mTimeZoomAccessor, g, getLocalBounds(), mAccessor.getAttr<AttrType::channelsLayout>(), findColour(Decorator::ColourIds::normalBorderColourId));
 }
 
 ANALYSE_FILE_END

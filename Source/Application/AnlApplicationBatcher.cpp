@@ -284,7 +284,7 @@ void Application::BatcherContent::process()
                                                                     std::this_thread::sleep_for(20ms);
                                                                 }
 
-                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, {}, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
+                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, {}, {}, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
                                                                 if(result.failed())
                                                                 {
                                                                     triggerAsyncUpdate();
