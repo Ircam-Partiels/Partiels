@@ -1093,15 +1093,15 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, {}, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, false, '\t', true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, {}, fileUsed, false, '\t', true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, timeRange, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, {}, fileUsed, shouldAbort);
             case Options::Format::reaper:
-                return Track::Exporter::toReaper(trackAcsr, timeRange, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
+                return Track::Exporter::toReaper(trackAcsr, timeRange, {}, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);
