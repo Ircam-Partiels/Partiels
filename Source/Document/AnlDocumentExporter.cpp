@@ -330,16 +330,14 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     };
     mPropertySdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
 
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
             {
-                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this]([[maybe_unused]] Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                                                                  {
-                                                                                     juce::ignoreUnused(trackAcsr);
                                                                                      if(trackAttribute == Track::AttrType::name)
                                                                                      {
                                                                                          updateItems();
@@ -351,9 +349,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
             break;
             case AcsrType::groups:
             {
-                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this]([[maybe_unused]] Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                                                                  {
-                                                                                     juce::ignoreUnused(groupAcsr);
                                                                                      if(groupAttribute == Group::AttrType::name || groupAttribute == Group::AttrType::layout)
                                                                                      {
                                                                                          updateItems();
@@ -369,9 +366,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
         }
     };
 
-    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
