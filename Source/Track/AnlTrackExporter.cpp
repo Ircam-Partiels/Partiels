@@ -781,7 +781,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "Reaper";
@@ -836,27 +836,30 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
 
     for(size_t i = 0; i < markers->size(); ++i)
     {
-        if(shouldAbort)
+        if(channels.empty() || channels.count(i) > 0)
         {
-            return aborted(name, format);
-        }
-        auto const& channelMarkers = markers->at(i);
-        auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
-        auto index = std::distance(channelMarkers.cbegin(), it);
-        while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-        {
-            if(isMarker)
+            if(shouldAbort)
             {
-                stream << 'M' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ",,\n";
+                return aborted(name, format);
             }
-            else
+            auto const& channelMarkers = markers->at(i);
+            auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
+            auto index = std::distance(channelMarkers.cbegin(), it);
+            while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                stream << 'R' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ',' << std::get<0_z>(*it) + std::get<1_z>(*it) << ',' << std::get<1_z>(*it) << '\n';
+                if(isMarker)
+                {
+                    stream << 'M' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ",,\n";
+                }
+                else
+                {
+                    stream << 'R' << index << ',' << escapeString(std::get<2_z>(*it)) << ',' << std::get<0_z>(*it) << ',' << std::get<0_z>(*it) + std::get<1_z>(*it) << ',' << std::get<1_z>(*it) << '\n';
+                }
+                ++it;
+                ++index;
             }
-            ++it;
-            ++index;
+            stream << '\n';
         }
-        stream << '\n';
     }
 
     if(!stream.good())
@@ -872,7 +875,7 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "Reaper";
@@ -883,7 +886,7 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toReaper(accessor, timeRange, stream, isMarker, shouldAbort);
+    auto const result = toReaper(accessor, timeRange, channels, stream, isMarker, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -897,10 +900,10 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toReaper(accessor, timeRange, stream, isMarker, shouldAbort);
+    auto const result = toReaper(accessor, timeRange, channels, stream, isMarker, shouldAbort);
     if(result.failed())
     {
         return result;
