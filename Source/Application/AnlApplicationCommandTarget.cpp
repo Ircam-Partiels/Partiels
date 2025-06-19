@@ -153,6 +153,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::frameBreak
         , CommandIDs::frameResetDurationToZero
         , CommandIDs::frameResetDurationToFull
+        , CommandIDs::frameExport
         , CommandIDs::frameSystemCopy
         , CommandIDs::frameToggleDrawing
         
@@ -400,6 +401,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Reset Frame(s) duration to full"), juce::translate("Reset the selected frame(s) duration to full"), "Edit", 0);
             result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameExport:
+        {
+            result.setInfo(juce::translate("Export Frame(s)"), juce::translate("Export the selected frame(s) using the current export options"), "Edit", 0);
+            auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
+            auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            result.setActive(isFrameMode && std::any_of(frameTypes.cbegin(), frameTypes.cend(), [&](auto const& type)
+                                                        {
+                                                            return exportOptions.isCompatible(type);
+                                                        }));
             break;
         }
         case CommandIDs::frameSystemCopy:
@@ -1154,6 +1166,24 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            return true;
+        }
+        case CommandIDs::frameExport:
+        {
+            auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+            for(auto const& trackAcsr : trackAcsrs)
+            {
+                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+                {
+                    std::atomic<bool> shouldAbort{false};
+                    auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                    if(!selectedChannels.empty())
+                    {
+                        JUCE_COMPILER_WARNING("to do");
+                        return true;
+                    }
+                }
+            }
             return true;
         }
         case CommandIDs::frameSystemCopy:
