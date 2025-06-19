@@ -912,7 +912,7 @@ juce::Result Track::Exporter::toReaper(Accessor const& accessor, Zoom::Range tim
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "DAT";
@@ -951,88 +951,100 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
     if(markers != nullptr)
     {
         stream.write("PTLM01", 6 * sizeof(char));
-        for(auto const& channelResults : *markers)
+        for(size_t i = 0; i < markers->size(); ++i)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(i) > 0)
             {
-                return aborted(name, format);
-            }
+                if(shouldAbort)
+                {
+                    return aborted(name, format);
+                }
 
-            auto const numChannels = static_cast<uint64_t>(channelResults.size());
-            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-            {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
-                auto const length = static_cast<uint64_t>(std::get<2_z>(*it).size());
-                stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
-                stream.write(std::get<2_z>(*it).c_str(), static_cast<long>(sizeof(char) * std::get<2_z>(*it).size()));
-                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
-                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
-                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
-                ++it;
+                auto const& channelResults = markers->at(i);
+                auto const numChannels = static_cast<uint64_t>(channelResults.size());
+                stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                    stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                    auto const length = static_cast<uint64_t>(std::get<2_z>(*it).size());
+                    stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
+                    stream.write(std::get<2_z>(*it).c_str(), static_cast<long>(sizeof(char) * std::get<2_z>(*it).size()));
+                    auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                    stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                    stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
+                    ++it;
+                }
             }
         }
     }
     else if(points != nullptr)
     {
         stream.write("PTLP01", 6 * sizeof(char));
-        for(auto const& channelResults : *points)
+        for(size_t i = 0; i < points->size(); ++i)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(i) > 0)
             {
-                return aborted(name, format);
-            }
-
-            auto const numChannels = static_cast<uint64_t>(channelResults.size());
-            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-            {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
-                auto const hasValue = std::get<2_z>(*it).has_value();
-                stream.write(reinterpret_cast<char const*>(&hasValue), sizeof(hasValue));
-                if(hasValue)
+                if(shouldAbort)
                 {
-                    auto const& value = std::get<2_z>(*it).value();
-                    stream.write(reinterpret_cast<char const*>(&value), sizeof(value));
+                    return aborted(name, format);
                 }
-                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
-                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
-                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
-                ++it;
+
+                auto const& channelResults = points->at(i);
+                auto const numChannels = static_cast<uint64_t>(channelResults.size());
+                stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                    stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                    auto const hasValue = std::get<2_z>(*it).has_value();
+                    stream.write(reinterpret_cast<char const*>(&hasValue), sizeof(hasValue));
+                    if(hasValue)
+                    {
+                        auto const& value = std::get<2_z>(*it).value();
+                        stream.write(reinterpret_cast<char const*>(&value), sizeof(value));
+                    }
+                    auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                    stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                    stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
+                    ++it;
+                }
             }
         }
     }
     else if(columns != nullptr)
     {
         stream.write("PTLC01", 6 * sizeof(char));
-        for(auto const& channelResults : *columns)
+        for(size_t i = 0; i < columns->size(); ++i)
         {
-            auto const numChannels = static_cast<uint64_t>(channelResults.size());
-            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            if(channels.empty() || channels.count(i) > 0)
             {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                 if(shouldAbort)
                 {
                     return aborted(name, format);
                 }
 
-                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
-                auto const numBins = static_cast<uint64_t>(std::get<2_z>(*it).size());
-                stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
-                stream.write(reinterpret_cast<char const*>(std::get<2_z>(*it).data()), static_cast<long>(sizeof(*std::get<2_z>(*it).data()) * numBins));
-                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
-                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
-                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
-                ++it;
+                auto const& channelResults = columns->at(i);
+                auto const numChannels = static_cast<uint64_t>(channelResults.size());
+                stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                    stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                    auto const numBins = static_cast<uint64_t>(std::get<2_z>(*it).size());
+                    stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
+                    stream.write(reinterpret_cast<char const*>(std::get<2_z>(*it).data()), static_cast<long>(sizeof(*std::get<2_z>(*it).data()) * numBins));
+                    auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                    stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                    stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
+                    ++it;
+                }
             }
         }
     }
@@ -1050,7 +1062,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "DAT";
@@ -1061,7 +1073,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toBinary(accessor, timeRange, stream, shouldAbort);
+    auto const result = toBinary(accessor, timeRange, channels, stream, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -1075,10 +1087,10 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toBinary(accessor, timeRange, stream, shouldAbort);
+    auto const result = toBinary(accessor, timeRange, channels, stream, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -1189,7 +1201,7 @@ juce::Result Track::Exporter::consolidateInDirectory(Accessor const& accessor, j
     else
     {
         std::atomic<bool> shouldAbort = false;
-        return toBinary(accessor, {}, newFile, shouldAbort);
+        return toBinary(accessor, {}, {}, newFile, shouldAbort);
     }
 }
 
