@@ -89,16 +89,24 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, int width, int height)
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height)
 {
     juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
     juce::Graphics g(image);
     g.fillAll(accessor.getAttr<AttrType::colours>().background);
-    Renderer::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
+    std::vector<bool> channelVisibility(accessor.getAttr<AttrType::channelsLayout>().size(), false);
+    for(auto const& channel : channels)
+    {
+        if(channel < channelVisibility.size())
+        {
+            channelVisibility[channel] = true;
+        }
+    }
+    Renderer::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, channelVisibility, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
     return image;
 }
 
-juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "image";
@@ -120,7 +128,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return aborted(name, format);
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, width, height);
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height);
 
     if(shouldAbort)
     {

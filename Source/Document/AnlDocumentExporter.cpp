@@ -799,7 +799,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
 {
     if(file == juce::File())
     {
@@ -886,7 +886,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -1093,15 +1093,15 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, {}, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, {}, fileUsed, false, '\t', true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, timeRange, {}, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, shouldAbort);
             case Options::Format::reaper:
-                return Track::Exporter::toReaper(trackAcsr, timeRange, {}, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
+                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);

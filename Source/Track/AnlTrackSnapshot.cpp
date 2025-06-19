@@ -164,18 +164,19 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
     auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
     {
+        auto const channels = accessor.getAttr<AttrType::channelsLayout>();
         switch(frameType.value())
         {
             case Track::FrameType::label:
             {
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int>, size_t)
                                         {
                                         });
             }
             break;
             case Track::FrameType::value:
             {
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
                                         {
                                             paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
                                         });
@@ -183,7 +184,7 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
             break;
             case Track::FrameType::vector:
             {
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
                                         {
                                             paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
                                         });
@@ -198,12 +199,13 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
     auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
     {
+        auto const channels = accessor.getAttr<AttrType::channelsLayout>();
         switch(frameType.value())
         {
             case Track::FrameType::label:
             {
                 paintGrid(accessor, g, bounds, colour);
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int>, size_t)
                                         {
                                         });
             }
@@ -211,7 +213,7 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
             case Track::FrameType::value:
             {
                 paintGrid(accessor, g, bounds, colour);
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                                         {
                                             paintPoints(accessor, channel, g, region, timeZoomAcsr, time);
                                         });
@@ -219,7 +221,7 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
             break;
             case Track::FrameType::vector:
             {
-                Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                Renderer::paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                                         {
                                             paintColumns(accessor, channel, g, region, timeZoomAcsr, time);
                                         });
