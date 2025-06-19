@@ -157,7 +157,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -283,13 +283,16 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
         for(size_t i = 0; i < markers->size(); ++i)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(i) > 0)
             {
-                return aborted(name, format);
-            }
+                if(shouldAbort)
+                {
+                    return aborted(name, format);
+                }
 
-            addChannel(markers->at(i));
-            addLine();
+                addChannel(markers->at(i));
+                addLine();
+            }
         }
     }
     else if(points != nullptr)
@@ -320,13 +323,16 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
         for(size_t i = 0; i < points->size(); ++i)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(i) > 0)
             {
-                return aborted(name, format);
-            }
+                if(shouldAbort)
+                {
+                    return aborted(name, format);
+                }
 
-            addChannel(points->at(i));
-            addLine();
+                addChannel(points->at(i));
+                addLine();
+            }
         }
     }
     else if(columns != nullptr)
@@ -368,13 +374,16 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
         for(size_t i = 0; i < columns->size(); ++i)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(i) > 0)
             {
-                return aborted(name, format);
-            }
+                if(shouldAbort)
+                {
+                    return aborted(name, format);
+                }
 
-            addChannel(columns->at(i));
-            addLine();
+                addChannel(columns->at(i));
+                addLine();
+            }
         }
     }
 
@@ -391,7 +400,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -402,7 +411,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, useEndTime, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -416,10 +425,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, useEndTime, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
     if(result.failed())
     {
         return result;
