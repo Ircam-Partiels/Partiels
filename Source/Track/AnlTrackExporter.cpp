@@ -644,7 +644,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CUE";
@@ -705,26 +705,29 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
 
     for(auto channelIndex = 0_z; channelIndex < markers->size(); ++channelIndex)
     {
-        if(shouldAbort)
+        if(channels.empty() || channels.count(channelIndex) > 0)
         {
-            return aborted(name, format);
-        }
+            if(shouldAbort)
+            {
+                return aborted(name, format);
+            }
 
-        auto const& channelResults = markers->at(channelIndex);
-        stream << "TITLE CHANNEL_" << to2Digits(static_cast<int>(channelIndex)) << "\n";
-        auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
-        auto frameIndex = std::distance(channelResults.cbegin(), it);
-        while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-        {
-            MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-            stream << "  "
-                   << "TRACK " << to2Digits(static_cast<int>(frameIndex)) << " AUDIO \n";
-            stream << "    "
-                   << "TITLE \"" << std::get<2_z>(*it) << "\"\n";
-            stream << "    "
-                   << "INDEX 01 " << timeToString(std::get<0_z>(*it)) << "\n";
-            ++it;
-            ++frameIndex;
+            auto const& channelResults = markers->at(channelIndex);
+            stream << "TITLE CHANNEL_" << to2Digits(static_cast<int>(channelIndex)) << "\n";
+            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
+            auto frameIndex = std::distance(channelResults.cbegin(), it);
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                stream << "  "
+                       << "TRACK " << to2Digits(static_cast<int>(frameIndex)) << " AUDIO \n";
+                stream << "    "
+                       << "TITLE \"" << std::get<2_z>(*it) << "\"\n";
+                stream << "    "
+                       << "INDEX 01 " << timeToString(std::get<0_z>(*it)) << "\n";
+                ++it;
+                ++frameIndex;
+            }
         }
     }
 
@@ -741,7 +744,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CUE";
@@ -752,7 +755,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCue(accessor, timeRange, stream, shouldAbort);
+    auto const result = toCue(accessor, timeRange, channels, stream, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -766,10 +769,10 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCue(accessor, timeRange, stream, shouldAbort);
+    auto const result = toCue(accessor, timeRange, channels, stream, shouldAbort);
     if(result.failed())
     {
         return result;
