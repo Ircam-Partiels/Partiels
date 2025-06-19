@@ -574,7 +574,6 @@ std::set<Track::FrameType> Document::Tools::getSelectedChannelsFrameTypes(Access
         {
             frameTypes.insert(frameType.value());
         }
-        
     }
     for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
     {
