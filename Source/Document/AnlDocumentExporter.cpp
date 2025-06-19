@@ -103,6 +103,29 @@ bool Document::Exporter::Options::isValid() const
     return format != Format::sdif || (sdifFrameSignature.length() == 4 && !sdifFrameSignature.contains("?") && sdifMatrixSignature.length() == 4 && !sdifMatrixSignature.contains("?"));
 }
 
+bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
+{
+    switch(format)
+    {
+        case Format::jpeg:
+            return true;
+        case Format::png:
+            return true;
+        case Format::csv:
+            return true;
+        case Format::lab:
+            return true;
+        case Format::json:
+            return true;
+        case Format::cue:
+            return frameType == Track::FrameType::label;
+        case Format::reaper:
+            return frameType == Track::FrameType::label;
+        case Format::sdif:
+            return true;
+    }
+}
+
 static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets()
 {
     static std::vector<std::tuple<std::string, int, int>> const presets{{"Wide Ultra Extended Graphics Array", 1920, 1200}, {"A3 (300ppi)", 4960, 3508}, {"A4 (300ppi)", 3508, 2480}, {"A5 (300ppi)", 2480, 1748}, {"A6 (300ppi)", 1748, 1240}, {"A7 (300ppi)", 1240, 874}, {"HD (720p)", 1280, 720}, {"Full HD (1080p)", 1920, 1080}, {"4K UHD", 3840, 2160}};

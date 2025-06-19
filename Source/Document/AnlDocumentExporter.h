@@ -79,6 +79,7 @@ namespace Document
             char getSeparatorChar() const;
 
             bool isValid() const;
+            bool isCompatible(Track::FrameType frameType) const;
         };
 
         class Panel
