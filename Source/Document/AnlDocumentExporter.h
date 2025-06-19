@@ -143,7 +143,7 @@ namespace Document
             auto static constexpr groupItemFactor = documentItemFactor / 1000;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor);
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor);
 
         juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
         juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);

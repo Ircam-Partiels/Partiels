@@ -170,7 +170,7 @@ namespace Track
             juce::GlyphArrangement mGlyphArrangement;
         };
 
-        void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
+        void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour);
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
@@ -179,9 +179,9 @@ namespace Track
     } // namespace Renderer
 } // namespace Track
 
-void Track::Renderer::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
+void Track::Renderer::paintChannels(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
 {
-    auto const verticalRanges = Tools::getChannelVerticalRanges(acsr, bounds);
+    auto const verticalRanges = Tools::getChannelVerticalRanges(bounds, channels);
     for(auto const& verticalRange : verticalRanges)
     {
         juce::Graphics::ScopedSaveState sss(g);
@@ -212,7 +212,7 @@ void Track::Renderer::paintClippedImage(juce::Graphics& g, juce::Image const& im
     g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
 }
 
-void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour)
+void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour)
 {
     if(colour.isTransparent() || accessor.getAttr<AttrType::grid>() == GridMode::hidden)
     {
@@ -294,14 +294,14 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         {
             case Track::FrameType::label:
             {
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int>, size_t)
                               {
                               });
             }
             break;
             case Track::FrameType::value:
             {
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
                               {
                                   paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
                               });
@@ -309,7 +309,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
             break;
             case Track::FrameType::vector:
             {
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
                               {
                                   paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
                               });
@@ -321,7 +321,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
     Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
 }
 
-void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour)
+void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour)
 {
     g.setFont(accessor.getAttr<AttrType::font>());
     auto const frameType = Tools::getFrameType(accessor);
@@ -331,8 +331,8 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
         {
             case Track::FrameType::label:
             {
-                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
                                   paintMarkers(accessor, channel, g, region, timeZoomAcsr);
                               });
@@ -340,8 +340,8 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
             break;
             case Track::FrameType::value:
             {
-                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
                                   paintPoints(accessor, channel, g, region, timeZoomAcsr);
                               });
@@ -349,11 +349,11 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
             break;
             case Track::FrameType::vector:
             {
-                paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
                                   paintColumns(accessor, channel, g, region, timeZoomAcsr);
                               });
-                paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
             }
             break;
         }

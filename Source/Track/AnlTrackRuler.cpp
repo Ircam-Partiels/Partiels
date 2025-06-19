@@ -143,7 +143,7 @@ void Track::Ruler::resized()
 
 void Track::Ruler::paint(juce::Graphics& g)
 {
-    Renderer::paintChannels(mAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId), [&](juce::Rectangle<int>, size_t)
+    Renderer::paintChannels(g, getLocalBounds(), mAccessor.getAttr<AttrType::channelsLayout>(), findColour(Decorator::ColourIds::normalBorderColourId), [&](juce::Rectangle<int>, size_t)
                             {
                             });
 }

@@ -1,9 +1,40 @@
 #include "AnlGroupExporter.h"
+#include "../Track/AnlTrackRenderer.h"
 #include "AnlGroupPlot.h"
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
+juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height)
+{
+    juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
+    juce::Graphics g(image);
+    g.fillAll(accessor.getAttr<AttrType::colour>());
+    auto const bounds = juce::Rectangle<int>(0, 0, width, height);
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const& layout = accessor.getAttr<AttrType::layout>();
+    std::vector<bool> channelVisibility(channels.size(), false);
+    for(auto const& channel : channels)
+    {
+        if(channel < channelVisibility.size())
+        {
+            channelVisibility[channel] = true;
+        }
+    }
+    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(accessor);
+    for(auto it = layout.crbegin(); it != layout.crend(); ++it)
+    {
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, *it);
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
+        {
+            auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
+            auto const colour = isSelected ? laf.findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            Track::Renderer::paint(trackAcsr.value().get(), timeZoomAccessor, g, bounds, channelVisibility, colour);
+        }
+    }
+    return image;
+}
+
+juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -30,21 +61,7 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& 
         return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto const getImage = [&]()
-    {
-        if(!lock.tryEnter())
-        {
-            return juce::Image{};
-        }
-        Zoom::Accessor tempTimeZoomAcsr;
-        tempTimeZoomAcsr.copyFrom(timeZoomAccessor, NotificationType::synchronous);
-        Plot plot(accessor, tempTimeZoomAcsr);
-        plot.setSize(width, height);
-        return plot.createComponentSnapshot({0, 0, width, height});
-    };
-
-    auto const image = getImage();
-
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height);
     if(image.isValid())
     {
         juce::FileOutputStream stream(temp.getFile());

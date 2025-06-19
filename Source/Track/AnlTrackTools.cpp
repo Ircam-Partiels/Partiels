@@ -302,9 +302,8 @@ std::optional<std::tuple<size_t, juce::Range<int>>> Track::Tools::getChannelVert
     return {};
 }
 
-std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
+std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(juce::Rectangle<int> bounds, std::vector<bool> const& channelsLayout)
 {
-    auto const channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
     auto const numVisibleChannels = static_cast<int>(std::count(channelsLayout.cbegin(), channelsLayout.cend(), true));
     if(numVisibleChannels == 0)
     {
@@ -335,6 +334,11 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
         }
     }
     return verticalRanges;
+}
+
+std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
+{
+    return getChannelVerticalRanges(std::move(bounds), acsr.getAttr<AttrType::channelsLayout>());
 }
 
 Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::atomic<bool> const& shouldAbort)
