@@ -41,6 +41,7 @@ namespace Document
         bool matchesFrame(Accessor const& accessor, double const time);
         bool canBreak(Accessor const& accessor, double time);
         bool isClipboardEmpty(Accessor const& accessor, Clipboard const& clipboard);
+        std::set<Track::FrameType> getSelectedChannelsFrameTypes(Accessor const& accessor);
         std::set<size_t> getEffectiveSelectedChannelsForTrack(Accessor const& accessor, Track::Accessor const& trackAcsr);
 
         std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& accessor);
