@@ -1170,18 +1170,20 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::frameExport:
         {
+            std::atomic<bool> shouldAbort{false};
+            auto options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            options.ignoreGridResults = false;
             auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+            auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
+            auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
             for(auto const& trackAcsr : trackAcsrs)
             {
-                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+                auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                if(!selectedChannels.empty())
                 {
-                    std::atomic<bool> shouldAbort{false};
-                    auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
-                    if(!selectedChannels.empty())
-                    {
-                        JUCE_COMPILER_WARNING("to do");
-                        return true;
-                    }
+                    [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, selectedChannels, date, trackAcsr.get().getAttr<Track::AttrType::identifier>(), options, shouldAbort, Instance::getSizeFor);
+                    MiscWeakAssert(results.wasOk() && "Exporting track failed!");
+                    return true;
                 }
             }
             return true;
@@ -1191,17 +1193,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)
             {
-                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+                std::atomic<bool> shouldAbort{false};
+                auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                if(!selectedChannels.empty())
                 {
-                    std::atomic<bool> shouldAbort{false};
-                    auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
-                    if(!selectedChannels.empty())
-                    {
-                        juce::String clipboardResults;
-                        Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
-                        juce::SystemClipboard::copyTextToClipboard(clipboardResults);
-                        return true;
-                    }
+                    juce::String clipboardResults;
+                    Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
+                    juce::SystemClipboard::copyTextToClipboard(clipboardResults);
+                    return true;
                 }
             }
             return true;
