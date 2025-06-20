@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugins>
+  <plugin>
+    <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="acf"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="candidates"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="detectionfunction"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="filtered_acf"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="tempo"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:percussiononsets" feature="detectionfunction"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:percussiononsets" feature="onsets"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:powerspectrum" feature="powerspectrum"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="logcentroid"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:zerocrossing" feature="counts"/>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:zerocrossing" feature="zerocrossings"/>
+  </plugin>
+</plugins>
