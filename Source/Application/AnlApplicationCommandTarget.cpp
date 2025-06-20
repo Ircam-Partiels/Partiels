@@ -405,7 +405,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameExport:
         {
-            result.setInfo(juce::translate("Export Frame(s)"), juce::translate("Export the selected frame(s) using the current export options"), "Edit", 0);
+            result.setInfo(juce::translate("Export Frame(s) to Desktop"), juce::translate("Export the selected frame(s) using the current export options to the desktop"), "Edit", 0);
             auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
             auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
             result.setActive(isFrameMode && std::any_of(frameTypes.cbegin(), frameTypes.cend(), [&](auto const& type)
