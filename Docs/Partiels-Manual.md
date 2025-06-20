@@ -1011,6 +1011,7 @@ Usage:
         --colname <name> The name of the column (optional).
  Partiels --plugin-list [options]  Prints an exhaustive list of installed plugins.
         --description Includes the descriptions of the plugins (optional).
+        --format <fileformat> Defines the output format (json or xml) (optional - default: json).
 ```
 
 It is recommended to add the path to the executable in the paths of your command line tool environment. 
