@@ -317,25 +317,53 @@ Application::CommandLine::CommandLine()
         {"--plugin-list",
          "--plugin-list [options]",
          "Prints an exhaustive list of installed plugins.\n\t"
-         "--description Includes the descriptions of the plugins (optional).",
+         "--description Includes the descriptions of the plugins (optional).\n\t"
+         "--format <fileformat> Defines the output format (json or xml) (optional - default: json).",
          "",
          []([[maybe_unused]] juce::ArgumentList const& args)
          {
              auto const includeDescription = args.containsOption("--description");
+             auto const format = args.containsOption("--format") ? args.getValueForOption("--format").toLowerCase() : "json";
+             if(format != "json" && format != "xml")
+             {
+                 fail("Invalid value for '--format'. Accepted values are 'json' or 'xml'. Use '--help' for more information.");
+             }
              PluginList::Scanner scanner;
              auto const plugins = scanner.getPlugins(48000.0);
-             nlohmann::json json;
-             for(auto const& plugin : std::get<0>(plugins))
+             if(format == "xml")
              {
-                 nlohmann::json plug;
-                 plug["key"] = plugin.first;
-                 if(includeDescription)
+                 juce::XmlElement xml("plugins");
+                 for(auto const& plugin : std::get<0>(plugins))
                  {
-                     plug["description"] = plugin.second;
+                     auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
+                     MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
+                     if(pluginXml != nullptr)
+                     {
+                         XmlParser::toXml(*pluginXml, "key", plugin.first);
+                         if(includeDescription)
+                         {
+                             XmlParser::toXml(*pluginXml, "description", plugin.second);
+                         }
+                         xml.addChildElement(pluginXml.release());
+                     }
                  }
-                 json.push_back(plug);
+                 std::cout << xml.toString() << std::endl;
              }
-             std::cout << json.dump(4) << std::endl;
+             else
+             {
+                 nlohmann::json json;
+                 for(auto const& plugin : std::get<0>(plugins))
+                 {
+                     nlohmann::json plug;
+                     plug["key"] = plugin.first;
+                     if(includeDescription)
+                     {
+                         plug["description"] = plugin.second;
+                     }
+                     json.push_back(plug);
+                 }
+                 std::cout << json.dump(4) << std::endl;
+             }
          }});
 }
 
