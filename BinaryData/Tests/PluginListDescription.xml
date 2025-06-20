@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugins>
+  <plugin>
+    <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
+    <description name="Amplitude Follower" inputDomain="0" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Track the amplitude of the audio signal&#10;Code copyright 2006 Dan Stowell; method from SuperCollider.  Freely redistributable (BSD license)">
+      <defaultState blockSize="0" stepSize="0" windowType="3">
+        <parameters key="attack" value="0.009999999776482582"/>
+        <parameters key="release" value="0.009999999776482582"/>
+      </defaultState>
+      <parameters>
+        <value identifier="attack" name="Attack time" description="The 60dB convergence time for an increase in amplitude"
+               unit="s" minValue="0.0" maxValue="1.0" defaultValue="0.009999999776482582"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="release" name="Release time" description="The 60dB convergence time for a decrease in amplitude"
+               unit="s" minValue="0.0" maxValue="1.0" defaultValue="0.009999999776482582"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="amplitude" name="Amplitude" description="The peak tracked amplitude for the current processing block"
+              unit="V" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="acf"/>
+    <description name="Simple Fixed Tempo Estimator" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Study a short section of audio and estimate its tempo, assuming the tempo is constant&#10;Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)">
+      <defaultState blockSize="256" stepSize="64" windowType="3">
+        <parameters key="maxbpm" value="190.0"/>
+        <parameters key="maxdflen" value="10.0"/>
+        <parameters key="minbpm" value="50.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="minbpm" name="Minimum estimated tempo" description="Minimum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="50.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxbpm" name="Maximum estimated tempo" description="Maximum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="190.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxdflen" name="Input duration to study" description="Length of audio input, in seconds, which should be taken into account when estimating tempo.  There is no need to supply the plugin with any further input once this time has elapsed since the start of the audio.  The tempo estimator may use only the first part of this, up to eight times the slowest beat duration: increasing this value further than that is unlikely to improve results."
+               unit="s" minValue="2.0" maxValue="40.0" defaultValue="10.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="acf" name="Autocorrelation Function" description="Autocorrelation of onset detection function"
+              unit="r" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="1.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="1" sampleRate="375.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="candidates"/>
+    <description name="Simple Fixed Tempo Estimator" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Study a short section of audio and estimate its tempo, assuming the tempo is constant&#10;Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)">
+      <defaultState blockSize="256" stepSize="64" windowType="3">
+        <parameters key="maxbpm" value="190.0"/>
+        <parameters key="maxdflen" value="10.0"/>
+        <parameters key="minbpm" value="50.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="minbpm" name="Minimum estimated tempo" description="Minimum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="50.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxbpm" name="Maximum estimated tempo" description="Maximum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="190.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxdflen" name="Input duration to study" description="Length of audio input, in seconds, which should be taken into account when estimating tempo.  There is no need to supply the plugin with any further input once this time has elapsed since the start of the audio.  The tempo estimator may use only the first part of this, up to eight times the slowest beat duration: increasing this value further than that is unlikely to improve results."
+               unit="s" minValue="2.0" maxValue="40.0" defaultValue="10.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="candidates" name="Tempo candidates" description="Possible tempo estimates, one per bin with the most likely in the first bin"
+              unit="bpm" hasFixedBinCount="0" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="48000.0" hasDuration="1"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="detectionfunction"/>
+    <description name="Simple Fixed Tempo Estimator" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Study a short section of audio and estimate its tempo, assuming the tempo is constant&#10;Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)">
+      <defaultState blockSize="256" stepSize="64" windowType="3">
+        <parameters key="maxbpm" value="190.0"/>
+        <parameters key="maxdflen" value="10.0"/>
+        <parameters key="minbpm" value="50.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="minbpm" name="Minimum estimated tempo" description="Minimum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="50.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxbpm" name="Maximum estimated tempo" description="Maximum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="190.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxdflen" name="Input duration to study" description="Length of audio input, in seconds, which should be taken into account when estimating tempo.  There is no need to supply the plugin with any further input once this time has elapsed since the start of the audio.  The tempo estimator may use only the first part of this, up to eight times the slowest beat duration: increasing this value further than that is unlikely to improve results."
+               unit="s" minValue="2.0" maxValue="40.0" defaultValue="10.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="detectionfunction" name="Detection Function" description="Onset detection function"
+              unit="" hasFixedBinCount="1" binCount="1" hasKnownExtents="1"
+              minValue="0.0" maxValue="1.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="1" sampleRate="375.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="filtered_acf"/>
+    <description name="Simple Fixed Tempo Estimator" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Study a short section of audio and estimate its tempo, assuming the tempo is constant&#10;Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)">
+      <defaultState blockSize="256" stepSize="64" windowType="3">
+        <parameters key="maxbpm" value="190.0"/>
+        <parameters key="maxdflen" value="10.0"/>
+        <parameters key="minbpm" value="50.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="minbpm" name="Minimum estimated tempo" description="Minimum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="50.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxbpm" name="Maximum estimated tempo" description="Maximum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="190.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxdflen" name="Input duration to study" description="Length of audio input, in seconds, which should be taken into account when estimating tempo.  There is no need to supply the plugin with any further input once this time has elapsed since the start of the audio.  The tempo estimator may use only the first part of this, up to eight times the slowest beat duration: increasing this value further than that is unlikely to improve results."
+               unit="s" minValue="2.0" maxValue="40.0" defaultValue="10.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="filtered_acf" name="Filtered Autocorrelation" description="Filtered autocorrelation of onset detection function"
+              unit="r" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="1.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="1" sampleRate="375.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:fixedtempo" feature="tempo"/>
+    <description name="Simple Fixed Tempo Estimator" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="" details="Study a short section of audio and estimate its tempo, assuming the tempo is constant&#10;Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)">
+      <defaultState blockSize="256" stepSize="64" windowType="3">
+        <parameters key="maxbpm" value="190.0"/>
+        <parameters key="maxdflen" value="10.0"/>
+        <parameters key="minbpm" value="50.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="minbpm" name="Minimum estimated tempo" description="Minimum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="50.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxbpm" name="Maximum estimated tempo" description="Maximum beat-per-minute value which the tempo estimator is able to return"
+               unit="bpm" minValue="10.0" maxValue="360.0" defaultValue="190.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxdflen" name="Input duration to study" description="Length of audio input, in seconds, which should be taken into account when estimating tempo.  There is no need to supply the plugin with any further input once this time has elapsed since the start of the audio.  The tempo estimator may use only the first part of this, up to eight times the slowest beat duration: increasing this value further than that is unlikely to improve results."
+               unit="s" minValue="2.0" maxValue="40.0" defaultValue="10.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="tempo" name="Tempo" description="Estimated tempo"
+              unit="bpm" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="48000.0" hasDuration="1"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:percussiononsets" feature="detectionfunction"/>
+    <description name="Simple Percussion Onset Detector" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Detect percussive note onsets by identifying broadband energy rises&#10;Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3">
+        <parameters key="sensitivity" value="40.0"/>
+        <parameters key="threshold" value="3.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="threshold" name="Energy rise threshold" description="Energy rise within a frequency bin necessary to count toward broadband total"
+               unit="dB" minValue="0.0" maxValue="20.0" defaultValue="3.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="sensitivity" name="Sensitivity" description="Sensitivity of peak detector applied to broadband detection function"
+               unit="%" minValue="0.0" maxValue="100.0" defaultValue="40.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="detectionfunction" name="Detection Function" description="Broadband energy rise detection function"
+              unit="" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="1" quantizeStep="1.0"
+              sampleType="0" sampleRate="48000.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:percussiononsets" feature="onsets"/>
+    <description name="Simple Percussion Onset Detector" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Detect percussive note onsets by identifying broadband energy rises&#10;Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3">
+        <parameters key="sensitivity" value="40.0"/>
+        <parameters key="threshold" value="3.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="threshold" name="Energy rise threshold" description="Energy rise within a frequency bin necessary to count toward broadband total"
+               unit="dB" minValue="0.0" maxValue="20.0" defaultValue="3.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="sensitivity" name="Sensitivity" description="Sensitivity of peak detector applied to broadband detection function"
+               unit="%" minValue="0.0" maxValue="100.0" defaultValue="40.0"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="onsets" name="Onsets" description="Percussive note onset locations"
+              unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="48000.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:powerspectrum" feature="powerspectrum"/>
+    <description name="Simple Power Spectrum" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Return the power spectrum of a signal&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
+      <output identifier="powerspectrum" name="Power Spectrum" description="Power values of the frequency spectrum bins calculated from the input signal"
+              unit="V&#94;2" hasFixedBinCount="1" binCount="513" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
+    <description name="Spectral Centroid" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Calculate the centroid frequency of the spectrum of the input signal&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
+      <output identifier="linearcentroid" name="Linear Frequency Centroid"
+              description="Centroid of the linear frequency spectrum" unit="Hz"
+              hasFixedBinCount="1" binCount="1" hasKnownExtents="0" minValue="0.0"
+              maxValue="0.0" isQuantized="0" quantizeStep="0.0" sampleType="0"
+              sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="logcentroid"/>
+    <description name="Spectral Centroid" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Calculate the centroid frequency of the spectrum of the input signal&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
+      <output identifier="logcentroid" name="Log Frequency Centroid" description="Centroid of the log weighted frequency spectrum"
+              unit="Hz" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:zerocrossing" feature="counts"/>
+    <description name="Zero Crossings" inputDomain="0" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Detect and count zero crossing points&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="counts" name="Zero Crossing Counts" description="The number of zero crossing points per processing block"
+              unit="crossings" hasFixedBinCount="1" binCount="1" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="1" quantizeStep="1.0"
+              sampleType="0" sampleRate="0.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+  <plugin>
+    <key identifier="vamp-example-plugins:zerocrossing" feature="zerocrossings"/>
+    <description name="Zero Crossings" inputDomain="0" maker="Vamp SDK Example Plugins"
+                 version="2" category="" details="Detect and count zero crossing points&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="zerocrossings" name="Zero Crossings" description="The locations of zero crossing points"
+              unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="1" quantizeStep="1.0"
+              sampleType="2" sampleRate="48000.0" hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+  </plugin>
+</plugins>
