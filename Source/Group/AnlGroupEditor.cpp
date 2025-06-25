@@ -103,7 +103,6 @@ void Group::Editor::updateTrackEditor()
 {
     if(mTrackEditor != nullptr)
     {
-        mTrackEditor->setSnapshotNameAndColour(mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colour>());
         mTrackEditor->setFocusInfo(mAccessor.getAttr<AttrType::focused>());
     }
 }
