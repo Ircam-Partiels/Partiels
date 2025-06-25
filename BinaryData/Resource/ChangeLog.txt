@@ -1,4 +1,19 @@
 
+- Fix: Corrected the loop stop at the end of the loop
+- Add: Frame and editing actions now accessible via right-click menu on groups and graphic tracks
+- Imp: Added detailed compilation instructions in the README.md
+- Fix: Corrected inconsistent naming of 'cut frame' and 'paste frame' actions in the undo/redo history
+- Imp: Enhanced user interface messages and improved French translations
+- Add: New helper scripts and templates for generating translation files
+- Imp: Fixed submenu behavior to remain visible after selecting items in the group plot popup menu
+- Imp: Enhanced global keyboard shortcuts with better macOS compatibility
+- Imp: Replaced Edit mode with Draw mode for more intuitive results modification via keyboard shortcuts
+- Add: New CLI command '--plugin-list' to output the list of installed plugins
+- Add: New function to reset frame durations to either full length or zero
+- Fix: Resolved application crash on startup in Linux Mint 21.2
+
+v2.0.11
+
 - Imp: Manual, release notes and to credits
 - Add: Support for track layout in OSC and the Matrix Manager patch for Pd
 - Add: Translation menu and a rewrite of the translation system
