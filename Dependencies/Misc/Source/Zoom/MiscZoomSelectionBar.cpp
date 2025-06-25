@@ -122,7 +122,7 @@ void Zoom::SelectionBar::paint(juce::Graphics& g)
 
 void Zoom::SelectionBar::mouseMove(juce::MouseEvent const& event)
 {
-    if(!mActive || event.mods.isPopupMenu())
+    if(event.mods.isPopupMenu())
     {
         setMouseCursor(mDefaultMouseCursor);
         return;
@@ -147,7 +147,7 @@ void Zoom::SelectionBar::mouseMove(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDown(juce::MouseEvent const& event)
 {
-    if(!mActive || event.mods.isPopupMenu())
+    if(event.mods.isPopupMenu())
     {
         return;
     }
@@ -186,7 +186,7 @@ void Zoom::SelectionBar::mouseDown(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDrag(juce::MouseEvent const& event)
 {
-    if(!mActive || event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
+    if(event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
     {
         return;
     }
@@ -200,7 +200,7 @@ void Zoom::SelectionBar::mouseDrag(juce::MouseEvent const& event)
 void Zoom::SelectionBar::mouseUp(juce::MouseEvent const& event)
 {
     setMouseCursor(mDefaultMouseCursor);
-    if(!mActive || event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
+    if(event.mods.isPopupMenu() || !event.mouseWasDraggedSinceMouseDown())
     {
         return;
     }
@@ -213,7 +213,7 @@ void Zoom::SelectionBar::mouseUp(juce::MouseEvent const& event)
 
 void Zoom::SelectionBar::mouseDoubleClick(juce::MouseEvent const& event)
 {
-    if(!mActive || event.mods.isPopupMenu())
+    if(event.mods.isPopupMenu())
     {
         return;
     }
