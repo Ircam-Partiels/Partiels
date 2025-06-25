@@ -58,7 +58,7 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
                 auto const startPosition = isLooping ? loopRange.getStart() : mStartPosition.load();
                 mReadPosition = startPosition;
                 mAudioFormatReaderSource.setNextReadPosition(startPosition);
-                mIsPlaying.store(mIsPlaying.load() && isLooping);
+                mIsPlaying.store(mIsPlaying.load() && isLooping && !stopAtLoopEnd);
             }
             else
             {
