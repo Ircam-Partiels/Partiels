@@ -108,6 +108,7 @@ Application::CommandTarget::CommandTarget()
 
 Application::CommandTarget::~CommandTarget()
 {
+    mShouldAbort.store(true);
     Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().removeListener(mTransportListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
@@ -153,6 +154,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::frameBreak
         , CommandIDs::frameResetDurationToZero
         , CommandIDs::frameResetDurationToFull
+        , CommandIDs::frameExport
         , CommandIDs::frameSystemCopy
         , CommandIDs::frameToggleDrawing
         
@@ -400,6 +402,18 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Reset Frame(s) duration to full"), juce::translate("Reset the selected frame(s) duration to full"), "Edit", 0);
             result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            break;
+        }
+        case CommandIDs::frameExport:
+        {
+            result.setInfo(juce::translate("Export Frame(s) to Desktop"), juce::translate("Export the selected frame(s) using the current export options to the desktop"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::altModifier, 0));
+            auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
+            auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            result.setActive(isFrameMode && std::any_of(frameTypes.cbegin(), frameTypes.cend(), [&](auto const& type)
+                                                        {
+                                                            return exportOptions.isCompatible(type);
+                                                        }));
             break;
         }
         case CommandIDs::frameSystemCopy:
@@ -1156,22 +1170,58 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
             return true;
         }
+        case CommandIDs::frameExport:
+        {
+            auto options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
+            auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
+            auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+
+            auto const exportItem = [&](juce::String const& identifier, std::set<size_t> const& channels)
+            {
+                if(!channels.empty())
+                {
+                    [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, channels, date, identifier, options, mShouldAbort, Instance::getSizeFor);
+                    MiscWeakAssert(results.wasOk() && "Exporting track failed!");
+                }
+            };
+
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            for(auto const& groupIdentifier : std::get<0_z>(selectedItems))
+            {
+                MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
+                if(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
+                    auto const channels = Group::Tools::getSelectedChannels(groupAcsr);
+                    exportItem(groupIdentifier, channels);
+                }
+            }
+            for(auto const& trackIdentifier : std::get<1_z>(selectedItems))
+            {
+                MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
+                if(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
+                    auto const channels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                    exportItem(trackIdentifier, channels);
+                }
+            }
+            return true;
+        }
         case CommandIDs::frameSystemCopy:
         {
             auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)
             {
-                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+                std::atomic<bool> shouldAbort{false};
+                auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
+                if(!selectedChannels.empty())
                 {
-                    std::atomic<bool> shouldAbort{false};
-                    auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
-                    if(!selectedChannels.empty())
-                    {
-                        juce::String clipboardResults;
-                        Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
-                        juce::SystemClipboard::copyTextToClipboard(clipboardResults);
-                        return true;
-                    }
+                    juce::String clipboardResults;
+                    Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
+                    juce::SystemClipboard::copyTextToClipboard(clipboardResults);
+                    return true;
                 }
             }
             return true;
