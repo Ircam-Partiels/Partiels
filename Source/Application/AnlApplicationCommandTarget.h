@@ -38,6 +38,7 @@ namespace Application
         Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         Document::Tools::Clipboard mClipboard;
+        std::atomic<bool> mShouldAbort{false};
 
         JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
     };
