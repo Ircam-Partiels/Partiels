@@ -122,7 +122,6 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
     mApplicationCommandManager.addListener(this);
-    mApplicationCommandManager.registerAllCommandsForTarget(this);
     applicationCommandListChanged();
 }
 
@@ -131,12 +130,6 @@ Track::Editor::~Editor()
     mApplicationCommandManager.removeListener(this);
     mTimeZoomAccessor.removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
-}
-
-void Track::Editor::setSnapshotNameAndColour(juce::String const& name, juce::Colour const& colour)
-{
-    mSnapshotName = name;
-    mSnapshotColour = colour;
 }
 
 void Track::Editor::setFocusInfo(FocusInfo const& info)
@@ -189,11 +182,6 @@ void Track::Editor::mouseEnter(juce::MouseEvent const& event)
 void Track::Editor::mouseExit([[maybe_unused]] juce::MouseEvent const& event)
 {
     Tooltip::BubbleClient::setTooltip("");
-}
-
-void Track::Editor::takeSnapshot()
-{
-    ComponentSnapshot::takeSnapshot(mContent, mSnapshotName, mSnapshotColour);
 }
 
 void Track::Editor::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
