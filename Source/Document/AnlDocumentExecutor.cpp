@@ -33,9 +33,13 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
     auto fileResult = Document::FileBased::parse(templateFile);
     if(fileResult.index() == 1_z)
     {
-        return juce::Result::fail(std::get_if<1>(&fileResult)->getErrorMessage());
+        return std::get<1>(fileResult);
     }
-    auto xml = std::move(*std::get_if<0>(&fileResult));
+    auto xml = std::move(std::get<0>(fileResult));
+
+    // Adjust the path in the XML to match the new template file location
+    XmlParser::replaceAllAttributeValues(*xml.get(), FileBased::getPathReplacement(*xml.get()), templateFile.getParentDirectory().getFullPathName() + juce::File::getSeparatorString());
+
     Document::FileBased::loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
 
     anlDebug("Executor", "Sanitize document...");
