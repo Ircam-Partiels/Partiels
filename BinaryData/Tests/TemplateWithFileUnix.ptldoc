@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="131084" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/BinaryData/Tests/TemplateWithFileUnix.ptldoc"
+          grid="1" autoresize="1" samplerate="44100.0" channels="2">
+  <reader>
+    <value file="/Users/guillot/Git/Partiels/BinaryData/Tests/Sound.wav" channel="0"/>
+  </reader>
+  <reader>
+    <value file="/Users/guillot/Git/Partiels/BinaryData/Tests/Sound.wav" channel="1"/>
+  </reader>
+  <layout value="dc5e59b9f3654979946bb384fcf0e673"/>
+  <timeZoom MiscModelVersion="131084" globalRange_start="0.0" globalRange_end="1.0"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="1.0">
+    <grid MiscModelVersion="131084" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="131084" startPlayhead="0.4713055954088953"
+             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
+             autoScroll="1" gain="3.981071705534973" magnetize="0"/>
+  <groups MiscModelVersion="131084" identifier="dc5e59b9f3654979946bb384fcf0e673"
+          name="Group 1" height="748" colour="0" expanded="0" referenceid="">
+    <layout value="e9d315cd57c74c45a617e33f7db701f1"/>
+    <zoom MiscModelVersion="131084" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="131084" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="131084" identifier="e9d315cd57c74c45a617e33f7db701f1"
+          name="Markers" input="" sampleRate="44100.0" height="78" font="Nunito Sans; 14.0 Regular"
+          lineWidth="2.0" showInGroup="1" sendViaOsc="0" zoomValueMode="0"
+          zoomLogScale="0" zoomLink="1">
+    <file path="/Users/guillot/Git/Partiels/BinaryData/Tests/Markers.csv"
+          commit="">
+      <args>
+        <pair key="separator" value=","/>
+        <pair key="useendtime" value="true"/>
+      </args>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff00f345" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="131084" globalRange_start="0.0" globalRange_end="0.0"
+               minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131084" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131084" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131084" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
