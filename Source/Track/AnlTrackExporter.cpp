@@ -491,14 +491,8 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                     nlohmann::json vjson;
                     vjson["time"] = std::get<0_z>(*it);
-                    if(std::get<1_z>(*it) > 0.0)
-                    {
-                        vjson["duration"] = std::get<1_z>(*it);
-                    }
-                    if(!std::get<2_z>(*it).empty())
-                    {
-                        vjson["label"] = std::get<2_z>(*it);
-                    }
+                    vjson["duration"] = std::get<1_z>(*it);
+                    vjson["label"] = std::get<2_z>(*it);
                     if(!std::get<3_z>(*it).empty())
                     {
                         vjson["extra"] = std::get<3_z>(*it);
@@ -529,13 +523,14 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                     nlohmann::json vjson;
                     vjson["time"] = std::get<0_z>(*it);
-                    if(std::get<1_z>(*it) > 0.0)
-                    {
-                        vjson["duration"] = std::get<1_z>(*it);
-                    }
+                    vjson["duration"] = std::get<1_z>(*it);
                     if(std::get<2_z>(*it).has_value())
                     {
                         vjson["value"] = std::get<2_z>(*it).value();
+                    }
+                    else
+                    {
+                        vjson["value"] = {};
                     }
                     if(!std::get<3_z>(*it).empty())
                     {
@@ -567,10 +562,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
 
                     nlohmann::json vjson;
                     vjson["time"] = std::get<0_z>(*it);
-                    if(std::get<1_z>(*it) > 0.0)
-                    {
-                        vjson["duration"] = std::get<1_z>(*it);
-                    }
+                    vjson["duration"] = std::get<1_z>(*it);
                     vjson["values"] = std::get<2_z>(*it);
                     if(!std::get<3_z>(*it).empty())
                     {
