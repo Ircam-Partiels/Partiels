@@ -112,7 +112,7 @@ countries: fr be
 "Cannot copy from SRCFLNAME to DSTFLNAME" = "Impossible de copier de SRCFLNAME à DSTFLNAME"
 "Font Style" = "Style de police"
 "Metadata MDNM of the audio file" = "Métadonnées MDNM du fichier audio"
-"Warning generated!" = "Avertissement généré !"
+"Error: The track TRACKNAME contains an ERRORTYPE error!" = "Erreur : La piste TRACKNAME contient une erreur de type ERRORTYPE !"
 "Do you still want to quit the app? Note that a running analysis may block the application from closing until it completes." = "Voulez-vous toujours quitter l'application ? Notez qu'une analyse en cours peut empêcher l'application de se fermer jusqu'à ce qu'elle soit terminée."
 "Move the Playhead Forward" = "Déplacer la tête de lecture vers l'avant"
 "The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON." = "Le plugin [KEYID - KEYFEATURE] de la piste TKNAME ne peut pas être chargé : RAISON."
