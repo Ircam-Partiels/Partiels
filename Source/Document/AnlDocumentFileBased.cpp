@@ -120,14 +120,13 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     }
     auto xml = std::move(*std::get_if<0>(&fileResult));
 
-    auto const original = XmlParser::fromXml(*xml.get(), "path", file);
-    auto const oldDirectory = getConsolidateDirectory(original);
-    auto const newDirectory = getConsolidateDirectory(file);
-    replacePath(*xml.get(), oldDirectory.getFullPathName(), newDirectory.getFullPathName());
+    auto const originalParent = getPathReplacement(*xml.get());
+    auto const newParent = file.getParentDirectory();
+    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, newParent.getFullPathName() + juce::File::getSeparatorString());
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
-    mDirector.setFileMapper(original, file);
+    mDirector.setFileMapper(juce::File(originalParent), newParent);
     mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
@@ -247,12 +246,17 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
     auto fileResult = parse(file);
     if(fileResult.index() == 1_z)
     {
-        return *std::get_if<1>(&fileResult);
+        return std::get<1>(fileResult);
     }
-    auto xml = std::move(*std::get_if<0>(&fileResult));
+    auto xml = std::move(std::get<0>(fileResult));
+
+    auto const originalParent = getPathReplacement(*xml.get());
+    auto const newParent = file.getParentDirectory();
+    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, newParent.getFullPathName() + juce::File::getSeparatorString());
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
+    mDirector.setFileMapper(juce::File(originalParent), newParent);
     mAccessor.sendSignal(SignalType::isLoading, {true}, NotificationType::synchronous);
     loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
@@ -282,9 +286,9 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     auto fileResult = parse(file);
     if(fileResult.index() == 1_z)
     {
-        return *std::get_if<1>(&fileResult);
+        return std::get<1>(fileResult);
     }
-    auto const xml = std::move(*std::get_if<0>(&fileResult));
+    auto const xml = std::move(std::get<0>(fileResult));
 
     if(xml->hasAttribute("origin"))
     {
@@ -456,26 +460,32 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
     }
 }
 
-void Document::FileBased::replacePath(juce::XmlElement& element, juce::String const& oldPath, juce::String const& newPath)
+juce::String Document::FileBased::getPathReplacement(juce::XmlElement const& element)
 {
-    if(oldPath == newPath)
+    auto const oldPath = element.getStringAttribute("path");
+    if(juce::File::isAbsolutePath(oldPath))
     {
-        return;
+        return juce::File(oldPath).getParentDirectory().getFullPathName() + juce::File::getSeparatorString();
     }
-    for(int i = 0; i < element.getNumAttributes(); ++i)
+    else
     {
-        auto const& currentValue = element.getAttributeValue(i);
-        if(currentValue.contains(oldPath))
+        // The path is formatted for another operating system than the current one,
+        // so we use the other separator to generate the parent directory path.
+#if JUCE_WINDOWS
+        static juce::juce_wchar constexpr separator('/');
+#else
+        static juce::juce_wchar constexpr separator('\\');
+#endif
+        auto const lastSlash = oldPath.lastIndexOfChar(separator);
+        if(lastSlash > 0)
         {
-            element.setAttribute(element.getAttributeName(i), currentValue.replace(oldPath, newPath));
+            return oldPath.substring(0, lastSlash + 1);
         }
-    }
-    for(auto* child : element.getChildIterator())
-    {
-        if(child != nullptr)
+        if(lastSlash == 0)
         {
-            replacePath(*child, oldPath, newPath);
+            return juce::String::charToString(separator);
         }
+        return oldPath;
     }
 }
 

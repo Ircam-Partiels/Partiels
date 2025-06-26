@@ -28,6 +28,11 @@ namespace Document
         static void loadTemplate(Accessor& accessor, juce::XmlElement const& xml, bool adaptOnSampleRate);
         static juce::File getConsolidateDirectory(juce::File const& file);
 
+        //! @brief Returns the original path to replace that corresponds to the parent directory of the 'path' attribute.
+        //! @details The path could be formatted for another operating system (Unix/Windows) and the format should
+        //! be preserved to ensure that the other paths will be correctly replaced.
+        static juce::String getPathReplacement(juce::XmlElement const& element);
+
     protected:
         // juce::FileBasedDocument
         juce::String getDocumentTitle() override;
@@ -40,8 +45,6 @@ namespace Document
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
-
-        static void replacePath(juce::XmlElement& element, juce::String const& oldPath, juce::String const& newPath);
 
         Director& mDirector;
         Accessor& mAccessor;
