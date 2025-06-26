@@ -251,7 +251,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     advancement.store(0.2f);
     if(container.is_discarded())
     {
-        return {juce::translate("Parsing error")};
+        return {juce::translate("Parsing error: invalid JSON format")};
     }
 
     auto const& json = container.count("results") ? container.at("results") : container;
@@ -278,11 +278,6 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     // clang-format on
 
     auto mode = Mode::undefined;
-    auto const check = [&](Mode const expected)
-    {
-        return mode == Mode::undefined || mode == expected;
-    };
-
     auto const checkAndSet = [&](Mode const expected)
     {
         if(mode == Mode::undefined || mode == expected)
@@ -299,9 +294,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
         Results::Markers markerChannel;
         Results::Points pointChannel;
         Results::Columns columnChannel;
-        markerChannel.reserve(check(Mode::marker) ? channelData.size() : 0_z);
-        pointChannel.reserve(check(Mode::point) ? channelData.size() : 0_z);
-        columnChannel.reserve(check(Mode::column) ? channelData.size() : 0_z);
+        markerChannel.reserve(mode == Mode::marker ? channelData.size() : 0_z);
+        pointChannel.reserve(mode == Mode::point ? channelData.size() : 0_z);
+        columnChannel.reserve(mode == Mode::column ? channelData.size() : 0_z);
 
         auto const advRatio = 0.8f * static_cast<float>(channelIndex) / static_cast<float>(json.size());
         advancement.store(0.2f + advRatio);
@@ -317,68 +312,77 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
             auto const timeIt = frameData.find("time");
             if(timeIt == frameData.cend())
             {
-                return {juce::translate("Parsing error")};
+                return {juce::translate("Parsing error: the result frame doesn't contain the time value")};
             }
             auto const durationIt = frameData.find("duration");
             auto const extraIt = frameData.find("extra");
             auto const labelIt = frameData.find("label");
-            if(labelIt != frameData.cend())
+            auto const valueIt = frameData.find("value");
+            auto const valuesIt = frameData.find("values");
+            if(labelIt != frameData.cend() || mode == Mode::marker || (mode == Mode::undefined && valueIt == frameData.cend() && valuesIt == frameData.cend()))
             {
                 if(!checkAndSet(Mode::marker))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error: the type of results is not consistent - expected EXPECTTYPE, but got CURRENTTYPE").replace("EXPECTTYPE", std::string(magic_enum::enum_name(Mode::marker))).replace("CURRENTTYPE", std::string(magic_enum::enum_name(mode)))};
                 }
                 markerChannel.push_back({});
                 std::get<0_z>(markerChannel.back()) = timeIt->get<double>();
                 std::get<1_z>(markerChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
-                std::get<2_z>(markerChannel.back()) = labelIt->get<std::string>();
+                if(labelIt != frameData.cend())
+                {
+                    std::get<2_z>(markerChannel.back()) = labelIt->get<std::string>();
+                }
                 if(extraIt != frameData.cend())
                 {
                     std::get<3_z>(markerChannel.back()) = extraIt->get<std::vector<float>>();
                 }
             }
-            auto const valueIt = frameData.find("value");
-            if(valueIt != frameData.cend())
+            else if(valueIt != frameData.cend() || mode == Mode::point)
             {
                 if(!checkAndSet(Mode::point))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error: the type of results is not consistent - expected EXPECTTYPE, but got CURRENTTYPE").replace("EXPECTTYPE", std::string(magic_enum::enum_name(Mode::point))).replace("CURRENTTYPE", std::string(magic_enum::enum_name(mode)))};
                 }
                 pointChannel.push_back({});
                 std::get<0_z>(pointChannel.back()) = timeIt->get<double>();
                 std::get<1_z>(pointChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
-                std::get<2_z>(pointChannel.back()) = valueIt->get<float>();
+                if(valueIt != frameData.cend())
+                {
+                    std::get<2_z>(pointChannel.back()) = valueIt->get<float>();
+                }
                 if(extraIt != frameData.cend())
                 {
                     std::get<3_z>(pointChannel.back()) = extraIt->get<std::vector<float>>();
                 }
             }
-            auto const valuesIt = frameData.find("values");
-            if(valuesIt != frameData.cend())
+            else if(valuesIt != frameData.cend() || mode == Mode::column)
             {
                 if(!checkAndSet(Mode::column))
                 {
-                    return {juce::translate("Parsing error")};
+                    return {juce::translate("Parsing error: the type of results is not consistent - expected EXPECTTYPE, but got CURRENTTYPE").replace("EXPECTTYPE", std::string(magic_enum::enum_name(Mode::column))).replace("CURRENTTYPE", std::string(magic_enum::enum_name(mode)))};
                 }
                 columnChannel.push_back({});
                 std::get<0_z>(columnChannel.back()) = timeIt->get<double>();
                 std::get<1_z>(columnChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
-                std::get<2_z>(columnChannel.back()) = valuesIt->get<std::vector<float>>();
+                if(valuesIt != frameData.cend())
+                {
+                    std::get<2_z>(columnChannel.back()) = valuesIt->get<std::vector<float>>();
+                }
                 if(extraIt != frameData.cend())
                 {
                     std::get<3_z>(columnChannel.back()) = extraIt->get<std::vector<float>>();
                 }
             }
         }
-        if(check(Mode::marker))
+        if(mode == Mode::marker)
         {
             markers.push_back(std::move(markerChannel));
         }
-        else if(check(Mode::point))
+        else if(mode == Mode::point)
         {
             points.push_back(std::move(pointChannel));
         }
-        else if(check(Mode::column))
+        else if(mode == Mode::column)
         {
             columns.push_back(std::move(columnChannel));
         }
@@ -389,19 +393,19 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     }
 
     advancement.store(1.0f);
-    if(check(Mode::marker))
+    if(mode == Mode::marker)
     {
         return Track::Results(std::move(markers));
     }
-    else if(check(Mode::point))
+    else if(mode == Mode::point)
     {
         return Track::Results(std::move(points));
     }
-    else if(check(Mode::column))
+    else if(mode == Mode::column)
     {
         return Track::Results(std::move(columns));
     }
-    return {juce::translate("Parsing error")};
+    return {juce::translate("Parsing error: couldn't determine the type of results")};
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
