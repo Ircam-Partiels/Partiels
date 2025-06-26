@@ -403,6 +403,9 @@ set_tests_properties(ExportPng PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_D
 add_test(NAME ExportCsv COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
+add_test(NAME ExportCsvWithFileUnix COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithFileUnix.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportCsvWithFileUnix PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/ --format=json)
 set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 add_test(NAME ExportJsonCompareSpectrum COMMAND ${CMAKE_COMMAND} -E compare_files "${TESTS_DIRECTORY}/Expected/JSON/Sound Group 1_Simple Power Spectrum.json" "${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Sound Group 1_Simple Power Spectrum.json")
