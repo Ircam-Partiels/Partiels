@@ -727,9 +727,9 @@ void Track::Director::runLoading()
     if(file.file != juce::File{})
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+        mLoader.loadAnalysis(file);
         startTimer(50);
         timerCallback();
-        mLoader.loadAnalysis(file);
     }
 }
 
