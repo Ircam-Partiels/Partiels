@@ -62,12 +62,15 @@ juce::Result Document::Executor::launch()
 {
     anlDebug("Executor", "Check for warnings...");
     auto const trackAcsrs = mAccessor.getAcsrs<Document::AcsrType::tracks>();
-    if(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                   {
-                       return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
-                   }))
+    auto const warningTrackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                             {
+                                                 return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
+                                             });
+    if(warningTrackIt != trackAcsrs.cend())
     {
-        return juce::Result::fail(juce::translate("Warning generated!"));
+        auto const trackName = warningTrackIt->get().getAttr<Track::AttrType::name>();
+        auto const warningType = std::string(magic_enum::enum_name(warningTrackIt->get().getAttr<Track::AttrType::warnings>()));
+        return juce::Result::fail(juce::translate("Error: The track TRACKNAME contains an ERRORTYPE error!").replace("TRACKNAME", trackName).replace("ERRORTYPE", warningType));
     }
 
     timerCallback();
