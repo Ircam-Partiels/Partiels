@@ -563,6 +563,34 @@ bool Document::Tools::isClipboardEmpty(Accessor const& accessor, Clipboard const
     return true;
 }
 
+std::set<Track::FrameType> Document::Tools::getSelectedChannelsFrameTypes(Accessor const& accessor)
+{
+    std::set<Track::FrameType> frameTypes;
+    for(auto const& trackAcsr : accessor.getAcsrs<AcsrType::tracks>())
+    {
+        auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+        auto const frameType = Track::Tools::getFrameType(trackAcsr.get());
+        if(!selectedChannels.empty() && frameType.has_value())
+        {
+            frameTypes.insert(frameType.value());
+        }
+    }
+    for(auto const& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    {
+        auto const selectedChannels = Group::Tools::getSelectedChannels(groupAcsr.get());
+        auto const referenceTrack = Group::Tools::getReferenceTrackAcsr(groupAcsr.get());
+        if(!selectedChannels.empty() && referenceTrack.has_value())
+        {
+            auto const frameType = Track::Tools::getFrameType(referenceTrack.value().get());
+            if(frameType.has_value())
+            {
+                frameTypes.insert(frameType.value());
+            }
+        }
+    }
+    return frameTypes;
+}
+
 std::set<size_t> Document::Tools::getEffectiveSelectedChannelsForTrack(Accessor const& accessor, Track::Accessor const& trackAcsr)
 {
     // If the track is the reference track of a group, it adds the selected channels

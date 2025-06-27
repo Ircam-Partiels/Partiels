@@ -41,13 +41,9 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
-                break;
             case AttrType::name:
             case AttrType::colours:
-            {
-                mEditor.setSnapshotNameAndColour(acsr.getAttr<AttrType::name>(), acsr.getAttr<AttrType::colours>().background);
                 break;
-            }
             case AttrType::height:
             {
                 setSize(getWidth(), acsr.getAttr<AttrType::height>());

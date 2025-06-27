@@ -103,9 +103,45 @@ bool Document::Exporter::Options::isValid() const
     return format != Format::sdif || (sdifFrameSignature.length() == 4 && !sdifFrameSignature.contains("?") && sdifMatrixSignature.length() == 4 && !sdifMatrixSignature.contains("?"));
 }
 
+bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
+{
+    switch(format)
+    {
+        case Format::jpeg:
+            return true;
+        case Format::png:
+            return true;
+        case Format::csv:
+            return true;
+        case Format::lab:
+            return true;
+        case Format::json:
+            return true;
+        case Format::cue:
+            return frameType == Track::FrameType::label;
+        case Format::reaper:
+            return frameType == Track::FrameType::label;
+        case Format::sdif:
+            return true;
+    }
+}
+
 static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets()
 {
-    static std::vector<std::tuple<std::string, int, int>> const presets{{"Wide Ultra Extended Graphics Array", 1920, 1200}, {"A3 (300ppi)", 4960, 3508}, {"A4 (300ppi)", 3508, 2480}, {"A5 (300ppi)", 2480, 1748}, {"A6 (300ppi)", 1748, 1240}, {"A7 (300ppi)", 1240, 874}, {"HD (720p)", 1280, 720}, {"Full HD (1080p)", 1920, 1080}, {"4K UHD", 3840, 2160}};
+    // clang-format off
+    static std::vector<std::tuple<std::string, int, int>> const presets
+    {
+          {"Wide Ultra Extended Graphics Array", 1920, 1200}
+        , {"A3 (300ppi)", 4960, 3508}
+        , {"A4 (300ppi)", 3508, 2480}
+        , {"A5 (300ppi)", 2480, 1748}
+        , {"A6 (300ppi)", 1748, 1240}
+        , {"A7 (300ppi)", 1240, 874}
+        , {"HD (720p)", 1280, 720}
+        , {"Full HD (1080p)", 1920, 1080}
+        , {"4K UHD", 3840, 2160}
+    };
+    // clang-format on
     return presets;
 }
 
@@ -294,16 +330,14 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     };
     mPropertySdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
 
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
             {
-                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this]([[maybe_unused]] Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                                                                  {
-                                                                                     juce::ignoreUnused(trackAcsr);
                                                                                      if(trackAttribute == Track::AttrType::name)
                                                                                      {
                                                                                          updateItems();
@@ -315,9 +349,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
             break;
             case AcsrType::groups:
             {
-                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this]([[maybe_unused]] Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                                                                  {
-                                                                                     juce::ignoreUnused(groupAcsr);
                                                                                      if(groupAttribute == Group::AttrType::name || groupAttribute == Group::AttrType::layout)
                                                                                      {
                                                                                          updateItems();
@@ -333,9 +366,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
         }
     };
 
-    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::tracks:
@@ -767,7 +799,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
 {
     if(file == juce::File())
     {
@@ -854,7 +886,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -886,7 +918,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -1061,15 +1093,15 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, false, '\t', true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, timeRange, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, shouldAbort);
             case Options::Format::reaper:
-                return Track::Exporter::toReaper(trackAcsr, timeRange, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
+                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);

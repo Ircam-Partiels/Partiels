@@ -10,7 +10,7 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class Editor
-    : public ComponentSnapshot
+    : public juce::Component
     , public Tooltip::BubbleClient
     , public juce::SettableTooltipClient
     , private juce::ApplicationCommandManagerListener
@@ -19,7 +19,6 @@ namespace Track
         Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor, juce::ApplicationCommandManager& commandManager, juce::Component& content, std::function<juce::String(juce::Point<int> const&)> getTooltip, bool paintBackground);
         ~Editor() override;
 
-        void setSnapshotNameAndColour(juce::String const& name, juce::Colour const& colour);
         void setFocusInfo(FocusInfo const& info);
         std::function<void(juce::MouseEvent const& event)> onMouseDown = nullptr;
 
@@ -34,9 +33,6 @@ namespace Track
         void fillPopupMenu(juce::PopupMenu& menu);
 
     private:
-        // ComponentSnapshot
-        void takeSnapshot() override;
-
         // juce::ApplicationCommandManagerListener
         void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
         void applicationCommandListChanged() override;

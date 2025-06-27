@@ -12,28 +12,28 @@ namespace Track
 
         juce::Result toPreset(Accessor const& accessor, juce::File const& file);
 
-        juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, int width, int height);
-        juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
+        juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height);
+        juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
 
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort);
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeDescription, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort);
-        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
-        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort);
+        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, std::atomic<bool> const& shouldAbort);
+        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, std::atomic<bool> const& shouldAbort);
+        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort);
-        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort);
-        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort);
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool isMarker, std::atomic<bool> const& shouldAbort);
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool isMarker, std::atomic<bool> const& shouldAbort);
+        juce::Result toReaper(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool isMarker, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, std::atomic<bool> const& shouldAbort);
-        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
-        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, std::atomic<bool> const& shouldAbort);
+        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, std::atomic<bool> const& shouldAbort);
+        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, std::atomic<bool> const& shouldAbort);
+        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, std::atomic<bool> const& shouldAbort);
 
         juce::Result toSdif(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort);
 
