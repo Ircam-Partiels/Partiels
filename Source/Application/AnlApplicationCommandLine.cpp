@@ -5,6 +5,24 @@ ANALYSE_FILE_BEGIN
 
 Application::CommandLine::CommandLine()
 {
+    PluginList::Accessor pluginListAcsr;
+    auto const packagePluginDir = std::invoke([]()
+                                              {
+                                                  auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+                                                  auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
+                                                  auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
+                                                  PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
+                                                  return pluginPackage;
+#else
+                                                  return exeFile.getSiblingFile("PlugIns");
+#endif
+                                              });
+    pluginListAcsr.setAttr<PluginList::AttrType::useEnvVariable>(true, NotificationType::synchronous);
+    pluginListAcsr.setAttr<PluginList::AttrType::quarantineMode>(PluginList::QuarantineMode::ignore, NotificationType::synchronous);
+    pluginListAcsr.setAttr<PluginList::AttrType::searchPath>(std::vector<juce::File>{packagePluginDir}, NotificationType::synchronous);
+    PluginList::setEnvironment(pluginListAcsr, {});
+
     addHelpCommand("--help|-h", "Usage:", false);
     addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + Instance::get().getApplicationVersion());
     addCommand({"", "[file(s)]", "Loads the document or creates a new document with the audio files specified as arguments.", "", {}});
