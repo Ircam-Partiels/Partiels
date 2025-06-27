@@ -791,11 +791,6 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     // clang-format on
 
     auto mode = Mode::undefined;
-    auto const check = [&](Mode const expected)
-    {
-        return mode == Mode::undefined || mode == expected;
-    };
-
     auto const getFloatValue = [](auto const& v) -> std::optional<float>
     {
         try
@@ -894,11 +889,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     }
 
     advancement.store(1.0f);
-    if(check(Mode::marker))
+    if(mode == Mode::marker)
     {
         return Track::Results(std::move(markers));
     }
-    else if(check(Mode::point))
+    else if(mode == Mode::point)
     {
         return Track::Results(std::move(points));
     }
