@@ -136,6 +136,29 @@ auto XmlParser::fromXml<juce::StringPairArray>(juce::XmlElement const& xml, juce
     return value;
 }
 
+void XmlParser::replaceAllAttributeValues(juce::XmlElement& element, juce::String const& previousValue, juce::String const& newValue)
+{
+    if(previousValue.isEmpty())
+    {
+        return;
+    }
+    for(auto i = 0; i < element.getNumAttributes(); ++i)
+    {
+        auto const& currentValue = element.getAttributeValue(i);
+        if(currentValue.contains(previousValue))
+        {
+            element.setAttribute(element.getAttributeName(i), currentValue.replace(previousValue, newValue));
+        }
+    }
+    for(auto* child : element.getChildIterator())
+    {
+        if(child != nullptr)
+        {
+            replaceAllAttributeValues(*child, previousValue, newValue);
+        }
+    }
+}
+
 class XmlParserUnitTest
 : public juce::UnitTest
 {
