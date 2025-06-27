@@ -1378,7 +1378,7 @@ public:
 
     void runTest() override
     {
-        auto const checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9)
+        auto const checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9, bool ignoreLabel = false)
         {
             if(vResult.index() != 0_z)
             {
@@ -1402,11 +1402,14 @@ public:
             }
 
             using namespace std::string_literals;
-            auto const expectMarker = [this, timeEpsilon](Results::Marker const& marker, double time, std::string const& label)
+            auto const expectMarker = [this, timeEpsilon, ignoreLabel](Results::Marker const& marker, double time, std::string const& label)
             {
                 expectWithinAbsoluteError(std::get<0>(marker), time, timeEpsilon, "Time");
                 expectWithinAbsoluteError(std::get<1>(marker), 0.0, 1e-9, "Duration");
-                expectEquals(std::get<2>(marker), label, "Label");
+                if(!ignoreLabel)
+                {
+                    expectEquals(std::get<2>(marker), label, "Label");
+                }
             };
 
             auto const expectChannel = [&](Results::Markers const& channelMarkers, std::vector<std::tuple<double, std::string>> const& expectedResults)
@@ -1427,7 +1430,7 @@ public:
             expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {10.023582767, "A"s}});
         };
 
-        auto const checkPoints = [this](std::variant<Results, juce::String> vResult)
+        auto const checkPoints = [this](std::variant<Results, juce::String> vResult, bool ignoreNoValue = false)
         {
             if(vResult.index() != 0_z)
             {
@@ -1451,11 +1454,11 @@ public:
             }
 
             using namespace std::string_literals;
-            auto const expectPoint = [this](Results::Point const& point, double time, float value)
+            auto const expectPoint = [this, ignoreNoValue](Results::Point const& point, double time, float value)
             {
                 expectWithinAbsoluteError(std::get<0>(point), time, 1e-9, "Time");
                 expectWithinAbsoluteError(std::get<1>(point), 0.0, 1e-9, "Duration");
-                expect(std::get<2>(point).has_value(), "Has Value");
+                expect(ignoreNoValue || std::get<2>(point).has_value(), "Has Value");
                 if(std::get<2>(point).has_value())
                 {
                     expectWithinAbsoluteError(*std::get<2>(point), value, 1e-9f, "Value");
@@ -1596,6 +1599,24 @@ public:
             expectEquals(loadFromJson(stream, shouldAbort, advancement).index(), 1_z);
         }
 
+        beginTest("load json error - no time");
+        {
+            auto const result = std::string(TestResultsData::ErrorNoTime_json);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromJson(stream, shouldAbort, advancement).index(), 1_z);
+        }
+
+        beginTest("load json error - multiple type");
+        {
+            auto const result = std::string(TestResultsData::ErrorMultipleType_json);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromJson(stream, shouldAbort, advancement).index(), 1_z);
+        }
+
         beginTest("load json markers");
         {
             auto const result = std::string(TestResultsData::Markers_json);
@@ -1605,6 +1626,15 @@ public:
             checkMakers(loadFromJson(stream, shouldAbort, advancement));
         }
 
+        beginTest("load json markers - no type");
+        {
+            auto const result = std::string(TestResultsData::MarkerNoType_json);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromJson(stream, shouldAbort, advancement), 1e-9, true);
+        }
+
         beginTest("load json points");
         {
             auto const result = std::string(TestResultsData::Points_json);
@@ -1612,6 +1642,15 @@ public:
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
             checkPoints(loadFromJson(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load json points - optional");
+        {
+            auto const result = std::string(TestResultsData::PointsOptional_json);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromJson(stream, shouldAbort, advancement), true);
         }
 
         beginTest("load binary error");
