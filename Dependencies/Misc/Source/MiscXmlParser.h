@@ -297,6 +297,9 @@ namespace XmlParser
     template <>
     auto fromXml<juce::StringPairArray>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::StringPairArray const& defaultValue)
         -> juce::StringPairArray;
+
+    //! @brief Replaces all occurrences of a specific attribute value in the XML element with a new value.
+    void replaceAllAttributeValues(juce::XmlElement& element, juce::String const& previousValue, juce::String const& newValue);
 } // namespace XmlParser
 
 MISC_FILE_END
