@@ -406,6 +406,9 @@ set_tests_properties(ExportCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_D
 add_test(NAME ExportCsvWithFileUnix COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithFileUnix.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportCsvWithFileUnix PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
+add_test(NAME ExportCsvWithFileWindows COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithFileWindows.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportCsvWithFileWindows PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
 add_test(NAME ExportCsvWithFileNoColour COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithFileNoColour.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportCsvWithFileNoColour PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
