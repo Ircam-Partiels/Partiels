@@ -70,7 +70,7 @@ juce::Result Document::Executor::launch()
     {
         auto const trackName = warningTrackIt->get().getAttr<Track::AttrType::name>();
         auto const warningType = std::string(magic_enum::enum_name(warningTrackIt->get().getAttr<Track::AttrType::warnings>()));
-        return juce::Result::fail(juce::translate("Error: The track TRACKNAME contains an ERRORTYPE error!").replace("TRACKNAME", trackName).replace("ERRORTYPE", warningType));
+        return juce::Result::fail(juce::translate("Error: The track TRACKNAME contains the error type 'ERRORTYPE'").replace("TRACKNAME", trackName).replace("ERRORTYPE", warningType));
     }
 
     timerCallback();
