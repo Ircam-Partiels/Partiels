@@ -341,7 +341,7 @@ The results table displays data in three columns, the first corresponding to tim
 The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + ⇧ Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
 
 <p align="center">
-<img src="Images/section-export-analyses.1-v1.0.7.png" width="232"/>
+<img src="Images/section-export-analyses.1-v2.1.0.png" width="232"/>
 </p>
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
@@ -382,9 +382,9 @@ The `Preserve Group Overlay` button toggles the preservation of the group overla
 <img src="Images/section-export-analyses.4.a-v1.0.7.png" width="198"/>
 </p>
 
-The `Image Size` dropdown menu offers presets to control the size of the image. If the *Current Size(s)* item is selected, the export mechanism uses the current visible sizes of the tracks and groups. The *Manual* item is selected if the width and height of the image are defined manually and don't match one of the presets.
+The `Image Size` dropdown menu offers presets to control the size of the image. If the *Current Size(s)* item is selected, the export mechanism uses the current visible sizes and resolution of the tracks and groups. The *Manual* item is selected if the width and height of the image are defined manually and don't match one of the presets.
 
-The `Image Width` and `Image Height` number fields can be used to manually define the width and the height of the images in pixels.
+The `Image Width`, `Image Height`, `Image PPI` number fields can be used to manually define the width and the height of the images in pixels and the resolution in pixels per inch.
 
 ### 7.3. Text and binary options
 
