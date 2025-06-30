@@ -8,7 +8,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::ExporterContent::ExporterContent()
-: mExporterPanel(Instance::get().getDocumentAccessor(), true, Instance::getSizeFor)
+: mExporterPanel(Instance::get().getDocumentAccessor(), true, true)
 , mPropertyExport("Export", "Export the results", [this]()
                   {
                       if(mProcess.valid())
@@ -135,7 +135,7 @@ void Application::ExporterContent::exportToFile()
                                   mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
                                                         {
                                                             juce::Thread::setCurrentThreadName("ExporterContent");
-                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifier, options, mShoulAbort, Instance::getSizeFor);
+                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifier, options, mShoulAbort);
                                                             triggerAsyncUpdate();
                                                             if(result.failed())
                                                             {

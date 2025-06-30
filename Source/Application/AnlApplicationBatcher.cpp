@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 Application::BatcherContent::BatcherContent()
 : mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::channelLayoutAll | AudioFileLayoutTable::SupportMode::channelLayoutMono | AudioFileLayoutTable::SupportMode::multipleSampleRates, AudioFileLayout::ChannelLayout::all)
-, mExporterPanel(Instance::get().getDocumentAccessor(), false, nullptr)
+, mExporterPanel(Instance::get().getDocumentAccessor(), false, true)
 , mPropertyAdaptationToSampleRate("Adapt to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", [](bool state)
                                   {
                                       auto& acsr = Instance::get().getApplicationAccessor();
@@ -284,7 +284,7 @@ void Application::BatcherContent::process()
                                                                     std::this_thread::sleep_for(20ms);
                                                                 }
 
-                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, {}, {}, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
+                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, {}, {}, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort);
                                                                 if(result.failed())
                                                                 {
                                                                     triggerAsyncUpdate();

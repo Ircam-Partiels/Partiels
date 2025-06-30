@@ -89,10 +89,14 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height)
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight)
 {
-    juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
+    juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
     juce::Graphics g(image);
+    g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::highResamplingQuality);
+    auto const scaleWidth = static_cast<float>(scaledWidth) / static_cast<float>(width);
+    auto const scaleHeight = static_cast<float>(scaledHeight) / static_cast<float>(height);
+    g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
     g.fillAll(accessor.getAttr<AttrType::colours>().background);
     std::vector<bool> channelVisibility(accessor.getAttr<AttrType::channelsLayout>().size(), false);
     for(auto const& channel : channels)
@@ -106,7 +110,7 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     return image;
 }
 
-juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "image";
@@ -118,7 +122,17 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
 
     juce::TemporaryFile temp(file);
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
-    if(imageFormat == nullptr)
+    auto const xDensity = std::round(static_cast<double>(scaledWidth) / static_cast<double>(width) * 72.0);
+    auto const yDensity = std::round(static_cast<double>(scaledHeight) / static_cast<double>(height) * 72.0);
+    if(auto* pngFormat = dynamic_cast<juce::PNGImageFormat*>(imageFormat))
+    {
+        pngFormat->setDensity(static_cast<juce::uint32>(xDensity), static_cast<juce::uint32>(yDensity));
+    }
+    else if(auto* jpegFormat = dynamic_cast<juce::JPEGImageFormat*>(imageFormat))
+    {
+        jpegFormat->setDensity(static_cast<juce::uint16>(xDensity), static_cast<juce::uint16>(yDensity));
+    }
+    else
     {
         return failed(name, format, "the format is not supported");
     }
@@ -128,7 +142,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return aborted(name, format);
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height);
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
 
     if(shouldAbort)
     {

@@ -7,6 +7,16 @@
 
 ANALYSE_FILE_BEGIN
 
+std::tuple<juce::Rectangle<int>, juce::Rectangle<int>> Document::Exporter::getPlotBounds(juce::String const& identifier)
+{
+    if(auto const* plot = getPlotComponent(identifier))
+    {
+        auto const bounds = plot->getBounds();
+        return std::make_tuple(bounds, juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds));
+    }
+    return std::make_tuple(juce::Rectangle<int>{}, juce::Rectangle<int>{});
+}
+
 bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
 {
     return format == rhd.format &&
@@ -14,6 +24,7 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            useAutoSize == rhd.useAutoSize &&
            imageWidth == rhd.imageWidth &&
            imageHeight == rhd.imageHeight &&
+           imagePpi == rhd.imagePpi &&
            includeHeaderRaw == rhd.includeHeaderRaw &&
            ignoreGridResults == rhd.ignoreGridResults &&
            columnSeparator == rhd.columnSeparator &&
@@ -145,9 +156,9 @@ static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets
     return presets;
 }
 
-Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSizeFn getSizeFor)
+Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize)
 : mAccessor(accessor)
-, mGetSizeForFn(getSizeFor)
+, mShowAutoSize(showAutoSize)
 , mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this]([[maybe_unused]] size_t index)
                 {
                     sanitizeProperties(true);
@@ -185,8 +196,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
 , mPropertySizePreset("Image Size", "Select the size preset of the image", "", std::vector<std::string>{}, [this](size_t index)
                       {
                           auto options = mOptions;
-                          options.useAutoSize = mGetSizeForFn != nullptr && index == 0_z;
-                          if(mGetSizeForFn != nullptr && !options.useAutoSize)
+                          options.useAutoSize = mShowAutoSize && index == 0_z;
+                          if(!mShowAutoSize && !options.useAutoSize)
                           {
                               index--;
                           }
@@ -212,6 +223,13 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
+, mPropertyPpi("Image PPI", "Set the pixel density of the image", "pixels/inch", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+               {
+                   auto options = mOptions;
+                   options.useAutoSize = false;
+                   options.imagePpi = std::max(static_cast<int>(std::round(value)), 1);
+                   setOptions(options, juce::NotificationType::sendNotificationSync);
+               })
 , mPropertyRowHeader("Include Header Row", "Include header row before the data rows", [this](bool state)
                      {
                          auto options = mOptions;
@@ -289,6 +307,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     addAndMakeVisible(mPropertySizePreset);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
+    addAndMakeVisible(mPropertyPpi);
     addChildComponent(mPropertyRowHeader);
     addChildComponent(mPropertyColumnSeparator);
     addChildComponent(mPropertyReaperType);
@@ -300,7 +319,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     setSize(300, 200);
 
     mPropertySizePreset.entry.clear(juce::NotificationType::dontSendNotification);
-    if(mGetSizeForFn != nullptr)
+    if(mShowAutoSize)
     {
         mPropertySizePreset.entry.addItem(juce::translate("Current Size(s)"), mPropertySizePreset.entry.getNumItems() + 1);
     }
@@ -464,6 +483,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySizePreset);
     setBounds(mPropertyWidth);
     setBounds(mPropertyHeight);
+    setBounds(mPropertyPpi);
     setBounds(mPropertyRowHeader);
     setBounds(mPropertyColumnSeparator);
     setBounds(mPropertyReaperType);
@@ -596,6 +616,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
     {
         mPropertyWidth.setEnabled(true);
         mPropertyHeight.setEnabled(true);
+        mPropertyPpi.setEnabled(true);
     }
 
     auto options = mOptions;
@@ -606,11 +627,19 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
         options.useGroupOverview = false;
     }
 
-    if(mGetSizeForFn != nullptr && mOptions.useAutoSize && !itemIsDocument)
+    if(mShowAutoSize && mOptions.useAutoSize && !itemIsDocument)
     {
-        auto const size = mGetSizeForFn(identifier);
-        options.imageWidth = std::get<0>(size);
-        options.imageHeight = std::get<1>(size);
+        auto const bounds = getPlotBounds(identifier);
+        if(std::get<0>(bounds).isEmpty())
+        {
+            options.useAutoSize = false;
+        }
+        else
+        {
+            options.imageWidth = std::get<0>(bounds).getWidth();
+            options.imageHeight = std::get<0>(bounds).getHeight();
+            options.imagePpi = static_cast<int>(std::round(static_cast<double>(std::get<1>(bounds).getWidth()) / static_cast<double>(options.imageWidth) * 72.0));
+        }
     }
 
     auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -648,11 +677,13 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyGroupMode.entry.setToggleState(options.useGroupOverview, silent);
     mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), silent);
     mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), silent);
-    if(options.useAutoSize && mGetSizeForFn != nullptr)
+    mPropertyPpi.entry.setValue(static_cast<double>(options.imagePpi), silent);
+    if(options.useAutoSize)
     {
         mPropertySizePreset.entry.setSelectedItemIndex(0, silent);
         mPropertyWidth.entry.setText(juce::translate("Automatic"), silent);
         mPropertyHeight.entry.setText(juce::translate("Automatic"), silent);
+        mPropertyPpi.entry.setText(juce::translate("Automatic"), silent);
     }
     else
     {
@@ -663,7 +694,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
                                      });
         if(presetIt != presets.cend())
         {
-            auto const index = static_cast<int>(std::distance(presets.cbegin(), presetIt)) + (mGetSizeForFn != nullptr ? 1 : 0);
+            auto const index = static_cast<int>(std::distance(presets.cbegin(), presetIt)) + (mShowAutoSize ? 1 : 0);
             mPropertySizePreset.entry.setSelectedItemIndex(index, silent);
         }
         else
@@ -685,6 +716,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySizePreset.setVisible(options.useImageFormat());
     mPropertyWidth.setVisible(options.useImageFormat());
     mPropertyHeight.setVisible(options.useImageFormat());
+    mPropertyPpi.setVisible(options.useImageFormat());
     mPropertyRowHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyColumnSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyReaperType.setVisible(options.format == Document::Exporter::Options::Format::reaper);
@@ -799,7 +831,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort)
 {
     if(file == juce::File())
     {
@@ -870,12 +902,15 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return juce::Result::fail("Track is invalid");
             }
 
-            anlStrongAssert(!options.useAutoSize || getSizeFor != nullptr);
-            if(options.useAutoSize && getSizeFor == nullptr)
-            {
-                return juce::Result::fail("Invalid size method");
-            }
-            auto const size = options.useAutoSize ? getSizeFor(trackIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
+            auto const sizes = std::invoke([&]()
+                                           {
+                                               if(options.useAutoSize)
+                                               {
+                                                   auto const autoBounds = getPlotBounds(identifier);
+                                                   return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
+                                               }
+                                               return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
+                                           });
             auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
             Zoom::Accessor timeZoomAcsr;
             timeZoomAcsr.copyFrom(accessor.getAcsr<AcsrType::timeZoom>(), NotificationType::synchronous);
@@ -886,7 +921,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -902,12 +937,17 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             {
                 return juce::Result::fail("Group is invalid");
             }
-            anlStrongAssert(!options.useAutoSize || getSizeFor != nullptr);
-            if(options.useAutoSize && getSizeFor == nullptr)
-            {
-                return juce::Result::fail("Invalid size method");
-            }
-            auto const size = options.useAutoSize ? getSizeFor(groupIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
+
+            auto const sizes = std::invoke([&]()
+                                           {
+                                               if(options.useAutoSize)
+                                               {
+                                                   auto const autoBounds = getPlotBounds(identifier);
+                                                   return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
+                                               }
+                                               return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
+                                           });
+
             auto& groupAcsr = Tools::getGroupAcsr(accessor, groupIdentifier);
             Zoom::Accessor timeZoomAcsr;
             timeZoomAcsr.copyFrom(accessor.getAcsr<AcsrType::timeZoom>(), NotificationType::synchronous);
@@ -918,7 +958,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
         };
 
         auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -1210,6 +1250,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "useAutoSize", value.useAutoSize);
         toXml(*child, "imageWidth", value.imageWidth);
         toXml(*child, "imageHeight", value.imageHeight);
+        toXml(*child, "imagePpi", value.imagePpi);
         toXml(*child, "includeHeaderRaw", value.includeHeaderRaw);
         toXml(*child, "ignoreGridResults", value.ignoreGridResults);
         toXml(*child, "columnSeparator", value.columnSeparator);
@@ -1237,6 +1278,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.useAutoSize = fromXml(*child, "useAutoSize", defaultValue.useAutoSize);
     value.imageWidth = fromXml(*child, "imageWidth", defaultValue.imageWidth);
     value.imageHeight = fromXml(*child, "imageHeight", defaultValue.imageHeight);
+    value.imagePpi = fromXml(*child, "imagePpi", defaultValue.imagePpi);
     value.includeHeaderRaw = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRaw);
     value.ignoreGridResults = fromXml(*child, "ignoreGridResults", defaultValue.ignoreGridResults);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);

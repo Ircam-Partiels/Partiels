@@ -24,7 +24,7 @@ namespace Application
         Interface();
         ~Interface() override;
 
-        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        juce::Component const* getPlot(juce::String const& identifier) const;
         PluginList::Table& getPluginListTable();
         Track::Loader::ArgumentSelector& getTrackLoaderArgumentSelector();
 

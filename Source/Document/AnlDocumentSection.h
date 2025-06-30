@@ -26,7 +26,7 @@ namespace Document
         Section(Director& director, juce::ApplicationCommandManager& commandManager);
         ~Section() override;
 
-        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        juce::Component const* getPlot(juce::String const& identifier) const;
 
         juce::TextButton pluginListButton;
 

@@ -102,7 +102,7 @@ juce::Result Document::Executor::exportTo(juce::File const& outputDir, juce::Str
 {
     anlDebug("Executor", "Exporting results...");
     std::atomic<bool> shouldAbort{false};
-    return Exporter::toFile(mAccessor, outputDir, {}, {}, filePrefix, identifier, options, shouldAbort, nullptr);
+    return Exporter::toFile(mAccessor, outputDir, {}, {}, filePrefix, identifier, options, shouldAbort);
 }
 
 void Document::Executor::timerCallback()

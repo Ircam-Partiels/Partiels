@@ -20,7 +20,7 @@ namespace Group
 
         bool isStretching() const;
         juce::Component const& getSection(juce::String const& identifier) const;
-        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        juce::Component const* getPlot(juce::String const& identifier) const;
         void setCanAnimate(bool state);
         void setLastItemResizable(bool state);
 

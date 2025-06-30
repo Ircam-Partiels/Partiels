@@ -385,21 +385,6 @@ juce::String Application::Instance::getWildCardForAudioFormats()
     return get().getAudioFormatManager().getWildcardForAllFormats();
 }
 
-std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identifier)
-{
-    if(identifier.isEmpty())
-    {
-        return {0, 0};
-    }
-    if(auto* window = get().getWindow())
-    {
-        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getInterface().getPlotBounds(identifier));
-        anlWeakAssert(!bounds.isEmpty());
-        return {bounds.getWidth(), bounds.getHeight()};
-    }
-    return {0, 0};
-}
-
 LookAndFeel::ColourChart Application::Instance::getColourChart()
 {
     auto& instance = get();
@@ -898,6 +883,16 @@ void Application::Instance::updateLookAndFeel()
             }
         }
     }
+}
+
+juce::Component const* Document::Exporter::getPlotComponent(juce::String const& identifier)
+{
+    auto* window = Application::Instance::get().getWindow();
+    if(identifier.isEmpty() || window == nullptr)
+    {
+        return {};
+    }
+    return window->getInterface().getPlot(identifier);
 }
 
 ANALYSE_FILE_END

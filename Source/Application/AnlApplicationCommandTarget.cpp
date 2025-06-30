@@ -1181,7 +1181,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 if(!channels.empty())
                 {
-                    [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, channels, date, identifier, options, mShouldAbort, Instance::getSizeFor);
+                    [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, channels, date, identifier, options, mShouldAbort);
                     MiscWeakAssert(results.wasOk() && "Exporting track failed!");
                 }
             };
