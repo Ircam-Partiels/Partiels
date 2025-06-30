@@ -76,6 +76,7 @@ Application::CommandLine::CommandLine()
          "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).\n\t"
          "--width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--ppi <ppi> Defines the pixel density of the image of the exported image in pixels per inch (optional with the jpeg and png formats - default 72).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
@@ -143,6 +144,7 @@ Application::CommandLine::CommandLine()
                  options.format = format == "jpeg" ? Options::Format::jpeg : Options::Format::png;
                  options.imageWidth = args.getValueForOption("--width").getIntValue();
                  options.imageHeight = args.getValueForOption("--height").getIntValue();
+                 options.imagePpi = args.containsOption("--ppi") ? args.getValueForOption("--ppi").getIntValue() : 72;
                  options.useGroupOverview = args.containsOption("--groups");
              }
              else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif")
