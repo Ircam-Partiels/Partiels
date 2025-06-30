@@ -321,7 +321,7 @@ Other editing actions can be performed at any time:
 - Use the keyboard shortcut `b` to insert a point with no value (to break the continuity of the segments) at the playhead position (if the playback is running) or at the start of the selected time range (if the playback is not running). 
 - Double-click on a marker to display the results table, focusing on the selected element.
 
-> 💡 **Tip**: The actions are also available via the main menu `Frame`, or by right-clicking on the group or track graphical plots to display the popup menu.
+> 💡 **Tip**: You can edit the selected tracks and groups via the main menu `Frame → Export Frame(s) to Desktop` or by right-clicking on the group or track plots to display the popup menu.
 
 ### 6.2. Table
 
@@ -345,6 +345,8 @@ The results of the analyses of a document can be exported in different formats, 
 </p>
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
+
+> 💡 **Tip**: You can export the selected tracks and groups to your desktop according to the last configuration used via the main menu `Frame → Export Frame(s) to Desktop`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows).
 
 ### 7.1. General options
 
