@@ -165,11 +165,11 @@ juce::Component const& Group::StretchableSection::getSection(juce::String const&
     return *this;
 }
 
-juce::Rectangle<int> Group::StretchableSection::getPlotBounds(juce::String const& identifier) const
+juce::Component const* Group::StretchableSection::getPlot(juce::String const& identifier) const
 {
     if(identifier == mAccessor.getAttr<AttrType::identifier>())
     {
-        return mSection.getPlotBounds();
+        return &mSection.getPlot();
     }
     if(Tools::hasTrackAcsr(mAccessor, identifier))
     {
@@ -177,11 +177,11 @@ juce::Rectangle<int> Group::StretchableSection::getPlotBounds(juce::String const
         auto it = contents.find(identifier);
         if(it != contents.end() && it->second != nullptr)
         {
-            return it->second->getPlotBounds();
+            return &it->second->getPlot();
         }
     }
     anlWeakAssert(false);
-    return {};
+    return nullptr;
 }
 
 void Group::StretchableSection::setLastItemResizable(bool state)

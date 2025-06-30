@@ -95,9 +95,9 @@ Track::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
-juce::Rectangle<int> Track::Section::getPlotBounds() const
+juce::Component const& Track::Section::getPlot() const
 {
-    return getLocalArea(&mPlot, mPlot.getBounds());
+    return mPlot;
 }
 
 juce::String Track::Section::getIdentifier() const

@@ -391,9 +391,9 @@ bool Application::Interface::isPluginListTablePanelVisible() const
     return mDocumentContainer.isPluginListTablePanelVisible();
 }
 
-juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const
+juce::Component const* Application::Interface::getPlot(juce::String const& identifier) const
 {
-    return mDocumentContainer.getDocumentSection().getPlotBounds(identifier);
+    return mDocumentContainer.getDocumentSection().getPlot(identifier);
 }
 
 PluginList::Table& Application::Interface::getPluginListTable()

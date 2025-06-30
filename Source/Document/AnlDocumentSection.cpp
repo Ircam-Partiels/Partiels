@@ -572,7 +572,7 @@ void Document::Section::updateFocus()
     }
 }
 
-juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const
+juce::Component const* Document::Section::getPlot(juce::String const& identifier) const
 {
     auto const getGroupIdentifier = [&]()
     {
@@ -588,9 +588,9 @@ juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identi
     anlWeakAssert(it != mGroupSections.end());
     if(it != mGroupSections.end())
     {
-        return it->second.get()->getPlotBounds(identifier);
+        return it->second.get()->getPlot(identifier);
     }
-    return {};
+    return nullptr;
 }
 
 void Document::Section::updateLayout()

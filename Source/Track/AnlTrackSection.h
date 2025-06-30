@@ -26,7 +26,7 @@ namespace Track
         Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, ResizerFn resizerFn);
         ~Section() override;
 
-        juce::Rectangle<int> getPlotBounds() const;
+        juce::Component const& getPlot() const;
         juce::String getIdentifier() const;
         void setResizable(bool state);
 

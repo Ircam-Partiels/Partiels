@@ -9,7 +9,8 @@ namespace Document
 {
     namespace Exporter
     {
-        using GetSizeFn = std::function<std::pair<int, int>(juce::String const& identifier)>;
+        juce::Component const* getPlotComponent(juce::String const& identifier);
+        std::tuple<juce::Rectangle<int>, juce::Rectangle<int>> getPlotBounds(juce::String const& identifier);
 
         struct Options
         {
@@ -56,6 +57,7 @@ namespace Document
             bool useAutoSize{false};
             int imageWidth{1920};
             int imageHeight{1200};
+            int imagePpi{144};
             bool includeHeaderRaw{true};
             bool ignoreGridResults{true};
             ReaperType reaperType{ReaperType::marker};
@@ -87,7 +89,7 @@ namespace Document
         , private juce::AsyncUpdater
         {
         public:
-            Panel(Accessor& accessor, bool showTimeRange, GetSizeFn getSizeFor);
+            Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize);
             ~Panel() override;
 
             // juce::Component
@@ -110,7 +112,7 @@ namespace Document
             void handleAsyncUpdate() override;
 
             Accessor& mAccessor;
-            GetSizeFn mGetSizeForFn = nullptr;
+            bool mShowAutoSize;
             Options mOptions;
 
             PropertyList mPropertyItem;
@@ -123,6 +125,7 @@ namespace Document
             PropertyList mPropertySizePreset;
             PropertyNumber mPropertyWidth;
             PropertyNumber mPropertyHeight;
+            PropertyNumber mPropertyPpi;
             PropertyToggle mPropertyRowHeader;
             PropertyList mPropertyColumnSeparator;
             PropertyList mPropertyReaperType;
@@ -143,7 +146,7 @@ namespace Document
             auto static constexpr groupItemFactor = documentItemFactor / 1000;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor);
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
 
         juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
         juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);

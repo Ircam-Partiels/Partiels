@@ -42,7 +42,6 @@ namespace Application
         static juce::String getWildCardForDocumentFile();
         static juce::String getWildCardForImportFormats();
         static juce::String getWildCardForAudioFormats();
-        static std::pair<int, int> getSizeFor(juce::String const& identifier);
         static LookAndFeel::ColourChart getColourChart();
 
         void newDocument();

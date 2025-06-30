@@ -80,9 +80,9 @@ Group::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
-juce::Rectangle<int> Group::Section::getPlotBounds() const
+juce::Component const& Group::Section::getPlot() const
 {
-    return getLocalArea(&mPlot, mPlot.getBounds());
+    return mPlot;
 }
 
 juce::String Group::Section::getIdentifier() const

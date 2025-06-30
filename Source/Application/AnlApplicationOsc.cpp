@@ -750,7 +750,7 @@ void Application::Osc::MouseDispatcher::mouseMove(juce::MouseEvent const& event)
         auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupSection->getIdentifier());
         auto const tracks = Group::Tools::getTrackAcsrs(groupAcsr);
         auto const pos = groupSection->getMouseXYRelative();
-        auto const bounds = groupSection->getPlotBounds();
+        auto const bounds = groupSection->getPlot().getLocalBounds();
         for(auto const& track : tracks)
         {
             sendTrack(track.get().getAttr<Track::AttrType::identifier>(), pos, bounds);
@@ -758,7 +758,7 @@ void Application::Osc::MouseDispatcher::mouseMove(juce::MouseEvent const& event)
     }
     else if(auto const* trackSection = getTrackSection(*component))
     {
-        sendTrack(trackSection->getIdentifier(), trackSection->getMouseXYRelative(), trackSection->getPlotBounds());
+        sendTrack(trackSection->getIdentifier(), trackSection->getMouseXYRelative(), trackSection->getPlot().getLocalBounds());
     }
     else if(mMouseOver)
     {
