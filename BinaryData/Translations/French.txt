@@ -225,7 +225,7 @@ countries: fr be
 "Reset the selected frame(s) duration to zero" = "Réinitialiser la durée des trames sélectionnées à zéro"
 "Reset Frame(s) duration to full" = "Réinitialiser la durée des trames au maximum"
 "Reset the selected frame(s) duration to full" = "Réinitialiser la durée des trames sélectionnées au maximum"
-"Export Frame(s)" = "Exporter les trames"
+"Export Frame(s) to Desktop" = "Exporter les trames sur le bureau"
 "Export the selected frame(s) using the current export options" = "Exporter les trames sélectionnées avec les options d'exportation actuelles"
 "File format not supported!" = "Format de fichier non pris en charge !"
 "File formats not supported!" = "Formats de fichiers non pris en charge !"
