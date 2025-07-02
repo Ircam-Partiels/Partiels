@@ -14,12 +14,22 @@ namespace Document
         Executor();
         ~Executor() override = default;
 
+        //! @brief Loads a document from an audio file and a template file.
         juce::Result load(juce::File const& audioFile, juce::File const& templateFile, bool adaptOnSampleRate);
+
+        //! @brief Runs the analysis.
         juce::Result launch();
+
+        //! @brief Saves the current document to a file.
         juce::Result saveTo(juce::File const& outputFile);
+
+        //! @brief Exports the results to a file.
         juce::Result exportTo(juce::File const& outputDir, juce::String const& filePrefix, Exporter::Options const& options, juce::String const& identifier);
+
+        //! @brief Checks if the executor is currently running.
         bool isRunning() const;
 
+        //! @brief The callback that is called when the analysis has ended.
         std::function<void(void)> onEnded = nullptr;
 
     private:
