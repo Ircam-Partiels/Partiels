@@ -219,6 +219,78 @@ void Group::Tools::fillMenuForTrackVisibility(Accessor const& accessor, juce::Po
     }
 }
 
+void Group::Tools::fillMenuForTrackOsc(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn)
+{
+    auto const trackAcsrs = getTrackAcsrs(accessor);
+    auto const allTrackEnabled = std::all_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                             {
+                                                 return trackAcsr.get().template getAttr<Track::AttrType::sendViaOsc>();
+                                             });
+    menu.addItem(juce::translate("All"), !allTrackEnabled, allTrackEnabled, [=, &accessor]()
+                 {
+                     if(startFn != nullptr)
+                     {
+                         startFn();
+                     }
+                     for(auto const& trackAcsr : getTrackAcsrs(accessor))
+                     {
+                         trackAcsr.get().setAttr<Track::AttrType::sendViaOsc>(true, NotificationType::synchronous);
+                     }
+                     if(endFn != nullptr)
+                     {
+                         endFn();
+                     }
+                 });
+    auto const noneTrackEnabled = std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                               {
+                                                   return trackAcsr.get().template getAttr<Track::AttrType::sendViaOsc>();
+                                               });
+    menu.addItem(juce::translate("None"), !noneTrackEnabled, noneTrackEnabled, [=, &accessor]()
+                 {
+                     if(startFn != nullptr)
+                     {
+                         startFn();
+                     }
+                     for(auto const& trackAcsr : getTrackAcsrs(accessor))
+                     {
+                         trackAcsr.get().setAttr<Track::AttrType::sendViaOsc>(false, NotificationType::synchronous);
+                     }
+                     if(endFn != nullptr)
+                     {
+                         endFn();
+                     }
+                 });
+    menu.addSeparator();
+    auto const layout = accessor.getAttr<AttrType::layout>();
+    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    {
+        auto const trackIdentifier = layout.at(layoutIndex);
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
+            auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
+            auto const trackOscEnabled = trackAcsr.value().get().getAttr<Track::AttrType::sendViaOsc>();
+            menu.addItem(itemLabel, true, trackOscEnabled, [=, &accessor]()
+                         {
+                             auto localTrackAcsr = Group::Tools::getTrackAcsr(accessor, trackIdentifier);
+                             if(startFn != nullptr)
+                             {
+                                 startFn();
+                             }
+                             if(localTrackAcsr.has_value())
+                             {
+                                 localTrackAcsr.value().get().setAttr<Track::AttrType::sendViaOsc>(!trackOscEnabled, NotificationType::synchronous);
+                             }
+                             if(endFn != nullptr)
+                             {
+                                 endFn();
+                             }
+                         });
+        }
+    }
+}
+
 void Group::Tools::fillMenuForChannelVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn)
 {
     auto const channelslayout = getChannelVisibilityStates(accessor);

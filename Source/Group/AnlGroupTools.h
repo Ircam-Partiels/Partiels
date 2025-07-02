@@ -23,6 +23,7 @@ namespace Group
         void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
 
         void fillMenuForTrackVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn);
+        void fillMenuForTrackOsc(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn);
         void fillMenuForChannelVisibility(Accessor const& accessor, juce::PopupMenu& menu, std::function<void(void)> startFn, std::function<void(void)> endFn);
     } // namespace Tools
 
