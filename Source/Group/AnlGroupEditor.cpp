@@ -143,9 +143,6 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
         }
     };
 
-    auto static constexpr trackReferenceId = 100000;
-    auto static constexpr trackLayoutId = 200000;
-    auto static constexpr channelLayoutId = 300000;
     juce::PopupMenu mainMenu;
     {
         juce::PopupMenu subMenu;
@@ -176,7 +173,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
         }
         if(subMenu.getNumItems() > 2)
         {
-            mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu, true, nullptr, false, trackReferenceId);
+            mainMenu.addSubMenu(juce::translate("Track Reference"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackReference));
         }
     }
     {
@@ -192,7 +189,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
             });
         if(subMenu.getNumItems() > 0)
         {
-            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu, true, nullptr, false, trackLayoutId);
+            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackLayout));
         }
     }
     {
@@ -208,7 +205,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
             });
         if(subMenu.getNumItems() > 1)
         {
-            mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu, true, nullptr, false, channelLayoutId);
+            mainMenu.addSubMenu(juce::translate("Channel Layout"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::channelLayout));
         }
     }
 
