@@ -402,6 +402,10 @@ set_tests_properties(ExportDocumentWithFileUnix PROPERTIES ENVIRONMENT "VAMP_PAT
 add_test(NAME ExportDocumentWithFileWindows COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileWindows.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportDocumentWithFileWindows PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
+add_test(NAME ExportDocumentWithInvalidFile COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithInvalidFile.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES WILL_FAIL TRUE)
+
 add_test(NAME ExportOptions COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
 set_tests_properties(ExportOptions PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
@@ -422,6 +426,10 @@ set_tests_properties(ExportCsvWithFileWindows PROPERTIES ENVIRONMENT "VAMP_PATH=
 
 add_test(NAME ExportCsvWithFileNoColour COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithFileNoColour.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportCsvWithFileNoColour PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
+add_test(NAME ExportCsvWithInvalidFile COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithInvalidFile.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportCsvWithInvalidFile PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+set_tests_properties(ExportCsvWithInvalidFile PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/ --format=json)
 set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
