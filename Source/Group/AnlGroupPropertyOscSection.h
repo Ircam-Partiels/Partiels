@@ -18,12 +18,12 @@ namespace Group
         void resized() override;
 
     private:
-        void updateContent();
+        void showTrackOsc();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        PropertyToggle mPropertySendViaOsc;
-        LayoutNotifier mLayoutNotifier;
+        PropertyTextButton mPropertyTrackOsc;
+        bool mTrackOscActionStarted{false};
     };
 } // namespace Group
 
