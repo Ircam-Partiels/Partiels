@@ -122,6 +122,11 @@ juce::Result Document::Executor::saveTo(juce::File const& outputFile)
 juce::Result Document::Executor::exportTo(juce::File const& outputDir, juce::String const& filePrefix, Document::Exporter::Options const& options, juce::String const& identifier)
 {
     anlDebug("Executor", "Exporting results...");
+    MiscWeakAssert(!isRunning());
+    if(isRunning())
+    {
+        return juce::Result::fail(juce::translate("Error: Cannot export while running analysis or file parsing."));
+    }
     std::atomic<bool> shouldAbort{false};
     return Exporter::toFile(mAccessor, outputDir, {}, {}, filePrefix, identifier, options, shouldAbort);
 }
