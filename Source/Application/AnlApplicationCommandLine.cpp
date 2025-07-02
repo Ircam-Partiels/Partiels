@@ -70,14 +70,15 @@ Application::CommandLine::CommandLine()
         {"--export|-e",
          "--export|-e [options]",
          "Analyzes an audio file and exports the results.\n\t"
-         "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
-         "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
+         "--document|-d <document> Defines the path to the document to analyze (required if --input/template are undefined).\n\t"
+         "--input|-i <audiofile> Defines the path to the audio file to analyze (required if --template is defined).\n\t"
+         "--template|-t <templatefile> Defines the path to the template file (required if --input is defined).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
          "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).\n\t"
          "--width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
-         "--ppi <ppi> Defines the pixel density of the image of the exported image in pixels per inch (optional with the jpeg and png formats - default 72).\n\t"
-         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
+         "--ppi <ppi> Defines the pixel density of the exported image in pixels per inch (optional with the jpeg and png formats - default 72).\n\t"
+         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional if --input/template are defined).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
@@ -94,8 +95,6 @@ Application::CommandLine::CommandLine()
              anlDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
 
-             auto const audioFile = args.getExistingFileForOption("-i|--input");
-             auto const templateFile = args.getFileForOption("-t|--template");
              auto const outputDir = args.getFileForOption("-o|--output");
              if(!outputDir.exists())
              {
@@ -109,8 +108,6 @@ Application::CommandLine::CommandLine()
              {
                  fail("Could not find folder: " + outputDir.getFullPathName());
              }
-
-             auto const adaptToSampleRate = args.containsOption("--adapt");
 
              Options options;
              auto const format = args.getValueForOption("-f|--format");
@@ -201,6 +198,10 @@ Application::CommandLine::CommandLine()
 
              options.useAutoSize = false;
 
+             auto const useDocument = args.containsOption("-d|--document");
+             auto const outputPrefix = useDocument
+                                           ? args.getExistingFileForOption("-d|--document").getFileNameWithoutExtension() + " "
+                                           : args.getExistingFileForOption("-i|--input").getFileNameWithoutExtension() + " ";
              mExecutor = std::make_unique<Document::Executor>();
              if(mExecutor == nullptr)
              {
@@ -210,7 +211,7 @@ Application::CommandLine::CommandLine()
              {
                  LookAndFeel lookAndFeel;
                  juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
-                 auto const result = mExecutor->exportTo(outputDir, audioFile.getFileNameWithoutExtension() + " ", options, "");
+                 auto const result = mExecutor->exportTo(outputDir, outputPrefix, options, "");
                  mShouldWait = false;
                  if(result.failed())
                  {
@@ -222,14 +223,29 @@ Application::CommandLine::CommandLine()
              };
 
              mShouldWait = true;
-             auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
-             if(result.failed())
+             if(useDocument)
              {
-                 mShouldWait = false;
-                 fail(result.getErrorMessage());
+                 auto const documentFile = args.getExistingFileForOption("-d|--document");
+                 auto const result = mExecutor->load(documentFile);
+                 if(result.failed())
+                 {
+                     mShouldWait = false;
+                     fail(result.getErrorMessage());
+                 }
              }
-
-             result = mExecutor->launch();
+             else
+             {
+                 auto const audioFile = args.getExistingFileForOption("-i|--input");
+                 auto const templateFile = args.getExistingFileForOption("-t|--template");
+                 auto const adaptToSampleRate = args.containsOption("--adapt");
+                 auto const result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
+                 if(result.failed())
+                 {
+                     mShouldWait = false;
+                     fail(result.getErrorMessage());
+                 }
+             }
+             auto const result = mExecutor->launch();
              if(result.failed())
              {
                  mShouldWait = false;
