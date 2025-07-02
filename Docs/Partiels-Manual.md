@@ -979,13 +979,15 @@ Usage:
         --output|-o <outputfile> Defines the path of the output file (required).
         --adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
  Partiels --export|-e [options]    Analyzes an audio file and exports the results.
-        --input|-i <audiofile> Defines the path to the audio file to analyze (required).
-        --template|-t <templatefile> Defines the path to the template file (required).
+        --document|-d <document> Defines the path to the document to analyze (required if --input/template are undefined).
+        --input|-i <audiofile> Defines the path to the audio file to analyze (required if --template is defined).
+        --template|-t <templatefile> Defines the path to the template file (required if --input is defined).
         --output|-o <outputdirectory> Defines the path of the output folder (required).
         --format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).
         --width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).
         --height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).
-        --adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
+        --ppi <ppi> Defines the pixel density of the exported image in pixels per inch (optional with the jpeg and png formats - default 72).
+        --adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional if --input/template are defined).
         --groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).
         --nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).
         --header Includes header row before the data rows (optional with the csv format).
