@@ -192,13 +192,12 @@ void Group::Tools::fillMenuForTrackVisibility(Accessor const& accessor, juce::Po
     auto const layout = accessor.getAttr<AttrType::layout>();
     for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
     {
-        auto const trackId = layout.at(layoutIndex);
-        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackId);
+        auto const trackIdentifier = layout.at(layoutIndex);
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
         if(trackAcsr.has_value())
         {
             auto const& trackName = trackAcsr.value().get().getAttr<Track::AttrType::name>();
             auto const itemLabel = trackName.isEmpty() ? juce::translate("Track IDX").replace("IDX", juce::String(layoutIndex + 1)) : trackName;
-            auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
             auto const trackVisible = trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>();
             menu.addItem(itemLabel, true, trackVisible, [=, &accessor]()
                          {
