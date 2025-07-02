@@ -9,6 +9,27 @@ Document::Executor::Executor()
     mAudioFormatManager.registerBasicFormats();
 }
 
+juce::Result Document::Executor::load(juce::File const& documentFile)
+{
+    anlDebug("Executor", "Loading document file...");
+    auto fileResult = Document::FileBased::parse(documentFile);
+    if(fileResult.index() == 1_z)
+    {
+        return std::get<1>(fileResult);
+    }
+    auto xml = std::move(std::get<0>(fileResult));
+
+    // Adjust the path in the XML to match the new template file location
+    XmlParser::replaceAllAttributeValues(*xml.get(), FileBased::getPathReplacement(*xml.get()), juce::File::addTrailingSeparator(documentFile.getParentDirectory().getFullPathName()));
+
+    AlertWindow::Catcher catcher;
+    mDirector.setAlertCatcher(&catcher);
+    mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    mDirector.setAlertCatcher(nullptr);
+
+    return juce::Result::ok();
+}
+
 juce::Result Document::Executor::load(juce::File const& audioFile, juce::File const& templateFile, bool adaptOnSampleRate)
 {
     if(std::none_of(mAudioFormatManager.begin(), mAudioFormatManager.end(), [&](auto* audioFormat)

@@ -14,6 +14,9 @@ namespace Document
         Executor();
         ~Executor() override = default;
 
+        //! @brief Loads a document from a file.
+        juce::Result load(juce::File const& documentFile);
+
         //! @brief Loads a document from an audio file and a template file.
         juce::Result load(juce::File const& audioFile, juce::File const& templateFile, bool adaptOnSampleRate);
 
