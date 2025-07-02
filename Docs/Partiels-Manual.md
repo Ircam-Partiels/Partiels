@@ -773,17 +773,17 @@ The plugin section displays information about the plugin such as name, feature, 
 The group properties panel allows you to access information about a group and modify the processor and graphical properties of its tracks. You can display a group's properties panel by using the corresponding entry in the dropdown menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**) or using the keyboard shortcut `⌘ + ⎇ Option + P` (Mac) or `Ctrl + Alt + P` (Linux/Windows).
 
 <p align="center">
-<img src="Images/section-group-properties.1-v2.0.4.png" width="242"/>
+<img src="Images/section-group-properties.1-v2.1.0.png" width="242"/>
 </p>
 
 The first entries correspond to exclusive properties of the group:
 - Name: The property defines the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
-- Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent.
+- Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent. This option is only available when there isn't any matrix track in the group.
 - Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay. By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
 
 The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
-> 💡 **Tip**: The reference track, track layout and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
+> 💡 **Tip**: The reference track, track visibility, track OSC, and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
 
 <div style="page-break-after: always;"></div>
 
