@@ -124,6 +124,9 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
                 case PopupSubmenuId::trackVisibility:
                     mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks of the group"));
                     break;
+                case PopupSubmenuId::trackOsc:
+                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the OSC state of the tracks of the group"));
+                    break;
                 case PopupSubmenuId::channelLayout:
                     mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the channels of the group"));
                     break;
@@ -136,6 +139,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
                     mDirector.startAction(false);
                     break;
                 case PopupSubmenuId::trackVisibility:
+                case PopupSubmenuId::trackOsc:
                 case PopupSubmenuId::channelLayout:
                     mDirector.startAction(true);
                     break;
@@ -190,6 +194,22 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
         if(subMenu.getNumItems() > 0)
         {
             mainMenu.addSubMenu(juce::translate("Track Visibility"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackVisibility));
+        }
+    }
+    {
+        juce::PopupMenu subMenu;
+        Tools::fillMenuForTrackOsc(
+            mAccessor, subMenu, [=]()
+            {
+                switchAction(PopupSubmenuId::trackOsc);
+            },
+            [=, this]()
+            {
+                showPopupMenu(position, PopupSubmenuId::trackOsc);
+            });
+        if(subMenu.getNumItems() > 0)
+        {
+            mainMenu.addSubMenu(juce::translate("Track OSC"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackOsc));
         }
     }
     {

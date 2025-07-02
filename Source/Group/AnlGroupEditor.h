@@ -26,7 +26,8 @@ namespace Group
               none = 0
             , trackReference = 100000
             , trackVisibility = 200000
-            , channelLayout = 300000
+            , trackOsc = 300000
+            , channelLayout = 400000
         };
         // clang-format on
 
