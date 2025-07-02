@@ -121,8 +121,8 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
                 case PopupSubmenuId::trackReference:
                     mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change track reference of the group"));
                     break;
-                case PopupSubmenuId::trackLayout:
-                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change track reference of the group"));
+                case PopupSubmenuId::trackVisibility:
+                    mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks of the group"));
                     break;
                 case PopupSubmenuId::channelLayout:
                     mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the channels of the group"));
@@ -135,7 +135,7 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
                 case PopupSubmenuId::trackReference:
                     mDirector.startAction(false);
                     break;
-                case PopupSubmenuId::trackLayout:
+                case PopupSubmenuId::trackVisibility:
                 case PopupSubmenuId::channelLayout:
                     mDirector.startAction(true);
                     break;
@@ -181,15 +181,15 @@ void Group::Editor::showPopupMenu(juce::Point<int> const position, PopupSubmenuI
         Tools::fillMenuForTrackVisibility(
             mAccessor, subMenu, [=]()
             {
-                switchAction(PopupSubmenuId::trackLayout);
+                switchAction(PopupSubmenuId::trackVisibility);
             },
             [=, this]()
             {
-                showPopupMenu(position, PopupSubmenuId::trackLayout);
+                showPopupMenu(position, PopupSubmenuId::trackVisibility);
             });
         if(subMenu.getNumItems() > 0)
         {
-            mainMenu.addSubMenu(juce::translate("Track Layout"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackLayout));
+            mainMenu.addSubMenu(juce::translate("Track Visibility"), subMenu, true, nullptr, false, static_cast<int>(PopupSubmenuId::trackVisibility));
         }
     }
     {
