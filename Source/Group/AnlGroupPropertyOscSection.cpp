@@ -6,22 +6,12 @@ ANALYSE_FILE_BEGIN
 
 Group::PropertyOscSection::PropertyOscSection(Director& director)
 : mDirector(director)
-, mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle tracks' results to be sent via OSC"), [this](bool state)
-                      {
-                          mDirector.startAction(true);
-                          for(auto& trackAcsr : Tools::getTrackAcsrs(mAccessor))
-                          {
-                              trackAcsr.get().setAttr<Track::AttrType::sendViaOsc>(state, NotificationType::synchronous);
-                          }
-                          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Toggle tracks' results to be sent via OSC"));
-                      })
-, mLayoutNotifier(mAccessor, [this]()
-                  {
-                      updateContent();
-                  },
-                  {Track::AttrType::identifier, Track::AttrType::sendViaOsc})
+, mPropertyTrackOsc(juce::translate("Track OSC"), juce::translate("The OSC state of the tracks of the group."), [this]()
+                    {
+                        showTrackOsc();
+                    })
 {
-    addAndMakeVisible(mPropertySendViaOsc);
+    addAndMakeVisible(mPropertyTrackOsc);
 }
 
 void Group::PropertyOscSection::resized()
@@ -34,27 +24,28 @@ void Group::PropertyOscSection::resized()
             component.setBounds(bounds.removeFromTop(component.getHeight()));
         }
     };
-    setBounds(mPropertySendViaOsc);
+    setBounds(mPropertyTrackOsc);
     setSize(getWidth(), bounds.getY());
 }
 
-void Group::PropertyOscSection::updateContent()
+void Group::PropertyOscSection::showTrackOsc()
 {
-    juce::StringArray trackNames;
-    std::set<bool> sentViaOsc;
-    for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
+    juce::PopupMenu menu;
+    Tools::fillMenuForTrackOsc(mAccessor, menu, nullptr, [this]()
+                               {
+                                   showTrackOsc();
+                               });
+    if(!std::exchange(mTrackOscActionStarted, true))
     {
-        trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
-        sentViaOsc.insert(trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>());
+        mDirector.startAction(true);
     }
-    mPropertySendViaOsc.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("Toggle tracks' results to be sent via OSC"));
-    mPropertySendViaOsc.setVisible(!sentViaOsc.empty());
-    if(!sentViaOsc.empty())
-    {
-        mPropertySendViaOsc.entry.setToggleState(*sentViaOsc.cbegin(), juce::NotificationType::dontSendNotification);
-    }
-    mPropertySendViaOsc.entry.setAlpha(sentViaOsc.size() > 1_z ? 0.5f : 1.0f);
-    resized();
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyTrackOsc.entry).withDeletionCheck(*this), [=, this](int menuResult)
+                       {
+                           if(menuResult == 0 && std::exchange(mTrackOscActionStarted, false))
+                           {
+                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the OSC state of the tracks of the group"));
+                           }
+                       });
 }
 
 ANALYSE_FILE_END
