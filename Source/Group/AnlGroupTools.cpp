@@ -42,14 +42,16 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcs
 std::vector<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcsrs(Accessor const& accessor)
 {
     auto const& layout = accessor.getAttr<AttrType::layout>();
-    return copy_with_erased_if(accessor.getAttr<AttrType::tracks>(), [&](auto const& trackAcsr)
-                               {
-                                   auto const identifier = trackAcsr.get().template getAttr<Track::AttrType::identifier>();
-                                   return std::none_of(layout.cbegin(), layout.cend(), [&](auto const& layoutId)
-                                                       {
-                                                           return layoutId == identifier;
-                                                       });
-                               });
+    std::vector<std::reference_wrapper<Track::Accessor>> trackAcsrs;
+    for(auto const& trackIdentifier : layout)
+    {
+        auto const trackAcsr = getTrackAcsr(accessor, trackIdentifier);
+        if(trackAcsr.has_value())
+        {
+            trackAcsrs.push_back(trackAcsr.value());
+        }
+    }
+    return trackAcsrs;
 }
 
 std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilityStates(Accessor const& accessor)
