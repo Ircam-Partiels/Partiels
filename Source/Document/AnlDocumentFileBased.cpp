@@ -122,7 +122,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
     auto const originalParent = getPathReplacement(*xml.get());
     auto const newParent = file.getParentDirectory();
-    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, newParent.getFullPathName() + juce::File::getSeparatorString());
+    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, juce::File::addTrailingSeparator(newParent.getFullPathName()));
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
@@ -252,7 +252,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
 
     auto const originalParent = getPathReplacement(*xml.get());
     auto const newParent = file.getParentDirectory();
-    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, newParent.getFullPathName() + juce::File::getSeparatorString());
+    XmlParser::replaceAllAttributeValues(*xml.get(), originalParent, juce::File::addTrailingSeparator(newParent.getFullPathName()));
 
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
@@ -465,7 +465,7 @@ juce::String Document::FileBased::getPathReplacement(juce::XmlElement const& ele
     auto const oldPath = element.getStringAttribute("path");
     if(juce::File::isAbsolutePath(oldPath))
     {
-        return juce::File(oldPath).getParentDirectory().getFullPathName() + juce::File::getSeparatorString();
+        return juce::File::addTrailingSeparator(juce::File(oldPath).getParentDirectory().getFullPathName());
     }
     else
     {
