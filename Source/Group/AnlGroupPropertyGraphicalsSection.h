@@ -32,7 +32,7 @@ namespace Group
         void setLabelJustification(Track::LabelLayout::Justification justification);
         void setLabelPosition(float position);
         void setLogScale(bool state);
-        void showVisibilityInGroup();
+        void showTrackVisibility();
         void showChannelLayout();
         void updateContent();
         void updateColourMap();
@@ -62,8 +62,8 @@ namespace Group
         PropertyToggle mPropertyValueRangeLogScale;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
-        PropertyTextButton mPropertyShowInGroup;
-        bool mShowInGroupActionStarted{false};
+        PropertyTextButton mPropertyTrackVisibility;
+        bool mTrackVisibilityActionStarted{false};
 
         LayoutNotifier mLayoutNotifier;
     };

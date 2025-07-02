@@ -189,14 +189,14 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                                   setLogScale(value);
                                   mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group log scale"));
                               })
-, mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visibility of the channels of the tracks of the group."), [this]()
+, mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visibility of the channels of the group."), [this]()
                          {
                              showChannelLayout();
                          })
-, mPropertyShowInGroup(juce::translate("Track Layout"), juce::translate("The visibility of the tracks in the group overlay view."), [this]()
-                       {
-                           showVisibilityInGroup();
-                       })
+, mPropertyTrackVisibility(juce::translate("Track Visibility"), juce::translate("The visibility of the tracks of the group."), [this]()
+                           {
+                               showTrackVisibility();
+                           })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -225,7 +225,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyLabelPosition);
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyValueRangeLogScale);
-    addAndMakeVisible(mPropertyShowInGroup);
+    addAndMakeVisible(mPropertyTrackVisibility);
     addAndMakeVisible(mPropertyChannelLayout);
 }
 
@@ -253,7 +253,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
     setBounds(mPropertyValueRangeLogScale);
-    setBounds(mPropertyShowInGroup);
+    setBounds(mPropertyTrackVisibility);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
 }
@@ -585,20 +585,20 @@ void Group::PropertyGraphicalsSection::showChannelLayout()
                        });
 }
 
-void Group::PropertyGraphicalsSection::showVisibilityInGroup()
+void Group::PropertyGraphicalsSection::showTrackVisibility()
 {
     juce::PopupMenu menu;
     Tools::fillMenuForTrackVisibility(mAccessor, menu, nullptr, [this]()
                                       {
-                                          showVisibilityInGroup();
+                                          showTrackVisibility();
                                       });
-    if(!std::exchange(mShowInGroupActionStarted, true))
+    if(!std::exchange(mTrackVisibilityActionStarted, true))
     {
         mDirector.startAction(true);
     }
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyShowInGroup.entry).withDeletionCheck(*this), [=, this](int menuResult)
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyTrackVisibility.entry).withDeletionCheck(*this), [=, this](int menuResult)
                        {
-                           if(menuResult == 0 && std::exchange(mShowInGroupActionStarted, false))
+                           if(menuResult == 0 && std::exchange(mTrackVisibilityActionStarted, false))
                            {
                                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks of the group"));
                            }
