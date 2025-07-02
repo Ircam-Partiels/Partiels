@@ -59,7 +59,7 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
     auto xml = std::move(std::get<0>(fileResult));
 
     // Adjust the path in the XML to match the new template file location
-    XmlParser::replaceAllAttributeValues(*xml.get(), FileBased::getPathReplacement(*xml.get()), templateFile.getParentDirectory().getFullPathName() + juce::File::getSeparatorString());
+    XmlParser::replaceAllAttributeValues(*xml.get(), FileBased::getPathReplacement(*xml.get()), juce::File::addTrailingSeparator(templateFile.getParentDirectory().getFullPathName()));
 
     Document::FileBased::loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
 
