@@ -393,6 +393,15 @@ add_test(NAME Help COMMAND Partiels --help)
 
 add_test(NAME ExportEmbeddedPlugins COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/FactoryTemplate.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JPEG/ --format=jpeg --width=800 --height=600)
 
+add_test(NAME ExportDocument COMMAND Partiels --export --document=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Document/ --format=jpeg --width=800 --height=600)
+set_tests_properties(ExportDocument PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
+add_test(NAME ExportDocumentWithFileUnix COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileUnix.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Document/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportDocumentWithFileUnix PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
+add_test(NAME ExportDocumentWithFileWindows COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileWindows.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportDocumentWithFileWindows PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
 add_test(NAME ExportOptions COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
 set_tests_properties(ExportOptions PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
