@@ -16,15 +16,6 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const bounds = juce::Rectangle<int>(0, 0, width, height);
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 
-    std::vector<bool> channelVisibility(Tools::getChannelVisibilityStates(accessor).size(), channels.empty() ? true : false);
-    for(auto const& channel : channels)
-    {
-        if(channel < channelVisibility.size())
-        {
-            channelVisibility[channel] = true;
-        }
-    }
-
     auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(accessor);
     auto const& layout = accessor.getAttr<AttrType::layout>();
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
@@ -32,6 +23,15 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
         auto const trackAcsr = Tools::getTrackAcsr(accessor, *it);
         if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
+            auto const channelLayout = trackAcsr.value().get().getAttr<Track::AttrType::channelsLayout>();
+            auto channelVisibility = channels.empty() ? channelLayout : std::vector<bool>(channelLayout.size(), false);
+            for(auto const& channel : channels)
+            {
+                if(channel < channelVisibility.size())
+                {
+                    channelVisibility[channel] = true;
+                }
+            }
             auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
             auto const colour = isSelected ? laf.findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Renderer::paint(trackAcsr.value().get(), timeZoomAccessor, g, bounds, channelVisibility, colour);
