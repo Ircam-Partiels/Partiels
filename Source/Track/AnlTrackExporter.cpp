@@ -98,7 +98,10 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const scaleHeight = static_cast<float>(scaledHeight) / static_cast<float>(height);
     g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
     g.fillAll(accessor.getAttr<AttrType::colours>().background);
-    std::vector<bool> channelVisibility(accessor.getAttr<AttrType::channelsLayout>().size(), false);
+    auto const bounds = juce::Rectangle<int>(0, 0, width, height);
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+
+    std::vector<bool> channelVisibility(accessor.getAttr<AttrType::channelsLayout>().size(), channels.empty() ? true : false);
     for(auto const& channel : channels)
     {
         if(channel < channelVisibility.size())
@@ -106,7 +109,9 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
             channelVisibility[channel] = true;
         }
     }
-    Renderer::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, channelVisibility, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
+
+    auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
+    Renderer::paint(accessor, timeZoomAccessor, g, bounds, channelVisibility, colour);
     return image;
 }
 

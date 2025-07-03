@@ -15,8 +15,8 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     g.fillAll(accessor.getAttr<AttrType::colour>());
     auto const bounds = juce::Rectangle<int>(0, 0, width, height);
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const& layout = accessor.getAttr<AttrType::layout>();
-    std::vector<bool> channelVisibility(channels.size(), false);
+
+    std::vector<bool> channelVisibility(Tools::getChannelVisibilityStates(accessor).size(), channels.empty() ? true : false);
     for(auto const& channel : channels)
     {
         if(channel < channelVisibility.size())
@@ -24,7 +24,9 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
             channelVisibility[channel] = true;
         }
     }
+
     auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(accessor);
+    auto const& layout = accessor.getAttr<AttrType::layout>();
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(accessor, *it);
