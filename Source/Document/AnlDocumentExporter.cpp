@@ -907,7 +907,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                                            {
                                                if(options.useAutoSize)
                                                {
-                                                   auto const autoBounds = getPlotBounds(identifier);
+                                                   auto const autoBounds = getPlotBounds(trackIdentifier);
                                                    return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
                                                }
                                                return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
@@ -943,7 +943,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                                            {
                                                if(options.useAutoSize)
                                                {
-                                                   auto const autoBounds = getPlotBounds(identifier);
+                                                   auto const autoBounds = getPlotBounds(groupIdentifier);
                                                    return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
                                                }
                                                return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
