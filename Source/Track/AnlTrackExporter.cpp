@@ -101,7 +101,8 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const bounds = juce::Rectangle<int>(0, 0, width, height);
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 
-    std::vector<bool> channelVisibility(accessor.getAttr<AttrType::channelsLayout>().size(), channels.empty() ? true : false);
+    auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
+    auto channelVisibility = channels.empty() ? channelLayout : std::vector<bool>(channelLayout.size(), false);
     for(auto const& channel : channels)
     {
         if(channel < channelVisibility.size())
