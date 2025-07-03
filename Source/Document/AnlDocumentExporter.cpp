@@ -14,6 +14,7 @@ std::tuple<juce::Rectangle<int>, juce::Rectangle<int>> Document::Exporter::getPl
         auto const bounds = plot->getBounds();
         return std::make_tuple(bounds, juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds));
     }
+    MiscWeakAssert(false && "Plot component not found for identifier");
     return std::make_tuple(juce::Rectangle<int>{}, juce::Rectangle<int>{});
 }
 
