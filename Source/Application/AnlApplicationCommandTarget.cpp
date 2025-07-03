@@ -1177,13 +1177,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
             auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
 
-            auto const exportItem = [&](juce::String const& identifier, std::set<size_t> const& channels)
+            auto const exportItem = [&](juce::String const& identifier)
             {
-                if(!channels.empty())
-                {
-                    [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, channels, date, identifier, options, mShouldAbort);
-                    MiscWeakAssert(results.wasOk() && "Exporting track failed!");
-                }
+                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, {}, date, identifier, options, mShouldAbort);
+                MiscWeakAssert(results.wasOk() && "Exporting track failed!");
             };
 
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
@@ -1192,9 +1189,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
                 if(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
                 {
-                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-                    auto const channels = Group::Tools::getSelectedChannels(groupAcsr);
-                    exportItem(groupIdentifier, channels);
+                    exportItem(groupIdentifier);
                 }
             }
             for(auto const& trackIdentifier : std::get<1_z>(selectedItems))
@@ -1202,9 +1197,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
                 if(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
                 {
-                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-                    auto const channels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
-                    exportItem(trackIdentifier, channels);
+                    exportItem(trackIdentifier);
                 }
             }
             return true;
