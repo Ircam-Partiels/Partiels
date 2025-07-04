@@ -534,7 +534,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
 
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
     {
-        auto const trackConnected = trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>() && Document::Tools::hasItem(documentAcsr, trackAcsr.get().getAttr<Track::AttrType::identifier>());
+        auto const trackConnected = trackAcsr.get().getAttr<Track::AttrType::sendViaOsc>() && Document::Tools::hasTrackAcsr(documentAcsr, trackAcsr.get().getAttr<Track::AttrType::identifier>());
         if(trackConnected)
         {
             auto trackListener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), trackAttrChanged);
