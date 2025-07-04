@@ -468,10 +468,9 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
                     if(trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
                     {
-                        if(Track::Tools::getFrameType(trackAcsr).value_or(Track::FrameType::label) == Track::FrameType::vector)
-                        {
-                            message.addString(trackAcsr.getAttr<Track::AttrType::identifier>());
-                        }
+                        message.addString(trackAcsr.getAttr<Track::AttrType::identifier>());
+                        auto const frameType = Track::Tools::getFrameType(trackAcsr).value_or(Track::FrameType::label);
+                        message.addString(std::string(magic_enum::enum_name(frameType)));
                     }
                 }
             }
