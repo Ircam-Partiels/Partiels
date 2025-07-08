@@ -4,8 +4,6 @@ set(IGNORE_VAMP_PLUGIN_TESTER false CACHE STRING "Disables the tests with vamp p
 
 project(PartielsVampPlugins VERSION 1.0.0 LANGUAGES C CXX)
 
-include(../xcode-warnings.cmake)
-
 file(GLOB PARTIELS_VAMP_PLUGINS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/AnlVampPlugins.h ${CMAKE_CURRENT_SOURCE_DIR}/AnlVampPlugins.cpp)
 source_group("sources" FILES ${PARTIELS_VAMP_PLUGINS_SOURCES})
 add_library(partiels-vamp-plugins SHARED ${PARTIELS_VAMP_PLUGINS_SOURCES})
