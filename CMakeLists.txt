@@ -202,6 +202,7 @@ set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$
 
 include(${PARTIELS_BINARYDATA_DIRECTORY}/Resource/XcodeSetupWarnings.cmake)
 target_enable_xcode_full_warnings(Partiels)
+target_enable_xcode_full_warnings(partiels-vamp-plugins)
 
 if(WIN32)
     target_compile_options(Partiels PRIVATE /wd4244)

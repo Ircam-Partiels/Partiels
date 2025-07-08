@@ -93,7 +93,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
     return {d};
 }
 
-Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
+Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const*, Vamp::RealTime)
 {
     // The process should be managed by Partiels directly. The method is here for legacy reason.
     return {};
@@ -185,7 +185,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
     return {d};
 }
 
-Vamp::Plugin::FeatureSet AnlVampPlugin::Spectrogram::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
+Vamp::Plugin::FeatureSet AnlVampPlugin::Spectrogram::process(const float* const* inputBuffers, Vamp::RealTime)
 {
     if(mBlockSize == 0 || mStepSize == 0)
     {
@@ -283,7 +283,7 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
     return list;
 }
 
-Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::process(const float* const*, Vamp::RealTime timeStamp)
+Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::process(const float* const*, Vamp::RealTime)
 {
     return {};
 }
@@ -340,7 +340,7 @@ extern "C"
         }
     }
 
-    IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int index)
+    IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int)
     {
         if(version < 2)
         {
