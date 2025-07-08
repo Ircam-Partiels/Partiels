@@ -1,6 +1,0 @@
-- Output all key shortcuts
-- Add coverage
-- Move Model ctor and parseXml methods to cpp files
-- Check font of key names of main menu on Linux
-- Add allocation of multiple tracks with variable parameters values
-- Changing audio file doesn't ask to re-analyse if consolidate 
