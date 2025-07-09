@@ -1,4 +1,20 @@
 
+- Add: Added validation tests for exported images by comparing their contents with ImageMagick
+- Fix: Corrected channel layout when exporting images
+- Add: Added an option for pixel density when exporting PNG/JPEG files
+- Add: Added an export action accessible from the menus and via a shortcuts
+- Imp: Added configuration of the VAMP plugin environment in the CLI to add embedded plugins and ignore quarantined plugins
+- Fix: Corrected the path replacement mechanism when loading templates or sharing documents to fix missing files
+- Fix: Corrected parsing of JSON files when there is no label or value
+- Imp: Improved error message when analyzing and exporting document results
+- Fix: Corrected the export command when the template contains a results file
+- Add: Added a new --document option to the --export command of the CLI
+- Add: Added a drop-down menu to control the OSC of tracks in the group properties panel and plot
+- Imp: Move document action management to the application
+- Add: Added Max patch that generates spectrograms of matrix tracks
+
+v2.0.12
+
 - Fix: Corrected the loop stop at the end of the loop
 - Add: Frame and editing actions now accessible via right-click menu on groups and graphic tracks
 - Imp: Added detailed compilation instructions in the README.md
