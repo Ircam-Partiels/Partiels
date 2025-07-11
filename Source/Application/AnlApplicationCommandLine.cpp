@@ -198,10 +198,6 @@ Application::CommandLine::CommandLine()
 
              options.useAutoSize = false;
 
-             auto const useDocument = args.containsOption("-d|--document");
-             auto const outputPrefix = useDocument
-                                           ? args.getExistingFileForOption("-d|--document").getFileNameWithoutExtension() + " "
-                                           : args.getExistingFileForOption("-i|--input").getFileNameWithoutExtension() + " ";
              mExecutor = std::make_unique<Document::Executor>();
              if(mExecutor == nullptr)
              {
@@ -211,7 +207,7 @@ Application::CommandLine::CommandLine()
              {
                  LookAndFeel lookAndFeel;
                  juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
-                 auto const result = mExecutor->exportTo(outputDir, outputPrefix, options, "");
+                 auto const result = mExecutor->exportTo(outputDir, "", options, "");
                  mShouldWait = false;
                  if(result.failed())
                  {
@@ -223,7 +219,7 @@ Application::CommandLine::CommandLine()
              };
 
              mShouldWait = true;
-             if(useDocument)
+             if(args.containsOption("-d|--document"))
              {
                  auto const documentFile = args.getExistingFileForOption("-d|--document");
                  auto const result = mExecutor->load(documentFile);
