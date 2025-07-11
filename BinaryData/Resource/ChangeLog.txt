@@ -1,4 +1,5 @@
 
+- Imp: Removed the prefix from the names of output files during CLI
 - Add: Added validation tests for exported images by comparing their contents with ImageMagick
 - Fix: Corrected channel layout when exporting images
 - Add: Added an option for pixel density when exporting PNG/JPEG files
