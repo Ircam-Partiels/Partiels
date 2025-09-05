@@ -4,6 +4,14 @@
 
 ANALYSE_FILE_BEGIN
 
+namespace Document
+{
+    namespace Exporter
+    {
+        struct Options;
+    }
+}
+
 namespace Track
 {
     namespace Renderer
@@ -11,6 +19,7 @@ namespace Track
         void paintChannels(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
         void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour);
+        void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour, Document::Exporter::Options const* options);
     } // namespace Renderer
 } // namespace Track
 

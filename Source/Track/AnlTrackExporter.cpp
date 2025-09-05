@@ -188,8 +188,55 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
 
 juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Document::Exporter::Options const& options)
 {
-    // For now, delegate to the original function - will implement outsideGridLabels logic later
-    return toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+    // Determine if we need to expand the image for outside grid labels
+    auto actualWidth = width;
+    auto actualHeight = height;
+    auto actualScaledWidth = scaledWidth;
+    auto actualScaledHeight = scaledHeight;
+    auto contentBounds = juce::Rectangle<int>(0, 0, width, height);
+    
+    if(options.outsideGridLabels)
+    {
+        // TODO: Implement logic to expand image bounds and calculate space needed for outside labels
+        // For now, add some fixed padding
+        auto const padding = 50; // pixels for outside labels
+        actualWidth = width + padding * 2;
+        actualHeight = height + padding * 2;
+        actualScaledWidth = scaledWidth + static_cast<int>(padding * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
+        actualScaledHeight = scaledHeight + static_cast<int>(padding * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
+        contentBounds = juce::Rectangle<int>(padding, padding, width, height);
+    }
+
+    juce::Image image(juce::Image::PixelFormat::ARGB, actualScaledWidth, actualScaledHeight, true);
+    juce::Graphics g(image);
+    g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::highResamplingQuality);
+    auto const scaleWidth = static_cast<float>(actualScaledWidth) / static_cast<float>(actualWidth);
+    auto const scaleHeight = static_cast<float>(actualScaledHeight) / static_cast<float>(actualHeight);
+    g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
+    g.fillAll(accessor.getAttr<AttrType::colours>().background);
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+
+    auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
+    auto channelVisibility = channels.empty() ? channelLayout : std::vector<bool>(channelLayout.size(), false);
+    for(auto const& channel : channels)
+    {
+        if(channel < channelVisibility.size())
+        {
+            channelVisibility[channel] = true;
+        }
+    }
+
+    auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
+    Renderer::paint(accessor, timeZoomAccessor, g, contentBounds, channelVisibility, colour, &options);
+    
+    if(options.outsideGridLabels)
+    {
+        // TODO: Draw outside grid labels here
+        // This would involve calling Zoom::Grid paint functions with labels enabled
+        // and positioning them outside the content bounds
+    }
+    
+    return image;
 }
 
 juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Document::Exporter::Options const& options)

@@ -1,5 +1,6 @@
 #include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
+#include "../Document/AnlDocumentExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -170,7 +171,7 @@ namespace Track
             juce::GlyphArrangement mGlyphArrangement;
         };
 
-        void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour);
+        void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Document::Exporter::Options const* options = nullptr);
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
@@ -212,7 +213,7 @@ void Track::Renderer::paintClippedImage(juce::Graphics& g, juce::Image const& im
     g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
 }
 
-void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour)
+void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Document::Exporter::Options const* options)
 {
     if(colour.isTransparent() || accessor.getAttr<AttrType::grid>() == GridMode::hidden)
     {
@@ -284,10 +285,12 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         };
 
         auto const stringify = getStringify();
+        // Suppress labels when outsideGridLabels is enabled during export
+        auto const labelStringify = (options != nullptr && options->outsideGridLabels) ? nullptr : stringify;
         auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
         {
             g.setColour(colour);
-            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
+            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, labelStringify, justificationHorizontal);
         };
 
         switch(frameType.value())
@@ -318,6 +321,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         }
     }
     g.setColour(colour);
+    // For horizontal grid, we might want to add time labels in the future when outsideGridLabels is implemented
     Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
 }
 
@@ -354,6 +358,45 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
                                   paintColumns(accessor, channel, g, region, timeZoomAcsr);
                               });
                 paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
+            }
+            break;
+        }
+    }
+}
+
+void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour, Document::Exporter::Options const* options)
+{
+    g.setFont(accessor.getAttr<AttrType::font>());
+    auto const frameType = Tools::getFrameType(accessor);
+    if(frameType.has_value())
+    {
+        switch(frameType.value())
+        {
+            case Track::FrameType::label:
+            {
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour, options);
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintMarkers(accessor, channel, g, region, timeZoomAcsr);
+                              });
+            }
+            break;
+            case Track::FrameType::value:
+            {
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour, options);
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintPoints(accessor, channel, g, region, timeZoomAcsr);
+                              });
+            }
+            break;
+            case Track::FrameType::vector:
+            {
+                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  paintColumns(accessor, channel, g, region, timeZoomAcsr);
+                              });
+                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour, options);
             }
             break;
         }
