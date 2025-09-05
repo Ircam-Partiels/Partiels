@@ -1,6 +1,7 @@
 #include "AnlTrackExporter.h"
 #include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
+#include "../Document/AnlDocumentExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -149,6 +150,81 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     }
 
     auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    if(image.isValid())
+    {
+        juce::FileOutputStream stream(temp.getFile());
+        if(!stream.openedOk())
+        {
+            return failed(name, format, ErrorType::streamAccessFailure);
+        }
+
+        if(!imageFormat->writeImageToStream(image, stream))
+        {
+            return failed(name, format, ErrorType::streamWritingFailure);
+        }
+    }
+    else
+    {
+        return failed(name, format, "the image cannot be created");
+    }
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return failed(name, format, ErrorType::fileAccessFailure, file);
+    }
+    return juce::Result::ok();
+}
+
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Document::Exporter::Options const& options)
+{
+    // For now, delegate to the original function - will implement outsideGridLabels logic later
+    return toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+}
+
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Document::Exporter::Options const& options)
+{
+    auto const name = accessor.getAttr<AttrType::name>();
+    auto constexpr format = "image";
+
+    if(width <= 0 || height <= 0)
+    {
+        return failed(name, format, "the size is invalid");
+    }
+
+    juce::TemporaryFile temp(file);
+    auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
+    auto const xDensity = std::round(static_cast<double>(scaledWidth) / static_cast<double>(width) * 72.0);
+    auto const yDensity = std::round(static_cast<double>(scaledHeight) / static_cast<double>(height) * 72.0);
+    if(auto* pngFormat = dynamic_cast<juce::PNGImageFormat*>(imageFormat))
+    {
+        pngFormat->setDensity(static_cast<juce::uint32>(xDensity), static_cast<juce::uint32>(yDensity));
+    }
+    else if(auto* jpegFormat = dynamic_cast<juce::JPEGImageFormat*>(imageFormat))
+    {
+        jpegFormat->setDensity(static_cast<juce::uint16>(xDensity), static_cast<juce::uint16>(yDensity));
+    }
+    else
+    {
+        return failed(name, format, "the format is not supported");
+    }
+
+    if(shouldAbort)
+    {
+        return aborted(name, format);
+    }
+
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, options);
 
     if(shouldAbort)
     {

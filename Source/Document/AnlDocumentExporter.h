@@ -67,6 +67,7 @@ namespace Document
             juce::String sdifMatrixSignature{"????"};
             juce::String sdifColumnName;
             TimePreset timePreset{TimePreset::global};
+            bool outsideGridLabels{false};
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
@@ -134,6 +135,7 @@ namespace Document
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
             PropertyToggle mPropertyIgnoreGrids;
+            PropertyToggle mPropertyOutsideGridLabels;
 
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};

@@ -178,11 +178,6 @@ bool Zoom::Grid::isMainTick(Accessor const& accessor, Zoom::Grid::TickDrawingInf
 
 void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification)
 {
-    paintVertical(g, accessor, visibleRange, bounds, stringify, justification, false);
-}
-
-void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification, bool outside)
-{
     MiscWeakAssert(justification.getOnlyVerticalFlags() == 0);
     justification = justification.getOnlyHorizontalFlags();
     if(justification == 0)
@@ -221,25 +216,11 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         auto const yPos = static_cast<float>(getPosition(value));
         if(justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontallyCentred))
         {
-            if(outside)
-            {
-                path.addLineSegment(juce::Line<float>(x - tickWidth, yPos, x, yPos), 1.0f);
-            }
-            else
-            {
-                path.addLineSegment(juce::Line<float>(x, yPos, tickWidth + x, yPos), 1.0f);
-            }
+            path.addLineSegment(juce::Line<float>(x, yPos, tickWidth + x, yPos), 1.0f);
         }
         if(justification.testFlags(Justification::right) || justification.testFlags(Justification::horizontallyCentred))
         {
-            if(outside)
-            {
-                path.addLineSegment(juce::Line<float>(width + x, yPos, width + x + tickWidth, yPos), 1.0f);
-            }
-            else
-            {
-                path.addLineSegment(juce::Line<float>(width - tickWidth + x, yPos, width + x, yPos), 1.0f);
-            }
+            path.addLineSegment(juce::Line<float>(width - tickWidth + x, yPos, width + x, yPos), 1.0f);
         }
         if(justification.testFlags(Justification::horizontallyCentred) && isPrimaryTick)
         {
@@ -249,27 +230,13 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         if(isPrimaryTick && stringify != nullptr && yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height))
         {
             auto const text = stringify(value);
-            if(outside)
-            {
-                // For outside mode, position text further from the frame
-                auto const textOffset = justification.testFlags(Justification::left) ? static_cast<int>(x - tickWidth - font.getStringWidth(text) - 4) : static_cast<int>(width + x + tickWidth + 4);
-                g.drawText(text, textOffset, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, font.getStringWidth(text), static_cast<int>(std::ceil(font.getHeight())), textJustification);
-            }
-            else
-            {
-                g.drawText(text, 2 + static_cast<int>(x), static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4.0f + x), static_cast<int>(std::ceil(font.getHeight())), textJustification);
-            }
+            g.drawText(text, 2 + static_cast<int>(x), static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4.0f + x), static_cast<int>(std::ceil(font.getHeight())), textJustification);
         }
     }
     g.fillPath(path);
 }
 
 void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, int maxStringWidth, Justification justification)
-{
-    paintHorizontal(g, accessor, visibleRange, bounds, stringify, maxStringWidth, justification, false);
-}
-
-void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, int maxStringWidth, Justification justification, bool outside)
 {
     MiscWeakAssert(justification.getOnlyHorizontalFlags() == 0);
     justification = justification.getOnlyVerticalFlags();
@@ -308,25 +275,11 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         auto const xPos = static_cast<float>(getPosition(value));
         if(justification.testFlags(Justification::top) || justification.testFlags(Justification::verticallyCentred))
         {
-            if(outside)
-            {
-                path.addLineSegment(juce::Line<float>(xPos, y - tickHeight, xPos, y), 1.0f);
-            }
-            else
-            {
-                path.addLineSegment(juce::Line<float>(xPos, y, xPos, tickHeight + y), 1.0f);
-            }
+            path.addLineSegment(juce::Line<float>(xPos, y, xPos, tickHeight + y), 1.0f);
         }
         if(justification.testFlags(Justification::bottom) || justification.testFlags(Justification::verticallyCentred))
         {
-            if(outside)
-            {
-                path.addLineSegment(juce::Line<float>(xPos, fheight + y, xPos, fheight + y + tickHeight), 1.0f);
-            }
-            else
-            {
-                path.addLineSegment(juce::Line<float>(xPos, fheight - tickHeight + y, xPos, fheight + y), 1.0f);
-            }
+            path.addLineSegment(juce::Line<float>(xPos, fheight - tickHeight + y, xPos, fheight + y), 1.0f);
         }
         if(justification.testFlags(Justification::verticallyCentred) && isPrimaryTick)
         {
@@ -336,18 +289,7 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         if(isPrimaryTick && stringify != nullptr)
         {
             auto const text = stringify(value);
-            if(outside)
-            {
-                // For outside mode, position text further from the frame
-                auto const textY = justification.testFlags(Justification::top) 
-                    ? static_cast<int>(y - tickHeight - font.getHeight() - 2)
-                    : static_cast<int>(fheight + y + tickHeight + 2);
-                g.drawText(text, static_cast<int>(std::floor(xPos + 2.0f)), textY, maxStringWidth, static_cast<int>(font.getHeight()), justification);
-            }
-            else
-            {
-                g.drawText(text, static_cast<int>(std::floor(xPos + 2.0f)), static_cast<int>(std::floor(fheight - font.getAscent() + y)), maxStringWidth, static_cast<int>(font.getHeight()), justification);
-            }
+            g.drawText(text, static_cast<int>(std::floor(xPos + 2.0f)), static_cast<int>(std::floor(fheight - font.getAscent() + y)), maxStringWidth, static_cast<int>(font.getHeight()), justification);
         }
     }
     g.fillPath(path);

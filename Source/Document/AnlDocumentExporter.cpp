@@ -34,7 +34,8 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            sdifFrameSignature == rhd.sdifFrameSignature &&
            sdifMatrixSignature == rhd.sdifMatrixSignature &&
            sdifColumnName == rhd.sdifColumnName &&
-           timePreset == rhd.timePreset;
+           timePreset == rhd.timePreset &&
+           outsideGridLabels == rhd.outsideGridLabels;
 }
 
 bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
@@ -289,6 +290,12 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            options.ignoreGridResults = state;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
+, mPropertyOutsideGridLabels("Outside Grid Labels", "Draw grid labels outside the frame bounds during image export", [this](bool state)
+                       {
+                           auto options = mOptions;
+                           options.outsideGridLabels = state;
+                           setOptions(options, juce::NotificationType::sendNotificationSync);
+                       })
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                           {
                               updateItems();
@@ -317,6 +324,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
     addChildComponent(mPropertySdifMatrix);
     addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
+    addChildComponent(mPropertyOutsideGridLabels);
     setSize(300, 200);
 
     mPropertySizePreset.entry.clear(juce::NotificationType::dontSendNotification);
@@ -493,6 +501,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySdifMatrix);
     setBounds(mPropertySdifColName);
     setBounds(mPropertyIgnoreGrids);
+    setBounds(mPropertyOutsideGridLabels);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
@@ -659,6 +668,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
     mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
+    mPropertyOutsideGridLabels.setEnabled(mOptions.useImageFormat());
 }
 
 Document::Exporter::Options const& Document::Exporter::Panel::getOptions() const
@@ -708,6 +718,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
+    mPropertyOutsideGridLabels.entry.setToggleState(options.outsideGridLabels, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
     mPropertySdifMatrix.entry.setText(options.sdifMatrixSignature, silent);
@@ -726,6 +737,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    mPropertyOutsideGridLabels.setVisible(options.useImageFormat());
     updateTimePreset(false, silent);
     sanitizeProperties(false);
     resized();
@@ -922,7 +934,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -959,7 +971,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options);
         };
 
         auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -1259,6 +1271,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
         toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
         toXml(*child, "sdifColumnName", value.sdifColumnName);
+        toXml(*child, "outsideGridLabels", value.outsideGridLabels);
         xml.addChildElement(child.release());
     }
 }
@@ -1287,6 +1300,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.sdifFrameSignature = fromXml(*child, "sdifFrameSignature", defaultValue.sdifFrameSignature);
     value.sdifMatrixSignature = fromXml(*child, "sdifMatrixSignature", defaultValue.sdifMatrixSignature);
     value.sdifColumnName = fromXml(*child, "sdifColumnName", defaultValue.sdifColumnName);
+    value.outsideGridLabels = fromXml(*child, "outsideGridLabels", defaultValue.outsideGridLabels);
     return value;
 }
 

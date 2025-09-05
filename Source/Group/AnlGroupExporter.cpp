@@ -1,5 +1,6 @@
 #include "AnlGroupExporter.h"
 #include "../Track/AnlTrackRenderer.h"
+#include "../Document/AnlDocumentExporter.h"
 #include "AnlGroupPlot.h"
 
 ANALYSE_FILE_BEGIN
@@ -78,6 +79,79 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& 
     }
 
     auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+    if(image.isValid())
+    {
+        juce::FileOutputStream stream(temp.getFile());
+        if(!stream.openedOk())
+        {
+            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        }
+
+        if(!imageFormat->writeImageToStream(image, stream))
+        {
+            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        }
+    }
+    else
+    {
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the image cannot be created.").replace("ANLNAME", name));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>()).replace("FLNAME", file.getFullPathName()));
+    }
+    return juce::Result::ok();
+}
+
+juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Document::Exporter::Options const& options)
+{
+    // For now, delegate to the original function - will implement outsideGridLabels logic later
+    return toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+}
+
+juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Document::Exporter::Options const& options)
+{
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
+    
+    auto const name = accessor.getAttr<AttrType::name>();
+    if(width <= 0 || height <= 0)
+    {
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because image size is not valid.").replace("ANLNAME", name));
+    }
+
+    juce::TemporaryFile temp(file);
+    auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
+    auto const xDensity = std::round(static_cast<double>(scaledWidth) / static_cast<double>(width) * 72.0);
+    auto const yDensity = std::round(static_cast<double>(scaledHeight) / static_cast<double>(height) * 72.0);
+    if(auto* pngFormat = dynamic_cast<juce::PNGImageFormat*>(imageFormat))
+    {
+        pngFormat->setDensity(static_cast<juce::uint32>(xDensity), static_cast<juce::uint32>(yDensity));
+    }
+    else if(auto* jpegFormat = dynamic_cast<juce::JPEGImageFormat*>(imageFormat))
+    {
+        jpegFormat->setDensity(static_cast<juce::uint16>(xDensity), static_cast<juce::uint16>(yDensity));
+    }
+    else
+    {
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, options);
     if(image.isValid())
     {
         juce::FileOutputStream stream(temp.getFile());
