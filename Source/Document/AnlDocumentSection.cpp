@@ -205,6 +205,11 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             break;
             case GridMode::full:
             {
+                mAccessor.setAttr<AttrType::grid>(GridMode::outside, NotificationType::synchronous);
+            }
+            break;
+            case GridMode::outside:
+            {
                 mAccessor.setAttr<AttrType::grid>(GridMode::hidden, NotificationType::synchronous);
             }
             break;
@@ -281,6 +286,12 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                     }
                     break;
                     case GridMode::full:
+                    {
+                        mGridButton.setToggleState(true, juce::NotificationType::dontSendNotification);
+                        mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridfull_png, AnlIconsData::gridfull_pngSize));
+                    }
+                    break;
+                    case GridMode::outside:
                     {
                         mGridButton.setToggleState(true, juce::NotificationType::dontSendNotification);
                         mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridfull_png, AnlIconsData::gridfull_pngSize));

@@ -165,6 +165,7 @@ namespace Track
           hidden
         , partial
         , full
+        , outside
     };
 
     enum class WarningType

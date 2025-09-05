@@ -153,12 +153,14 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
     }
 
     using Justification = Zoom::Grid::Justification;
+    auto const gridMode = accessor.getAttr<AttrType::grid>();
     auto const justificationHorizontal = Justification(Zoom::Grid::Justification::left);
+    auto const isOutside = gridMode == GridMode::outside;
 
     auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
     {
         g.setColour(colour);
-        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, nullptr, justificationHorizontal);
+        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, nullptr, justificationHorizontal, isOutside);
     };
 
     auto const frameType = Tools::getFrameType(accessor);

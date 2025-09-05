@@ -219,8 +219,9 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         return;
     }
     using Justification = Zoom::Grid::Justification;
-    auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
-    auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
+    auto const gridMode = accessor.getAttr<AttrType::grid>();
+    auto const justificationHorizontal = (gridMode == GridMode::partial || gridMode == GridMode::outside) ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
+    auto const justificationVertical = (gridMode == GridMode::partial || gridMode == GridMode::outside) ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
 
     auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
@@ -284,10 +285,11 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         };
 
         auto const stringify = getStringify();
+        auto const isOutside = gridMode == GridMode::outside;
         auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
         {
             g.setColour(colour);
-            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
+            Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal, isOutside);
         };
 
         switch(frameType.value())
@@ -318,7 +320,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         }
     }
     g.setColour(colour);
-    Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
+    Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical, isOutside);
 }
 
 void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour)
