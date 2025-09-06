@@ -260,7 +260,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         }
     };
 
-    auto const addRow = [&](auto const iterator, std::vector<std::string> const& extraColumns)
+    auto const addRow = [&](auto const iterator, auto const& extraColumns)
     {
         auto const time = std::get<0_z>(*iterator);
         auto const duration = std::get<1_z>(*iterator);
@@ -275,19 +275,27 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         addLine();
     };
 
+    auto const escapeString = [](juce::String const& s)
+    {
+        return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
+    };
+
+    auto const escapeFloat = [](auto const& s)
+    {
+        std::ostringstream ss;
+        ss << s;
+        return ss.str();
+    };
+
     auto const markers = results.getMarkers();
     auto const points = results.getPoints();
     auto const columns = results.getColumns();
+    std::vector<std::string> binColumns;
     if(markers != nullptr)
     {
-        auto const escapeString = [](juce::String const& s)
-        {
-            return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
-        };
-
         auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
-            std::vector<std::string> binColumns;
+            binColumns.clear();
             binColumns.push_back("LABEL");
             auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
             for(size_t j = 0; j < extraOutputs.size(); ++j)
@@ -302,7 +310,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 binColumns.push_back(escapeString(std::get<2_z>(*it)));
                 for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
                 {
-                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
                 }
                 addRow(it, binColumns);
                 ++it;
@@ -327,7 +335,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
-            std::vector<std::string> binColumns;
+            binColumns.clear();
             binColumns.push_back("VALUE");
             auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
             for(size_t j = 0; j < extraOutputs.size(); ++j)
@@ -339,10 +347,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 binColumns.clear();
-                binColumns.push_back(std::get<2_z>(*it).has_value() ? std::to_string(std::get<2_z>(*it).value()) : std::string{});
+                binColumns.push_back(std::get<2_z>(*it).has_value() ? escapeFloat(std::get<2_z>(*it).value()) : std::string{});
                 for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
                 {
-                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
                 }
                 addRow(it, binColumns);
                 ++it;
@@ -367,11 +375,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Column> const& channelColumns)
         {
+            binColumns.clear();
             auto const numBins = std::accumulate(channelColumns.cbegin(), channelColumns.cend(), 0_z, [](auto const s, auto const& channelColumn)
                                                  {
                                                      return std::max(s, std::get<2>(channelColumn).size());
                                                  });
-            std::vector<std::string> binColumns;
             for(size_t j = 0; j < numBins; ++j)
             {
                 binColumns.push_back("BIN" + std::to_string(j));
@@ -389,11 +397,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 binColumns.clear();
                 for(auto const& value : std::get<2_z>(*it))
                 {
-                    binColumns.push_back(std::to_string(value));
+                    binColumns.push_back(escapeFloat(value));
                 }
                 for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
                 {
-                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
                 }
                 addRow(it, binColumns);
                 ++it;
