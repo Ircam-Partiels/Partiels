@@ -21,7 +21,7 @@ jobs:
           - 'VampPlugins'
           - 'Dependencies/Misc/Source'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Check
       uses: jidicula/clang-format-action@v4.15.0
       with:
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: Format
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: recursive
     - uses: seanmiddleditch/gha-setup-ninja@master
@@ -65,7 +65,7 @@ jobs:
     runs-on: windows-latest
     needs: Format
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: recursive
     - run: choco install imagemagick -fy -d
@@ -98,7 +98,7 @@ jobs:
     needs: Format
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         submodules: recursive
     - uses: actions/setup-node@v4
@@ -182,7 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: Format
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: recursive
     - uses: actions/setup-node@v4
