@@ -149,10 +149,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 auto const windowState = acsr.getAttr<AttrType::windowState>();
                 auto const scale = acsr.getAttr<AttrType::desktopGlobalScaleFactor>();
                 juce::Desktop::getInstance().setGlobalScaleFactor(scale);
-                if(mWindow != nullptr && !windowState.isEmpty())
-                {
-                    mWindow->restoreWindowStateFromString(windowState);
-                }
                 mMainMenuModel->menuItemsChanged();
                 break;
             }
