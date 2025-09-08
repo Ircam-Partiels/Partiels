@@ -101,7 +101,7 @@ jobs:
       uses: actions/checkout@v5
       with:
         submodules: recursive
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: 20
     - run: npm install -g appdmg
@@ -185,7 +185,7 @@ jobs:
     - uses: actions/checkout@v5
       with:
         submodules: recursive
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: 20
     - run: npm install -g git+https://github.com/elliotblackburn/mdpdf.git#3.0.4
