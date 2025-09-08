@@ -40,6 +40,15 @@ namespace Zoom
 
         using Justification = juce::Justification;
 
+        enum class OutsideGridOptions
+        {
+              none   = 0x00
+            , left   = 0x01
+            , right  = 0x02
+            , top    = 0x04
+            , bottom = 0x08
+        };
+
         static void paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification);
 
         static void paintHorizontal(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, int maxStringWidth, Justification justification);

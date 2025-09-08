@@ -23,11 +23,8 @@ namespace Track
 
         juce::Result toPreset(Accessor const& accessor, juce::File const& file);
 
-        juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight);
-        juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort);
-        
-        juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Document::Exporter::Options const& options);
-        juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Document::Exporter::Options const& options);
+        juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::OutsideGridOptions outsideGridOptions = Zoom::Grid::OutsideGridOptions::none);
+        juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Zoom::Grid::OutsideGridOptions outsideGridOptions = Zoom::Grid::OutsideGridOptions::none);
 
         juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
         juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);

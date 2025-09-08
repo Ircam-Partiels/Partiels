@@ -286,7 +286,7 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
 
         auto const stringify = getStringify();
         // Suppress labels when outsideGridLabels is enabled during export
-        auto const labelStringify = (options != nullptr && options->outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none) ? nullptr : stringify;
+        auto const labelStringify = (options != nullptr && options->outsideGridLabels != Zoom::Grid::OutsideGridOptions::none) ? nullptr : stringify;
         auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
         {
             g.setColour(colour);

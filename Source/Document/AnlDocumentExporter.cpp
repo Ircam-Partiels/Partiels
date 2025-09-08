@@ -295,12 +295,12 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            auto options = mOptions;
                            switch(index)
                            {
-                               case 0: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::none; break;
-                               case 1: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::left; break;
-                               case 2: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::right; break;
-                               case 3: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::top; break;
-                               case 4: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::bottom; break;
-                               default: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::none; break;
+                               case 0: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::none; break;
+                               case 1: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::left; break;
+                               case 2: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::right; break;
+                               case 3: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::top; break;
+                               case 4: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::bottom; break;
+                               default: options.outsideGridLabels = Zoom::Grid::OutsideGridOptions::none; break;
                            }
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
@@ -729,11 +729,11 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     int outsideGridIndex = 0;
     switch(options.outsideGridLabels)
     {
-        case Document::Exporter::Options::OutsideGridLabels::none: outsideGridIndex = 0; break;
-        case Document::Exporter::Options::OutsideGridLabels::left: outsideGridIndex = 1; break;
-        case Document::Exporter::Options::OutsideGridLabels::right: outsideGridIndex = 2; break;
-        case Document::Exporter::Options::OutsideGridLabels::top: outsideGridIndex = 3; break;
-        case Document::Exporter::Options::OutsideGridLabels::bottom: outsideGridIndex = 4; break;
+        case Zoom::Grid::OutsideGridOptions::none: outsideGridIndex = 0; break;
+        case Zoom::Grid::OutsideGridOptions::left: outsideGridIndex = 1; break;
+        case Zoom::Grid::OutsideGridOptions::right: outsideGridIndex = 2; break;
+        case Zoom::Grid::OutsideGridOptions::top: outsideGridIndex = 3; break;
+        case Zoom::Grid::OutsideGridOptions::bottom: outsideGridIndex = 4; break;
         default: outsideGridIndex = 0; break;
     }
     mPropertyOutsideGridLabels.entry.setSelectedItemIndex(outsideGridIndex, silent);
@@ -952,7 +952,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options.outsideGridLabels);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -989,7 +989,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort, options.outsideGridLabels);
         };
 
         auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)

@@ -90,16 +90,55 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight)
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::OutsideGridOptions outsideGridOptions)
 {
-    juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
+    // Determine if we need to expand the image for outside grid labels
+    auto actualWidth = width;
+    auto actualHeight = height;
+    auto actualScaledWidth = scaledWidth;
+    auto actualScaledHeight = scaledHeight;
+    auto contentBounds = juce::Rectangle<int>(0, 0, width, height);
+    
+    if(outsideGridOptions != Zoom::Grid::OutsideGridOptions::none)
+    {
+        // Calculate space needed for outside labels
+        auto leftPadding = 0;
+        auto rightPadding = 0;
+        auto topPadding = 0;
+        auto bottomPadding = 0;
+        
+        switch(outsideGridOptions)
+        {
+            case Zoom::Grid::OutsideGridOptions::left:
+                leftPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
+                break;
+            case Zoom::Grid::OutsideGridOptions::right:
+                rightPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
+                break;
+            case Zoom::Grid::OutsideGridOptions::top:
+                topPadding = outsideGridTickHeight + 20; // Height for text
+                break;
+            case Zoom::Grid::OutsideGridOptions::bottom:
+                bottomPadding = outsideGridTickHeight + 20; // Height for text
+                break;
+            default:
+                break;
+        }
+        
+        actualWidth = width + leftPadding + rightPadding;
+        actualHeight = height + topPadding + bottomPadding;
+        actualScaledWidth = scaledWidth + static_cast<int>((leftPadding + rightPadding) * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
+        actualScaledHeight = scaledHeight + static_cast<int>((topPadding + bottomPadding) * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
+        contentBounds = juce::Rectangle<int>(leftPadding, topPadding, width, height);
+    }
+
+    juce::Image image(juce::Image::PixelFormat::ARGB, actualScaledWidth, actualScaledHeight, true);
     juce::Graphics g(image);
     g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::highResamplingQuality);
-    auto const scaleWidth = static_cast<float>(scaledWidth) / static_cast<float>(width);
-    auto const scaleHeight = static_cast<float>(scaledHeight) / static_cast<float>(height);
+    auto const scaleWidth = static_cast<float>(actualScaledWidth) / static_cast<float>(actualWidth);
+    auto const scaleHeight = static_cast<float>(actualScaledHeight) / static_cast<float>(actualHeight);
     g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
     g.fillAll(accessor.getAttr<AttrType::colours>().background);
-    auto const bounds = juce::Rectangle<int>(0, 0, width, height);
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 
     auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
@@ -113,11 +152,108 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     }
 
     auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
-    Renderer::paint(accessor, timeZoomAccessor, g, bounds, channelVisibility, colour);
+    
+    // Create a dummy options struct to pass the outsideGridOptions to the renderer
+    Document::Exporter::Options dummyOptions;
+    dummyOptions.outsideGridLabels = outsideGridOptions;
+    Renderer::paint(accessor, timeZoomAccessor, g, contentBounds, channelVisibility, colour, &dummyOptions);
+    
+    if(outsideGridOptions != Zoom::Grid::OutsideGridOptions::none)
+    {
+        // Draw outside grid labels
+        g.setFont(accessor.getAttr<AttrType::font>());
+        g.setColour(colour);
+        
+        auto const getStringify = [&]() -> std::function<juce::String(double)>
+        {
+            auto const& plotInfo = accessor.getAttr<AttrType::description>();
+            auto const frameType = Tools::getFrameType(accessor);
+            if(!frameType.has_value())
+            {
+                return nullptr;
+            }
+            
+            switch(frameType.value())
+            {
+                case FrameType::vector:
+                case FrameType::matrix:
+                case FrameType::plot:
+                case FrameType::image:
+                case FrameType::label:
+                {
+                    auto const unit = plotInfo.unit;
+                    auto const scale = plotInfo.scale;
+                    return [unit, scale](double value)
+                    {
+                        return Tools::getStringValue(value, unit, scale);
+                    };
+                }
+                case FrameType::value:
+                {
+                    auto const unit = plotInfo.unit;
+                    auto const scale = plotInfo.scale;
+                    return [unit, scale](double value)
+                    {
+                        return Tools::getStringValue(value, unit, scale);
+                    };
+                }
+            }
+            return nullptr;
+        };
+        
+        auto const stringifyValue = getStringify();
+        auto const stringifyTime = [](double const timeInSeconds) { return Tools::getStringTime(timeInSeconds); };
+        
+        if(auto const* zoomAcsr = Tools::getZoomAccessor(accessor))
+        {
+            switch(outsideGridOptions)
+            {
+                case Zoom::Grid::OutsideGridOptions::left:
+                case Zoom::Grid::OutsideGridOptions::right:
+                {
+                    if(stringifyValue != nullptr)
+                    {
+                        auto const labelBounds = juce::Rectangle<int>(
+                            outsideGridOptions == Zoom::Grid::OutsideGridOptions::left ? 0 : (actualWidth - outsideGridLabelMaxWidth - outsideGridTickHeight),
+                            contentBounds.getY(),
+                            outsideGridLabelMaxWidth,
+                            contentBounds.getHeight());
+                        
+                        Zoom::Grid::paintOutsideVertical(g, zoomAcsr->getAcsr<Zoom::AcsrType::grid>(), 
+                                                      zoomAcsr->getAttr<Zoom::AttrType::visibleRange>(), 
+                                                      labelBounds, 
+                                                      stringifyValue, 
+                                                      Zoom::Grid::Justification::horizontallyCentred);
+                    }
+                    break;
+                }
+                case Zoom::Grid::OutsideGridOptions::top:
+                case Zoom::Grid::OutsideGridOptions::bottom:
+                {
+                    auto const labelBounds = juce::Rectangle<int>(
+                        contentBounds.getX(),
+                        outsideGridOptions == Zoom::Grid::OutsideGridOptions::top ? 0 : (actualHeight - outsideGridTickHeight - 20),
+                        contentBounds.getWidth(),
+                        outsideGridTickHeight + 20);
+                    
+                    Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
+                                                    timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
+                                                    labelBounds, 
+                                                    stringifyTime, 
+                                                    outsideGridLabelMaxWidth, 
+                                                    Zoom::Grid::Justification::horizontallyCentred);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+    
     return image;
 }
 
-juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Zoom::Grid::OutsideGridOptions outsideGridOptions)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "image";
@@ -149,7 +285,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return aborted(name, format);
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, outsideGridOptions);
 
     if(shouldAbort)
     {
@@ -188,235 +324,12 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
 
 juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Document::Exporter::Options const& options)
 {
-    // Determine if we need to expand the image for outside grid labels
-    auto actualWidth = width;
-    auto actualHeight = height;
-    auto actualScaledWidth = scaledWidth;
-    auto actualScaledHeight = scaledHeight;
-    auto contentBounds = juce::Rectangle<int>(0, 0, width, height);
-    
-    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
-    {
-        // Calculate space needed for outside labels
-        auto leftPadding = 0;
-        auto rightPadding = 0;
-        auto topPadding = 0;
-        auto bottomPadding = 0;
-        
-        switch(options.outsideGridLabels)
-        {
-            case Document::Exporter::Options::OutsideGridLabels::left:
-                leftPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
-                break;
-            case Document::Exporter::Options::OutsideGridLabels::right:
-                rightPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
-                break;
-            case Document::Exporter::Options::OutsideGridLabels::top:
-                topPadding = outsideGridTickHeight + 20; // Height for text
-                break;
-            case Document::Exporter::Options::OutsideGridLabels::bottom:
-                bottomPadding = outsideGridTickHeight + 20; // Height for text
-                break;
-            default:
-                break;
-        }
-        
-        actualWidth = width + leftPadding + rightPadding;
-        actualHeight = height + topPadding + bottomPadding;
-        actualScaledWidth = scaledWidth + static_cast<int>((leftPadding + rightPadding) * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
-        actualScaledHeight = scaledHeight + static_cast<int>((topPadding + bottomPadding) * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
-        contentBounds = juce::Rectangle<int>(leftPadding, topPadding, width, height);
-    }
-
-    juce::Image image(juce::Image::PixelFormat::ARGB, actualScaledWidth, actualScaledHeight, true);
-    juce::Graphics g(image);
-    g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::highResamplingQuality);
-    auto const scaleWidth = static_cast<float>(actualScaledWidth) / static_cast<float>(actualWidth);
-    auto const scaleHeight = static_cast<float>(actualScaledHeight) / static_cast<float>(actualHeight);
-    g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
-    g.fillAll(accessor.getAttr<AttrType::colours>().background);
-    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-
-    auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
-    auto channelVisibility = channels.empty() ? channelLayout : std::vector<bool>(channelLayout.size(), false);
-    for(auto const& channel : channels)
-    {
-        if(channel < channelVisibility.size())
-        {
-            channelVisibility[channel] = true;
-        }
-    }
-
-    auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
-    Renderer::paint(accessor, timeZoomAccessor, g, contentBounds, channelVisibility, colour, &options);
-    
-    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
-    {
-        // Draw outside grid labels
-        g.setFont(accessor.getAttr<AttrType::font>());
-        g.setColour(colour);
-        
-        auto const getStringify = [&]() -> std::function<juce::String(double)>
-        {
-            auto const& plotInfo = accessor.getAttr<AttrType::description>();
-            auto const frameType = Tools::getFrameType(accessor);
-            if(!frameType.has_value())
-            {
-                return nullptr;
-            }
-            
-            switch(frameType.value())
-            {
-                case FrameType::vector:
-                case FrameType::matrix:
-                case FrameType::plot:
-                case FrameType::image:
-                case FrameType::label:
-                {
-                    auto const unit = plotInfo.unit;
-                    auto const scale = plotInfo.scale;
-                    return [unit, scale](double value)
-                    {
-                        return Tools::getStringValue(value, unit, scale);
-                    };
-                }
-                case FrameType::pointer:
-                    return nullptr;
-            }
-            return nullptr;
-        };
-        
-        auto const stringify = getStringify();
-        if(stringify != nullptr)
-        {
-            switch(options.outsideGridLabels)
-            {
-                case Document::Exporter::Options::OutsideGridLabels::left:
-                {
-                    auto const zoomAcsr = accessor.getAcsr<AcsrType::zoom>();
-                    if(zoomAcsr.has_value())
-                    {
-                        Zoom::Grid::paintOutsideVertical(g, zoomAcsr->getAcsr<Zoom::AcsrType::grid>(), 
-                                                        zoomAcsr->getAttr<Zoom::AttrType::visibleRange>(), 
-                                                        contentBounds, stringify, 
-                                                        juce::Justification::left);
-                    }
-                    break;
-                }
-                case Document::Exporter::Options::OutsideGridLabels::right:
-                {
-                    auto const zoomAcsr = accessor.getAcsr<AcsrType::zoom>();
-                    if(zoomAcsr.has_value())
-                    {
-                        Zoom::Grid::paintOutsideVertical(g, zoomAcsr->getAcsr<Zoom::AcsrType::grid>(), 
-                                                        zoomAcsr->getAttr<Zoom::AttrType::visibleRange>(), 
-                                                        contentBounds, stringify, 
-                                                        juce::Justification::right);
-                    }
-                    break;
-                }
-                case Document::Exporter::Options::OutsideGridLabels::top:
-                {
-                    auto const timeStringify = [](double value)
-                    {
-                        return Tools::getStringTime(value);
-                    };
-                    Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
-                                                      timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
-                                                      contentBounds, timeStringify, 
-                                                      outsideGridLabelMaxWidth, 
-                                                      juce::Justification::top);
-                    break;
-                }
-                case Document::Exporter::Options::OutsideGridLabels::bottom:
-                {
-                    auto const timeStringify = [](double value)
-                    {
-                        return Tools::getStringTime(value);
-                    };
-                    Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
-                                                      timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
-                                                      contentBounds, timeStringify, 
-                                                      outsideGridLabelMaxWidth, 
-                                                      juce::Justification::bottom);
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-    }
-    
-    return image;
+    return toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, options.outsideGridLabels);
 }
 
 juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort, Document::Exporter::Options const& options)
 {
-    auto const name = accessor.getAttr<AttrType::name>();
-    auto constexpr format = "image";
-
-    if(width <= 0 || height <= 0)
-    {
-        return failed(name, format, "the size is invalid");
-    }
-
-    juce::TemporaryFile temp(file);
-    auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
-    auto const xDensity = std::round(static_cast<double>(scaledWidth) / static_cast<double>(width) * 72.0);
-    auto const yDensity = std::round(static_cast<double>(scaledHeight) / static_cast<double>(height) * 72.0);
-    if(auto* pngFormat = dynamic_cast<juce::PNGImageFormat*>(imageFormat))
-    {
-        pngFormat->setDensity(static_cast<juce::uint32>(xDensity), static_cast<juce::uint32>(yDensity));
-    }
-    else if(auto* jpegFormat = dynamic_cast<juce::JPEGImageFormat*>(imageFormat))
-    {
-        jpegFormat->setDensity(static_cast<juce::uint16>(xDensity), static_cast<juce::uint16>(yDensity));
-    }
-    else
-    {
-        return failed(name, format, "the format is not supported");
-    }
-
-    if(shouldAbort)
-    {
-        return aborted(name, format);
-    }
-
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, options);
-
-    if(shouldAbort)
-    {
-        return aborted(name, format);
-    }
-
-    if(image.isValid())
-    {
-        juce::FileOutputStream stream(temp.getFile());
-        if(!stream.openedOk())
-        {
-            return failed(name, format, ErrorType::streamAccessFailure);
-        }
-
-        if(!imageFormat->writeImageToStream(image, stream))
-        {
-            return failed(name, format, ErrorType::streamWritingFailure);
-        }
-    }
-    else
-    {
-        return failed(name, format, "the image cannot be created");
-    }
-
-    if(shouldAbort)
-    {
-        return aborted(name, format);
-    }
-
-    if(!temp.overwriteTargetFileWithTemporary())
-    {
-        return failed(name, format, ErrorType::fileAccessFailure, file);
-    }
-    return juce::Result::ok();
+    return toImage(accessor, timeZoomAccessor, channels, file, width, height, scaledWidth, scaledHeight, shouldAbort, options.outsideGridLabels);
 }
 
 juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)

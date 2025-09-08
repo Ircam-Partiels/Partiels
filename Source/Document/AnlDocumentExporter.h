@@ -50,15 +50,6 @@ namespace Document
                   marker
                 , region
             };
-            
-            enum class OutsideGridLabels
-            {
-                  none   = 0x00
-                , left   = 0x01
-                , right  = 0x02
-                , top    = 0x04
-                , bottom = 0x08
-            };
             // clang-format on
 
             Format format{Format::jpeg};
@@ -76,7 +67,7 @@ namespace Document
             juce::String sdifMatrixSignature{"????"};
             juce::String sdifColumnName;
             TimePreset timePreset{TimePreset::global};
-            OutsideGridLabels outsideGridLabels{OutsideGridLabels::none};
+            Zoom::Grid::OutsideGridOptions outsideGridLabels{Zoom::Grid::OutsideGridOptions::none};
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
