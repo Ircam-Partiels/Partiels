@@ -62,28 +62,28 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
             bool perform() override
             {
-                return Modifier::updateFrame < Data::Type::marker | Data::Type::point > (mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                                                                                     {
+                                                                                         if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
                                                                                          {
-                                                                                             if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
-                                                                                             {
-                                                                                                 std::get<0_z>(frame) = mNewTime;
-                                                                                                 return true;
-                                                                                             }
-                                                                                             return false;
-                                                                                         });
+                                                                                             std::get<0_z>(frame) = mNewTime;
+                                                                                             return true;
+                                                                                         }
+                                                                                         return false;
+                                                                                     });
             }
 
             bool undo() override
             {
-                return Modifier::updateFrame < Data::Type::marker | Data::Type::point > (mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                                                                                     {
+                                                                                         if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
                                                                                          {
-                                                                                             if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
-                                                                                             {
-                                                                                                 std::get<0_z>(frame) = mCurrentTime;
-                                                                                                 return true;
-                                                                                             }
-                                                                                             return false;
-                                                                                         });
+                                                                                             std::get<0_z>(frame) = mCurrentTime;
+                                                                                             return true;
+                                                                                         }
+                                                                                         return false;
+                                                                                     });
             }
 
         private:
