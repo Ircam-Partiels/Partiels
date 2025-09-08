@@ -195,16 +195,37 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto actualScaledHeight = scaledHeight;
     auto contentBounds = juce::Rectangle<int>(0, 0, width, height);
     
-    if(options.outsideGridLabels)
+    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
     {
-        // TODO: Implement logic to expand image bounds and calculate space needed for outside labels
-        // For now, add some fixed padding
-        auto const padding = 50; // pixels for outside labels
-        actualWidth = width + padding * 2;
-        actualHeight = height + padding * 2;
-        actualScaledWidth = scaledWidth + static_cast<int>(padding * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
-        actualScaledHeight = scaledHeight + static_cast<int>(padding * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
-        contentBounds = juce::Rectangle<int>(padding, padding, width, height);
+        // Calculate space needed for outside labels
+        auto leftPadding = 0;
+        auto rightPadding = 0;
+        auto topPadding = 0;
+        auto bottomPadding = 0;
+        
+        switch(options.outsideGridLabels)
+        {
+            case Document::Exporter::Options::OutsideGridLabels::left:
+                leftPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::right:
+                rightPadding = outsideGridLabelMaxWidth + outsideGridTickHeight;
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::top:
+                topPadding = outsideGridTickHeight + 20; // Height for text
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::bottom:
+                bottomPadding = outsideGridTickHeight + 20; // Height for text
+                break;
+            default:
+                break;
+        }
+        
+        actualWidth = width + leftPadding + rightPadding;
+        actualHeight = height + topPadding + bottomPadding;
+        actualScaledWidth = scaledWidth + static_cast<int>((leftPadding + rightPadding) * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
+        actualScaledHeight = scaledHeight + static_cast<int>((topPadding + bottomPadding) * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
+        contentBounds = juce::Rectangle<int>(leftPadding, topPadding, width, height);
     }
 
     juce::Image image(juce::Image::PixelFormat::ARGB, actualScaledWidth, actualScaledHeight, true);
@@ -229,11 +250,101 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
     Renderer::paint(accessor, timeZoomAccessor, g, contentBounds, channelVisibility, colour, &options);
     
-    if(options.outsideGridLabels)
+    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
     {
-        // TODO: Draw outside grid labels here
-        // This would involve calling Zoom::Grid paint functions with labels enabled
-        // and positioning them outside the content bounds
+        // Draw outside grid labels
+        g.setFont(accessor.getAttr<AttrType::font>());
+        g.setColour(colour);
+        
+        auto const getStringify = [&]() -> std::function<juce::String(double)>
+        {
+            auto const& plotInfo = accessor.getAttr<AttrType::description>();
+            auto const frameType = Tools::getFrameType(accessor);
+            if(!frameType.has_value())
+            {
+                return nullptr;
+            }
+            
+            switch(frameType.value())
+            {
+                case FrameType::vector:
+                case FrameType::matrix:
+                case FrameType::plot:
+                case FrameType::image:
+                case FrameType::label:
+                {
+                    auto const unit = plotInfo.unit;
+                    auto const scale = plotInfo.scale;
+                    return [unit, scale](double value)
+                    {
+                        return Tools::getStringValue(value, unit, scale);
+                    };
+                }
+                case FrameType::pointer:
+                    return nullptr;
+            }
+            return nullptr;
+        };
+        
+        auto const stringify = getStringify();
+        if(stringify != nullptr)
+        {
+            switch(options.outsideGridLabels)
+            {
+                case Document::Exporter::Options::OutsideGridLabels::left:
+                {
+                    auto const zoomAcsr = accessor.getAcsr<AcsrType::zoom>();
+                    if(zoomAcsr.has_value())
+                    {
+                        Zoom::Grid::paintOutsideVertical(g, zoomAcsr->getAcsr<Zoom::AcsrType::grid>(), 
+                                                        zoomAcsr->getAttr<Zoom::AttrType::visibleRange>(), 
+                                                        contentBounds, stringify, 
+                                                        juce::Justification::left);
+                    }
+                    break;
+                }
+                case Document::Exporter::Options::OutsideGridLabels::right:
+                {
+                    auto const zoomAcsr = accessor.getAcsr<AcsrType::zoom>();
+                    if(zoomAcsr.has_value())
+                    {
+                        Zoom::Grid::paintOutsideVertical(g, zoomAcsr->getAcsr<Zoom::AcsrType::grid>(), 
+                                                        zoomAcsr->getAttr<Zoom::AttrType::visibleRange>(), 
+                                                        contentBounds, stringify, 
+                                                        juce::Justification::right);
+                    }
+                    break;
+                }
+                case Document::Exporter::Options::OutsideGridLabels::top:
+                {
+                    auto const timeStringify = [](double value)
+                    {
+                        return Tools::getStringTime(value);
+                    };
+                    Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
+                                                      timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
+                                                      contentBounds, timeStringify, 
+                                                      outsideGridLabelMaxWidth, 
+                                                      juce::Justification::top);
+                    break;
+                }
+                case Document::Exporter::Options::OutsideGridLabels::bottom:
+                {
+                    auto const timeStringify = [](double value)
+                    {
+                        return Tools::getStringTime(value);
+                    };
+                    Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
+                                                      timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
+                                                      contentBounds, timeStringify, 
+                                                      outsideGridLabelMaxWidth, 
+                                                      juce::Justification::bottom);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     }
     
     return image;

@@ -118,16 +118,37 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto actualScaledHeight = scaledHeight;
     auto contentBounds = juce::Rectangle<int>(0, 0, width, height);
     
-    if(options.outsideGridLabels)
+    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
     {
-        // TODO: Implement logic to expand image bounds and calculate space needed for outside labels
-        // For now, add some fixed padding
-        auto const padding = 50; // pixels for outside labels
-        actualWidth = width + padding * 2;
-        actualHeight = height + padding * 2;
-        actualScaledWidth = scaledWidth + static_cast<int>(padding * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
-        actualScaledHeight = scaledHeight + static_cast<int>(padding * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
-        contentBounds = juce::Rectangle<int>(padding, padding, width, height);
+        // Calculate space needed for outside labels - use Track constants
+        auto leftPadding = 0;
+        auto rightPadding = 0;
+        auto topPadding = 0;
+        auto bottomPadding = 0;
+        
+        switch(options.outsideGridLabels)
+        {
+            case Document::Exporter::Options::OutsideGridLabels::left:
+                leftPadding = Track::Exporter::outsideGridLabelMaxWidth + Track::Exporter::outsideGridTickHeight;
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::right:
+                rightPadding = Track::Exporter::outsideGridLabelMaxWidth + Track::Exporter::outsideGridTickHeight;
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::top:
+                topPadding = Track::Exporter::outsideGridTickHeight + 20; // Height for text
+                break;
+            case Document::Exporter::Options::OutsideGridLabels::bottom:
+                bottomPadding = Track::Exporter::outsideGridTickHeight + 20; // Height for text
+                break;
+            default:
+                break;
+        }
+        
+        actualWidth = width + leftPadding + rightPadding;
+        actualHeight = height + topPadding + bottomPadding;
+        actualScaledWidth = scaledWidth + static_cast<int>((leftPadding + rightPadding) * (static_cast<float>(scaledWidth) / static_cast<float>(width)));
+        actualScaledHeight = scaledHeight + static_cast<int>((topPadding + bottomPadding) * (static_cast<float>(scaledHeight) / static_cast<float>(height)));
+        contentBounds = juce::Rectangle<int>(leftPadding, topPadding, width, height);
     }
 
     juce::Image image(juce::Image::PixelFormat::ARGB, actualScaledWidth, actualScaledHeight, true);
@@ -161,11 +182,47 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
         }
     }
     
-    if(options.outsideGridLabels)
+    if(options.outsideGridLabels != Document::Exporter::Options::OutsideGridLabels::none)
     {
-        // TODO: Draw outside grid labels here for the group
-        // This would involve calling Zoom::Grid paint functions with labels enabled
-        // and positioning them outside the content bounds
+        // Draw outside grid labels for the group - only draw time labels on horizontal sides
+        g.setColour(laf.findColour(Decorator::ColourIds::normalBorderColourId));
+        
+        switch(options.outsideGridLabels)
+        {
+            case Document::Exporter::Options::OutsideGridLabels::top:
+            {
+                auto const timeStringify = [](double value)
+                {
+                    return Track::Tools::getStringTime(value);
+                };
+                Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
+                                                  timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
+                                                  contentBounds, timeStringify, 
+                                                  Track::Exporter::outsideGridLabelMaxWidth, 
+                                                  juce::Justification::top);
+                break;
+            }
+            case Document::Exporter::Options::OutsideGridLabels::bottom:
+            {
+                auto const timeStringify = [](double value)
+                {
+                    return Track::Tools::getStringTime(value);
+                };
+                Zoom::Grid::paintOutsideHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), 
+                                                  timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), 
+                                                  contentBounds, timeStringify, 
+                                                  Track::Exporter::outsideGridLabelMaxWidth, 
+                                                  juce::Justification::bottom);
+                break;
+            }
+            case Document::Exporter::Options::OutsideGridLabels::left:
+            case Document::Exporter::Options::OutsideGridLabels::right:
+                // For groups, we only support horizontal outside labels (time labels)
+                // Vertical labels would be track-specific and don't make sense for groups
+                break;
+            default:
+                break;
+        }
     }
     
     return image;

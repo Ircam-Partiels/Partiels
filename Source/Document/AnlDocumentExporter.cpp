@@ -290,10 +290,18 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            options.ignoreGridResults = state;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
-, mPropertyOutsideGridLabels("Outside Grid Labels", "Draw grid labels outside the frame bounds during image export", [this](bool state)
+, mPropertyOutsideGridLabels("Outside Grid Labels", "Draw grid labels outside the frame bounds during image export", "", std::vector<std::string>{"None", "Left", "Right", "Top", "Bottom"}, [this](size_t index)
                        {
                            auto options = mOptions;
-                           options.outsideGridLabels = state;
+                           switch(index)
+                           {
+                               case 0: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::none; break;
+                               case 1: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::left; break;
+                               case 2: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::right; break;
+                               case 3: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::top; break;
+                               case 4: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::bottom; break;
+                               default: options.outsideGridLabels = Document::Exporter::Options::OutsideGridLabels::none; break;
+                           }
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
@@ -718,7 +726,17 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
-    mPropertyOutsideGridLabels.entry.setToggleState(options.outsideGridLabels, silent);
+    int outsideGridIndex = 0;
+    switch(options.outsideGridLabels)
+    {
+        case Document::Exporter::Options::OutsideGridLabels::none: outsideGridIndex = 0; break;
+        case Document::Exporter::Options::OutsideGridLabels::left: outsideGridIndex = 1; break;
+        case Document::Exporter::Options::OutsideGridLabels::right: outsideGridIndex = 2; break;
+        case Document::Exporter::Options::OutsideGridLabels::top: outsideGridIndex = 3; break;
+        case Document::Exporter::Options::OutsideGridLabels::bottom: outsideGridIndex = 4; break;
+        default: outsideGridIndex = 0; break;
+    }
+    mPropertyOutsideGridLabels.entry.setSelectedItemIndex(outsideGridIndex, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
     mPropertySdifMatrix.entry.setText(options.sdifMatrixSignature, silent);

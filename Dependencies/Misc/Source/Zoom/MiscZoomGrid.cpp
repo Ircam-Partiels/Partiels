@@ -295,4 +295,129 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
     g.fillPath(path);
 }
 
+void Zoom::Grid::paintOutsideHorizontal(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, int maxStringWidth, Justification justification)
+{
+    MiscWeakAssert(justification.getOnlyHorizontalFlags() == 0);
+    justification = justification.getOnlyVerticalFlags();
+    if(justification == 0 || stringify == nullptr)
+    {
+        return;
+    }
+    auto const clipBounds = g.getClipBounds();
+    if(bounds.isEmpty() || clipBounds.isEmpty() || visibleRange.isEmpty())
+    {
+        return;
+    }
+    
+    auto const font = g.getCurrentFont();
+    auto const x = static_cast<float>(bounds.getX());
+    auto const y = static_cast<float>(bounds.getY());
+    auto const width = static_cast<float>(bounds.getWidth());
+    auto const height = static_cast<float>(bounds.getHeight());
+    auto const fheight = static_cast<float>(height);
+    
+    auto const rangeStart = visibleRange.getStart();
+    auto const rangeLength = visibleRange.getLength();
+    auto getPosition = [&](double value)
+    {
+        return (value - rangeStart) / rangeLength * static_cast<double>(width) + static_cast<double>(x);
+    };
+
+    auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, static_cast<int>(width), static_cast<double>(maxStringWidth));
+    juce::Path path;
+    
+    for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
+    {
+        auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
+        auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
+        
+        if(isPrimaryTick && stringify != nullptr)
+        {
+            auto const xPos = static_cast<float>(getPosition(value));
+            auto const text = stringify(value);
+            
+            // Draw outside labels
+            if(justification.testFlags(Justification::top))
+            {
+                // Draw ticks extending outside the top
+                path.addLineSegment(juce::Line<float>(xPos, y, xPos, y - 12.0f), 1.0f);
+                // Draw labels above the frame
+                g.drawText(text, static_cast<int>(std::floor(xPos - maxStringWidth / 2.0f)), static_cast<int>(y - 12.0f - font.getHeight()), maxStringWidth, static_cast<int>(font.getHeight()), juce::Justification::centred);
+            }
+            if(justification.testFlags(Justification::bottom))
+            {
+                // Draw ticks extending outside the bottom
+                path.addLineSegment(juce::Line<float>(xPos, y + fheight, xPos, y + fheight + 12.0f), 1.0f);
+                // Draw labels below the frame
+                g.drawText(text, static_cast<int>(std::floor(xPos - maxStringWidth / 2.0f)), static_cast<int>(y + fheight + 12.0f), maxStringWidth, static_cast<int>(font.getHeight()), juce::Justification::centred);
+            }
+        }
+    }
+    g.fillPath(path);
+}
+
+void Zoom::Grid::paintOutsideVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification)
+{
+    MiscWeakAssert(justification.getOnlyVerticalFlags() == 0);
+    justification = justification.getOnlyHorizontalFlags();
+    if(justification == 0 || stringify == nullptr)
+    {
+        return;
+    }
+    auto const clipBounds = g.getClipBounds();
+    if(bounds.isEmpty() || clipBounds.isEmpty() || visibleRange.isEmpty())
+    {
+        return;
+    }
+    
+    auto const font = g.getCurrentFont();
+    auto const x = static_cast<float>(bounds.getX());
+    auto const y = static_cast<float>(bounds.getY());
+    auto const width = static_cast<float>(bounds.getWidth());
+    auto const height = static_cast<float>(bounds.getHeight());
+    
+    auto const rangeStart = visibleRange.getStart();
+    auto const rangeLength = visibleRange.getLength();
+    auto getPosition = [&](double value)
+    {
+        return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(height + 1) + static_cast<double>(y);
+    };
+
+    auto const textJustification = justification.testFlags(juce::Justification::left) ? juce::Justification::left : juce::Justification::right;
+    auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, height - 1, font.getHeight() + 2.0f);
+    juce::Path path;
+    
+    for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
+    {
+        auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
+        auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
+
+        if(isPrimaryTick && stringify != nullptr)
+        {
+            auto const yPos = static_cast<float>(getPosition(value));
+            if(yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height))
+            {
+                auto const text = stringify(value);
+                
+                // Draw outside labels
+                if(justification.testFlags(juce::Justification::left))
+                {
+                    // Draw ticks extending outside the left
+                    path.addLineSegment(juce::Line<float>(x, yPos, x - 12.0f, yPos), 1.0f);
+                    // Draw labels to the left of the frame
+                    g.drawText(text, static_cast<int>(x - 72.0f - 12.0f), static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, 72, static_cast<int>(std::ceil(font.getHeight())), juce::Justification::right);
+                }
+                if(justification.testFlags(juce::Justification::right))
+                {
+                    // Draw ticks extending outside the right
+                    path.addLineSegment(juce::Line<float>(x + width, yPos, x + width + 12.0f, yPos), 1.0f);
+                    // Draw labels to the right of the frame
+                    g.drawText(text, static_cast<int>(x + width + 12.0f), static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, 72, static_cast<int>(std::ceil(font.getHeight())), juce::Justification::left);
+                }
+            }
+        }
+    }
+    g.fillPath(path);
+}
+
 MISC_FILE_END

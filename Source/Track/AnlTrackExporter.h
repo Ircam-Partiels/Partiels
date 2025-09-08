@@ -16,6 +16,9 @@ namespace Track
 {
     namespace Exporter
     {
+        static constexpr int outsideGridTickHeight = 12;
+        static constexpr int outsideGridLabelMaxWidth = 72;
+        
         juce::Result fromPreset(Accessor& accessor, juce::File const& file);
 
         juce::Result toPreset(Accessor const& accessor, juce::File const& file);
