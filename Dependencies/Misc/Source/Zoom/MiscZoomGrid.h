@@ -9,6 +9,41 @@ namespace Zoom
 {
     struct Grid
     {
+        class Justification
+        {
+        public:
+            Justification(int justificationFlags) noexcept
+            : mFlags(justificationFlags)
+            {
+            }
+
+            Justification(const Justification&) = default;
+            Justification& operator=(const Justification&) = default;
+            bool operator==(Justification const& other) const noexcept { return mFlags == other.mFlags; }
+            bool operator!=(Justification const& other) const noexcept { return mFlags != other.mFlags; }
+            inline int getFlags() const noexcept { return mFlags; }
+            inline bool testFlags(int flagsToTest) const noexcept { return (mFlags & flagsToTest) != 0; }
+            int getOnlyVerticalFlags() const noexcept { return mFlags & (top | bottom | vertical); }
+            int getOnlyHorizontalFlags() const noexcept { return mFlags & (left | right | horizontal); }
+            juce::Justification getTextJustification() { return juce::Justification(mFlags); }
+
+            // clang-format off
+            enum Flags
+            {
+                  none = 0
+                , left = 1
+                , right = 2
+                , horizontal = 4
+                , top = 8
+                , bottom = 16
+                , vertical = 32
+            };
+            // clang-format on
+
+        private:
+            int mFlags;
+        };
+
         // clang-format off
         enum class AttrType : size_t
         {
@@ -37,8 +72,6 @@ namespace Zoom
             {
             }
         };
-
-        using Justification = juce::Justification;
 
         static void paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification);
 
