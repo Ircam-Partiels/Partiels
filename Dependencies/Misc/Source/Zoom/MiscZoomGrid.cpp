@@ -203,7 +203,7 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(height + 1) + static_cast<double>(y);
     };
 
-    auto const textJustification = justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontallyCentred) ? juce::Justification::left : juce::Justification::right;
+    auto const textJustification = justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontal) ? juce::Justification::left : juce::Justification::right;
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, height - 1, font.getHeight() + 2.0f);
     juce::Path path;
     auto const x = static_cast<float>(bounds.getX());
@@ -214,15 +214,15 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         auto const tickWidth = isPrimaryTick ? 12.0f : 8.0f;
 
         auto const yPos = static_cast<float>(getPosition(value));
-        if(justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontallyCentred))
+        if(justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontal))
         {
             path.addLineSegment(juce::Line<float>(x, yPos, tickWidth + x, yPos), 1.0f);
         }
-        if(justification.testFlags(Justification::right) || justification.testFlags(Justification::horizontallyCentred))
+        if(justification.testFlags(Justification::right) || justification.testFlags(Justification::horizontal))
         {
             path.addLineSegment(juce::Line<float>(width - tickWidth + x, yPos, width + x, yPos), 1.0f);
         }
-        if(justification.testFlags(Justification::horizontallyCentred) && isPrimaryTick)
+        if(justification.testFlags(Justification::horizontal) && isPrimaryTick)
         {
             path.addLineSegment(juce::Line<float>(x, yPos, width + x, yPos), 1.0f);
         }
@@ -273,15 +273,15 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         auto const tickHeight = isPrimaryTick ? 8.0f : 6.0f;
 
         auto const xPos = static_cast<float>(getPosition(value));
-        if(justification.testFlags(Justification::top) || justification.testFlags(Justification::verticallyCentred))
+        if(justification.testFlags(Justification::top) || justification.testFlags(Justification::vertical))
         {
             path.addLineSegment(juce::Line<float>(xPos, y, xPos, tickHeight + y), 1.0f);
         }
-        if(justification.testFlags(Justification::bottom) || justification.testFlags(Justification::verticallyCentred))
+        if(justification.testFlags(Justification::bottom) || justification.testFlags(Justification::vertical))
         {
             path.addLineSegment(juce::Line<float>(xPos, fheight - tickHeight + y, xPos, fheight + y), 1.0f);
         }
-        if(justification.testFlags(Justification::verticallyCentred) && isPrimaryTick)
+        if(justification.testFlags(Justification::vertical) && isPrimaryTick)
         {
             path.addLineSegment(juce::Line<float>(xPos, y, xPos, fheight + y), 1.0f);
         }
@@ -289,7 +289,7 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         if(isPrimaryTick && stringify != nullptr)
         {
             auto const text = stringify(value);
-            g.drawText(text, static_cast<int>(std::floor(xPos + 2.0f)), static_cast<int>(std::floor(fheight - font.getAscent() + y)), maxStringWidth, static_cast<int>(font.getHeight()), justification);
+            g.drawText(text, static_cast<int>(std::floor(xPos + 2.0f)), static_cast<int>(std::floor(fheight - font.getAscent() + y)), maxStringWidth, static_cast<int>(font.getHeight()), justification.getTextJustification());
         }
     }
     g.fillPath(path);
