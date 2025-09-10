@@ -682,6 +682,15 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
             auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
             options.imagePpi = static_cast<int>(std::round(static_cast<double>(scaledBounds.getWidth()) / static_cast<double>(options.imageWidth) * 72.0));
         }
+        mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), juce::NotificationType::dontSendNotification);
+        mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), juce::NotificationType::dontSendNotification);
+        mPropertyPpi.entry.setValue(static_cast<double>(options.imagePpi), juce::NotificationType::dontSendNotification);
+    }
+    else if(mShowAutoSize && mOptions.useAutoSize && itemIsDocument)
+    {
+        mPropertyWidth.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
+        mPropertyHeight.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
+        mPropertyPpi.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
     }
 
     auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -724,9 +733,12 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     if(options.useAutoSize)
     {
         mPropertySizePreset.entry.setSelectedItemIndex(0, silent);
-        mPropertyWidth.entry.setText(juce::translate("Automatic"), silent);
-        mPropertyHeight.entry.setText(juce::translate("Automatic"), silent);
-        mPropertyPpi.entry.setText(juce::translate("Automatic"), silent);
+        if(getSelectedIdentifier().isEmpty())
+        {
+            mPropertyWidth.entry.setText(juce::translate("Multiple"), silent);
+            mPropertyHeight.entry.setText(juce::translate("Multiple"), silent);
+            mPropertyPpi.entry.setText(juce::translate("Multiple"), silent);
+        }
     }
     else
     {
