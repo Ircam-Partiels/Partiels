@@ -89,7 +89,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight)
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridJustification)
 {
     juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
     juce::Graphics g(image);
@@ -112,11 +112,11 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     }
 
     auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
-    Renderer::paint(accessor, timeZoomAccessor, g, bounds, channelVisibility, colour);
+    Renderer::paint(accessor, timeZoomAccessor, g, bounds, channelVisibility, colour, outsideGridJustification);
     return image;
 }
 
-juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridJustification, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "image";
@@ -148,7 +148,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return aborted(name, format);
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, outsideGridJustification);
 
     if(shouldAbort)
     {
