@@ -18,6 +18,19 @@ juce::Rectangle<int> Document::Exporter::getPlotBounds(juce::String const& ident
     return juce::Rectangle<int>{};
 }
 
+std::tuple<int, int, int> Document::Exporter::getPlotDimension(juce::String const& identifier)
+{
+    auto const bounds = getPlotBounds(identifier);
+    auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(bounds.toNearestInt(), false);
+    if(display == nullptr)
+    {
+        return std::make_tuple(bounds.getWidth(), bounds.getHeight(), 72);
+    }
+    auto const globalScale = juce::Desktop::getInstance().getGlobalScaleFactor();
+    auto const dpi = static_cast<int>(std::round(static_cast<double>(globalScale) * display->scale * display->dpi));
+    return std::make_tuple(bounds.getWidth(), bounds.getHeight(), dpi);
+}
+
 bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
 {
     return format == rhd.format &&
@@ -199,6 +212,21 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       {
                           auto options = mOptions;
                           options.useAutoSize = mShowAutoSize && index == 0_z;
+                          if(options.useAutoSize)
+                          {
+                              auto const identifier = getSelectedIdentifier();
+                              if(identifier.isNotEmpty())
+                              {
+                                  auto const dimension = getPlotDimension(identifier);
+                                  auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+                                  if(hasDimension)
+                                  {
+                                      options.imageWidth = std::get<0_z>(dimension);
+                                      options.imageHeight = std::get<1_z>(dimension);
+                                      options.imagePpi = std::get<2_z>(dimension);
+                                  }
+                              }
+                          }
                           if(!mShowAutoSize && !options.useAutoSize)
                           {
                               index--;
@@ -214,21 +242,54 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyWidth("Image Width", "Set the width of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                  {
                      auto options = mOptions;
-                     options.useAutoSize = false;
+                     auto const identifier = getSelectedIdentifier();
+                     if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                     {
+                         auto const dimension = getPlotDimension(identifier);
+                         auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+                         if(hasDimension)
+                         {
+                             options.imageWidth = std::get<0_z>(dimension);
+                             options.imageHeight = std::get<1_z>(dimension);
+                             options.imagePpi = std::get<2_z>(dimension);
+                         }
+                     }
                      options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
                      setOptions(options, juce::NotificationType::sendNotificationSync);
                  })
 , mPropertyHeight("Image Height", "Set the height of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                   {
                       auto options = mOptions;
-                      options.useAutoSize = false;
+                      auto const identifier = getSelectedIdentifier();
+                      if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                      {
+                          auto const dimension = getPlotDimension(identifier);
+                          auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+                          if(hasDimension)
+                          {
+                              options.imageWidth = std::get<0_z>(dimension);
+                              options.imageHeight = std::get<1_z>(dimension);
+                              options.imagePpi = std::get<2_z>(dimension);
+                          }
+                      }
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
 , mPropertyPpi("Image PPI", "Set the pixel density of the image", "pixels/inch", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                {
                    auto options = mOptions;
-                   options.useAutoSize = false;
+                   auto const identifier = getSelectedIdentifier();
+                   if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                   {
+                       auto const dimension = getPlotDimension(identifier);
+                       auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+                       if(hasDimension)
+                       {
+                           options.imageWidth = std::get<0_z>(dimension);
+                           options.imageHeight = std::get<1_z>(dimension);
+                           options.imagePpi = std::get<2_z>(dimension);
+                       }
+                   }
                    options.imagePpi = std::max(static_cast<int>(std::round(value)), 1);
                    setOptions(options, juce::NotificationType::sendNotificationSync);
                })
@@ -670,17 +731,14 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     if(mShowAutoSize && mOptions.useAutoSize && !itemIsDocument)
     {
-        auto const bounds = getPlotBounds(identifier);
-        if(bounds.isEmpty())
+        auto const dimension = getPlotDimension(identifier);
+        auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+        options.useAutoSize = hasDimension;
+        if(hasDimension)
         {
-            options.useAutoSize = false;
-        }
-        else
-        {
-            options.imageWidth = bounds.getWidth();
-            options.imageHeight = bounds.getHeight();
-            auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
-            options.imagePpi = static_cast<int>(std::round(static_cast<double>(scaledBounds.getWidth()) / static_cast<double>(options.imageWidth) * 72.0));
+            options.imageWidth = std::get<0_z>(dimension);
+            options.imageHeight = std::get<1_z>(dimension);
+            options.imagePpi = std::get<2_z>(dimension);
         }
         mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), juce::NotificationType::dontSendNotification);
         mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), juce::NotificationType::dontSendNotification);
