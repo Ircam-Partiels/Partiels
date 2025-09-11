@@ -129,7 +129,7 @@ void Group::Plot::paint(juce::Graphics& g)
         {
             auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
-            Track::Renderer::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, trackAcsr.value().get().getAttr<Track::AttrType::channelsLayout>(), colour);
+            Track::Renderer::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, trackAcsr.value().get().getAttr<Track::AttrType::channelsLayout>(), colour, Zoom::Grid::Justification::none);
         }
     }
 }
