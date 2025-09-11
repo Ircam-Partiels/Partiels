@@ -170,7 +170,14 @@ namespace Track
             juce::GlyphArrangement mGlyphArrangement;
         };
 
-        void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour);
+        static constexpr int outsideGridHeight = 16;
+        static constexpr int outsideGridWidth = 72;
+
+        juce::String getStringForTime(Zoom::Accessor const& timeZoomAcsr, double time);
+        std::function<juce::String(double)> getGridStringify(Accessor const& accessor);
+        void paintInternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, bool showGridLabels);
+        void paintExternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification);
+
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
@@ -212,78 +219,94 @@ void Track::Renderer::paintClippedImage(juce::Graphics& g, juce::Image const& im
     g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
 }
 
-void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour)
+juce::String Track::Renderer::getStringForTime(Zoom::Accessor const& timeZoomAcsr, double time)
+{
+    auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
+    auto const hours = endTime > 3600.0 ? ":" : "";
+    auto const minutes = endTime > 60.0 ? ":" : "";
+    auto const seconds = endTime > 1.0 ? (endTime > 60.0 ? ":" : "s") : "";
+    auto const milliseconds = endTime > 0.001 ? (endTime > 60.0 ? "" : "ms") : "";
+    return Format::secondsToString(time, {hours, minutes, seconds, milliseconds});
+}
+
+std::function<juce::String(double)> Track::Renderer::getGridStringify(Accessor const& accessor)
+{
+    auto const frameType = Tools::getFrameType(accessor);
+    if(!frameType.has_value())
+    {
+        return nullptr;
+    }
+    switch(frameType.value())
+    {
+        case Track::FrameType::label:
+        {
+            return nullptr;
+        }
+        case Track::FrameType::value:
+        {
+            auto const unit = Tools::getUnit(accessor);
+            auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
+            if(isLog)
+            {
+                auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+                auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
+                return [scaleRatio, unit](double value)
+                {
+                    return Format::valueToString(std::round(Tools::getHertzFromMidi(value * scaleRatio)), 0) + unit;
+                };
+            }
+            else
+            {
+                return [unit](double value)
+                {
+                    return Format::valueToString(value, 4) + unit;
+                };
+            }
+        }
+        case Track::FrameType::vector:
+        {
+            auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
+            if(isLog)
+            {
+                auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
+                auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
+                auto const midiMax = std::max(Tools::getMidiFromHertz(nyquist), 1.0);
+                return [&, numBins, nyquist, midiMax](double value)
+                {
+                    auto const startMidi = Tools::getHertzFromMidi(value / numBins * midiMax);
+                    auto const index = static_cast<size_t>(std::floor(startMidi / nyquist * numBins));
+                    auto const name = Tools::getBinName(accessor, index);
+                    return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+                };
+            }
+            else
+            {
+                return [&](double value)
+                {
+                    auto const index = static_cast<size_t>(std::floor(value));
+                    auto const name = Tools::getBinName(accessor, index);
+                    return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+                };
+            }
+        }
+    }
+    return nullptr;
+}
+
+void Track::Renderer::paintInternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, bool showGridLabels)
 {
     if(colour.isTransparent() || accessor.getAttr<AttrType::grid>() == GridMode::hidden)
     {
         return;
     }
     using Justification = Zoom::Grid::Justification;
-    auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
-    auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
+    auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Justification::left | Justification::right) : Justification(Justification::horizontal);
+    auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Justification::top | Justification::bottom) : Justification(Justification::vertical);
 
     auto const frameType = Tools::getFrameType(accessor);
     if(frameType.has_value())
     {
-        auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
-        auto const getStringify = [&]() -> std::function<juce::String(double)>
-        {
-            switch(frameType.value())
-            {
-                case Track::FrameType::label:
-                {
-                    return nullptr;
-                }
-                case Track::FrameType::value:
-                {
-                    auto const unit = Tools::getUnit(accessor);
-                    if(isLog)
-                    {
-                        auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
-                        auto const scaleRatio = static_cast<float>(std::max(Tools::getMidiFromHertz(nyquist), 1.0) / nyquist);
-                        return [scaleRatio, unit](double value)
-                        {
-                            return Format::valueToString(std::round(Tools::getHertzFromMidi(value * scaleRatio)), 0) + unit;
-                        };
-                    }
-                    else
-                    {
-                        return [unit](double value)
-                        {
-                            return Format::valueToString(value, 4) + unit;
-                        };
-                    }
-                }
-                case Track::FrameType::vector:
-                {
-                    if(isLog)
-                    {
-                        auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
-                        auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
-                        auto const midiMax = std::max(Tools::getMidiFromHertz(nyquist), 1.0);
-                        return [&, numBins, nyquist, midiMax](double value)
-                        {
-                            auto const startMidi = Tools::getHertzFromMidi(value / numBins * midiMax);
-                            auto const index = static_cast<size_t>(std::floor(startMidi / nyquist * numBins));
-                            auto const name = Tools::getBinName(accessor, index);
-                            return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
-                        };
-                    }
-                    else
-                    {
-                        return [&](double value)
-                        {
-                            auto const index = static_cast<size_t>(std::floor(value));
-                            auto const name = Tools::getBinName(accessor, index);
-                            return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
-                        };
-                    }
-                }
-            }
-            return nullptr;
-        };
-
-        auto const stringify = getStringify();
+        auto const stringify = showGridLabels ? getGridStringify(accessor) : nullptr;
         auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
         {
             g.setColour(colour);
@@ -318,45 +341,146 @@ void Track::Renderer::paintGrid(Accessor const& accessor, Zoom::Accessor const& 
         }
     }
     g.setColour(colour);
-    Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
+    Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, outsideGridWidth, justificationVertical);
 }
 
-void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour)
+void Track::Renderer::paintExternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification)
 {
-    g.setFont(accessor.getAttr<AttrType::font>());
-    auto const frameType = Tools::getFrameType(accessor);
-    if(frameType.has_value())
+    if(colour.isTransparent())
     {
+        return;
+    }
+    g.setColour(colour);
+    using Justification = Zoom::Grid::Justification;
+    auto const frameType = Tools::getFrameType(accessor);
+    if(frameType.has_value() && (outsideGridjustification.testFlags(Justification::left) || outsideGridjustification.testFlags(Justification::right)))
+    {
+        auto const stringify = getGridStringify(accessor);
+        auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> region)
+        {
+            if(outsideGridjustification.testFlags(Justification::left))
+            {
+                Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region.removeFromLeft(outsideGridWidth), stringify, Justification::right);
+            }
+            if(outsideGridjustification.testFlags(Justification::right))
+            {
+                Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region.removeFromRight(outsideGridWidth), stringify, Justification::left);
+            }
+        };
+        auto const verticalBounds = bounds.withTrimmedTop(outsideGridjustification.testFlags(Justification::top) ? outsideGridHeight : 0).withTrimmedBottom(outsideGridjustification.testFlags(Justification::bottom) ? outsideGridHeight : 0);
         switch(frameType.value())
         {
             case Track::FrameType::label:
             {
-                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
-                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int>, size_t)
                               {
+                              });
+            }
+            break;
+            case Track::FrameType::value:
+            {
+                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
+                              {
+                                  paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
+                              });
+            }
+            break;
+            case Track::FrameType::vector:
+            {
+                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
+                              {
+                                  paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
+                              });
+            }
+            break;
+        }
+    }
+
+    auto horizontalBounds = bounds.withTrimmedLeft(outsideGridjustification.testFlags(Justification::left) ? outsideGridWidth : 0).withTrimmedRight(outsideGridjustification.testFlags(Justification::right) ? outsideGridWidth : 0);
+    if(outsideGridjustification.testFlags(Justification::top))
+    {
+        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromTop(outsideGridHeight).reduced(0, 1), [&](double time)
+                                    {
+                                        return getStringForTime(timeZoomAccessor, time);
+                                    },
+                                    outsideGridWidth, Justification::bottom);
+    }
+    if(outsideGridjustification.testFlags(Justification::bottom))
+    {
+        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromBottom(outsideGridHeight).reduced(0, 1), [&](double time)
+                                    {
+                                        return getStringForTime(timeZoomAccessor, time);
+                                    },
+                                    outsideGridWidth, Justification::top);
+    }
+}
+
+juce::BorderSize<int> Track::Renderer::getOutsideGridBorder(Zoom::Grid::Justification outsideGridjustification)
+{
+    using Justification = Zoom::Grid::Justification;
+    return {
+        outsideGridjustification.testFlags(Justification::top) ? outsideGridHeight : 0,
+        outsideGridjustification.testFlags(Justification::left) ? outsideGridWidth : 0,
+        outsideGridjustification.testFlags(Justification::bottom) ? outsideGridHeight : 0,
+        outsideGridjustification.testFlags(Justification::right) ? outsideGridWidth : 0,
+    };
+}
+
+void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification)
+{
+    using Justification = Zoom::Grid::Justification;
+    auto const outsideGridBorder = getOutsideGridBorder(outsideGridjustification);
+    auto const internalBounds = outsideGridBorder.subtractedFrom(bounds);
+    auto const frameType = Tools::getFrameType(accessor);
+    if(!frameType.has_value())
+    {
+        return;
+    }
+
+    if(!internalBounds.isEmpty())
+    {
+        auto const showGridLabels = outsideGridjustification == Justification::none;
+        juce::Graphics::ScopedSaveState sss(g);
+        g.reduceClipRegion(internalBounds);
+        switch(frameType.value())
+        {
+            case Track::FrameType::label:
+            {
+                paintInternalGrid(accessor, timeZoomAcsr, g, internalBounds, channels, colour, showGridLabels);
+                paintChannels(g, internalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                              {
+                                  g.setFont(accessor.getAttr<AttrType::font>());
                                   paintMarkers(accessor, channel, g, region, timeZoomAcsr);
                               });
             }
             break;
             case Track::FrameType::value:
             {
-                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
-                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintInternalGrid(accessor, timeZoomAcsr, g, internalBounds, channels, colour, showGridLabels);
+                paintChannels(g, internalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
+                                  g.setFont(accessor.getAttr<AttrType::font>());
                                   paintPoints(accessor, channel, g, region, timeZoomAcsr);
                               });
             }
             break;
             case Track::FrameType::vector:
             {
-                paintChannels(g, bounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
+                paintChannels(g, internalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
                                   paintColumns(accessor, channel, g, region, timeZoomAcsr);
                               });
-                paintGrid(accessor, timeZoomAcsr, g, bounds, channels, colour);
+                paintInternalGrid(accessor, timeZoomAcsr, g, internalBounds, channels, colour, showGridLabels);
             }
             break;
         }
+    }
+
+    if(!outsideGridBorder.isEmpty())
+    {
+        g.setColour(colour);
+        g.drawRect(internalBounds.expanded(1), 1);
+        paintExternalGrid(accessor, timeZoomAcsr, g, bounds, channels, colour, outsideGridjustification);
     }
 }
 
@@ -901,6 +1025,7 @@ void Track::Renderer::paintColumns(Accessor const& accessor, size_t channel, juc
         auto const yRange = scale(yClippedRange, yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), juce::Range<int>{0, image.getHeight()});
 
         g.setColour(juce::Colours::black);
+        juce::Graphics::ScopedSaveState sss(g);
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
         paintClippedImage(g, image, juce::Rectangle<double>{xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()}.toFloat());
     };

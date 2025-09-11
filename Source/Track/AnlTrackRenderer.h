@@ -10,7 +10,8 @@ namespace Track
     {
         void paintChannels(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
-        void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour);
+        void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification);
+        juce::BorderSize<int> getOutsideGridBorder(Zoom::Grid::Justification outsideGridjustification);
     } // namespace Renderer
 } // namespace Track
 
