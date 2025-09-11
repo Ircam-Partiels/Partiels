@@ -10,7 +10,7 @@ namespace Document
     namespace Exporter
     {
         juce::Component const* getPlotComponent(juce::String const& identifier);
-        std::tuple<juce::Rectangle<int>, juce::Rectangle<int>> getPlotBounds(juce::String const& identifier);
+        juce::Rectangle<int> getPlotBounds(juce::String const& identifier);
 
         struct Options
         {
@@ -67,6 +67,7 @@ namespace Document
             juce::String sdifMatrixSignature{"????"};
             juce::String sdifColumnName;
             TimePreset timePreset{TimePreset::global};
+            Zoom::Grid::Justification outsideGridJustification{0};
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
@@ -134,6 +135,7 @@ namespace Document
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
             PropertyToggle mPropertyIgnoreGrids;
+            PropertyList mPropertyOutsideGridJustification;
 
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};

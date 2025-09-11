@@ -2,20 +2,20 @@
 #include "../Group/AnlGroupExporter.h"
 #include "../Group/AnlGroupTools.h"
 #include "../Track/AnlTrackExporter.h"
+#include "../Track/AnlTrackRenderer.h"
 #include "../Track/AnlTrackTools.h"
 #include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
-std::tuple<juce::Rectangle<int>, juce::Rectangle<int>> Document::Exporter::getPlotBounds(juce::String const& identifier)
+juce::Rectangle<int> Document::Exporter::getPlotBounds(juce::String const& identifier)
 {
     if(auto const* plot = getPlotComponent(identifier))
     {
-        auto const bounds = plot->getBounds();
-        return std::make_tuple(bounds, juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds));
+        return plot->getBounds();
     }
     MiscWeakAssert(false && "Plot component not found for identifier");
-    return std::make_tuple(juce::Rectangle<int>{}, juce::Rectangle<int>{});
+    return juce::Rectangle<int>{};
 }
 
 bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
@@ -34,7 +34,8 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            sdifFrameSignature == rhd.sdifFrameSignature &&
            sdifMatrixSignature == rhd.sdifMatrixSignature &&
            sdifColumnName == rhd.sdifColumnName &&
-           timePreset == rhd.timePreset;
+           timePreset == rhd.timePreset &&
+           outsideGridJustification == rhd.outsideGridJustification;
 }
 
 bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
@@ -289,6 +290,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            options.ignoreGridResults = state;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
+, mPropertyOutsideGridJustification("Outside Grid", "Draw grid ticks and labels outside the frame bounds", "", {}, nullptr)
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                           {
                               updateItems();
@@ -317,6 +319,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
     addChildComponent(mPropertySdifMatrix);
     addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
+    addChildComponent(mPropertyOutsideGridJustification);
     setSize(300, 200);
 
     mPropertySizePreset.entry.clear(juce::NotificationType::dontSendNotification);
@@ -349,6 +352,42 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
         }
     };
     mPropertySdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
+
+    mPropertyOutsideGridJustification.entry.onShowPopup = [this]()
+    {
+        juce::PopupMenu menu;
+        auto justification = mOptions.outsideGridJustification;
+        menu.addItem(juce::translate("None"), justification.getFlags() != Zoom::Grid::Justification::none, justification.getFlags() == Zoom::Grid::Justification::none, [this]()
+                     {
+                         auto options = mOptions;
+                         options.outsideGridJustification = Zoom::Grid::Justification(Zoom::Grid::Justification::none);
+                         setOptions(options, juce::NotificationType::sendNotificationSync);
+                         mPropertyOutsideGridJustification.entry.hidePopup();
+                         mPropertyOutsideGridJustification.entry.onShowPopup();
+                     });
+        auto const addItem = [&, this](auto const& name, auto const bit)
+        {
+            menu.addItem(name, true, justification.testFlags(bit), [this, bit]()
+                         {
+                             auto options = mOptions;
+                             auto const flags = options.outsideGridJustification.getFlags() ^ bit;
+                             options.outsideGridJustification = Zoom::Grid::Justification(flags);
+                             setOptions(options, juce::NotificationType::sendNotificationSync);
+                             mPropertyOutsideGridJustification.entry.hidePopup();
+                             mPropertyOutsideGridJustification.entry.showPopup();
+                         });
+        };
+        addItem(juce::translate("Left"), Zoom::Grid::Justification::left);
+        addItem(juce::translate("Right"), Zoom::Grid::Justification::right);
+        addItem(juce::translate("Top"), Zoom::Grid::Justification::top);
+        addItem(juce::translate("Bottom"), Zoom::Grid::Justification::bottom);
+        auto& lf = getLookAndFeel();
+        menu.setLookAndFeel(&lf);
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyOutsideGridJustification.entry).withMinimumWidth(mPropertyOutsideGridJustification.entry.getWidth()).withMaximumNumColumns(1).withDeletionCheck(*this), [this](int)
+                           {
+                               mPropertyOutsideGridJustification.entry.hidePopup();
+                           });
+    };
 
     mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
@@ -493,6 +532,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySdifMatrix);
     setBounds(mPropertySdifColName);
     setBounds(mPropertyIgnoreGrids);
+    setBounds(mPropertyOutsideGridJustification);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
@@ -631,15 +671,16 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
     if(mShowAutoSize && mOptions.useAutoSize && !itemIsDocument)
     {
         auto const bounds = getPlotBounds(identifier);
-        if(std::get<0>(bounds).isEmpty())
+        if(bounds.isEmpty())
         {
             options.useAutoSize = false;
         }
         else
         {
-            options.imageWidth = std::get<0>(bounds).getWidth();
-            options.imageHeight = std::get<0>(bounds).getHeight();
-            options.imagePpi = static_cast<int>(std::round(static_cast<double>(std::get<1>(bounds).getWidth()) / static_cast<double>(options.imageWidth) * 72.0));
+            options.imageWidth = bounds.getWidth();
+            options.imageHeight = bounds.getHeight();
+            auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
+            options.imagePpi = static_cast<int>(std::round(static_cast<double>(scaledBounds.getWidth()) / static_cast<double>(options.imageWidth) * 72.0));
         }
     }
 
@@ -659,6 +700,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
     mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
+    mPropertyOutsideGridJustification.setEnabled(mOptions.useImageFormat());
 }
 
 Document::Exporter::Options const& Document::Exporter::Panel::getOptions() const
@@ -726,6 +768,29 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    mPropertyOutsideGridJustification.setVisible(options.useImageFormat());
+    juce::StringArray justificationNames;
+    if(options.outsideGridJustification.getFlags() == Zoom::Grid::Justification::none)
+    {
+        justificationNames.add("None");
+    }
+    if(options.outsideGridJustification.testFlags(Zoom::Grid::Justification::left))
+    {
+        justificationNames.add(juce::translate("Left"));
+    }
+    if(options.outsideGridJustification.testFlags(Zoom::Grid::Justification::right))
+    {
+        justificationNames.add(juce::translate("Right"));
+    }
+    if(options.outsideGridJustification.testFlags(Zoom::Grid::Justification::top))
+    {
+        justificationNames.add(juce::translate("Top"));
+    }
+    if(options.outsideGridJustification.testFlags(Zoom::Grid::Justification::bottom))
+    {
+        justificationNames.add(juce::translate("Bottom"));
+    }
+    mPropertyOutsideGridJustification.entry.setText(justificationNames.joinIntoString(", "), juce::NotificationType::dontSendNotification);
     updateTimePreset(false, silent);
     sanitizeProperties(false);
     resized();
@@ -908,7 +973,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                                                if(options.useAutoSize)
                                                {
                                                    auto const autoBounds = getPlotBounds(trackIdentifier);
-                                                   return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
+                                                   auto const outsideBorder = Track::Renderer::getOutsideGridBorder(options.outsideGridJustification);
+                                                   auto const bounds = outsideBorder.addedTo(autoBounds);
+                                                   auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
+                                                   return std::make_tuple(bounds.getWidth(), bounds.getHeight(), scaledBounds.getWidth(), scaledBounds.getHeight());
                                                }
                                                return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
                                            });
@@ -922,7 +990,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), options.outsideGridJustification, shouldAbort);
         };
 
         auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -944,7 +1012,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                                                if(options.useAutoSize)
                                                {
                                                    auto const autoBounds = getPlotBounds(groupIdentifier);
-                                                   return std::make_tuple(std::get<0>(autoBounds).getWidth(), std::get<0>(autoBounds).getHeight(), std::get<1>(autoBounds).getWidth(), std::get<1>(autoBounds).getHeight());
+                                                   auto const outsideBorder = Track::Renderer::getOutsideGridBorder(options.outsideGridJustification);
+                                                   auto const bounds = outsideBorder.addedTo(autoBounds);
+                                                   auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
+                                                   return std::make_tuple(bounds.getWidth(), bounds.getHeight(), scaledBounds.getWidth(), scaledBounds.getHeight());
                                                }
                                                return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
                                            });
@@ -959,7 +1030,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), shouldAbort);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, channels, fileUsed, std::get<0>(sizes), std::get<1>(sizes), std::get<2>(sizes), std::get<3>(sizes), options.outsideGridJustification, shouldAbort);
         };
 
         auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -1259,6 +1330,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
         toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
         toXml(*child, "sdifColumnName", value.sdifColumnName);
+        toXml(*child, "outsideGridJustification", value.outsideGridJustification.getFlags());
         xml.addChildElement(child.release());
     }
 }
@@ -1287,6 +1359,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.sdifFrameSignature = fromXml(*child, "sdifFrameSignature", defaultValue.sdifFrameSignature);
     value.sdifMatrixSignature = fromXml(*child, "sdifMatrixSignature", defaultValue.sdifMatrixSignature);
     value.sdifColumnName = fromXml(*child, "sdifColumnName", defaultValue.sdifColumnName);
+    value.outsideGridJustification = Zoom::Grid::Justification(fromXml(*child, "outsideGridJustification", defaultValue.outsideGridJustification.getFlags()));
     return value;
 }
 
