@@ -33,6 +33,7 @@ namespace Track
 
         juce::String getUnit(Accessor const& acsr);
         juce::String getBinName(Accessor const& acsr, size_t index);
+        juce::String getEffectiveOscIdentifier(Accessor const& acsr);
 
         std::optional<Zoom::Range> getResultRange(Accessor const& accessor);
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);

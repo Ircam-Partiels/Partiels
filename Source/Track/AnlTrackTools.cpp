@@ -207,6 +207,12 @@ juce::String Track::Tools::getBinName(Accessor const& acsr, size_t index)
     return juce::String(index < output.binNames.size() ? output.binNames.at(index) : "");
 }
 
+juce::String Track::Tools::getEffectiveOscIdentifier(Accessor const& acsr)
+{
+    auto const& customIdentifier = acsr.getAttr<AttrType::oscIdentifier>();
+    return customIdentifier.isEmpty() ? acsr.getAttr<AttrType::identifier>() : customIdentifier;
+}
+
 std::optional<Zoom::Range> Track::Tools::getResultRange(Accessor const& accessor)
 {
     auto const& results = accessor.getAttr<AttrType::results>();

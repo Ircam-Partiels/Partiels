@@ -24,7 +24,8 @@ namespace Track
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
-        PropertyTextButton mPropertyIdentifier;
+        PropertyText mPropertyIdentifier;
+        juce::TextButton mCopyButton;
         PropertyToggle mPropertySendViaOsc;
         std::unique_ptr<juce::TooltipWindow> mTooltip;
     };
