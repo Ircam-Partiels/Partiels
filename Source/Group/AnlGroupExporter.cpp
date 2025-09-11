@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight)
+juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridOptions)
 {
     juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
     juce::Graphics g(image);
@@ -34,13 +34,13 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
             }
             auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
             auto const colour = isSelected ? laf.findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
-            Track::Renderer::paint(trackAcsr.value().get(), timeZoomAccessor, g, bounds, channelVisibility, colour);
+            Track::Renderer::paint(trackAcsr.value().get(), timeZoomAccessor, g, bounds, channelVisibility, colour, outsideGridOptions);
         }
     }
     return image;
 }
 
-juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, std::atomic<bool> const& shouldAbort)
+juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridOptions, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -77,7 +77,7 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& 
         return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight);
+    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, outsideGridOptions);
     if(image.isValid())
     {
         juce::FileOutputStream stream(temp.getFile());
