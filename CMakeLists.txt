@@ -273,7 +273,15 @@ if(WIN32)
     file(WRITE ${PARTIELS_PACKAGE_SCRIPT} "\"${ISCC_EXE_NAT}\" /DMyAppVerName=\"${PARTIELS_BUILD_TAG}\" /DMyBinaryDir=\"${PARTIELS_PACKAGE_TEMPDIR_NAT}\" /O\"${PARTIELS_PACKAGE_DIR_NAT}\" \"${PARTIELS_ISS_FILE_NAT}\"\n")
 
     if(PARTIELS_NOTARIZE)
-        find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64" REQUIRED)
+        file(GLOB_RECURSE SIGNTOOL_CANDIDATES
+        "$ENV{ProgramFiles}/Windows Kits/10/bin/*/x64/signtool.exe"
+        "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/bin/*/x64/signtool.exe"
+        )
+        foreach(SIGNTOOL_CANDIDATE IN LISTS SIGNTOOL_CANDIDATES)
+            get_filename_component(SIGNTOOL_CANDIDATE_DIR ${SIGNTOOL_CANDIDATE} DIRECTORY)
+            list(APPEND SIGNTOOL_CANDIDATE_DIRS ${SIGNTOOL_CANDIDATE_DIR})
+        endforeach()
+        find_program(SIGNTOOL_EXE "signtool" HINTS ${SIGNTOOL_CANDIDATE_DIRS} REQUIRED)
         cmake_path(NATIVE_PATH SIGNTOOL_EXE SIGNTOOL_EXE_NAT)
         cmake_path(NATIVE_PATH PARTIELS_CODESIGN_WINDOWS_KEYFILE PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT)
         file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "\"${SIGNTOOL_EXE_NAT}\" sign /f \"${PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT}\" /p \"${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD}\" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com \"${PARTIELS_PACKAGE_OUTEXE_NAT}\"\n")
