@@ -337,8 +337,20 @@ void PropertyToggle::resized()
     entry.setBounds(getLocalBounds().removeFromRight(getHeight()).reduced(4));
 }
 
+void VariableComboBox::showPopup()
+{
+    if(onShowPopup != nullptr)
+    {
+        onShowPopup();
+    }
+    else
+    {
+        juce::ComboBox::showPopup();
+    }
+}
+
 PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
-: PropertyComponent<juce::ComboBox>(name, tooltip)
+: PropertyComponent<VariableComboBox>(name, tooltip)
 {
     juce::StringArray items;
     for(auto const& value : values)

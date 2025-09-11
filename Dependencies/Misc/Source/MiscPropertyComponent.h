@@ -138,8 +138,20 @@ public:
     void resized() override;
 };
 
+class VariableComboBox
+: public juce::ComboBox
+{
+public:
+    using juce::ComboBox::ComboBox;
+    ~VariableComboBox() override = default;
+
+    void showPopup() override;
+
+    std::function<void()> onShowPopup = nullptr;
+};
+
 class PropertyList
-: public PropertyComponent<juce::ComboBox>
+: public PropertyComponent<VariableComboBox>
 {
 public:
     PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
