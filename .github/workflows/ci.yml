@@ -69,6 +69,7 @@ jobs:
       with:
         submodules: recursive
     - run: choco install imagemagick -fy -d
+    - run: choco install innosetup -fy -d
     - name: Prepare
       run: powershell -Command "& {[System.IO.File]::WriteAllBytes('${{ github.workspace }}\cert.p12', [System.Convert]::FromBase64String('${{ secrets.SECTIGO_CERT_P12}}'))}"
     - name: Configure
