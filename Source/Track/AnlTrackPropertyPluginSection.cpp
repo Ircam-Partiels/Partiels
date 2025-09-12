@@ -32,6 +32,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::identifier:
             case AttrType::height:

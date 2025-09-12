@@ -31,6 +31,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
                 break;
@@ -404,6 +405,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::edit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
                 break;

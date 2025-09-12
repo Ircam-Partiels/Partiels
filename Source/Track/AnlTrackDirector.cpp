@@ -242,6 +242,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::zoomValueMode:
             case AttrType::extraThresholds:
