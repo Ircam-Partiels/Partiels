@@ -127,16 +127,18 @@ target_compile_definitions(Partiels PRIVATE
     JUCE_USE_CURL=0
     JUCE_WEB_BROWSER=0
     JUCE_ENABLE_REPAINT_DEBUGGING=0
-    JUCE_ALSA
-    JUCE_WASAPI
-    JUCE_DIRECTSOUND
-    JUCE_ASIO
+    JUCE_ALSA=1
+    JUCE_WASAPI=1
+    JUCE_DIRECTSOUND=1
+    JUCE_ASIO=1
     MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
     PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
     PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
     )
 if(UNIX AND NOT APPLE)
-    target_compile_definitions(Partiels PRIVATE JUCE_JACK)
+    target_compile_definitions(Partiels PRIVATE 
+    JUCE_JACK=1
+    )
 endif()
 
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
