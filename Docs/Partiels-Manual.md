@@ -589,7 +589,7 @@ Track zoom information and additional value thresholds are also sent when they a
 
 Zoom information is sent only for point-type tracks (value zoom) and matrix-type tracks (value and bin zooms):
 
-1. Track address (string)
+1. Track OSC identifier (string)
 2. "zoom" (string)
 3. Zoom type (string - value or bin)
 4. Global range - start (float)
@@ -599,7 +599,7 @@ Zoom information is sent only for point-type tracks (value zoom) and matrix-type
 
 Additional value thresholds are sent only for tracks with additional values:
 
-1. Track address (string)
+1. Track OSC identifier (string)
 2. "thresholds" (string)
 3. List of numbers (float) for additional values
 
@@ -762,7 +762,7 @@ The value range of point and column results can be adapted to optimize the graph
 
 ### 9.3. OSC
 
-A track's OSC properties allow you to retrieve the unique ID of the track used when sending OSC messages, by clicking on the corresponding button to copy it to the system clipboard. And to enable or disable OSC support for the track.
+A track's OSC properties allow you to enable or disable OSC support for the track. You can also edit the OSC identifer of the track used when sending OSC messages (when empty, a unique identifier is used). You can copy the identifier to the system clipboard by clicking on the corresponding button.
 
 ### 9.4. Plugin
 
