@@ -138,6 +138,7 @@ target_compile_definitions(Partiels PRIVATE
 if(UNIX AND NOT APPLE)
     target_compile_definitions(Partiels PRIVATE 
     JUCE_JACK=1
+    JUCE_USE_MP3AUDIOFORMAT=1
     )
 endif()
 
