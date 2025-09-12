@@ -87,7 +87,7 @@ juce_add_gui_app(Partiels
     NEEDS_WEB_BROWSER                   FALSE
     NEEDS_STORE_KIT                     FALSE
     HARDENED_RUNTIME_ENABLED            TRUE
-    HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.allow-dyld-environment-variables" "com.apple.security.cs.disable-library-validation" "com.apple.security.cs.debugger" "com.apple.security.get-task-allow"
+    HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.allow-dyld-environment-variables" "com.apple.security.cs.allow-unsigned-executable-memory<" "com.apple.security.cs.disable-library-validation" "com.apple.security.cs.debugger" "com.apple.security.get-task-allow"
     PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string></dict></plist>"
     )
 
