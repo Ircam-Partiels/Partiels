@@ -1,4 +1,5 @@
 #include "AnlApplicationOsc.h"
+#include "../Track/AnlTrackTools.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
@@ -144,7 +145,7 @@ void Application::Osc::Sender::sendTrack(Track::Accessor const& trackAcsr, doubl
     auto const access = results.getReadAccess();
     if(static_cast<bool>(access))
     {
-        auto const& identifier = trackAcsr.getAttr<Track::AttrType::identifier>();
+        auto const& identifier = Track::Tools::getEffectiveOscIdentifier(trackAcsr);
         if(auto const allMakers = results.getMarkers())
         {
             if(!allMakers->empty())
@@ -348,7 +349,7 @@ Application::Osc::TrackDispatcher::TrackDispatcher(Sender& sender)
                   {
                       synchronize(mSender.isConnected());
                   },
-                  {Group::AttrType::layout}, {Track::AttrType::identifier, Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
+                  {Group::AttrType::layout}, {Track::AttrType::identifier, Track::AttrType::oscIdentifier, Track::AttrType::sendViaOsc, Track::AttrType::description, Track::AttrType::results})
 {
     mSender.addChangeListener(this);
 
@@ -393,6 +394,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
         switch(attribute)
         {
             case Track::AttrType::identifier:
+            case Track::AttrType::oscIdentifier:
             case Track::AttrType::sendViaOsc:
             case Track::AttrType::file:
             case Track::AttrType::results:
@@ -423,7 +425,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                 break;
             case Track::AttrType::extraThresholds:
             {
-                juce::OSCMessage message("/" + accessor.getAttr<Track::AttrType::identifier>());
+                juce::OSCMessage message("/" + Track::Tools::getEffectiveOscIdentifier(accessor));
                 message.addString("thresholds");
                 auto const& extraThresholds = accessor.getAttr<Track::AttrType::extraThresholds>();
                 for(auto const& extraThreshold : extraThresholds)
@@ -441,7 +443,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             };
             case Track::AttrType::name:
             {
-                juce::OSCMessage message("/" + accessor.getAttr<Track::AttrType::identifier>());
+                juce::OSCMessage message("/" + Track::Tools::getEffectiveOscIdentifier(accessor));
                 message.addString("name");
                 message.addString(accessor.getAttr<Track::AttrType::name>());
                 mSender.send(message);
@@ -468,7 +470,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
                     if(trackAcsr.getAttr<Track::AttrType::sendViaOsc>())
                     {
-                        message.addString(trackAcsr.getAttr<Track::AttrType::identifier>());
+                        message.addString(Track::Tools::getEffectiveOscIdentifier(trackAcsr));
                         auto const frameType = Track::Tools::getFrameType(trackAcsr).value_or(Track::FrameType::label);
                         message.addString(std::string(magic_enum::enum_name(frameType)));
                     }
@@ -496,11 +498,11 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
                                                       {
                                                           if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>()))
                                                           {
-                                                              return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::value};
+                                                              return {Track::Tools::getEffectiveOscIdentifier(trackAcsr.get()), Track::FrameType::value};
                                                           }
                                                           if(std::addressof(accessor) == std::addressof(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>()))
                                                           {
-                                                              return {trackAcsr.get().getAttr<Track::AttrType::identifier>(), Track::FrameType::vector};
+                                                              return {Track::Tools::getEffectiveOscIdentifier(trackAcsr.get()), Track::FrameType::vector};
                                                           }
                                                       }
                                                       return {"", Track::FrameType::label};
