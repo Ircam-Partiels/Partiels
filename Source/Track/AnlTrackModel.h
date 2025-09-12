@@ -197,6 +197,7 @@ namespace Track
         , labelLayout
         , channelsLayout
         , showInGroup
+        , oscIdentifier
         , sendViaOsc
         , zoomValueMode
         , zoomLogScale
@@ -244,6 +245,7 @@ namespace Track
     , Model::Attr<AttrType::labelLayout, LabelLayout, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::showInGroup, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::oscIdentifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::sendViaOsc, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomValueMode, ZoomValueMode, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::zoomLogScale, bool, Model::Flag::notifying | Model::Flag::saveable>
@@ -293,6 +295,7 @@ namespace Track
                                  , {}
                                  , {std::vector<bool>{}}
                                  , {true}
+                                 , {""}
                                  , {false}
                                  , {ZoomValueMode::undefined}
                                  , {false}
