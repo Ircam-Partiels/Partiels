@@ -33,6 +33,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:
@@ -194,6 +195,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::grid:
             case AttrType::focused:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:

@@ -33,6 +33,7 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::unit:
             case AttrType::labelLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::grid:
             case AttrType::description:

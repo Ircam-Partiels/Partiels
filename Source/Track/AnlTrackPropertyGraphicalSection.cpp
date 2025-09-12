@@ -453,6 +453,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::sampleRate:
                 break;

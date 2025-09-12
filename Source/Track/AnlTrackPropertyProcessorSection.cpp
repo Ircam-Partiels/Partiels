@@ -208,6 +208,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
+            case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::height:
             case AttrType::zoomAcsr:

@@ -33,6 +33,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::processing:
             case Track::AttrType::focused:
             case Track::AttrType::hasPluginColourMap:
+            case Track::AttrType::oscIdentifier:
             case Track::AttrType::sendViaOsc:
                 break;
             case Track::AttrType::grid:
