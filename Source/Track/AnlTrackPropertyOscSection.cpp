@@ -1,19 +1,18 @@
 #include "AnlTrackPropertyOscSection.h"
+#include "AnlTrackTools.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
 Track::PropertyOscSection::PropertyOscSection(Director& director)
 : mDirector(director)
-, mPropertyIdentifier(juce::translate("Identifier"), juce::translate("The OSC identifier of the track"), [this]()
+, mPropertyIdentifier(juce::translate("OSC Identifier"), juce::translate("The OSC identifier of the track"), [this](juce::String text)
                       {
-                          juce::SystemClipboard::copyTextToClipboard(mAccessor.getAttr<AttrType::identifier>());
-                          mTooltip = std::make_unique<juce::TooltipWindow>(nullptr);
-                          if(mTooltip != nullptr)
-                          {
-                              mTooltip->displayTip(juce::Desktop::getMousePosition(), juce::translate("OSC identifier copied to clipboard"));
-                              startTimer(500);
-                          }
+                          mDirector.startAction();
+                          mAccessor.setAttr<AttrType::oscIdentifier>(text, NotificationType::synchronous);
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Set track OSC identifier"));
                       })
+, mCopyButton(juce::ImageCache::getFromMemory(AnlIconsData::clipboard_png, AnlIconsData::clipboard_pngSize))
 , mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle track results to be sent via OSC"), [&](bool state)
                       {
                           mDirector.startAction();
@@ -26,8 +25,9 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
         switch(attribute)
         {
             case AttrType::identifier:
+            case AttrType::oscIdentifier:
             {
-                mPropertyIdentifier.entry.setButtonText(acsr.getAttr<AttrType::identifier>());
+                mPropertyIdentifier.entry.setText(Tools::getEffectiveOscIdentifier(acsr), juce::NotificationType::dontSendNotification);
                 break;
             }
             case AttrType::sendViaOsc:
@@ -67,7 +67,20 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
         }
     };
 
+    mCopyButton.onClick = [this]()
+    {
+        juce::SystemClipboard::copyTextToClipboard(Tools::getEffectiveOscIdentifier(mAccessor));
+        mTooltip = std::make_unique<juce::TooltipWindow>(nullptr);
+        if(mTooltip != nullptr)
+        {
+            mTooltip->displayTip(juce::Desktop::getMousePosition(), juce::translate("OSC identifier copied to clipboard"));
+            startTimer(500);
+        }
+    };
+    mCopyButton.setTooltip(juce::translate("Copy to clipboard"));
+
     addAndMakeVisible(mPropertyIdentifier);
+    addAndMakeVisible(mCopyButton);
     addAndMakeVisible(mPropertySendViaOsc);
     setSize(300, 200);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -88,7 +101,10 @@ void Track::PropertyOscSection::resized()
             component.setBounds(bounds.removeFromTop(component.getHeight()));
         }
     };
-    setBounds(mPropertyIdentifier);
+
+    auto identifierBounds = bounds.removeFromTop(mPropertyIdentifier.getHeight());
+    mCopyButton.setBounds(identifierBounds.removeFromRight(23).withSizeKeepingCentre(15, 23));
+    mPropertyIdentifier.setBounds(identifierBounds);
     setBounds(mPropertySendViaOsc);
     setSize(getWidth(), bounds.getY());
 }
