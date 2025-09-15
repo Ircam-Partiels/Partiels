@@ -7,8 +7,8 @@ ANALYSE_FILE_BEGIN
 Document::Header::Header(Director& director, juce::ApplicationCommandManager& commandManager)
 : mDirector(director)
 , mApplicationCommandManager(commandManager)
+, mDocumentFileButton(juce::ImageCache::getFromMemory(AnlIconsData::documentfile_png, AnlIconsData::documentfile_pngSize))
 , mReaderLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize))
-, mNameButton(juce::translate("Untitled"), juce::translate("Document not saved"))
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>(), commandManager)
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mOscButton(juce::translate("OSC"), juce::translate("Show OSC Settings"))
@@ -16,30 +16,24 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
 , mEditModeButton(juce::ImageCache::getFromMemory(AnlIconsData::edit_png, AnlIconsData::edit_pngSize))
 {
     addAndMakeVisible(mReaderLayoutButton);
-    addAndMakeVisible(mNameButton);
+    addAndMakeVisible(mDocumentFileButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
     addAndMakeVisible(mOscButton);
     addAndMakeVisible(mBubbleTooltipButton);
     addAndMakeVisible(mEditModeButton);
 
+    mDocumentFileButton.setWantsKeyboardFocus(false);
+    mDocumentFileButton.onClick = [this]()
+    {
+        mAccessor.sendSignal(SignalType::showDocumentFilePanel, {}, NotificationType::synchronous);
+    };
+    mDocumentFileButton.setTooltip(juce::translate("Show document file panel"));
+
     mReaderLayoutButton.setWantsKeyboardFocus(false);
     mReaderLayoutButton.onClick = [this]()
     {
         mAccessor.sendSignal(SignalType::showReaderLayoutPanel, {}, NotificationType::synchronous);
-    };
-
-    mNameButton.onClick = [this]()
-    {
-        auto const file = mAccessor.getAttr<AttrType::path>();
-        if(file != juce::File{})
-        {
-            mAccessor.getAttr<AttrType::path>().revealToUser();
-        }
-        else
-        {
-            mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::documentSave, true);
-        }
     };
 
     mOscButton.setCommandToTrigger(&mApplicationCommandManager, ApplicationCommandIDs::helpOpenOscSettings, true);
@@ -77,13 +71,6 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
             }
             break;
             case AttrType::path:
-            {
-                auto const file = acsr.getAttr<AttrType::path>();
-                mNameButton.setButtonText(file != juce::File{} ? file.getFileName() : juce::translate("Untitled"));
-                mNameButton.setTooltip(file != juce::File{} ? file.getFullPathName() : juce::translate("Document not saved"));
-                resized();
-            }
-            break;
             case AttrType::grid:
             case AttrType::autoresize:
             case AttrType::layout:
@@ -92,6 +79,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
             case AttrType::channels:
             case AttrType::editMode:
             case AttrType::drawingState:
+            case AttrType::description:
                 break;
         }
     };
@@ -117,19 +105,16 @@ void Document::Header::resized()
     auto const sideWidth = std::max((bounds.getWidth() - transportDisplayWidth) / 2, 0);
 
     auto leftPart = bounds.removeFromLeft(sideWidth).withSizeKeepingCentre(sideWidth - spaceWidth * 2, buttonHeight);
+    mDocumentFileButton.setVisible(leftPart.getWidth() >= 24);
+    if(mDocumentFileButton.isVisible())
+    {
+        mDocumentFileButton.setBounds(leftPart.removeFromLeft(24));
+        leftPart = leftPart.withTrimmedLeft(spaceWidth);
+    }
     mReaderLayoutButton.setVisible(leftPart.getWidth() >= 24);
     if(mReaderLayoutButton.isVisible())
     {
         mReaderLayoutButton.setBounds(leftPart.removeFromLeft(24));
-        leftPart = leftPart.withTrimmedLeft(spaceWidth);
-    }
-
-    auto const font = mNameButton.getLookAndFeel().getTextButtonFont(mNameButton, 24);
-    auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, mNameButton.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
-    mNameButton.setVisible(leftPart.getWidth() >= textWidth);
-    if(mNameButton.isVisible())
-    {
-        mNameButton.setBounds(leftPart.removeFromLeft(textWidth));
         leftPart = leftPart.withTrimmedLeft(spaceWidth);
     }
 

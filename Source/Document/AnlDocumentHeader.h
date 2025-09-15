@@ -30,8 +30,8 @@ namespace Document
         Accessor::Listener mListener{typeid(*this).name()};
         juce::ApplicationCommandManager& mApplicationCommandManager;
 
+        Icon mDocumentFileButton;
         Icon mReaderLayoutButton;
-        juce::TextButton mNameButton;
         TransportDisplay mTransportDisplay;
         TransportSelectionInfo mTransportSelectionInfo;
         juce::TextButton mOscButton;
