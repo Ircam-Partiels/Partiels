@@ -27,6 +27,7 @@ Document::ReaderLayoutContent::ReaderLayoutContent(Director& director)
             case AttrType::channels:
             case AttrType::editMode:
             case AttrType::drawingState:
+            case AttrType::description:
                 break;
         }
     };
