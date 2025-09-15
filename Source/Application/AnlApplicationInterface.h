@@ -2,6 +2,7 @@
 
 #include "../Document/AnlDocumentReaderLayout.h"
 #include "../Document/AnlDocumentSection.h"
+#include "../Document/AnlDocumentFileInfo.h"
 #include "../Plugin/AnlPluginListSearchPath.h"
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
@@ -40,6 +41,7 @@ namespace Application
         void showExporterPanel();
         void showPluginSearchPathPanel();
         void showReaderLayoutPanel();
+        void showFileInfoPanel();
         void showKeyMappingsPanel();
         void showTrackLoaderPanel();
 
@@ -151,6 +153,7 @@ namespace Application
         ExporterPanel mExporterPanel;
         PluginSearchPathPanel mPluginSearchPathPanel;
         ReaderLayoutPanel mReaderLayoutPanel;
+        Document::FileInfoPanel mFileInfoPanel;
         KeyMappingsPanel mKeyMappingsPanel;
         TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;

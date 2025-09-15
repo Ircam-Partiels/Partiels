@@ -160,6 +160,7 @@ Application::Interface::DocumentContainer::DocumentContainer()
             case Document::AttrType::channels:
             case Document::AttrType::editMode:
             case Document::AttrType::drawingState:
+            case Document::AttrType::description:
                 break;
         }
     };
@@ -261,6 +262,7 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mExporterPanel)
                              , std::ref<HideablePanel>(mPluginSearchPathPanel)
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
+                             , std::ref<HideablePanel>(mFileInfoPanel)
                              , std::ref<HideablePanel>(mKeyMappingsPanel)
                              , std::ref<HideablePanel>(mTrackLoaderPanel)
                              });
@@ -275,6 +277,11 @@ Application::Interface::Interface()
             case Document::SignalType::showReaderLayoutPanel:
             {
                 showReaderLayoutPanel();
+            }
+            break;
+            case Document::SignalType::showFilePanel:
+            {
+                showFileInfoPanel();
             }
             break;
         }
@@ -359,6 +366,11 @@ void Application::Interface::showPluginSearchPathPanel()
 void Application::Interface::showReaderLayoutPanel()
 {
     mPanelManager.show(mReaderLayoutPanel);
+}
+
+void Application::Interface::showFileInfoPanel()
+{
+    mPanelManager.show(mFileInfoPanel);
 }
 
 void Application::Interface::showKeyMappingsPanel()

@@ -29,6 +29,7 @@ namespace Document
         , channels
         , editMode
         , drawingState
+        , description
     };
     
     enum class AcsrType : size_t
@@ -43,6 +44,7 @@ namespace Document
     {
           viewport
         , showReaderLayoutPanel
+        , showFilePanel
         , isLoading
     };
     
@@ -57,6 +59,7 @@ namespace Document
     , Model::Attr<AttrType::channels, size_t, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::editMode, EditMode, Model::Flag::notifying>
     , Model::Attr<AttrType::drawingState, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::description, juce::String, Model::Flag::saveable | Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -86,6 +89,7 @@ namespace Document
                                  , {0_z}
                                  , {EditMode::items}
                                  , {false}
+                                 , {}
                                  ))
         {
         }

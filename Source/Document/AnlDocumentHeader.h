@@ -31,7 +31,7 @@ namespace Document
         juce::ApplicationCommandManager& mApplicationCommandManager;
 
         Icon mReaderLayoutButton;
-        juce::TextButton mNameButton;
+        Icon mFileButton;
         TransportDisplay mTransportDisplay;
         TransportSelectionInfo mTransportSelectionInfo;
         juce::TextButton mOscButton;
