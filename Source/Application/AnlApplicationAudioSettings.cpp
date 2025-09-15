@@ -212,6 +212,7 @@ Application::AudioSettingsContent::AudioSettingsContent()
             case Document::AttrType::channels:
             case Document::AttrType::editMode:
             case Document::AttrType::drawingState:
+            case Document::AttrType::description:
                 break;
         }
     };

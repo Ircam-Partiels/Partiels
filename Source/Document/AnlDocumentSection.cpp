@@ -305,6 +305,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             case AttrType::channels:
             case AttrType::editMode:
             case AttrType::drawingState:
+            case AttrType::description:
                 break;
         }
     };
@@ -348,6 +349,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                 break;
             }
             case SignalType::showReaderLayoutPanel:
+            case SignalType::showDocumentFilePanel:
                 break;
         }
     };

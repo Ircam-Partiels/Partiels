@@ -100,6 +100,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::channels:
             case AttrType::editMode:
             case AttrType::drawingState:
+            case AttrType::description:
                 break;
         }
     };

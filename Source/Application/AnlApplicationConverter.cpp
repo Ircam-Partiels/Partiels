@@ -193,6 +193,7 @@ Application::ConverterContent::ConverterContent()
             case Document::AttrType::channels:
             case Document::AttrType::editMode:
             case Document::AttrType::drawingState:
+            case Document::AttrType::description:
                 break;
         }
     };
