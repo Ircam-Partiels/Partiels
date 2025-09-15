@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Document/AnlDocumentFileInfo.h"
 #include "../Document/AnlDocumentReaderLayout.h"
 #include "../Document/AnlDocumentSection.h"
 #include "../Plugin/AnlPluginListSearchPath.h"
@@ -40,6 +41,7 @@ namespace Application
         void showExporterPanel();
         void showPluginSearchPathPanel();
         void showReaderLayoutPanel();
+        void showDocumentFileInfoPanel();
         void showKeyMappingsPanel();
         void showTrackLoaderPanel();
 
@@ -151,6 +153,7 @@ namespace Application
         ExporterPanel mExporterPanel;
         PluginSearchPathPanel mPluginSearchPathPanel;
         ReaderLayoutPanel mReaderLayoutPanel;
+        Document::FileInfoPanel mDocumentFileInfoPanel;
         KeyMappingsPanel mKeyMappingsPanel;
         TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;
