@@ -249,6 +249,7 @@ bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() 
 
 Application::Interface::Interface()
 : mOscSettingsPanel(Instance::get().getOscSender())
+, mFileInfoPanel(Instance::get().getDocumentDirector())
 {
     addAndMakeVisible(mPanelManager);
     // clang-format off

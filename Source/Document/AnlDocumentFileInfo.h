@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlDocumentDirector.h"
-#include "../Application/AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -33,7 +32,7 @@ namespace Document
     : public HideablePanel
     {
     public:
-        FileInfoPanel();
+        FileInfoPanel(Director& director);
         ~FileInfoPanel() override;
 
         // HideablePanel

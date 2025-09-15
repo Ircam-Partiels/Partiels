@@ -1,4 +1,5 @@
 
+- Add: Document file info panel with user-editable description field
 - Fix: Changing the font of a track changes the font of the grid
 - Fix: Support for InnoSetup and SignTool for the Windows GitHub action
 - Add: MP3 audio files support on linux

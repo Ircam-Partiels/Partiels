@@ -1,5 +1,4 @@
 #include "AnlDocumentFileInfo.h"
-#include "AnlApplicationInstance.h"
 #include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
@@ -101,8 +100,8 @@ void Document::FileInfoContent::resized()
     mDescriptionEditor.setBounds(descRow);
 }
 
-Document::FileInfoPanel::FileInfoPanel()
-: mFileInfoContent(Instance::get().getDocumentDirector())
+Document::FileInfoPanel::FileInfoPanel(Director& director)
+: mFileInfoContent(director)
 {
     setContent(juce::translate("File Info"), std::addressof(mFileInfoContent));
 }
