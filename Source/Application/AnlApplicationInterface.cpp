@@ -160,6 +160,7 @@ Application::Interface::DocumentContainer::DocumentContainer()
             case Document::AttrType::channels:
             case Document::AttrType::editMode:
             case Document::AttrType::drawingState:
+            case Document::AttrType::description:
                 break;
         }
     };
@@ -248,6 +249,7 @@ bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() 
 
 Application::Interface::Interface()
 : mOscSettingsPanel(Instance::get().getOscSender())
+, mDocumentFileInfoPanel(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
 {
     addAndMakeVisible(mPanelManager);
     // clang-format off
@@ -261,6 +263,7 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mExporterPanel)
                              , std::ref<HideablePanel>(mPluginSearchPathPanel)
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
+                             , std::ref<HideablePanel>(mDocumentFileInfoPanel)
                              , std::ref<HideablePanel>(mKeyMappingsPanel)
                              , std::ref<HideablePanel>(mTrackLoaderPanel)
                              });
@@ -275,6 +278,11 @@ Application::Interface::Interface()
             case Document::SignalType::showReaderLayoutPanel:
             {
                 showReaderLayoutPanel();
+            }
+            break;
+            case Document::SignalType::showDocumentFilePanel:
+            {
+                showDocumentFileInfoPanel();
             }
             break;
         }
@@ -359,6 +367,11 @@ void Application::Interface::showPluginSearchPathPanel()
 void Application::Interface::showReaderLayoutPanel()
 {
     mPanelManager.show(mReaderLayoutPanel);
+}
+
+void Application::Interface::showDocumentFileInfoPanel()
+{
+    mPanelManager.show(mDocumentFileInfoPanel);
 }
 
 void Application::Interface::showKeyMappingsPanel()
