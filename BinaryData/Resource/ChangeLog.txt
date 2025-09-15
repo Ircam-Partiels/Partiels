@@ -1,4 +1,14 @@
 
+- Fix: Changing the font of a track changes the font of the grid
+- Fix: Support for InnoSetup and SignTool for the Windows GitHub action
+- Add: MP3 audio files support on linux
+- Add: Allow manual setting of OSC identifiers for tracks
+- Add: An option to configure the rendering of grid graduations and labels outside the frame when exporting images
+- Imp: Decimal parsing when exporting to CSV
+- Fix: Remove the obsolete hack that restores the window size when the scale changes
+
+v2.1.0
+
 - Imp: Removed the prefix from the names of output files during CLI
 - Add: Added validation tests for exported images by comparing their contents with ImageMagick
 - Fix: Corrected channel layout when exporting images
