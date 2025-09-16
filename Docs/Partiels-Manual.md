@@ -5,7 +5,7 @@
 <i>Manual by Pierre Guillot</i><br>
 <a href="https://www.ircam.fr">www.ircam.fr</a><br><br>
 
-<img src="Images/overview-v2.0.4.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
+<img src="Images/overview-v2.1.1.png" alt="Example" width="600" style="box-shadow: 0px 0px 12px 0px black;"/>
 </p>
 
 <div style="page-break-after: always;"></div>
@@ -132,7 +132,7 @@ Copyright 2025 IRCAM. All rights reserved.
 
 Partiels has a main graphical interface to view, navigate and edit the different analyses of a document. The actions and interaction modes are presented in detail in the different sections of this manual.  
 
-<p align="center"><img src="Images/section-overview.1-v2.0.4.png" alt="Example" width="1250"/></p>
+<p align="center"><img src="Images/section-overview.1-v2.1.1.png" alt="Example" width="1250"/></p>
 
 To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
 
@@ -172,7 +172,11 @@ A document file is a text file describing its contents, such as audio files, ana
 
 If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plugins are no longer available.
 
-You can reveal the current document file in the file browser of your operating system by clicking on the corresponding [text button](#2-overview) (**K5**) of the main interface.
+You can open the document file information panel by clicking on the corresponding [text button](#2-overview) (**K5**) on the main interface. 
+
+<p align="center"><img src="Images/section-manage-documents.3-v2.1.1.png" alt="Example" width="302"/></p>
+
+This panel allows you to reveal the current document file in the file explorer of your operating system and to edit the description of the document. The description can be used to provide any information you deem useful: how to use the document, how to interpret the result, who created it, etc.
 
 ### 3.3. Edition and backup
 
