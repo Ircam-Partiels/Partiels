@@ -396,6 +396,8 @@ The `Outside Grid` dropdown menu allows you to select the image borders that sho
 
 The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
 
+The `Apply Extra Thresholds` button offers an option to filter exported results based on extra threshold values configured in the track properties. When enabled, only analysis results that meet all configured threshold criteria will be included in the exported file. This option is available for CSV, JSON, LAB, CUE, and Reaper formats but not for SDIF format. This feature is particularly useful for exporting only high-confidence analysis results by filtering out data points that fall below specified threshold values.
+
 Export to CSV format offers two options:
 - `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
 - `Column Separator` allows to define the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). This can facilitate the parsing of files in other applications. 

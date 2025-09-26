@@ -776,7 +776,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
     mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
-    mPropertyApplyExtraThresholds.setEnabled(mOptions.useTextFormat());
+    mPropertyApplyExtraThresholds.setEnabled(mOptions.useTextFormat() && mOptions.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setEnabled(mOptions.useImageFormat());
 }
 
@@ -849,7 +849,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
-    mPropertyApplyExtraThresholds.setVisible(options.useTextFormat());
+    mPropertyApplyExtraThresholds.setVisible(options.useTextFormat() && options.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setVisible(options.useImageFormat());
     juce::StringArray justificationNames;
     if(options.outsideGridJustification.getFlags() == Zoom::Grid::Justification::none)

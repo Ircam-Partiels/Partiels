@@ -39,6 +39,8 @@ namespace Track
 
         juce::File getConsolidatedFile(Accessor const& accessor, juce::File const& directory);
         juce::Result consolidateInDirectory(Accessor const& accessor, juce::File const& directory);
+        
+        class UnitTest;
     } // namespace Exporter
 } // namespace Track
 
