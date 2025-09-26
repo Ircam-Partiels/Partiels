@@ -74,7 +74,7 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required if --template is defined).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required if --input is defined).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
-         "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper or sdif) (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue, reaper, sdif or puredata) (required).\n\t"
          "--width <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--ppi <ppi> Defines the pixel density of the exported image in pixels per inch (optional with the jpeg and png formats - default 72).\n\t"
@@ -125,7 +125,7 @@ Application::CommandLine::CommandLine()
              }
              else if(!args.containsOption("-f|--format"))
              {
-                 fail("Format not specified! Available formats are jpeg, png, csv, json or cue.");
+                 fail("Format not specified! Available formats are jpeg, png, csv, lab, json, cue, reaper, sdif or puredata.");
              }
              else if(format == "jpeg" || format == "png")
              {
@@ -144,7 +144,7 @@ Application::CommandLine::CommandLine()
                  options.imagePpi = args.containsOption("--ppi") ? args.getValueForOption("--ppi").getIntValue() : 72;
                  options.useGroupOverview = args.containsOption("--groups");
              }
-             else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif")
+             else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif" || format == "puredata")
              {
                  if(format == "csv")
                  {
@@ -162,13 +162,17 @@ Application::CommandLine::CommandLine()
                  {
                      options.format = Options::Format::cue;
                  }
-                 else if(format == "reaper")
-                 {
-                     options.format = Options::Format::reaper;
-                 }
-                 else
-                 {
-                     options.format = Options::Format::sdif;
+                                 else if(format == "reaper")
+                {
+                    options.format = Options::Format::reaper;
+                }
+                else if(format == "puredata")
+                {
+                    options.format = Options::Format::puredata;
+                }
+                else
+                {
+                    options.format = Options::Format::sdif;
                      if(!args.containsOption("--frame"))
                      {
                          fail("Frame signature not specified! Specifiy the frame signature of the SDIf file.");
@@ -193,7 +197,7 @@ Application::CommandLine::CommandLine()
              }
              else
              {
-                 fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
+                 fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv, lab, json, cue, reaper, sdif or puredata.");
              }
 
              options.useAutoSize = false;

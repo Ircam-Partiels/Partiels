@@ -73,7 +73,7 @@ juce::String Document::Exporter::Options::getFormatName() const
 
 juce::String Document::Exporter::Options::getFormatExtension() const
 {
-    if(format == Format::reaper)
+    if(format == Format::reaper || format == Format::puredata)
     {
         return "csv";
     }
@@ -149,6 +149,8 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
             return frameType == Track::FrameType::label;
         case Format::sdif:
             return true;
+        case Format::puredata:
+            return true;
     }
 }
 
@@ -196,7 +198,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "SDIF"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "SDIF", "PUREDATA"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -1291,6 +1293,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 auto const columnName = options.sdifColumnName.isEmpty() ? std::optional<juce::String>{} : options.sdifColumnName;
                 return Track::Exporter::toSdif(trackAcsr, timeRange, fileUsed, frameId, matrixId, columnName, shouldAbort);
             }
+            case Options::Format::puredata:
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, true, true, shouldAbort);
         }
         return juce::Result::fail("Unsupported format");
     };

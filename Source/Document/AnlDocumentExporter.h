@@ -26,6 +26,7 @@ namespace Document
                 , cue
                 , reaper
                 , sdif
+                , puredata
             };
             
             enum class ColumnSeparator
