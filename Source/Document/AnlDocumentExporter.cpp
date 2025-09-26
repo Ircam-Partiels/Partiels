@@ -1293,9 +1293,9 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, options.applyExtraThresholds, shouldAbort);
             case Options::Format::reaper:
-                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
+                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, options.applyExtraThresholds, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);
