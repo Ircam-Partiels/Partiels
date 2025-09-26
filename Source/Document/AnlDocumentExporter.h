@@ -61,6 +61,7 @@ namespace Document
             int imagePpi{144};
             bool includeHeaderRaw{true};
             bool ignoreGridResults{true};
+            bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
             bool includeDescription{true};
@@ -136,6 +137,7 @@ namespace Document
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
             PropertyToggle mPropertyIgnoreGrids;
+            PropertyToggle mPropertyApplyExtraThresholds;
             PropertyList mPropertyOutsideGridJustification;
 
             Accessor::Listener mListener{typeid(*this).name()};

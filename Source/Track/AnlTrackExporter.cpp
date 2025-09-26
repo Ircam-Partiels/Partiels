@@ -185,7 +185,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -216,6 +216,13 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     if(shouldAbort)
     {
         return aborted(name, format);
+    }
+
+    // Get extra thresholds for filtering if requested
+    std::vector<std::optional<float>> extraThresholds;
+    if(applyExtraThresholds)
+    {
+        extraThresholds = accessor.getAttr<AttrType::extraThresholds>();
     }
 
     stream << std::fixed;
@@ -306,13 +313,17 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                binColumns.clear();
-                binColumns.push_back(escapeString(std::get<2_z>(*it)));
-                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                // Apply threshold filtering if requested
+                if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                 {
-                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
+                    binColumns.clear();
+                    binColumns.push_back(escapeString(std::get<2_z>(*it)));
+                    for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                    {
+                        binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
+                    }
+                    addRow(it, binColumns);
                 }
-                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -346,13 +357,17 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             auto it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                binColumns.clear();
-                binColumns.push_back(std::get<2_z>(*it).has_value() ? escapeFloat(std::get<2_z>(*it).value()) : std::string{});
-                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                // Apply threshold filtering if requested
+                if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                 {
-                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
+                    binColumns.clear();
+                    binColumns.push_back(std::get<2_z>(*it).has_value() ? escapeFloat(std::get<2_z>(*it).value()) : std::string{});
+                    for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                    {
+                        binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
+                    }
+                    addRow(it, binColumns);
                 }
-                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -394,16 +409,20 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             auto it = std::lower_bound(channelColumns.cbegin(), channelColumns.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                binColumns.clear();
-                for(auto const& value : std::get<2_z>(*it))
+                // Apply threshold filtering if requested
+                if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                 {
-                    binColumns.push_back(escapeFloat(value));
+                    binColumns.clear();
+                    for(auto const& value : std::get<2_z>(*it))
+                    {
+                        binColumns.push_back(escapeFloat(value));
+                    }
+                    for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                    {
+                        binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
+                    }
+                    addRow(it, binColumns);
                 }
-                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
-                {
-                    binColumns.push_back(escapeFloat(std::get<3_z>(*it).at(j)));
-                }
-                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -436,7 +455,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -447,7 +466,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -461,10 +480,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -473,7 +492,23 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort)
+// Backward compatible overloads that default to not applying thresholds
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+{
+    return toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, false, shouldAbort);
+}
+
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+{
+    return toCsv(accessor, timeRange, channels, file, includeHeader, separator, useEndTime, false, shouldAbort);
+}
+
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+{
+    return toCsv(accessor, timeRange, channels, string, includeHeader, separator, useEndTime, false, shouldAbort);
+}
+
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "JSON";
@@ -507,6 +542,13 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
         return aborted(name, format);
     }
 
+    // Get extra thresholds for filtering if requested
+    std::vector<std::optional<float>> extraThresholds;
+    if(applyExtraThresholds)
+    {
+        extraThresholds = accessor.getAttr<AttrType::extraThresholds>();
+    }
+
     auto container = nlohmann::json::object();
     auto& json = container["results"];
     if(includeDescription)
@@ -534,15 +576,19 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                 while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
                 {
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                    nlohmann::json vjson;
-                    vjson["time"] = std::get<0_z>(*it);
-                    vjson["duration"] = std::get<1_z>(*it);
-                    vjson["label"] = std::get<2_z>(*it);
-                    if(!std::get<3_z>(*it).empty())
+                    // Apply threshold filtering if requested
+                    if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                     {
-                        vjson["extra"] = std::get<3_z>(*it);
+                        nlohmann::json vjson;
+                        vjson["time"] = std::get<0_z>(*it);
+                        vjson["duration"] = std::get<1_z>(*it);
+                        vjson["label"] = std::get<2_z>(*it);
+                        if(!std::get<3_z>(*it).empty())
+                        {
+                            vjson["extra"] = std::get<3_z>(*it);
+                        }
+                        cjson.emplace_back(std::move(vjson));
                     }
-                    cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
                 json.emplace_back(std::move(cjson));
@@ -566,22 +612,26 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                 while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
                 {
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                    nlohmann::json vjson;
-                    vjson["time"] = std::get<0_z>(*it);
-                    vjson["duration"] = std::get<1_z>(*it);
-                    if(std::get<2_z>(*it).has_value())
+                    // Apply threshold filtering if requested
+                    if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                     {
-                        vjson["value"] = std::get<2_z>(*it).value();
+                        nlohmann::json vjson;
+                        vjson["time"] = std::get<0_z>(*it);
+                        vjson["duration"] = std::get<1_z>(*it);
+                        if(std::get<2_z>(*it).has_value())
+                        {
+                            vjson["value"] = std::get<2_z>(*it).value();
+                        }
+                        else
+                        {
+                            vjson["value"] = {};
+                        }
+                        if(!std::get<3_z>(*it).empty())
+                        {
+                            vjson["extra"] = std::get<3_z>(*it);
+                        }
+                        cjson.emplace_back(std::move(vjson));
                     }
-                    else
-                    {
-                        vjson["value"] = {};
-                    }
-                    if(!std::get<3_z>(*it).empty())
-                    {
-                        vjson["extra"] = std::get<3_z>(*it);
-                    }
-                    cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
                 json.emplace_back(std::move(cjson));
@@ -605,15 +655,19 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                         return aborted(name, format);
                     }
 
-                    nlohmann::json vjson;
-                    vjson["time"] = std::get<0_z>(*it);
-                    vjson["duration"] = std::get<1_z>(*it);
-                    vjson["values"] = std::get<2_z>(*it);
-                    if(!std::get<3_z>(*it).empty())
+                    // Apply threshold filtering if requested
+                    if(!applyExtraThresholds || Result::passThresholds(*it, extraThresholds))
                     {
-                        vjson["extra"] = std::get<3_z>(*it);
+                        nlohmann::json vjson;
+                        vjson["time"] = std::get<0_z>(*it);
+                        vjson["duration"] = std::get<1_z>(*it);
+                        vjson["values"] = std::get<2_z>(*it);
+                        if(!std::get<3_z>(*it).empty())
+                        {
+                            vjson["extra"] = std::get<3_z>(*it);
+                        }
+                        cjson.emplace_back(std::move(vjson));
                     }
-                    cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
                 json.emplace_back(std::move(cjson));
@@ -635,7 +689,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "JSON";
@@ -646,7 +700,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, shouldAbort);
+    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, applyExtraThresholds, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -660,16 +714,32 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeDescription, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, shouldAbort);
+    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, applyExtraThresholds, shouldAbort);
     if(result.failed())
     {
         return result;
     }
     string = stream.str();
     return juce::Result::ok();
+}
+
+// Backward compatible JSON overloads that default to not applying thresholds
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort)
+{
+    return toJson(accessor, timeRange, channels, stream, includeDescription, false, shouldAbort);
+}
+
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
+{
+    return toJson(accessor, timeRange, channels, file, includeDescription, false, shouldAbort);
+}
+
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeDescription, std::atomic<bool> const& shouldAbort)
+{
+    return toJson(accessor, timeRange, channels, string, includeDescription, false, shouldAbort);
 }
 
 juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, std::atomic<bool> const& shouldAbort)
