@@ -43,8 +43,8 @@ Partiels is a C++20 audio analysis application built with the JUCE framework and
   - `VAMP_PATH=build/VampPlugins/Debug:build/Debug ./build/Partiels_artefacts/Debug/Partiels --plugin-list` (should list available plugins)
 
 ### Code Quality Validation
-- **Format checking**: `cmake --build build --target PartielsCheckFormat` (may report formatting issues in existing code - this is normal)
-- **NEVER run format fixing** unless specifically requested: `cmake --build build --target PartielsApplyFormat`
+- **Format checking**: `cmake --build build --target PartielsCheckFormat` (must pass before committing; code must be properly formatted)
+- **Run format fixing before committing**: `cmake --build build --target PartielsApplyFormat` (required pre-commit step)
 - The CI pipeline (`.github/workflows/ci.yml`) will fail if code formatting issues are introduced.
 
 ### Testing Requirements
