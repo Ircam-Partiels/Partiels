@@ -472,6 +472,12 @@ set_tests_properties(ExportDocumentWithFileUnix PROPERTIES ENVIRONMENT "VAMP_PAT
 add_test(NAME ExportDocumentWithFileWindows COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileWindows.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportDocumentWithFileWindows PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
+add_test(NAME ExportDocumentWithFileExtraCsv COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileUnix.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/ExtraCsv/ --format=csv --nogrids --header --separator=, --thresholds)
+set_tests_properties(ExportDocumentWithFileExtraCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
+add_test(NAME ExportDocumentWithFileExtraJson COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileWindows.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/ExtraJson/ --format=json --description --thresholds)
+set_tests_properties(ExportDocumentWithFileExtraJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+
 add_test(NAME ExportDocumentWithInvalidFile COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithInvalidFile.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CSV/ --format=csv --nogrids --header --separator=,)
 set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES WILL_FAIL TRUE)
