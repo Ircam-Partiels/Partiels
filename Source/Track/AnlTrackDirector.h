@@ -66,6 +66,7 @@ namespace Track
 
     private:
         void sanitizeZooms(NotificationType const notification);
+        void sanitizeExtraOutputs(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         void runLoading();
         void runRendering();
