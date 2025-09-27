@@ -85,6 +85,7 @@ Application::CommandLine::CommandLine()
          "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
          "--reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').\n\t"
          "--description Includes the plugin description (optional with the json format).\n\t"
+         "--thresholds Applies extra thresholds filtering to the exported results (optional with the csv, lab, json, cue, and reaper formats).\n\t"
          "--frame <framesignature> Defines the 4 characters frame signature (required with the sdif format).\n\t"
          "--matrix <matrixsignature> Defines the 4 characters matrix signature (required with the sdif format).\n\t"
          "--colname <string> Defines the name of the column (optional with the sdif format).",
@@ -181,6 +182,7 @@ Application::CommandLine::CommandLine()
                  options.ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
+                 options.applyExtraThresholds = args.containsOption("--thresholds");
                  options.reaperType = args.getValueForOption("--reapertype").toLowerCase() == "marker" ? Options::ReaperType::marker : Options::ReaperType::region;
                  options.sdifFrameSignature = args.getValueForOption("--frame").removeCharacters("\"").toUpperCase();
                  options.sdifMatrixSignature = args.getValueForOption("--matrix").removeCharacters("\"").toUpperCase();
