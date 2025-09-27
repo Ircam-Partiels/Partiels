@@ -132,6 +132,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                     mAccessor.setAttr<AttrType::state>(state, notification);
                 }
                 sanitizeZooms(notification);
+                sanitizeExtraOutputs(notification);
             }
             break;
             case AttrType::file:
@@ -166,6 +167,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::results:
             {
                 sanitizeZooms(notification);
+                sanitizeExtraOutputs(notification);
                 auto const& results = mAccessor.getAttr<AttrType::results>();
                 auto const access = results.getReadAccess();
                 if(static_cast<bool>(access))
@@ -854,6 +856,58 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
             break;
         }
     }
+}
+
+void Track::Director::sanitizeExtraOutputs(NotificationType const notification)
+{
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return;
+    }
+
+    auto description = mAccessor.getAttr<AttrType::description>();
+    auto const updateDescription = [&](auto const& data)
+    {
+        auto& extraOutputs = description.extraOutputs;
+        for(auto const& channelData : data)
+        {
+            for(auto const& elemData : channelData)
+            {
+                for(auto i = 0_z; i < std::get<3>(elemData).size(); ++i)
+                {
+                    auto const value = std::get<3>(elemData).at(i);
+                    extraOutputs.resize(i + 1_z);
+                    auto& extraOutput = extraOutputs[i];
+                    if(std::exchange(extraOutput.hasKnownExtents, true))
+                    {
+                        extraOutput.minValue = std::min(extraOutput.minValue, value);
+                        extraOutput.maxValue = std::max(extraOutput.maxValue, value);
+                    }
+                    else
+                    {
+                        extraOutput.minValue = value;
+                        extraOutput.maxValue = value;
+                    }
+                }
+            }
+        }
+    };
+
+    if(auto const markers = results.getMarkers())
+    {
+        updateDescription(*markers);
+    }
+    else if(auto points = results.getPoints())
+    {
+        updateDescription(*points);
+    }
+    else if(auto columns = results.getColumns())
+    {
+        updateDescription(*columns);
+    }
+    mAccessor.setAttr<AttrType::description>(description, notification);
 }
 
 void Track::Director::fileHasBeenRemoved(juce::File const& file)
