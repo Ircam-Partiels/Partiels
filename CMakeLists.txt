@@ -476,6 +476,20 @@ add_test(NAME ExportDocumentWithInvalidFile COMMAND Partiels --export --document
 set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(ExportDocumentWithInvalidFile PROPERTIES WILL_FAIL TRUE)
 
+add_test(NAME ExportDocumentWithFileExtraCsv COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileExtra.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CSV/ --format=csv --nogrids --header --separator=,)
+set_tests_properties(ExportDocumentWithFileExtraCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+add_test(NAME CompareFilesExtraCsvCsv COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/PointsWithExtra.csv "${TESTS_OUTPUT_DIRECTORY}/CSV/Group 1_PointsWithExtraCSV.csv")
+set_tests_properties(CompareFilesExtraCsvCsv PROPERTIES DEPENDS "ExportDocumentWithFileExtraCsv")
+add_test(NAME CompareFilesExtraCsvJson COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/PointsWithExtra.csv "${TESTS_OUTPUT_DIRECTORY}/CSV/Group 1_PointsWithExtraJSON.csv")
+set_tests_properties(CompareFilesExtraCsvJson PROPERTIES DEPENDS "ExportDocumentWithFileExtraCsv")
+
+add_test(NAME ExportDocumentWithFileExtraJson COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileExtra.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CSV/ --format=json --nogrids --header --separator=,)
+set_tests_properties(ExportDocumentWithFileExtraJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+add_test(NAME CompareFilesExtraJsonCsv COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/PointsWithExtra.json "${TESTS_OUTPUT_DIRECTORY}/CSV/Group 1_PointsWithExtraCSV.json")
+set_tests_properties(CompareFilesExtraJsonCsv PROPERTIES DEPENDS "ExportDocumentWithFileExtraJson")
+add_test(NAME CompareFilesExtraJsonJson COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/PointsWithExtra.json "${TESTS_OUTPUT_DIRECTORY}/CSV/Group 1_PointsWithExtraJSON.json")
+set_tests_properties(CompareFilesExtraJsonJson PROPERTIES DEPENDS "ExportDocumentWithFileExtraJson")
+
 add_test(NAME ExportOptions COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/Xml/ --options=${TESTS_DIRECTORY}/exportOptions.xml)
 set_tests_properties(ExportOptions PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 

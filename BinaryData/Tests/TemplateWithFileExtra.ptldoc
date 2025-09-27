@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="131329" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/BinaryData/Tests/TemplateWithFileExtra.ptldoc"
+          grid="1" autoresize="1" samplerate="44100.0" channels="2" description="">
+  <reader>
+    <value file="/Users/guillot/Git/Partiels/BinaryData/Tests/Sound.wav"
+           channel="0"/>
+  </reader>
+  <reader>
+    <value file="/Users/guillot/Git/Partiels/BinaryData/Tests/Sound.wav"
+           channel="1"/>
+  </reader>
+  <layout value="3eee676199554cb496f405a1ea40b974"/>
+  <timeZoom MiscModelVersion="131329" globalRange_start="0.0" globalRange_end="4.338231292517007"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="4.338231292517007">
+    <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="131329" startPlayhead="0.3610005953600952"
+             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
+             autoScroll="1" gain="1.0" magnetize="0"/>
+  <groups MiscModelVersion="131329" identifier="3eee676199554cb496f405a1ea40b974"
+          name="Group 1" height="323" colour="0" expanded="1" referenceid="">
+    <layout value="11f4a157496e46aaa0421d3b7e45f820"/>
+    <layout value="f9caeb9ebd434acf95e7162cf741534e"/>
+    <zoom MiscModelVersion="131329" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="131329" identifier="11f4a157496e46aaa0421d3b7e45f820"
+          name="PointsWithExtraCSV" input="" sampleRate="44100.0" height="219"
+          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
+          oscIdentifier="" sendViaOsc="0" zoomValueMode="2" zoomLogScale="0"
+          zoomLink="1">
+    <file path="/Users/guillot/Git/Partiels/BinaryData/Tests/PointsWithExtra.csv"
+          commit="">
+      <args>
+        <pair key="separator" value=","/>
+        <pair key="useendtime" value="true"/>
+      </args>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <extraOutputs>
+        <value identifier="" name="" description="" unit="" hasKnownExtents="1"
+               minValue="0.1000000014901161" maxValue="0.8999999761581421" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <extraThresholds/>
+    <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
+               visibleRange_end="3200.0">
+      <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131329" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="131329" identifier="f9caeb9ebd434acf95e7162cf741534e"
+          name="PointsWithExtraJSON" input="" sampleRate="44100.0" height="206"
+          font="Nunito Sans; 14.0 Regular" lineWidth="1.0" showInGroup="1"
+          oscIdentifier="" sendViaOsc="0" zoomValueMode="2" zoomLogScale="0"
+          zoomLink="1">
+    <file path="/Users/guillot/Git/Partiels/BinaryData/Tests/PointsWithExtra.json"
+          commit="">
+      <args/>
+    </file>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="0" stepSize="0" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+      <extraOutputs>
+        <value identifier="" name="" description="" unit="" hasKnownExtents="1"
+               minValue="0.1000000014901161" maxValue="0.8999999761581421" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+      <input identifier="" name="" description="" unit="" hasFixedBinCount="0"
+             binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+             isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+             hasDuration="0"/>
+    </description>
+    <key identifier="" feature=""/>
+    <state blockSize="0" stepSize="0" windowType="3"/>
+    <colours map="7" background="0" foreground="ff7e7a7d" duration="667e7a7d"
+             text="ff000000" shadow="0"/>
+    <labelLayout position="12.0" justification="0"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
+               visibleRange_end="3200.0">
+      <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="131329" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
