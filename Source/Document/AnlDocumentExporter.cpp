@@ -41,6 +41,7 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            imagePpi == rhd.imagePpi &&
            includeHeaderRaw == rhd.includeHeaderRaw &&
            ignoreGridResults == rhd.ignoreGridResults &&
+           applyExtraThresholds == rhd.applyExtraThresholds &&
            columnSeparator == rhd.columnSeparator &&
            reaperType == rhd.reaperType &&
            includeDescription == rhd.includeDescription &&
@@ -1275,15 +1276,15 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, channels, fileUsed, options.applyExtraThresholds, shouldAbort);
             case Options::Format::reaper:
-                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, shouldAbort);
+                return Track::Exporter::toReaper(trackAcsr, timeRange, channels, fileUsed, options.reaperType == Options::ReaperType::marker, options.applyExtraThresholds, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);

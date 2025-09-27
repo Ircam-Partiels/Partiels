@@ -1212,7 +1212,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 if(!selectedChannels.empty())
                 {
                     juce::String clipboardResults;
-                    Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
+                    Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, false, shouldAbort);
                     juce::SystemClipboard::copyTextToClipboard(clipboardResults);
                     return true;
                 }
