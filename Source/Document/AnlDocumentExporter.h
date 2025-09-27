@@ -61,6 +61,7 @@ namespace Document
             int imagePpi{144};
             bool includeHeaderRaw{true};
             bool ignoreGridResults{true};
+            bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
             bool includeDescription{true};
