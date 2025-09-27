@@ -17,9 +17,9 @@
     <grid MiscModelVersion="131329" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131329" startPlayhead="0.3610005953600952"
-             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
-             autoScroll="1" gain="1.0" magnetize="0"/>
+  <transport MiscModelVersion="131329" startPlayhead="1.549812900770064" looping="0"
+             loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0" autoScroll="1"
+             gain="1.0" magnetize="0"/>
   <groups MiscModelVersion="131329" identifier="3eee676199554cb496f405a1ea40b974"
           name="Group 1" height="323" colour="0" expanded="1" referenceid="">
     <layout value="11f4a157496e46aaa0421d3b7e45f820"/>
@@ -65,7 +65,9 @@
     <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <extraThresholds/>
+    <extraThresholds>
+      <value value="0.4000000059604645"/>
+    </extraThresholds>
     <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
                visibleRange_end="3200.0">
@@ -110,6 +112,9 @@
     <labelLayout position="12.0" justification="0"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
+    <extraThresholds>
+      <value value="0.4000000059604645"/>
+    </extraThresholds>
     <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
                visibleRange_end="3200.0">
