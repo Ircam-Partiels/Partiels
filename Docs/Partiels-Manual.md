@@ -1002,6 +1002,7 @@ Usage:
         --separator <character> Defines the separator character between columns (optional with the csv format, default is ',').
         --reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').
         --description Includes the plugin description (optional with the json format).
+        --thresholds Applies extra thresholds filtering to the exported results (optional with the csv, lab, json, cue, and reaper formats).
         --frame <framesignature> Defines the 4 characters frame signature (required with the sdif format).
         --matrix <matrixsignature> Defines the 4 characters matrix signature (required with the sdif format).
         --colname <string> Defines the name of the column (optional with the sdif format).
