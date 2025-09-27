@@ -352,6 +352,12 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            options.ignoreGridResults = state;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
+, mPropertyApplyExtraThresholds("Apply Extra Thresholds", "Apply extra threshold filters to exclude values below thresholds when exporting", [this](bool state)
+                                {
+                                    auto options = mOptions;
+                                    options.applyExtraThresholds = state;
+                                    setOptions(options, juce::NotificationType::sendNotificationSync);
+                                })
 , mPropertyOutsideGridJustification("Outside Grid", "Draw grid ticks and labels outside the frame bounds", "", {}, nullptr)
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                           {
@@ -381,6 +387,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
     addChildComponent(mPropertySdifMatrix);
     addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
+    addChildComponent(mPropertyApplyExtraThresholds);
     addChildComponent(mPropertyOutsideGridJustification);
     setSize(300, 200);
 
@@ -594,6 +601,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySdifMatrix);
     setBounds(mPropertySdifColName);
     setBounds(mPropertyIgnoreGrids);
+    setBounds(mPropertyApplyExtraThresholds);
     setBounds(mPropertyOutsideGridJustification);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
@@ -768,6 +776,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
     mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
+    mPropertyApplyExtraThresholds.setEnabled(mOptions.useTextFormat() && mOptions.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setEnabled(mOptions.useImageFormat());
 }
 
@@ -821,6 +830,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
+    mPropertyApplyExtraThresholds.entry.setToggleState(options.applyExtraThresholds, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
     mPropertySdifMatrix.entry.setText(options.sdifMatrixSignature, silent);
@@ -839,6 +849,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    mPropertyApplyExtraThresholds.setVisible(options.useTextFormat() && options.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setVisible(options.useImageFormat());
     juce::StringArray justificationNames;
     if(options.outsideGridJustification.getFlags() == Zoom::Grid::Justification::none)
@@ -1396,6 +1407,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "imagePpi", value.imagePpi);
         toXml(*child, "includeHeaderRaw", value.includeHeaderRaw);
         toXml(*child, "ignoreGridResults", value.ignoreGridResults);
+        toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
         toXml(*child, "columnSeparator", value.columnSeparator);
         toXml(*child, "includeDescription", value.includeDescription);
         toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
@@ -1425,6 +1437,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.imagePpi = fromXml(*child, "imagePpi", defaultValue.imagePpi);
     value.includeHeaderRaw = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRaw);
     value.ignoreGridResults = fromXml(*child, "ignoreGridResults", defaultValue.ignoreGridResults);
+    value.applyExtraThresholds = fromXml(*child, "applyExtraThresholds", defaultValue.applyExtraThresholds);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
     value.includeDescription = fromXml(*child, "includeDescription", defaultValue.includeDescription);
     value.sdifFrameSignature = fromXml(*child, "sdifFrameSignature", defaultValue.sdifFrameSignature);

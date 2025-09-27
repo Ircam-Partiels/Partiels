@@ -137,6 +137,7 @@ namespace Document
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
             PropertyToggle mPropertyIgnoreGrids;
+            PropertyToggle mPropertyApplyExtraThresholds;
             PropertyList mPropertyOutsideGridJustification;
 
             Accessor::Listener mListener{typeid(*this).name()};
