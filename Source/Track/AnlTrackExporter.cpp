@@ -248,8 +248,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         {
             if(prependLineIndex)
             {
-                addColumn(lineIndex++);
-                addColumn("");  // Empty after comma for index
+                stream << lineIndex++ << ", ";
+                state = false; // Reset state so next addColumn doesn't add separator
             }
             addColumn("TIME");
             if(useEndTime)
@@ -276,8 +276,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         MiscWeakAssert(duration >= 0.0);
         if(prependLineIndex)
         {
-            addColumn(lineIndex++);
-            addColumn("");  // Empty after comma for index
+            stream << lineIndex++ << ", ";
+            state = false; // Reset state so next addColumn doesn't add separator
         }
         addColumn(time);
         addColumn(std::max(useEndTime ? time + duration : duration, 0.0));

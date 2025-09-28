@@ -171,9 +171,13 @@ Application::CommandLine::CommandLine()
                  {
                      options.format = Options::Format::puredata;
                  }
-                 else
-                 {
-                     options.format = Options::Format::sdif;
+                else if(format == "max")
+                {
+                    options.format = Options::Format::max;
+                }
+                else
+                {
+                    options.format = Options::Format::sdif;
                      if(!args.containsOption("--frame"))
                      {
                          fail("Frame signature not specified! Specifiy the frame signature of the SDIf file.");

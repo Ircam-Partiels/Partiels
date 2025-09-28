@@ -408,6 +408,8 @@ Export in Reaper format corresponds to the CSV format supported by the applicati
 
 Export in Pure Data format corresponds to the CSV format with space character as separator, semicolon as linebreak and no label escaping. This format facilitates the compatibility with the Pure Data's text object.
 
+Export in Max format corresponds to the CSV format with space character as separator, semicolon as linebreak, no label escaping, and line indices prepended to each line. This format facilitates the compatibility with the Max coll object.
+
 Export to JSON format offers one option:
 - `Include Extra Description` enables writing a JSON object after the results containing all the properties of the audio processor for analysis and graphical rendering of the track. This allows to automatically optimize the display of the analysis but also to restart the analysis if needed.
 
