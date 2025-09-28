@@ -396,7 +396,7 @@ The `Outside Grid` dropdown menu allows you to select the image borders that sho
 
 The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
 
-The `Apply Extra Thresholds` button offers an option to filter exported results based on extra threshold values configured in the track properties. When enabled, only analysis results that meet all configured threshold criteria will be included in the exported file. This option is available for CSV, JSON, LAB, CUE, and Reaper formats but not for SDIF format. This feature is particularly useful for exporting only high-confidence analysis results by filtering out data points that fall below specified threshold values.
+The `Apply Extra Thresholds` button offers an option to filter exported results based on extra threshold values configured in the track properties. When enabled, only analysis results that meet all configured threshold criteria will be included in the exported file. This option is available for CSV, JSON, LAB, CUE, Reaper, and Pure Data formats but not for SDIF format. This feature is particularly useful for exporting only high-confidence analysis results by filtering out data points that fall below specified threshold values.
 
 Export to CSV format offers two options:
 - `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
@@ -405,6 +405,8 @@ Export to CSV format offers two options:
 Export to Lab format corresponds to the CSV format, with the *Tab* character as separator and the end time used instead of the duration.
 
 Export in Reaper format corresponds to the CSV format supported by the application, with an option for markers or regions.
+
+Export in Pure Data format corresponds to the CSV format with space character as separator, semicolon as linebreak and no label escaping. This format facilitates the compatibility with the Pure Data's text object.
 
 Export to JSON format offers one option:
 - `Include Extra Description` enables writing a JSON object after the results containing all the properties of the audio processor for analysis and graphical rendering of the track. This allows to automatically optimize the display of the analysis but also to restart the analysis if needed.
@@ -551,7 +553,7 @@ Actions for moving the playhead starting position and controlling the playback l
 
 ### 8.4. OSC
 
-Partiels offers the possibility to send track analysis values via OSC (Open Sound Control) during playback or when hovering over tracks and groups with the mouse using the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The information can be retrieved by other applications (such as PureData, Live, Reaper, etc.) for real-time sonification of the results.
+Partiels offers the possibility to send track analysis values via OSC (Open Sound Control) during playback or when hovering over tracks and groups with the mouse using the keyboard modifier `⎇ Option` (Mac) or `Alt` (Linux/Windows). The information can be retrieved by other applications (such as Pure Data, Live, Reaper, etc.) for real-time sonification of the results.
 
 The host connection is configured via the OSC properties panel, accessible via the menu `Partiels → OSC Settings...` (Mac) or `Help → OSC Settings...` (Linux/Windows), or by clicking on the OSC button ([Overview](#2-overview) **O**) at the center of the main interface header (when OSC is connected, the button turns green).
 
