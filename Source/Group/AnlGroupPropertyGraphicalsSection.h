@@ -66,8 +66,7 @@ namespace Group
         bool mChannelLayoutActionStarted{false};
         PropertyTextButton mPropertyTrackVisibility;
         bool mTrackVisibilityActionStarted{false};
-        std::vector<std::unique_ptr<PropertySlider>> mPropertyExtraThresholds;
-        std::vector<juce::String> mExtraThresholdNames; // Store output names for each threshold
+        std::map<std::string, std::unique_ptr<PropertySlider>> mPropertyExtraThresholds;
 
         LayoutNotifier mLayoutNotifier;
     };

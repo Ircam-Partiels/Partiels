@@ -202,7 +202,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale, Track::AttrType::extraThresholds})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -254,7 +254,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
     setBounds(mPropertyValueRangeLogScale);
-    for(auto& property : mPropertyExtraThresholds)
+    for(auto const& [outputName, property] : mPropertyExtraThresholds)
     {
         if(property != nullptr)
         {
@@ -947,7 +947,6 @@ void Group::PropertyGraphicalsSection::updateLogScale()
 void Group::PropertyGraphicalsSection::addExtraThresholdProperties()
 {
     mPropertyExtraThresholds.clear();
-    mExtraThresholdNames.clear();
 
     // Collect unique extra outputs from all tracks
     std::map<juce::String, std::vector<std::reference_wrapper<Track::Accessor>>> extraOutputsToTracks;
@@ -1069,8 +1068,7 @@ void Group::PropertyGraphicalsSection::addExtraThresholdProperties()
         if(property != nullptr)
         {
             addAndMakeVisible(property.get());
-            mPropertyExtraThresholds.push_back(std::move(property));
-            mExtraThresholdNames.push_back(outputName);
+            mPropertyExtraThresholds[outputName.toStdString()] = std::move(property);
         }
     }
 }
@@ -1080,15 +1078,12 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
     // Update values for each extra threshold property based on current track values
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
 
-    for(auto propertyIndex = 0_z; propertyIndex < mPropertyExtraThresholds.size(); ++propertyIndex)
+    for(auto const& [outputName, property] : mPropertyExtraThresholds)
     {
-        auto& property = mPropertyExtraThresholds[propertyIndex];
-        if(property == nullptr || propertyIndex >= mExtraThresholdNames.size())
+        if(property == nullptr)
         {
             continue;
         }
-
-        auto const outputName = mExtraThresholdNames[propertyIndex];
 
         std::set<float> thresholdValues;
         bool hasAnyValue = false;
@@ -1107,7 +1102,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
 
             for(auto index = 0_z; index < description.extraOutputs.size(); ++index)
             {
-                if(description.extraOutputs.at(index).name == outputName)
+                if(description.extraOutputs.at(index).name == juce::String(outputName))
                 {
                     auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
                     auto const effective = value.has_value() ? value.value() : static_cast<float>(property->entry.getRange().getStart());
