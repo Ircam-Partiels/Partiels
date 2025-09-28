@@ -78,6 +78,10 @@ juce::String Document::Exporter::Options::getFormatExtension() const
     {
         return "csv";
     }
+    if(format == Format::puredata)
+    {
+        return "txt";
+    }
     return getFormatName().toLowerCase();
 }
 
@@ -148,6 +152,8 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
             return frameType == Track::FrameType::label;
         case Format::reaper:
             return frameType == Track::FrameType::label;
+        case Format::puredata:
+            return true;
         case Format::sdif:
             return true;
     }
@@ -1290,6 +1296,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, false, false, shouldAbort);
             case Options::Format::lab:
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, false, false, shouldAbort);
+            case Options::Format::puredata:
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, true, true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
