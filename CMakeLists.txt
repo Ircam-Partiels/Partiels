@@ -539,6 +539,11 @@ add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/So
 set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 add_compare_text_tests(ExportJson "JSON" "json")
 
+add_test(NAME ExportPureData COMMAND Partiels --export --document=${TESTS_DIRECTORY}/TemplateWithFileExtra.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/PUREDATA/ --format=puredata)
+set_tests_properties(ExportPureData PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
+add_compare_text_test(ExportPureData "CompareCSV" "Group 1_PointsWithExtraCSV" "PUREDATA" "txt")
+add_compare_text_test(ExportPureData "CompareJSON" "Group 1_PointsWithExtraJSON" "PUREDATA" "txt")
+
 add_test(NAME ExportCue COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CUE/ --format=cue)
 set_tests_properties(ExportCue PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 
