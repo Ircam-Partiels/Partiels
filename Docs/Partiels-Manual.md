@@ -371,7 +371,7 @@ The `Time Preset` drop-down menu allows you to select one of three presets: *Glo
 You can also define the time range with the text entries `Time Start`, `Time End`, and `Time Length`, the preset then automatically switches to *Manual* mode. 
 
 <p align="center">
-<img src="Images/section-export-analyses.4-v2.0.4.png" width="202"/>
+<img src="Images/section-export-analyses.4-v2.1.2.png" width="202"/>
 </p>
 
 The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV*, *LAB*, *CUE*, *REAPER*, or a binary format *SDIF*. For each format, you can set specific options (**E4**).
@@ -406,7 +406,9 @@ Export to Lab format corresponds to the CSV format, with the *Tab* character as 
 
 Export in Reaper format corresponds to the CSV format supported by the application, with an option for markers or regions.
 
-Export in Pure Data format corresponds to the CSV format with space character as separator, semicolon as linebreak and no label escaping. This format facilitates the compatibility with the Pure Data's text object.
+Export in Pure Data format corresponds to the CSV format with space character as separator, semicolon as linebreak and no label escaping. This format facilitates the compatibility with the Pure Data text object.
+
+Export in Max format corresponds to the CSV format with space character as separator and line indices prepended to each line. This format facilitates the compatibility with the Max coll object.
 
 Export to JSON format offers one option:
 - `Include Extra Description` enables writing a JSON object after the results containing all the properties of the audio processor for analysis and graphical rendering of the track. This allows to automatically optimize the display of the analysis but also to restart the analysis if needed.
