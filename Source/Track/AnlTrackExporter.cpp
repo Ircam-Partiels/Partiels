@@ -185,7 +185,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -224,10 +224,19 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     stream << std::setprecision(10);
 
     auto state = false;
+    auto lineIndex = 0;
     auto const addLine = [&]()
     {
-        state = false;
-        stream << (useSemicolonForLineBreak ? ';' : '\n');
+        if(lineIndex > 0)
+        {
+            state = false;
+            stream << lineBreakSeparator;
+        }
+        if(prependLineIndex)
+        {
+            stream << (lineIndex + 1) << ", ";
+        }
+        ++lineIndex;
     };
 
     auto const addColumn = [&](auto const& text)
@@ -245,6 +254,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         if(includeHeader)
         {
+            addLine();
             addColumn("TIME");
             if(useEndTime)
             {
@@ -258,12 +268,12 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             {
                 addColumn(extraColumn);
             }
-            addLine();
         }
     };
 
     auto const addRow = [&](auto const iterator, auto const& extraColumns)
     {
+        addLine();
         auto const time = std::get<0_z>(*iterator);
         auto const duration = std::get<1_z>(*iterator);
         MiscWeakAssert(time >= timeRange.getStart());
@@ -274,7 +284,6 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         {
             addColumn(extraColumn);
         }
-        addLine();
     };
 
     auto const escapeString = [&](juce::String const& s)
@@ -293,6 +302,27 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     auto const points = results.getPoints();
     auto const columns = results.getColumns();
     std::vector<std::string> binColumns;
+
+    auto const addChannels = [&](auto const data, auto const fn)
+    {
+        auto first = true;
+        for(auto i = 0_z; i < data->size(); ++i)
+        {
+            if(channels.empty() || channels.count(i) > 0)
+            {
+                if(shouldAbort)
+                {
+                    return;
+                }
+                if(!std::exchange(first, false))
+                {
+                    addLine();
+                }
+                fn(data->at(i));
+            }
+        }
+    };
+
     if(markers != nullptr)
     {
         auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
@@ -321,20 +351,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 ++it;
             }
         };
-
-        for(size_t i = 0; i < markers->size(); ++i)
-        {
-            if(channels.empty() || channels.count(i) > 0)
-            {
-                if(shouldAbort)
-                {
-                    return aborted(name, format);
-                }
-
-                addChannel(markers->at(i));
-                addLine();
-            }
-        }
+        addChannels(markers, addChannel);
     }
     else if(points != nullptr)
     {
@@ -364,20 +381,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 ++it;
             }
         };
-
-        for(size_t i = 0; i < points->size(); ++i)
-        {
-            if(channels.empty() || channels.count(i) > 0)
-            {
-                if(shouldAbort)
-                {
-                    return aborted(name, format);
-                }
-
-                addChannel(points->at(i));
-                addLine();
-            }
-        }
+        addChannels(points, addChannel);
     }
     else if(columns != nullptr)
     {
@@ -418,20 +422,18 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 ++it;
             }
         };
+        addChannels(columns, addChannel);
+    }
 
-        for(size_t i = 0; i < columns->size(); ++i)
-        {
-            if(channels.empty() || channels.count(i) > 0)
-            {
-                if(shouldAbort)
-                {
-                    return aborted(name, format);
-                }
+    if(lineIndex > 0)
+    {
+        state = false;
+        stream << lineBreakSeparator;
+    }
 
-                addChannel(columns->at(i));
-                addLine();
-            }
-        }
+    if(shouldAbort)
+    {
+        return aborted(name, format);
     }
 
     if(!stream.good())
@@ -447,7 +449,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -458,7 +460,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -472,10 +474,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;
