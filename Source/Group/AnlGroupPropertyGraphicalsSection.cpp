@@ -1,5 +1,6 @@
 #include "AnlGroupPropertyGraphicalsSection.h"
 #include "../Track/AnlTrackTools.h"
+#include "../Track/AnlTrackTooltip.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -201,7 +202,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale, Track::AttrType::extraThresholds})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -253,6 +254,13 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
     setBounds(mPropertyValueRangeLogScale);
+    for(auto& property : mPropertyExtraThresholds)
+    {
+        if(property != nullptr)
+        {
+            setBounds(*property);
+        }
+    }
     setBounds(mPropertyTrackVisibility);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
@@ -614,6 +622,8 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateUnit();
     updateLabel();
     updateLogScale();
+    addExtraThresholdProperties();
+    updateExtraThresholds();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const numChannels = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 0_z, [](auto n, auto const& trackAcsr)
                                              {
@@ -932,6 +942,211 @@ void Group::PropertyGraphicalsSection::updateLogScale()
         mPropertyValueRangeLogScale.entry.setToggleState(false, juce::NotificationType::dontSendNotification);
     }
     mPropertyValueRangeLogScale.entry.setAlpha(logScales.size() > 1_z ? 0.5f : 1.0f);
+}
+
+void Group::PropertyGraphicalsSection::addExtraThresholdProperties()
+{
+    mPropertyExtraThresholds.clear();
+    mExtraThresholdNames.clear();
+    
+    // Collect unique extra outputs from all tracks
+    std::map<juce::String, std::vector<std::reference_wrapper<Track::Accessor>>> extraOutputsToTracks;
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
+        {
+            continue;
+        }
+        
+        auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
+        for(auto index = 0_z; index < description.extraOutputs.size(); ++index)
+        {
+            auto const& output = description.extraOutputs.at(index);
+            extraOutputsToTracks[output.name].emplace_back(trackAcsr);
+        }
+    }
+    
+    // Create property sliders for each unique extra output
+    for(auto const& [outputName, tracksWithThisOutput] : extraOutputsToTracks)
+    {
+        if(tracksWithThisOutput.empty())
+        {
+            continue;
+        }
+        
+        // Get the output description from the first track having this output
+        auto const& firstTrack = tracksWithThisOutput.front().get();
+        auto const& description = firstTrack.getAttr<Track::AttrType::description>();
+        std::optional<Plugin::OutputExtra> output;
+        size_t outputIndex = 0;
+        
+        for(auto index = 0_z; index < description.extraOutputs.size(); ++index)
+        {
+            if(description.extraOutputs.at(index).name == outputName)
+            {
+                output = description.extraOutputs.at(index);
+                outputIndex = index;
+                break;
+            }
+        }
+        
+        if(!output.has_value())
+        {
+            continue;
+        }
+        
+        auto const range = Track::Tools::getExtraRange(firstTrack, outputIndex);
+        auto const tooltip = Track::Tools::getExtraTooltip(firstTrack, outputIndex);
+        auto const name = juce::translate("NAME Threshold").replace("NAME", output.value().name);
+        auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
+        auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
+        auto const step = output.value().isQuantized ? output.value().quantizeStep : 0.0f;
+        
+        // Create tooltip showing which tracks this affects
+        juce::StringArray trackNames;
+        for(auto const& trackRef : tracksWithThisOutput)
+        {
+            trackNames.add(trackRef.get().getAttr<Track::AttrType::name>());
+        }
+        auto const fullTooltip = "Track(s): " + trackNames.joinIntoString(", ") + " - " + tooltip;
+        
+        juce::WeakReference<juce::Component> weakReference(this);
+        auto const startChange = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            mDirector.startAction(true);
+        };
+        auto const endChange = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", outputName));
+        };
+        auto const applyChange = [=](float newValue)
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            
+            // Apply threshold to all tracks that have this extra output
+            for(auto const& trackRef : tracksWithThisOutput)
+            {
+                auto& trackAcsr = trackRef.get();
+                auto const& trackDescription = trackAcsr.getAttr<Track::AttrType::description>();
+                
+                // Find the index of this output in this track
+                for(auto index = 0_z; index < trackDescription.extraOutputs.size(); ++index)
+                {
+                    if(trackDescription.extraOutputs.at(index).name == outputName)
+                    {
+                        auto thresholds = trackAcsr.getAttr<Track::AttrType::extraThresholds>();
+                        thresholds.resize(trackDescription.extraOutputs.size());
+                        
+                        if(newValue <= start)
+                        {
+                            thresholds[index].reset();
+                        }
+                        else
+                        {
+                            thresholds[index] = newValue;
+                        }
+                        trackAcsr.setAttr<Track::AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
+                        break;
+                    }
+                }
+            }
+        };
+        
+        auto property = std::make_unique<PropertySlider>(name, fullTooltip, output.value().unit, juce::Range<float>{start, end}, step, startChange, applyChange, endChange, true);
+        if(property != nullptr)
+        {
+            addAndMakeVisible(property.get());
+            mPropertyExtraThresholds.push_back(std::move(property));
+            mExtraThresholdNames.push_back(outputName);
+        }
+    }
+}
+
+void Group::PropertyGraphicalsSection::updateExtraThresholds()
+{
+    // Update values for each extra threshold property based on current track values
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    
+    for(auto propertyIndex = 0_z; propertyIndex < mPropertyExtraThresholds.size(); ++propertyIndex)
+    {
+        auto& property = mPropertyExtraThresholds[propertyIndex];
+        if(property == nullptr || propertyIndex >= mExtraThresholdNames.size())
+        {
+            continue;
+        }
+        
+        auto const outputName = mExtraThresholdNames[propertyIndex];
+        
+        std::set<float> thresholdValues;
+        bool hasAnyValue = false;
+        float firstEffectiveValue = static_cast<float>(property->entry.getRange().getStart());
+        
+        // Collect threshold values from all tracks that have this extra output
+        for(auto const& trackAcsr : trackAcsrs)
+        {
+            if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
+            {
+                continue;
+            }
+            
+            auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
+            auto const& thresholds = trackAcsr.get().getAttr<Track::AttrType::extraThresholds>();
+            
+            for(auto index = 0_z; index < description.extraOutputs.size(); ++index)
+            {
+                if(description.extraOutputs.at(index).name == outputName)
+                {
+                    auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
+                    auto const effective = value.has_value() ? value.value() : static_cast<float>(property->entry.getRange().getStart());
+                    
+                    if(!hasAnyValue)
+                    {
+                        firstEffectiveValue = effective;
+                        hasAnyValue = true;
+                    }
+                    
+                    thresholdValues.insert(effective);
+                    break;
+                }
+            }
+        }
+        
+        // Update property display
+        if(thresholdValues.size() == 1)
+        {
+            // All tracks have the same value
+            property->entry.setValue(static_cast<double>(*thresholdValues.begin()), juce::NotificationType::dontSendNotification);
+            property->numberField.setValue(static_cast<double>(*thresholdValues.begin()), juce::NotificationType::dontSendNotification);
+            property->entry.setAlpha(1.0f);
+        }
+        else if(thresholdValues.size() > 1)
+        {
+            // Multiple values - show first one but indicate multiple values in some way
+            property->entry.setValue(static_cast<double>(firstEffectiveValue), juce::NotificationType::dontSendNotification);
+            property->numberField.setValue(static_cast<double>(firstEffectiveValue), juce::NotificationType::dontSendNotification);
+            property->entry.setAlpha(0.7f); // Dim to indicate multiple values
+        }
+        else if(hasAnyValue)
+        {
+            // Single value
+            property->entry.setValue(static_cast<double>(firstEffectiveValue), juce::NotificationType::dontSendNotification);
+            property->numberField.setValue(static_cast<double>(firstEffectiveValue), juce::NotificationType::dontSendNotification);
+            property->entry.setAlpha(1.0f);
+        }
+    }
 }
 
 ANALYSE_FILE_END

@@ -42,6 +42,8 @@ namespace Group
         void updateUnit();
         void updateLabel();
         void updateLogScale();
+        void addExtraThresholdProperties();
+        void updateExtraThresholds();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -64,6 +66,8 @@ namespace Group
         bool mChannelLayoutActionStarted{false};
         PropertyTextButton mPropertyTrackVisibility;
         bool mTrackVisibilityActionStarted{false};
+        std::vector<std::unique_ptr<PropertySlider>> mPropertyExtraThresholds;
+        std::vector<juce::String> mExtraThresholdNames; // Store output names for each threshold
 
         LayoutNotifier mLayoutNotifier;
     };
