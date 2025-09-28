@@ -131,7 +131,7 @@ namespace Track
             for(auto index = 0_z; index < maxExtra; ++index)
             {
                 auto const threshold = thresholds.at(index);
-                if(threshold.has_value() && threshold.value() >= std::get<3>(value).at(index))
+                if(threshold.has_value() && threshold.value() > std::get<3>(value).at(index))
                 {
                     return false;
                 }

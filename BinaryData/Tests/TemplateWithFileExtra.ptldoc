@@ -66,7 +66,7 @@
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
     <extraThresholds>
-      <value value="0.4000000059604645"/>
+      <value value="0.449999988079071"/>
     </extraThresholds>
     <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
@@ -113,7 +113,7 @@
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
     <extraThresholds>
-      <value value="0.4000000059604645"/>
+      <value value="0.449999988079071"/>
     </extraThresholds>
     <valueZoom MiscModelVersion="131329" globalRange_start="1000.0" globalRange_end="3200.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="1000.0"
