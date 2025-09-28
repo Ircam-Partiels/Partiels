@@ -25,6 +25,7 @@ namespace Document
                 , json
                 , cue
                 , reaper
+                , puredata
                 , sdif
             };
             
