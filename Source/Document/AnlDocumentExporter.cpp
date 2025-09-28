@@ -82,6 +82,10 @@ juce::String Document::Exporter::Options::getFormatExtension() const
     {
         return "txt";
     }
+    if(format == Format::max)
+    {
+        return "txt";
+    }
     return getFormatName().toLowerCase();
 }
 
@@ -153,6 +157,8 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
         case Format::reaper:
             return frameType == Track::FrameType::label;
         case Format::puredata:
+            return true;
+        case Format::max:
             return true;
         case Format::sdif:
             return true;
@@ -1298,6 +1304,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, "\n", false, false, shouldAbort);
             case Options::Format::puredata:
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";", true, false, shouldAbort);
+            case Options::Format::max:
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";\n", false, true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
