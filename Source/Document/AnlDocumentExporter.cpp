@@ -1293,11 +1293,11 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", false, false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, "\n", false, false, shouldAbort);
             case Options::Format::puredata:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, true, true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";", true, false, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
