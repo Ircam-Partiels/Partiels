@@ -82,6 +82,10 @@ juce::String Document::Exporter::Options::getFormatExtension() const
     {
         return "txt";
     }
+    if(format == Format::max)
+    {
+        return "txt";
+    }
     return getFormatName().toLowerCase();
 }
 
@@ -154,6 +158,8 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
             return frameType == Track::FrameType::label;
         case Format::puredata:
             return true;
+        case Format::max:
+            return true;
         case Format::sdif:
             return true;
     }
@@ -203,7 +209,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "SDIF"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -1293,11 +1299,13 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, false, false, false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, false, false, false, shouldAbort);
             case Options::Format::puredata:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, true, true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, true, true, false, shouldAbort);
+            case Options::Format::max:
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, true, false, true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:

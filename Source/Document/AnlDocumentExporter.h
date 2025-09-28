@@ -26,6 +26,7 @@ namespace Document
                 , cue
                 , reaper
                 , puredata
+                , max
                 , sdif
             };
             

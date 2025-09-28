@@ -185,7 +185,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -224,6 +224,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     stream << std::setprecision(10);
 
     auto state = false;
+    auto lineIndex = 1;
     auto const addLine = [&]()
     {
         state = false;
@@ -245,6 +246,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         if(includeHeader)
         {
+            if(prependLineIndex)
+            {
+                addColumn(lineIndex++);
+                addColumn("");  // Empty after comma for index
+            }
             addColumn("TIME");
             if(useEndTime)
             {
@@ -268,6 +274,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         auto const duration = std::get<1_z>(*iterator);
         MiscWeakAssert(time >= timeRange.getStart());
         MiscWeakAssert(duration >= 0.0);
+        if(prependLineIndex)
+        {
+            addColumn(lineIndex++);
+            addColumn("");  // Empty after comma for index
+        }
         addColumn(time);
         addColumn(std::max(useEndTime ? time + duration : duration, 0.0));
         for(auto const& extraColumn : extraColumns)
@@ -447,7 +458,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -458,7 +469,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -472,10 +483,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, bool useSemicolonForLineBreak, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, useSemicolonForLineBreak, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;
