@@ -15,13 +15,9 @@ namespace Track
         juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
-
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator = false, bool disableEscaping = false);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator = false, bool disableEscaping = false);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator = false, bool disableEscaping = false);
 
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort);
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);

@@ -1294,7 +1294,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toSdif(trackAcsr, timeRange, fileUsed, frameId, matrixId, columnName, shouldAbort);
             }
             case Options::Format::puredata:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, true, true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, shouldAbort, true, true);
         }
         return juce::Result::fail("Unsupported format");
     };

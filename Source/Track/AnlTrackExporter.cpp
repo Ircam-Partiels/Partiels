@@ -185,12 +185,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
-{
-    return toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, false, false, shouldAbort);
-}
-
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator, bool disableEscaping)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -452,7 +447,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator, bool disableEscaping)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -463,7 +458,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort, useSemicolonSeparator, disableEscaping);
     if(result.failed())
     {
         return result;
@@ -477,47 +472,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort, bool useSemicolonSeparator, bool disableEscaping)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort);
-    if(result.failed())
-    {
-        return result;
-    }
-    string = stream.str();
-    return juce::Result::ok();
-}
-
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort)
-{
-    auto const name = accessor.getAttr<AttrType::name>();
-    auto constexpr format = "CSV";
-
-    juce::TemporaryFile temp(file);
-    std::ofstream stream(temp.getFile().getFullPathName().toStdString());
-    if(!stream.is_open())
-    {
-        return failed(name, format, ErrorType::streamAccessFailure);
-    }
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, useSemicolonSeparator, disableEscaping, shouldAbort);
-    if(result.failed())
-    {
-        return result;
-    }
-    // This is important on Windows otherwise the temporary file cannot be copied
-    stream.close();
-    if(!temp.overwriteTargetFileWithTemporary())
-    {
-        return failed(name, format, ErrorType::fileAccessFailure, file);
-    }
-    return juce::Result::ok();
-}
-
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool useSemicolonSeparator, bool disableEscaping, std::atomic<bool> const& shouldAbort)
-{
-    std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, useSemicolonSeparator, disableEscaping, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, shouldAbort, useSemicolonSeparator, disableEscaping);
     if(result.failed())
     {
         return result;
