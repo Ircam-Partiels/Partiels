@@ -94,20 +94,24 @@ The following academic publications present the Partiels software:
 
 **Partiels : Exploring, Analyzing and Understanding Sounds**  
 Pierre Guillot  
-*Proceedings of the 28th International Conference on Digital Audio Effects (DAFx25)*  
+*Proceedings of the 28-th Int. Conf. on Digital Audio Effects (DAFx25)*  
 Ancona, Italy, September 2025, pp. 298-303  
 [📄 PDF](https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf)
 
 ```bibtex
-@inproceedings{guillot:dafx25,
-  TITLE = {{Partiels : Exploring, Analyzing and Understanding Sounds}},
-  AUTHOR = {Guillot, Pierre},
-  BOOKTITLE = {{Proceedings of the 28th International Conference on Digital Audio Effects (DAFx25)}},
-  ADDRESS = {Ancona, Italy},
-  YEAR = {2025},
-  MONTH = Sep,
-  PAGES = {298--303},
-  PDF = {https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf},
+@inproceedings{DAFx25_paper_66,
+    author = "Guillot, Pierre",
+    title = "{Partiels - Exploring, Analyzing and Understanding Sounds}",
+    booktitle = "Proceedings of the 28-th Int. Conf. on Digital Audio Effects (DAFx25)",
+    editor = "Gabrielli, L. and Cecchi, S.",
+    location = "Ancona, Italy",
+    eventdate = "2025-09-02/2025-09-05",
+    year = "2025",
+    month = "Sept",
+    publisher = "",
+    issn = "2413-6689",
+    doi = "",
+    pages = ""
 }
 ```
 
