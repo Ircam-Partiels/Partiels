@@ -51,6 +51,55 @@ Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), 
 
 > ⚠️ Some Vamp plugins may not support the same configurations and may have other restrictions.
 
+## Publications
+
+The following academic publications present the Partiels software:
+
+### DAFx 2025 Conference Paper
+
+**Partiels : Exploring, Analyzing and Understanding Sounds**  
+Pierre Guillot  
+*Proceedings of the 28th International Conference on Digital Audio Effects (DAFx25)*  
+Ancona, Italy, September 2025, pp. 298-303  
+[📄 PDF](https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf)
+
+```bibtex
+@inproceedings{guillot:dafx25,
+  TITLE = {{Partiels : Exploring, Analyzing and Understanding Sounds}},
+  AUTHOR = {Guillot, Pierre},
+  BOOKTITLE = {{Proceedings of the 28th International Conference on Digital Audio Effects (DAFx25)}},
+  ADDRESS = {Ancona, Italy},
+  YEAR = {2025},
+  MONTH = Sep,
+  PAGES = {298--303},
+  PDF = {https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf},
+}
+```
+
+### JIM 2025 Conference Paper
+
+**Partiels : un logiciel pour analyser et explorer le son**  
+Pierre Guillot  
+*Proceedings of the 32th Journées d'Informatique Musicale*  
+Lyon, France, June 2025  
+[📄 PDF](https://hal.science/hal-05102365v2/file/18.pdf) | [🔗 HAL](https://hal.science/hal-05102365)
+
+```bibtex
+@inproceedings{guillot:hal-05102365,
+  TITLE = {{Partiels : un logiciel pour analyser et explorer le son}},
+  AUTHOR = {Guillot, Pierre},
+  URL = {https://hal.science/hal-05102365},
+  BOOKTITLE = {{Proceedings of the 32th Journ{\'e}es d'Informatique Musicale}},
+  ADDRESS = {Lyon, France},
+  ORGANIZATION = {{GRAME and Inria}},
+  YEAR = {2025},
+  MONTH = Jun,
+  PDF = {https://hal.science/hal-05102365v2/file/18.pdf},
+  HAL_ID = {hal-05102365},
+  HAL_VERSION = {v2},
+}
+```
+
 ## Compilation
 
 The compilation system is based on [CMake](https://cmake.org/). On macOS, you can use the XCode generator with the command `cmake -G Xcode`. On Windows, you can use the Visual Studio generator with the command `cmake -G "Visual Studio 17 2022"`. On Linux, you can use the Makefile or Ninja generators with the commands `cmake -G "Unix Makefiles"` or `cmake -G Ninja`, using Clang or GCC as the compiler.
