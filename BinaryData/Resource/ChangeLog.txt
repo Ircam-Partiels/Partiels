@@ -1,3 +1,17 @@
+- Add: User-editable description property for documents
+- Add: Option to apply extra thresholds when exporting to text files
+- Add: Extra threshold properties in the group properties panel
+- Add: Extra threshold properties in the group properties panel
+- Add: Export format compatible with Max (coll object)
+- Add: Export format compatible with Pure Data (text object)
+- Fix: Extra values not supported when loading data files
+- Fix: Threshold comparison for extra values (should filter strictly lower, not lower or equal)
+- Add: Publications section in README with BibTeX references
+- Add: Video and presentation in dedicated discussion
+- Imp: Improved format instructions for Copilot
+- Imp: Bump JUCE to 8.0.10
+
+v2.1.1
 
 - Fix: Changing the font of a track changes the font of the grid
 - Fix: Support for InnoSetup and SignTool for the Windows GitHub action
