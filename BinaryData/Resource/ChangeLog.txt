@@ -1,7 +1,6 @@
 - Add: User-editable description property for documents
 - Add: Option to apply extra thresholds when exporting to text files
 - Add: Extra threshold properties in the group properties panel
-- Add: Extra threshold properties in the group properties panel
 - Add: Export format compatible with Max (coll object)
 - Add: Export format compatible with Pure Data (text object)
 - Fix: Extra values not supported when loading data files
