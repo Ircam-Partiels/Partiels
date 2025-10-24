@@ -204,7 +204,8 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Spectrogram::process(const float* const*
         {
             auto const real = *inputBuffer++;
             auto const imag = *inputBuffer++;
-            value = std::clamp(std::log10(real * real + imag * imag) * 20.0f, -120.0f, 12.0f);
+            auto const amp = std::sqrt(real * real + imag * imag);
+            value = std::clamp(std::log10(amp) * 20.0f, -120.0f, 12.0f);
         }
         fs[0].push_back(std::move(feature));
     }
