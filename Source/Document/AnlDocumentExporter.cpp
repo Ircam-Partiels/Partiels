@@ -240,7 +240,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                   }
                               }
                           }
-                          if(!mShowAutoSize && !options.useAutoSize)
+                          if(mShowAutoSize)
                           {
                               index--;
                           }
