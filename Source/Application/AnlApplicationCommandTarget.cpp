@@ -563,15 +563,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             auto const tracks = Document::Selection::getTracks(documentAcsr);
             if(!groups.empty() && tracks.empty())
             {
-                result.setInfo(juce::translate("Show group(s) properties"), juce::translate("Shows the group(s) properties window"), "View", 0);
+                result.setInfo(juce::translate("Show Group(s) Properties"), juce::translate("Shows the group(s) properties window"), "View", 0);
             }
             else if(groups.empty() && !tracks.empty())
             {
-                result.setInfo(juce::translate("Show track(s) properties"), juce::translate("Shows the track(s) properties window"), "View", 0);
+                result.setInfo(juce::translate("Show Track(s) Properties"), juce::translate("Shows the track(s) properties window"), "View", 0);
             }
             else
             {
-                result.setInfo(juce::translate("Show group(s) and track(s) properties"), juce::translate("Shows the group(s) and track(s) properties window"), "View", 0);
+                result.setInfo(juce::translate("Show Group(s) and Track(s) Properties"), juce::translate("Shows the group(s) and track(s) properties window"), "View", 0);
             }
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
             result.setActive(!groups.empty() || !tracks.empty());
