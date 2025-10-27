@@ -70,10 +70,8 @@ jobs:
         submodules: recursive
     - run: choco install imagemagick -fy -d
     - run: choco install innosetup -fy -d
-    - name: Prepare
-      run: powershell -Command "& {[System.IO.File]::WriteAllBytes('${{ github.workspace }}\cert.p12', [System.Convert]::FromBase64String('${{ secrets.SECTIGO_CERT_P12}}'))}"
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_NOTARIZE=ON -DPARTIELS_CODESIGN_WINDOWS_KEYFILE=${{ github.workspace }}\cert.p12 -DPARTIELS_CODESIGN_WINDOWS_KEYPASSWORD=${{ secrets.DEV_ID_PASSWORD }} -DPARTIELS_BUILD_TAG="${{ env.tag_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
+      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.tag_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
     - name: Test
