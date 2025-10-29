@@ -51,6 +51,37 @@ Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), 
 
 > ⚠️ Some Vamp plugins may not support the same configurations and may have other restrictions.
 
+## Releases
+
+Partiels uses GitHub Actions for continuous integration and automated releases. Releases can be created in two ways:
+
+### Automatic Release (Tag-based)
+
+When a new tag is pushed (e.g., `v2.1.0`), the CI workflow automatically:
+- Builds the project in Release mode
+- Creates a draft release with the tag name
+- Uploads all platform-specific installers and documentation
+
+```bash
+git tag v2.1.0
+git push origin v2.1.0
+```
+
+### Manual Release (Workflow Dispatch)
+
+You can also manually trigger a release build from the GitHub Actions UI:
+
+1. Go to the [Actions tab](https://github.com/Ircam-Partiels/Partiels/actions/workflows/ci.yml)
+2. Click "Run workflow"
+3. Configure the workflow inputs:
+   - **Create a release**: Enable to create a GitHub release
+   - **Version name**: Specify the version (e.g., `v2.1.0`)
+   - **Build type**: Choose `Release` or `Debug`
+
+This allows creating releases without pushing tags and provides flexibility for testing builds.
+
+> 💡 The CI workflow also automatically detects `[debug]` in commit messages to build in Debug mode for regular commits.
+
 ## Compilation
 
 The compilation system is based on [CMake](https://cmake.org/). On macOS, you can use the XCode generator with the command `cmake -G Xcode`. On Windows, you can use the Visual Studio generator with the command `cmake -G "Visual Studio 17 2022"`. On Linux, you can use the Makefile or Ninja generators with the commands `cmake -G "Unix Makefiles"` or `cmake -G Ninja`, using Clang or GCC as the compiler.
