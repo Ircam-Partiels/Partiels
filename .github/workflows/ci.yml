@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
       version_name:
-        description: 'Version name for the release (e.g., v2.1.0)'
+        description: 'Version name for the release (e.g., 2.1.0-rc1)'
         required: false
         type: string
         default: ''
