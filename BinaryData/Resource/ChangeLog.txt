@@ -1,3 +1,15 @@
+
+- Fix: Removed Windows codesigning due to expired certificate
+- Fix: Corrected case typo in the View menu
+- Fix: Corrected offset in image size preset selection in export panel
+- Fix: Corrected amplitude calculation of the embedded FFT spectrogram
+- Imp: Updated actions/setup-node from v5 to v6
+- Imp: Updated actions/upload-artifact from v4.6.2 to v5.0.0
+- Add: Added workflow inputs for manual release with GitHub Actions
+- Imp: Fixed typos and improved documentation/instructions
+
+v2.2.0
+
 - Add: User-editable description property for documents
 - Add: Option to apply extra thresholds when exporting to text files
 - Add: Extra threshold properties in the group properties panel
