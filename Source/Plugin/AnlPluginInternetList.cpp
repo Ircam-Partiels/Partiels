@@ -259,12 +259,65 @@ PluginList::InternetPluginManager::~InternetPluginManager()
 
 void PluginList::InternetPluginManager::downloadPluginList(std::function<void(bool)> callback)
 {
-    // For now, just load from cache. Downloading could be implemented later
-    // as a separate manual action triggered by the user.
-    if(callback)
+    if(mIsDownloading.exchange(true))
     {
-        callback(!mPluginList.empty());
+        // Already downloading
+        if(callback)
+        {
+            callback(false);
+        }
+        return;
     }
+
+    downloadPluginIndex([this, callback](bool success, juce::StringArray rdfUrls)
+                        {
+                            if(!success || rdfUrls.isEmpty())
+                            {
+                                mIsDownloading = false;
+                                if(callback)
+                                {
+                                    callback(false);
+                                }
+                                return;
+                            }
+
+                            // Download each RDF file sequentially
+                            std::vector<Plugin::InternetPluginInfo> allPlugins;
+                            std::atomic<int> remaining{static_cast<int>(rdfUrls.size())};
+                            std::atomic<bool> hasErrors{false};
+
+                            for(auto const& rdfUrl : rdfUrls)
+                            {
+                                downloadRdfFile(rdfUrl, [this, &allPlugins, &remaining, &hasErrors, callback](bool rdfSuccess, juce::String content)
+                                                {
+                                                    if(rdfSuccess && content.isNotEmpty())
+                                                    {
+                                                        auto plugins = RdfParser::parseRdfContent(content);
+                                                        if(!plugins.empty())
+                                                        {
+                                                            // Thread-safe insertion
+                                                            for(auto const& plugin : plugins)
+                                                            {
+                                                                mPluginList.push_back(plugin);
+                                                            }
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        hasErrors = true;
+                                                    }
+
+                                                    if(--remaining == 0)
+                                                    {
+                                                        mIsDownloading = false;
+                                                        if(callback)
+                                                        {
+                                                            callback(!mPluginList.empty());
+                                                        }
+                                                    }
+                                                });
+                            }
+                        });
 }
 
 std::vector<Plugin::InternetPluginInfo> const& PluginList::InternetPluginManager::getPluginList() const
@@ -317,16 +370,55 @@ std::unique_ptr<juce::XmlElement> PluginList::InternetPluginManager::toXml() con
 
 void PluginList::InternetPluginManager::downloadPluginIndex(std::function<void(bool, juce::StringArray)> callback)
 {
-    // Placeholder for future implementation
-    // Would download from https://www.vamp-plugins.org/rdf/plugins/index.txt
-    callback(false, {});
+    juce::URL indexUrl("https://www.vamp-plugins.org/rdf/plugins/index.txt");
+
+    auto stream = indexUrl.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(5000));
+
+    if(stream == nullptr)
+    {
+        callback(false, {});
+        return;
+    }
+
+    juce::String content = stream->readEntireStreamAsString();
+
+    if(content.isEmpty())
+    {
+        callback(false, {});
+        return;
+    }
+
+    // Parse the index file - each line is a URL to an RDF file
+    juce::StringArray rdfUrls;
+    juce::StringArray lines;
+    lines.addLines(content);
+
+    for(auto const& line : lines)
+    {
+        auto trimmedLine = line.trim();
+        if(trimmedLine.isNotEmpty() && !trimmedLine.startsWith("#"))
+        {
+            rdfUrls.add(trimmedLine);
+        }
+    }
+
+    callback(true, rdfUrls);
 }
 
 void PluginList::InternetPluginManager::downloadRdfFile(juce::String const& url, std::function<void(bool, juce::String)> callback)
 {
-    juce::ignoreUnused(url);
-    // Placeholder for future implementation
-    callback(false, "");
+    juce::URL rdfUrl(url);
+
+    auto stream = rdfUrl.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(5000));
+
+    if(stream == nullptr)
+    {
+        callback(false, "");
+        return;
+    }
+
+    juce::String content = stream->readEntireStreamAsString();
+    callback(!content.isEmpty(), content);
 }
 
 ANALYSE_FILE_END
