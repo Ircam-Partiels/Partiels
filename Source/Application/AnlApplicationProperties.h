@@ -30,6 +30,7 @@ namespace Application
               Application = 0
             , PluginList = 1
             , AudioSetup = 2
+            , InternetPlugins = 3
         };
         // clang-format on
 

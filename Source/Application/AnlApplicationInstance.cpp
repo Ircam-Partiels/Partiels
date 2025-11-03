@@ -71,6 +71,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mPluginListScanner = std::make_unique<PluginList::Scanner>();
     AppQuitIfInvalidPointer(mPluginListScanner);
 
+    mInternetPluginManager = std::make_unique<PluginList::InternetPluginManager>();
+    AppQuitIfInvalidPointer(mInternetPluginManager);
+
     mOscSender = std::make_unique<Osc::Sender>(mApplicationAccessor->getAcsr<AcsrType::osc>());
     AppQuitIfInvalidPointer(mOscSender);
 
@@ -602,6 +605,11 @@ PluginList::Accessor& Application::Instance::getPluginListAccessor()
 PluginList::Scanner& Application::Instance::getPluginListScanner()
 {
     return *mPluginListScanner.get();
+}
+
+PluginList::InternetPluginManager& Application::Instance::getInternetPluginManager()
+{
+    return *mInternetPluginManager.get();
 }
 
 Application::Osc::Sender& Application::Instance::getOscSender()

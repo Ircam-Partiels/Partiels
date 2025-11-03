@@ -10,6 +10,7 @@
 #include "AnlApplicationWindow.h"
 
 #include "../Document/AnlDocumentDirector.h"
+#include "../Plugin/AnlPluginInternetList.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -55,6 +56,7 @@ namespace Application
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
+        PluginList::InternetPluginManager& getInternetPluginManager();
         Osc::Sender& getOscSender();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
@@ -93,6 +95,7 @@ namespace Application
 
         std::unique_ptr<PluginList::Accessor> mPluginListAccessor;
         std::unique_ptr<PluginList::Scanner> mPluginListScanner;
+        std::unique_ptr<PluginList::InternetPluginManager> mInternetPluginManager;
         std::unique_ptr<Osc::Sender> mOscSender;
         std::unique_ptr<Document::Accessor> mDocumentAccessor;
         std::unique_ptr<Document::Director> mDocumentDirector;

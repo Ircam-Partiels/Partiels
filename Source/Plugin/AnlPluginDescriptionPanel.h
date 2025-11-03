@@ -15,7 +15,7 @@ namespace Plugin
         DescriptionPanel();
         ~DescriptionPanel() override = default;
 
-        void setDescription(Description const& description);
+        void setDescription(Description const& description, juce::String const& downloadUrl = juce::String());
 
         // juce::Component
         void resized() override;
@@ -28,6 +28,8 @@ namespace Plugin
         PropertyLabel mPropertyPluginVersion{juce::translate("Version"), juce::translate("The version of the plugin")};
         PropertyLabel mPropertyPluginCategory{juce::translate("Category"), juce::translate("The category of the plugin")};
         juce::TextEditor mPropertyPluginDetails;
+        juce::TextButton mDownloadButton{juce::translate("Download")};
+        juce::String mCurrentDownloadUrl;
     };
 } // namespace Plugin
 

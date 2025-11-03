@@ -25,6 +25,7 @@ Application::Properties::Properties()
     loadFromFile(PropertyType::Application);
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
+    loadFromFile(PropertyType::InternetPlugins);
 
     Instance::get().getApplicationAccessor().addListener(mApplicationListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
@@ -33,6 +34,15 @@ Application::Properties::Properties()
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
     saveToFile(PropertyType::AudioSetup);
+    
+    // Start downloading internet plugin list
+    Instance::get().getInternetPluginManager().downloadPluginList([this](bool success)
+    {
+        if(success)
+        {
+            saveToFile(PropertyType::InternetPlugins);
+        }
+    });
 }
 
 Application::Properties::~Properties()
@@ -97,6 +107,15 @@ void Application::Properties::saveToFile(PropertyType type)
             }
         }
         break;
+        case PropertyType::InternetPlugins:
+        {
+            auto xml = Instance::get().getInternetPluginManager().toXml();
+            if(xml != nullptr)
+            {
+                writeTo(std::move(xml), "internetplugins.settings");
+            }
+        }
+        break;
     }
 }
 
@@ -151,6 +170,15 @@ void Application::Properties::loadFromFile(PropertyType type)
             if(error.isNotEmpty())
             {
                 askToRestoreDefaultAudioSettings(error);
+            }
+        }
+        break;
+        case PropertyType::InternetPlugins:
+        {
+            auto xml = juce::parseXML(getFile("internetplugins.settings"));
+            if(xml != nullptr)
+            {
+                Instance::get().getInternetPluginManager().loadFromXml(*xml);
             }
         }
         break;

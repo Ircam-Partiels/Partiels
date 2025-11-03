@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlPluginDescriptionPanel.h"
+#include "AnlPluginInternetList.h"
 #include "AnlPluginListModel.h"
 #include "AnlPluginListScanner.h"
 
@@ -44,7 +45,9 @@ namespace PluginList
         Accessor::Listener mListener{"PluginList::Table"};
         Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
+        std::vector<Plugin::InternetPluginInfo> mInternetPlugins;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
+        std::vector<Plugin::InternetPluginInfo> mFilteredInternetPlugins;
         juce::String mLookingWord;
 
         Misc::Icon mSearchIcon;
