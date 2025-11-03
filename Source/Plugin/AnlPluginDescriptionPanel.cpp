@@ -46,7 +46,7 @@ void Plugin::DescriptionPanel::resized()
     setBounds(mPropertyPluginVersion);
     setBounds(mPropertyPluginCategory);
     setBounds(mPropertyPluginDetails);
-    
+
     if(mDownloadButton.isVisible())
     {
         auto buttonBounds = bounds.removeFromTop(30).reduced(4);
@@ -70,11 +70,11 @@ void Plugin::DescriptionPanel::setDescription(Description const& description, ju
     mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, juce::NotificationType::dontSendNotification);
     auto const details = juce::String(description.output.description) + (description.output.description.empty() ? "" : "\n") + description.details;
     mPropertyPluginDetails.setText(details, juce::NotificationType::dontSendNotification);
-    
+
     // Show download button for internet plugins
     mCurrentDownloadUrl = downloadUrl;
     mDownloadButton.setVisible(downloadUrl.isNotEmpty());
-    
+
     resized();
 }
 

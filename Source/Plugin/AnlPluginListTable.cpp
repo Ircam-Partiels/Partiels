@@ -113,7 +113,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     };
     mReceiver.onSignal(mAccessor, SignalType::rescan, {});
     mAccessor.addReceiver(mReceiver);
-    
+
     // Load internet plugins from manager
     auto& internetManager = Application::Instance::get().getInternetPluginManager();
     mInternetPlugins = internetManager.getPluginList();
@@ -194,9 +194,9 @@ void PluginList::Table::updateContent()
 {
     mFilteredList.clear();
     mFilteredInternetPlugins.clear();
-    
+
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
-    
+
     // Filter local plugins
     for(auto const& plugin : mList)
     {
@@ -210,7 +210,7 @@ void PluginList::Table::updateContent()
             }
         }
     }
-    
+
     // Filter internet plugins that are NOT installed locally
     for(auto const& internetPlugin : mInternetPlugins)
     {
@@ -240,12 +240,12 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
     const auto defaultColour = mPluginTable.findColour(juce::ListBox::backgroundColourId);
     const auto selectedColour = defaultColour.interpolatedWith(mPluginTable.findColour(juce::ListBox::textColourId), 0.5f);
     g.fillAll(rowIsSelected ? selectedColour : defaultColour);
-    
+
     auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
-    
+
     juce::String text;
     bool isInternetPlugin = false;
-    
+
     if(rowNumber < totalLocalPlugins)
     {
         // Local plugin
@@ -265,7 +265,7 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
     {
         return;
     }
-    
+
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
     g.setColour(isInternetPlugin ? defaultTextColour.withAlpha(0.7f) : defaultTextColour);
     g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
@@ -286,7 +286,7 @@ void PluginList::Table::selectedRowsChanged(int lastRowSelected)
 {
     auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
     auto const totalRows = static_cast<int>(mFilteredList.size() + mFilteredInternetPlugins.size());
-    
+
     if(lastRowSelected < 0 || lastRowSelected >= totalRows)
     {
         mDescriptionPanel.setDescription({});
@@ -301,13 +301,13 @@ void PluginList::Table::selectedRowsChanged(int lastRowSelected)
         // Internet plugin - create a description from the internet plugin info
         auto const index = static_cast<size_t>(lastRowSelected - totalLocalPlugins);
         auto const& internetPlugin = mFilteredInternetPlugins[index];
-        
+
         Plugin::Description desc;
         desc.name = internetPlugin.name;
         desc.maker = internetPlugin.maker;
         desc.details = internetPlugin.libraryDescription + "\n\n" + internetPlugin.pluginDescription;
         desc.output.description = "Available for download";
-        
+
         mDescriptionPanel.setDescription(desc, internetPlugin.downloadUrl);
     }
 }
@@ -321,7 +321,7 @@ juce::String PluginList::Table::getTooltipForRow(int rowNumber)
 {
     auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
     auto const totalRows = static_cast<int>(mFilteredList.size() + mFilteredInternetPlugins.size());
-    
+
     if(rowNumber < 0 || rowNumber >= totalRows)
     {
         return "";

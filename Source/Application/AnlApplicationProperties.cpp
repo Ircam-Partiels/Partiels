@@ -34,15 +34,15 @@ Application::Properties::Properties()
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
     saveToFile(PropertyType::AudioSetup);
-    
+
     // Start downloading internet plugin list
     Instance::get().getInternetPluginManager().downloadPluginList([this](bool success)
-    {
-        if(success)
-        {
-            saveToFile(PropertyType::InternetPlugins);
-        }
-    });
+                                                                  {
+                                                                      if(success)
+                                                                      {
+                                                                          saveToFile(PropertyType::InternetPlugins);
+                                                                      }
+                                                                  });
 }
 
 Application::Properties::~Properties()

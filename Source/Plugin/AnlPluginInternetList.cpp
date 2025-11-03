@@ -52,7 +52,7 @@ auto XmlParser::fromXml<Plugin::InternetPluginInfo>(juce::XmlElement const& xml,
     {
         return defaultValue;
     }
-    
+
     Plugin::InternetPluginInfo info;
     info.key.identifier = element->getStringAttribute("identifier", "").toStdString();
     info.key.feature = element->getStringAttribute("feature", "").toStdString();
@@ -69,14 +69,14 @@ auto XmlParser::fromXml<Plugin::InternetPluginInfo>(juce::XmlElement const& xml,
 std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(juce::String const& rdfContent)
 {
     std::vector<Plugin::InternetPluginInfo> plugins;
-    
+
     // Simple RDF parsing using string matching
     // This is a basic implementation - a full RDF parser would be more robust
-    
+
     // Extract library information
     juce::String libraryDescription;
     juce::String downloadPage;
-    
+
     // Find library dc:description
     auto libDescStart = rdfContent.indexOf("dc:description>");
     if(libDescStart >= 0)
@@ -88,7 +88,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
             libraryDescription = rdfContent.substring(libDescStart, libDescEnd).trim();
         }
     }
-    
+
     // Find download page
     auto downloadStart = rdfContent.indexOf("doap:download-page");
     if(downloadStart >= 0)
@@ -104,7 +104,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
             }
         }
     }
-    
+
     // Find all plugins in the RDF
     int searchStart = 0;
     while(true)
@@ -112,17 +112,17 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
         auto pluginStart = rdfContent.indexOf(searchStart, "vamp:Plugin");
         if(pluginStart < 0)
             break;
-            
+
         // Find the end of this plugin definition
         auto pluginEnd = rdfContent.indexOf(pluginStart, "</vamp:Plugin>");
         if(pluginEnd < 0)
             break;
-            
+
         pluginEnd += 14; // include the closing tag
         juce::String pluginBlock = rdfContent.substring(pluginStart, pluginEnd);
-        
+
         Plugin::InternetPluginInfo info;
-        
+
         // Extract plugin identifier (library:feature)
         auto identifierStart = pluginBlock.indexOf("rdf:about=\"");
         if(identifierStart >= 0)
@@ -142,7 +142,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 }
             }
         }
-        
+
         // Extract dc:title (plugin name)
         auto titleStart = pluginBlock.indexOf("dc:title>");
         if(titleStart >= 0)
@@ -154,7 +154,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 info.name = pluginBlock.substring(titleStart, titleEnd).trim();
             }
         }
-        
+
         // Extract dc:description (plugin description)
         auto descStart = pluginBlock.indexOf("dc:description>");
         if(descStart >= 0)
@@ -166,7 +166,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 info.pluginDescription = pluginBlock.substring(descStart, descEnd).trim();
             }
         }
-        
+
         // Extract foaf:maker
         auto makerStart = pluginBlock.indexOf("foaf:name>");
         if(makerStart >= 0)
@@ -178,7 +178,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 info.maker = pluginBlock.substring(makerStart, makerEnd).trim();
             }
         }
-        
+
         // Extract API version
         juce::String apiVersion;
         auto apiStart = pluginBlock.indexOf("vamp:vamp_API_version");
@@ -195,7 +195,7 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 }
             }
         }
-        
+
         // Extract binary platform
         juce::String binaryPlatform;
         auto binaryStart = pluginBlock.indexOf("vamp:has_binary");
@@ -207,22 +207,22 @@ std::vector<Plugin::InternetPluginInfo> PluginList::RdfParser::parseRdfContent(j
                 binaryPlatform = pluginBlock.substring(binaryStart, binaryEnd);
             }
         }
-        
+
         info.libraryDescription = libraryDescription;
         info.downloadUrl = downloadPage;
         info.isCompatible = isPluginCompatible(apiVersion, binaryPlatform);
-        
+
         if(info.key.identifier.empty() || info.key.feature.empty())
         {
             // Skip plugins without valid identifiers
             searchStart = pluginEnd;
             continue;
         }
-        
+
         plugins.push_back(info);
         searchStart = pluginEnd;
     }
-    
+
     return plugins;
 }
 
@@ -233,7 +233,7 @@ bool PluginList::RdfParser::isPluginCompatible(juce::String const& apiVersion, j
     {
         return false;
     }
-    
+
     // Check platform compatibility
 #if JUCE_WINDOWS
     juce::String requiredPlatform = "win";
@@ -244,7 +244,7 @@ bool PluginList::RdfParser::isPluginCompatible(juce::String const& apiVersion, j
 #else
     return false;
 #endif
-    
+
     return binaryPlatform.containsIgnoreCase(requiredPlatform);
 }
 
@@ -275,7 +275,7 @@ std::vector<Plugin::InternetPluginInfo> const& PluginList::InternetPluginManager
 void PluginList::InternetPluginManager::loadFromXml(juce::XmlElement const& xml)
 {
     mPluginList.clear();
-    
+
     for(auto* pluginElement : xml.getChildWithTagNameIterator("InternetPlugin"))
     {
         Plugin::InternetPluginInfo info;
@@ -287,7 +287,7 @@ void PluginList::InternetPluginManager::loadFromXml(juce::XmlElement const& xml)
         info.maker = pluginElement->getStringAttribute("maker", "");
         info.downloadUrl = pluginElement->getStringAttribute("downloadUrl", "");
         info.isCompatible = pluginElement->getBoolAttribute("isCompatible", false);
-        
+
         if(!info.key.identifier.empty() && !info.key.feature.empty())
         {
             mPluginList.push_back(info);
@@ -298,7 +298,7 @@ void PluginList::InternetPluginManager::loadFromXml(juce::XmlElement const& xml)
 std::unique_ptr<juce::XmlElement> PluginList::InternetPluginManager::toXml() const
 {
     auto xml = std::make_unique<juce::XmlElement>("InternetPlugins");
-    
+
     for(auto const& info : mPluginList)
     {
         auto* pluginElement = xml->createNewChildElement("InternetPlugin");
@@ -311,7 +311,7 @@ std::unique_ptr<juce::XmlElement> PluginList::InternetPluginManager::toXml() con
         pluginElement->setAttribute("downloadUrl", info.downloadUrl);
         pluginElement->setAttribute("isCompatible", info.isCompatible);
     }
-    
+
     return xml;
 }
 
