@@ -3,7 +3,13 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::Accessor::Accessor()
-: Accessor(AttrContainer({{true}, {QuarantineMode::force}, {getDefaultSearchPath()}}))
+: Accessor(AttrContainer({// clang-format off
+      {true}
+    , {QuarantineMode::force}
+    , {getDefaultSearchPath()}
+    , {}
+}))
+// clang-format on
 {
 }
 
