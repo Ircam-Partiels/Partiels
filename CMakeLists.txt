@@ -88,7 +88,7 @@ juce_add_gui_app(Partiels
     NEEDS_STORE_KIT                     FALSE
     HARDENED_RUNTIME_ENABLED            TRUE
     HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.disable-library-validation"
-    PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string></dict></plist>"
+    PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string><key>NSAppTransportSecurity</key><dict><key>NSExceptionDomains</key><dict><key>vamp-plugins.org</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/><key>NSIncludesSubdomains</key><true/><key>NSExceptionRequiresForwardSecrecy</key><false/><key>NSRequiresCertificateTransparency</key><false/></dict></dict></dict></dict></plist>"
     )
 
 juce_generate_juce_header(Partiels)
