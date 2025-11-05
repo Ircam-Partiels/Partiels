@@ -194,14 +194,15 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 }
                 mPropertyPreset.entry.addItemList(items, 3);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Load...", items.size() + 3);
-                mPropertyPreset.entry.addItem("Save...", items.size() + 4);
+                auto const baseId = static_cast<int>(programs.size()) + 3;
+                mPropertyPreset.entry.addItem("Load...", baseId);
+                mPropertyPreset.entry.addItem("Save...", baseId + 1);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Save as Default", items.size() + 5);
+                mPropertyPreset.entry.addItem("Save as Default", baseId + 2);
                 auto const& key = acsr.getAttr<AttrType::key>();
                 auto const hasDefaultPreset = Application::Properties::getDefaultPreset(key).has_value();
-                mPropertyPreset.entry.addItem("Delete Default", items.size() + 6);
-                mPropertyPreset.entry.setItemEnabled(items.size() + 6, hasDefaultPreset);
+                mPropertyPreset.entry.addItem("Delete Default", baseId + 3);
+                mPropertyPreset.entry.setItemEnabled(baseId + 3, hasDefaultPreset);
                 resized();
                 [[fallthrough]];
             }
