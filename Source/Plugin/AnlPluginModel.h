@@ -200,6 +200,37 @@ namespace Plugin
     {
         return !(lhd == rhd);
     }
+
+    //! @brief Information about an internet-available plugin
+    struct WebReference
+    {
+        juce::String identifier;         //!< The plugin identifier
+        juce::String name;               //!< The name of the plugin
+        juce::String libraryDescription; //!< Library description
+        juce::String pluginDescription;  //!< Plugin description
+        juce::String maker;              //!< The creator of the plugin
+        juce::String downloadUrl;        //!< The download link
+        bool isCompatible{true};         //!< Whether the plugin is compatible with this system
+
+        inline bool operator==(WebReference const& rhd) const noexcept
+        {
+            return identifier == rhd.identifier &&
+                   name == rhd.name &&
+                   libraryDescription == rhd.libraryDescription &&
+                   pluginDescription == rhd.pluginDescription &&
+                   maker == rhd.maker &&
+                   downloadUrl == rhd.downloadUrl &&
+                   isCompatible == rhd.isCompatible;
+        }
+
+        inline bool operator!=(WebReference const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+
+    void to_json(nlohmann::json& j, WebReference const& info);
+    void from_json(nlohmann::json const& j, WebReference& info);
 } // namespace Plugin
 
 namespace XmlParser
@@ -245,6 +276,12 @@ namespace XmlParser
     template <>
     auto fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::State const& defaultValue)
         -> Plugin::State;
+
+    template <>
+    void toXml<Plugin::WebReference>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::WebReference const& value);
+
+    template <>
+    auto fromXml<Plugin::WebReference>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::WebReference const& defaultValue) -> Plugin::WebReference;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
