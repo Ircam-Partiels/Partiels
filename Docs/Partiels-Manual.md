@@ -666,10 +666,10 @@ Depending on the plugin characteristics, the section provides access to the defa
 The section provides access to the plugin-specific parameters that are used to perform the analysis. According to their specifications, parameter values can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been modified, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking if you wish to continue (you can always cancel the operation to recover the previous analysis results).
 
 <p align="center">
-<img src="Images/section-track-properties.4-v1.0.5.png" width="196"/>
+<img src="Images/section-track-properties.4-v2.3.0.png" width="196"/>
 </p>
 
-The presets menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters to a file on your operating system and load this file to restore the state (the file can be used in any other track using the same plugin).
+The presets menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters to a file on your operating system and load this file to restore the state (the file can be used in any other track using the same plugin). You can also save the current state as the default preset for the plugin. This way, when you add a new track with this plugin, this preset will be used directly. Alternatively, you can delete the default preset to use the default state provided by the plugin.
 
 #### 9.1.3. State
 
