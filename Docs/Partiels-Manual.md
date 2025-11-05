@@ -200,7 +200,7 @@ Tracks can be created in two ways, from the analysis of a Vamp plugin or from a 
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface. 
+When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface, followed by the plugins available on internet as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/). 
 
 <p><img src="Images/section-add-new-plugin-tracks.1-v2.0.3.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
@@ -208,9 +208,9 @@ You can also search for specific plugins by clicking on the text filter entry (*
 
 > 💡 **Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plugins.
 
-Information on the selected plugin (name, feature, maker, version, category, description) is displayed in the section at the bottom of the panel (**P3**). 
+Information on the selected plugin is displayed in the section at the bottom of the panel (**P3**). The installed plugins display their name, feature, maker, version, category, and description. The plugins available on internet display their name, maker, description and a button to access the download website.
 
-You can select one or more plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+You can select one or more installed plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
 
 > For further information about the plugin management, please refer to the [Plug-ins settings](#13-plugins-settings) section.
 
@@ -916,6 +916,8 @@ In the upper section of the Plugin Settings window, each item in the list corres
 - Use environment variable: Enable or disable the use of the `VAMP_PATH` environment variable to define the extra folders. On MacOS, the option is accessible by clicking on the `Option` button (**P5**). On Windows and Linux, a toggle button replaces the button.
 
 - Quarantine management: Control the quarantine management when plugins are not notarized. Either "Keep the default system mechanism", the system will probably suggest you delete the plugins in question. Or "Attempt to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or "Ignore quarantined libraries", the application will ignore the plugins.
+
+> 💡 **Tip**: You can view the list of the plugins available on internet as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/) via the plugin list panel as explained in this [section](#41-analysis-tracks) .
 
 <div style="page-break-after: always;"></div>
 
