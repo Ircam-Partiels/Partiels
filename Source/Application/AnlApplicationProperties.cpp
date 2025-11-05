@@ -255,7 +255,7 @@ void Application::Properties::loadDefaultPresetsFromFile()
     {
         auto& presets = getDefaultPresets();
         presets.clear();
-        
+
         for(auto* presetXml : xml->getChildIterator())
         {
             if(presetXml->hasTagName("Preset"))

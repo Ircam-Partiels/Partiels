@@ -19,7 +19,7 @@ namespace Application
 
         static void askToRestoreDefaultAudioSettings(juce::String const& error);
         static juce::File getFile(juce::StringRef const& fileName);
-        
+
         static std::optional<Plugin::State> getDefaultPreset(Plugin::Key const& key);
         static void setDefaultPreset(Plugin::Key const& key, Plugin::State const& state);
         static void removeDefaultPreset(Plugin::Key const& key);
@@ -40,7 +40,7 @@ namespace Application
 
         void saveToFile(PropertyType type);
         void loadFromFile(PropertyType type);
-        
+
         static std::map<Plugin::Key, Plugin::State>& getDefaultPresets();
         static void saveDefaultPresetsToFile();
         static void loadDefaultPresetsFromFile();

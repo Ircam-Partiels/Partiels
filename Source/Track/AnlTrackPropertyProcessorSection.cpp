@@ -600,13 +600,13 @@ void Track::PropertyProcessorSection::saveAsDefaultPreset()
 {
     auto const& key = mAccessor.getAttr<AttrType::key>();
     auto const& state = mAccessor.getAttr<AttrType::state>();
-    
+
     if(key.identifier.empty() || key.feature.empty())
     {
         updateState();
         return;
     }
-    
+
     Application::Properties::setDefaultPreset(key, state);
     updateState();
 }
@@ -614,13 +614,13 @@ void Track::PropertyProcessorSection::saveAsDefaultPreset()
 void Track::PropertyProcessorSection::deleteDefaultPreset()
 {
     auto const& key = mAccessor.getAttr<AttrType::key>();
-    
+
     if(key.identifier.empty() || key.feature.empty())
     {
         updateState();
         return;
     }
-    
+
     Application::Properties::removeDefaultPreset(key);
     updateState();
 }
