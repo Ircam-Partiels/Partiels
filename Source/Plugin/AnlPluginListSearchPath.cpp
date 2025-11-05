@@ -151,6 +151,8 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
                 updateButtonsStates();
             }
             break;
+            case AttrType::webReferences:
+                break;
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);
