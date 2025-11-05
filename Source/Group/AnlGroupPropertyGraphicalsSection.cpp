@@ -1000,7 +1000,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto const srange = Track::Tools::getExtraRange(trackAcsr, outputIndex);
         auto const start = srange.has_value() ? static_cast<float>(srange.value().getStart()) : 0.0f;
         auto const end = srange.has_value() ? static_cast<float>(srange.value().getEnd()) : 0.0f;
-        auto const range = juce::Range<float>(start, end);
+        auto const range = juce::Range<float>(start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f));
         auto const tooltip = Track::Tools::getExtraTooltip(trackAcsr, outputIndex);
         auto const name = juce::translate("NAME Threshold").replace("NAME", it->name);
         auto const step = it->isQuantized ? it->quantizeStep : 0.0f;
