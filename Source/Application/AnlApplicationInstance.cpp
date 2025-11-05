@@ -81,6 +81,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     AppQuitIfInvalidPointer(mDocumentDirector);
     mDocumentDirector->setBackupDirectory(getBackupFile().getSiblingFile("Tracks"));
 
+    mTrackPresetListAccessor = std::make_unique<Track::PresetList::Accessor>();
+    AppQuitIfInvalidPointer(mTrackPresetListAccessor);
+
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
 
@@ -333,6 +336,7 @@ void Application::Instance::shutdown()
     mDocumentFileBased.reset();
     mAudioReader.reset();
     mProperties.reset();
+    mTrackPresetListAccessor.reset();
     mDocumentDirector.reset();
     mDocumentAccessor.reset();
     mOscSender.reset();
@@ -617,6 +621,11 @@ Document::Accessor& Application::Instance::getDocumentAccessor()
 Document::Director& Application::Instance::getDocumentDirector()
 {
     return *mDocumentDirector.get();
+}
+
+Track::PresetList::Accessor& Application::Instance::getTrackPresetListAccessor()
+{
+    return *mTrackPresetListAccessor.get();
 }
 
 Document::FileBased& Application::Instance::getDocumentFileBased()
