@@ -1,4 +1,5 @@
 #include "AnlTrackPropertyProcessorSection.h"
+#include "../Application/AnlApplicationProperties.h"
 #include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
@@ -105,6 +106,14 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                               {
                                   savePreset();
                               }
+                              else if(index - 2_z == programs.size() + 2)
+                              {
+                                  saveAsDefaultPreset();
+                              }
+                              else if(index - 2_z == programs.size() + 3)
+                              {
+                                  deleteDefaultPreset();
+                              }
                               else
                               {
                                   changePreset(index - 2_z);
@@ -187,6 +196,12 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 mPropertyPreset.entry.addSeparator();
                 mPropertyPreset.entry.addItem("Load...", items.size() + 3);
                 mPropertyPreset.entry.addItem("Save...", items.size() + 4);
+                mPropertyPreset.entry.addSeparator();
+                mPropertyPreset.entry.addItem("Save as Default", items.size() + 5);
+                auto const& key = acsr.getAttr<AttrType::key>();
+                auto const hasDefaultPreset = Application::Properties::getDefaultPreset(key).has_value();
+                mPropertyPreset.entry.addItem("Delete Default", items.size() + 6);
+                mPropertyPreset.entry.setItemEnabled(items.size() + 6, hasDefaultPreset);
                 resized();
                 [[fallthrough]];
             }
@@ -579,6 +594,35 @@ void Track::PropertyProcessorSection::changePreset(size_t index)
                              mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track preset properties"));
                          });
+}
+
+void Track::PropertyProcessorSection::saveAsDefaultPreset()
+{
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const& state = mAccessor.getAttr<AttrType::state>();
+    
+    if(key.identifier.empty() || key.feature.empty())
+    {
+        updateState();
+        return;
+    }
+    
+    Application::Properties::setDefaultPreset(key, state);
+    updateState();
+}
+
+void Track::PropertyProcessorSection::deleteDefaultPreset()
+{
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    
+    if(key.identifier.empty() || key.feature.empty())
+    {
+        updateState();
+        return;
+    }
+    
+    Application::Properties::removeDefaultPreset(key);
+    updateState();
 }
 
 void Track::PropertyProcessorSection::updateState()

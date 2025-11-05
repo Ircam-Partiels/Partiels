@@ -97,6 +97,11 @@ void Application::Properties::saveToFile(PropertyType type)
             }
         }
         break;
+        case PropertyType::DefaultPresets:
+        {
+            // Default presets are saved by saveDefaultPresetsToFile()
+        }
+        break;
     }
 }
 
@@ -154,6 +159,11 @@ void Application::Properties::loadFromFile(PropertyType type)
             }
         }
         break;
+        case PropertyType::DefaultPresets:
+        {
+            // Default presets are loaded by loadDefaultPresetsFromFile()
+        }
+        break;
     }
 }
 
@@ -174,6 +184,91 @@ void Application::Properties::askToRestoreDefaultAudioSettings(juce::String cons
                                          audioDeviceManager.initialiseWithDefaultDevices(0, sMaxIONumber);
                                      }
                                  });
+}
+
+std::map<Plugin::Key, Plugin::State>& Application::Properties::getDefaultPresets()
+{
+    static std::map<Plugin::Key, Plugin::State> defaultPresets;
+    static bool initialized = false;
+    if(!initialized)
+    {
+        loadDefaultPresetsFromFile();
+        initialized = true;
+    }
+    return defaultPresets;
+}
+
+std::optional<Plugin::State> Application::Properties::getDefaultPreset(Plugin::Key const& key)
+{
+    auto const& presets = getDefaultPresets();
+    auto const it = presets.find(key);
+    if(it != presets.end())
+    {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void Application::Properties::setDefaultPreset(Plugin::Key const& key, Plugin::State const& state)
+{
+    auto& presets = getDefaultPresets();
+    presets[key] = state;
+    saveDefaultPresetsToFile();
+}
+
+void Application::Properties::removeDefaultPreset(Plugin::Key const& key)
+{
+    auto& presets = getDefaultPresets();
+    presets.erase(key);
+    saveDefaultPresetsToFile();
+}
+
+void Application::Properties::saveDefaultPresetsToFile()
+{
+    auto xml = std::make_unique<juce::XmlElement>("DefaultPresets");
+    anlStrongAssert(xml != nullptr);
+    if(xml != nullptr)
+    {
+        auto const& presets = getDefaultPresets();
+        for(auto const& [key, state] : presets)
+        {
+            auto presetXml = std::make_unique<juce::XmlElement>("Preset");
+            anlStrongAssert(presetXml != nullptr);
+            if(presetXml != nullptr)
+            {
+                XmlParser::toXml(*presetXml, "key", key);
+                XmlParser::toXml(*presetXml, "state", state);
+                xml->addChildElement(presetXml.release());
+            }
+        }
+        if(!xml->writeTo(getFile("presets.settings")))
+        {
+            anlWeakAssert(false && "cannot write to presets file");
+        }
+    }
+}
+
+void Application::Properties::loadDefaultPresetsFromFile()
+{
+    auto xml = juce::parseXML(getFile("presets.settings"));
+    if(xml != nullptr && xml->hasTagName("DefaultPresets"))
+    {
+        auto& presets = getDefaultPresets();
+        presets.clear();
+        
+        for(auto* presetXml : xml->getChildIterator())
+        {
+            if(presetXml->hasTagName("Preset"))
+            {
+                auto key = XmlParser::fromXml<Plugin::Key>(*presetXml, "key", Plugin::Key{});
+                auto state = XmlParser::fromXml<Plugin::State>(*presetXml, "state", Plugin::State{});
+                if(!key.identifier.empty() && !key.feature.empty())
+                {
+                    presets[key] = state;
+                }
+            }
+        }
+    }
 }
 
 ANALYSE_FILE_END

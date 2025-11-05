@@ -1,6 +1,7 @@
 #include "AnlApplicationTools.h"
 #include "../Document/AnlDocumentSelection.h"
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationProperties.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -116,6 +117,14 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
 
             trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
             trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+            
+            // Apply default preset if defined
+            auto const defaultPreset = Properties::getDefaultPreset(key);
+            if(defaultPreset.has_value())
+            {
+                trackAcsr.setAttr<Track::AttrType::state>(defaultPreset.value(), NotificationType::synchronous);
+            }
+            
             trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
             auto const colourChart = Instance::getColourChart();

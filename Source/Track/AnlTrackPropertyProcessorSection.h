@@ -27,6 +27,8 @@ namespace Track
         void loadPreset();
         void savePreset();
         void changePreset(size_t index);
+        void saveAsDefaultPreset();
+        void deleteDefaultPreset();
         void updateState();
 
         Director& mDirector;
