@@ -45,6 +45,7 @@ namespace PluginList
         Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
+        std::vector<Plugin::WebReference> mFilteredWebPlugins;
         juce::String mLookingWord;
 
         Misc::Icon mSearchIcon;

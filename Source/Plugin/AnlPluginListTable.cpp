@@ -188,7 +188,11 @@ void PluginList::Table::notifyAddSelectedPlugins()
 void PluginList::Table::updateContent()
 {
     mFilteredList.clear();
+    mFilteredWebPlugins.clear();
+
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
+
+    // Filter local plugins
     for(auto const& plugin : mList)
     {
         auto const& description = plugin.second;
@@ -202,13 +206,30 @@ void PluginList::Table::updateContent()
         }
     }
 
+    // Filter internet plugins that are compatible and NOT installed locally
+    for(auto const& plugin : mAccessor.getAttr<AttrType::webReferences>())
+    {
+        auto const isNotInstalled = std::none_of(mList.cbegin(), mList.cend(), [&](auto const& pair)
+                                                 {
+                                                     return juce::String(pair.first.identifier).startsWith(plugin.identifier);
+                                                 });
+        if(isNotInstalled && plugin.isCompatible)
+        {
+            auto const filterName = (plugin.name + plugin.pluginDescription + plugin.libraryDescription + plugin.maker).removeCharacters(" ");
+            if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
+            {
+                mFilteredWebPlugins.push_back(plugin);
+            }
+        }
+    }
+
     mPluginTable.updateContent();
     mPluginTable.repaint();
 }
 
 int PluginList::Table::getNumRows()
 {
-    return static_cast<int>(mFilteredList.size());
+    return static_cast<int>(mFilteredList.size() + mFilteredWebPlugins.size());
 }
 
 void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
@@ -216,17 +237,34 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
     const auto defaultColour = mPluginTable.findColour(juce::ListBox::backgroundColourId);
     const auto selectedColour = defaultColour.interpolatedWith(mPluginTable.findColour(juce::ListBox::textColourId), 0.5f);
     g.fillAll(rowIsSelected ? selectedColour : defaultColour);
-    if(rowNumber >= static_cast<int>(mFilteredList.size()))
+
+    auto const info = [&]()
     {
-        return;
-    }
-    auto const index = static_cast<size_t>(rowNumber);
-    auto const& description = mFilteredList[index].second;
-    auto const text = description.name + " - " + description.output.name;
+        auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
+        auto const totalPlugins = totalLocalPlugins + static_cast<int>(mFilteredWebPlugins.size());
+        if(rowNumber < totalLocalPlugins) // Local Plugins
+        {
+            auto const index = static_cast<size_t>(rowNumber);
+            auto const& description = mFilteredList.at(index).second;
+            return std::make_tuple(description.name + " - " + description.output.name, false);
+        }
+        else if(rowNumber < totalPlugins) // Web Plugins
+        {
+            static const auto webPluginIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x8c\x90"); // 🌐
+            auto const index = static_cast<size_t>(rowNumber - totalLocalPlugins);
+            auto const& description = mFilteredWebPlugins.at(index);
+            return std::make_tuple(description.name + juce::String(webPluginIndicator), true);
+        }
+        else [[unlikely]]
+        {
+            return std::make_tuple(juce::String(), true);
+        }
+    }();
+
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(defaultTextColour);
+    g.setColour(std::get<1>(info) ? defaultTextColour.withAlpha(0.7f) : defaultTextColour);
     g.setFont(juce::Font(juce::FontOptions(static_cast<float>(height) * 0.7f)));
-    g.drawText(text, 4, 0, width - 6, height, juce::Justification::centredLeft, false);
+    g.drawText(std::get<0>(info), 4, 0, width - 6, height, juce::Justification::centredLeft, false);
 }
 
 void PluginList::Table::returnKeyPressed([[maybe_unused]] int lastRowSelected)
@@ -241,13 +279,20 @@ void PluginList::Table::deleteKeyPressed([[maybe_unused]] int lastRowSelected)
 
 void PluginList::Table::selectedRowsChanged(int lastRowSelected)
 {
-    if(lastRowSelected < 0 || lastRowSelected >= static_cast<int>(mFilteredList.size()))
+    auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
+    auto const totalPlugins = totalLocalPlugins + static_cast<int>(mFilteredWebPlugins.size());
+
+    if(lastRowSelected < 0 || lastRowSelected >= totalPlugins) [[unlikely]]
     {
         mDescriptionPanel.setDescription({});
     }
-    else
+    else if(lastRowSelected < totalLocalPlugins) // Local plugin
     {
         mDescriptionPanel.setDescription(mFilteredList.at(static_cast<size_t>(lastRowSelected)).second);
+    }
+    else // Web Plugin
+    {
+        mDescriptionPanel.setWebReference(mFilteredWebPlugins.at(static_cast<size_t>(lastRowSelected - totalLocalPlugins)));
     }
 }
 
@@ -258,14 +303,17 @@ void PluginList::Table::listBoxItemDoubleClicked([[maybe_unused]] int rowNumber,
 
 juce::String PluginList::Table::getTooltipForRow(int rowNumber)
 {
-    if(rowNumber < 0 || rowNumber >= static_cast<int>(mFilteredList.size()))
+    auto const totalLocalPlugins = static_cast<int>(mFilteredList.size());
+    auto const totalPlugins = totalLocalPlugins + static_cast<int>(mFilteredWebPlugins.size());
+    if(rowNumber < 0 || rowNumber >= totalPlugins)
     {
         return "";
     }
-    else
+    if(rowNumber < totalLocalPlugins)
     {
         return mFilteredList.at(static_cast<size_t>(rowNumber)).second.details;
     }
+    return mFilteredWebPlugins.at(static_cast<size_t>(rowNumber - totalLocalPlugins)).pluginDescription;
 }
 
 void PluginList::Table::setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept
