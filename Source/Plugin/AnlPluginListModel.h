@@ -12,6 +12,7 @@ namespace PluginList
           useEnvVariable
         , quarantineMode
         , searchPath
+        , webReferences
     };
     
     enum class QuarantineMode
@@ -30,6 +31,7 @@ namespace PluginList
     < Model::Attr<AttrType::useEnvVariable, bool, Model::Flag::basic>
     , Model::Attr<AttrType::quarantineMode, QuarantineMode, Model::Flag::basic>
     , Model::Attr<AttrType::searchPath, std::vector<juce::File>, Model::Flag::basic>
+    , Model::Attr<AttrType::webReferences, std::vector<Plugin::WebReference>, Model::Flag::basic>
     >;
     // clang-format on
 
