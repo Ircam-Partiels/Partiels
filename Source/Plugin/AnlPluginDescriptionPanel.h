@@ -16,6 +16,7 @@ namespace Plugin
         ~DescriptionPanel() override = default;
 
         void setDescription(Description const& description);
+        void setWebReference(WebReference const& webReference);
 
         // juce::Component
         void resized() override;
@@ -27,7 +28,9 @@ namespace Plugin
         PropertyLabel mPropertyPluginMaker{juce::translate("Maker"), juce::translate("The maker of the plugin")};
         PropertyLabel mPropertyPluginVersion{juce::translate("Version"), juce::translate("The version of the plugin")};
         PropertyLabel mPropertyPluginCategory{juce::translate("Category"), juce::translate("The category of the plugin")};
+        PropertyTextButton mPropertyPluginDownload;
         juce::TextEditor mPropertyPluginDetails;
+        juce::String mPluginDownloadUrl;
     };
 } // namespace Plugin
 
