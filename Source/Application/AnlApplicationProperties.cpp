@@ -17,6 +17,11 @@ Application::Properties::Properties()
         saveToFile(PropertyType::PluginList);
     };
 
+    mTrackPresetsListener.onAttrChanged = [this]([[maybe_unused]] Track::PresetList::Accessor const& acsr, [[maybe_unused]] Track::PresetList::AttrType attribute)
+    {
+        saveToFile(PropertyType::TrackPresets);
+    };
+
     if(getFile("").getParentDirectory().createDirectory().failed())
     {
         anlStrongAssert(false && "cannot create parent directory");
@@ -25,14 +30,17 @@ Application::Properties::Properties()
     loadFromFile(PropertyType::Application);
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
+    loadFromFile(PropertyType::TrackPresets);
 
     Instance::get().getApplicationAccessor().addListener(mApplicationListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
+    Instance::get().getTrackPresetListAccessor().addListener(mTrackPresetsListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
 
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
     saveToFile(PropertyType::AudioSetup);
+    saveToFile(PropertyType::TrackPresets);
 
     mWebDownloader.download([](juce::Result result, std::vector<Plugin::WebReference> const& plugins)
                             {
@@ -50,6 +58,7 @@ Application::Properties::Properties()
 Application::Properties::~Properties()
 {
     Instance::get().getAudioDeviceManager().removeChangeListener(this);
+    Instance::get().getTrackPresetListAccessor().removeListener(mTrackPresetsListener);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
     Instance::get().getApplicationAccessor().removeListener(mApplicationListener);
 }
@@ -109,6 +118,11 @@ void Application::Properties::saveToFile(PropertyType type)
             }
         }
         break;
+        case PropertyType::TrackPresets:
+        {
+            writeTo(Instance::get().getTrackPresetListAccessor().toXml("TrackPresets"), "trackpresets.settings");
+        }
+        break;
     }
 }
 
@@ -163,6 +177,16 @@ void Application::Properties::loadFromFile(PropertyType type)
             if(error.isNotEmpty())
             {
                 askToRestoreDefaultAudioSettings(error);
+            }
+        }
+        break;
+        case PropertyType::TrackPresets:
+        {
+            auto xml = juce::parseXML(getFile("trackpresets.settings"));
+            if(xml != nullptr)
+            {
+                auto& acsr = Instance::get().getTrackPresetListAccessor();
+                acsr.fromXml(*xml, "TrackPresets", NotificationType::synchronous);
             }
         }
         break;
