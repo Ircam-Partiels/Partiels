@@ -188,6 +188,28 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.programs = j.value("programs", description.programs);
 }
 
+void Plugin::to_json(nlohmann::json& j, WebReference const& info)
+{
+    j = nlohmann::json{{"identifier", info.identifier.toStdString()},
+                       {"name", info.name.toStdString()},
+                       {"libraryDescription", info.libraryDescription.toStdString()},
+                       {"pluginDescription", info.pluginDescription.toStdString()},
+                       {"maker", info.maker.toStdString()},
+                       {"downloadUrl", info.downloadUrl.toStdString()},
+                       {"isCompatible", info.isCompatible}};
+}
+
+void Plugin::from_json(nlohmann::json const& j, WebReference& info)
+{
+    info.identifier = juce::String(j.at("identifier").get<std::string>());
+    info.name = juce::String(j.at("name").get<std::string>());
+    info.libraryDescription = juce::String(j.at("libraryDescription").get<std::string>());
+    info.pluginDescription = juce::String(j.at("pluginDescription").get<std::string>());
+    info.maker = juce::String(j.at("maker").get<std::string>());
+    info.downloadUrl = juce::String(j.at("downloadUrl").get<std::string>());
+    info.isCompatible = j.at("isCompatible").get<bool>();
+}
+
 template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {
@@ -447,6 +469,40 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     value.windowType = fromXml(*child, "windowType", defaultValue.windowType);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     return value;
+}
+
+template <>
+void XmlParser::toXml<Plugin::WebReference>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::WebReference const& value)
+{
+    auto element = std::make_unique<juce::XmlElement>(attributeName);
+    element->setAttribute("identifier", value.identifier);
+    element->setAttribute("name", value.name);
+    element->setAttribute("libraryDescription", value.libraryDescription);
+    element->setAttribute("pluginDescription", value.pluginDescription);
+    element->setAttribute("maker", value.maker);
+    element->setAttribute("downloadUrl", value.downloadUrl);
+    element->setAttribute("isCompatible", value.isCompatible);
+    xml.addChildElement(element.release());
+}
+
+template <>
+auto XmlParser::fromXml<Plugin::WebReference>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::WebReference const& defaultValue)
+    -> Plugin::WebReference
+{
+    auto const* element = xml.getChildByName(attributeName);
+    if(element == nullptr)
+    {
+        return defaultValue;
+    }
+    Plugin::WebReference info;
+    info.identifier = element->getStringAttribute("identifier", defaultValue.identifier);
+    info.name = element->getStringAttribute("name", defaultValue.name);
+    info.libraryDescription = element->getStringAttribute("libraryDescription", defaultValue.libraryDescription);
+    info.pluginDescription = element->getStringAttribute("pluginDescription", defaultValue.pluginDescription);
+    info.maker = element->getStringAttribute("maker", defaultValue.maker);
+    info.downloadUrl = element->getStringAttribute("downloadUrl", defaultValue.downloadUrl);
+    info.isCompatible = element->getBoolAttribute("isCompatible", defaultValue.isCompatible);
+    return info;
 }
 
 Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key)
