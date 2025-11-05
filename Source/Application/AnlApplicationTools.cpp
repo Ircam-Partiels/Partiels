@@ -116,6 +116,15 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
 
             trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
             trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+
+            // Apply default preset if defined
+            auto const presets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::processor>();
+            auto const presetIt = presets.find(key);
+            if(presetIt != presets.cend())
+            {
+                trackAcsr.setAttr<Track::AttrType::state>(presetIt->second, NotificationType::synchronous);
+            }
+
             trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
             auto const colourChart = Instance::getColourChart();
