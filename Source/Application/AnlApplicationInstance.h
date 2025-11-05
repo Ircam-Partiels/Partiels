@@ -59,6 +59,7 @@ namespace Application
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
+        Track::PresetList::Accessor& getTrackPresetListAccessor();
 
         juce::ApplicationCommandManager& getApplicationCommandManager();
         juce::AudioFormatManager& getAudioFormatManager();
@@ -96,6 +97,7 @@ namespace Application
         std::unique_ptr<Osc::Sender> mOscSender;
         std::unique_ptr<Document::Accessor> mDocumentAccessor;
         std::unique_ptr<Document::Director> mDocumentDirector;
+        std::unique_ptr<Track::PresetList::Accessor> mTrackPresetListAccessor;
 
         std::unique_ptr<AudioReader> mAudioReader;
         std::unique_ptr<LookAndFeel> mLookAndFeel;
