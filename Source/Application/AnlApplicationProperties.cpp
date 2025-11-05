@@ -33,6 +33,18 @@ Application::Properties::Properties()
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
     saveToFile(PropertyType::AudioSetup);
+
+    mWebDownloader.download([](juce::Result result, std::vector<Plugin::WebReference> const& plugins)
+                            {
+                                if(result.wasOk())
+                                {
+                                    Instance::get().getPluginListAccessor().setAttr<PluginList::AttrType::webReferences>(plugins, NotificationType::synchronous);
+                                }
+                                else
+                                {
+                                    anlDebug("Application::Properties", juce::String("Web plugin list download failed: ERROR").replace("ERROR", result.getErrorMessage()));
+                                }
+                            });
 }
 
 Application::Properties::~Properties()
