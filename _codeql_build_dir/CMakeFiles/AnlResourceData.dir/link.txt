@@ -1,0 +1,2 @@
+/usr/bin/ar qc libAnlResourceData.a CMakeFiles/AnlResourceData.dir/juce_binarydata_AnlResourceData/JuceLibraryCode/BinaryData1.cpp.o CMakeFiles/AnlResourceData.dir/juce_binarydata_AnlResourceData/JuceLibraryCode/BinaryData2.cpp.o CMakeFiles/AnlResourceData.dir/juce_binarydata_AnlResourceData/JuceLibraryCode/BinaryData3.cpp.o CMakeFiles/AnlResourceData.dir/juce_binarydata_AnlResourceData/JuceLibraryCode/BinaryData4.cpp.o
+/usr/bin/ranlib libAnlResourceData.a

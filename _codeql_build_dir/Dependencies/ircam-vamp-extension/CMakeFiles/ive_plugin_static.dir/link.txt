@@ -1,0 +1,2 @@
+/usr/bin/ar qc libive_plugin.a CMakeFiles/ive_plugin_static.dir/Source/IvePluginAdapter.cpp.o
+/usr/bin/ranlib libive_plugin.a
