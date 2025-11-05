@@ -691,7 +691,7 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             }
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
-        auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, end}, step, startChange, applyChange, endChange, true);
+        auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f)}, step, startChange, applyChange, endChange, true);
         anlWeakAssert(property != nullptr);
         if(property != nullptr)
         {
