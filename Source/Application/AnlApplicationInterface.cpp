@@ -108,7 +108,7 @@ void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
 }
 
 Application::Interface::DocumentContainer::DocumentContainer()
-: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
+: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getTrackPresetListAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);

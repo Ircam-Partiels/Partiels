@@ -4,10 +4,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, ResizerFn resizerFn)
+Track::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, PresetList::Accessor& presetListAcsr, ResizerFn resizerFn)
 : mDirector(director)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
+, mThumbnail(mDirector, mTimeZoomAccessor, mTransportAccessor, presetListAcsr)
 , mPlot(mDirector.getAccessor(), mTimeZoomAccessor)
 , mEditor(mDirector, mTimeZoomAccessor, mTransportAccessor, commandManager, mPlot, nullptr, true)
 {

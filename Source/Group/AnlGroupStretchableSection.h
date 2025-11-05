@@ -15,7 +15,7 @@ namespace Group
     public:
         using ResizerFn = Section::ResizerFn;
 
-        StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn);
+        StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, Track::PresetList::Accessor& presetListAcsr, ResizerFn resizerFn);
         ~StretchableSection() override;
 
         bool isStretching() const;
@@ -44,6 +44,7 @@ namespace Group
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        Track::PresetList::Accessor& mTrackPresetListAccessor;
         juce::ApplicationCommandManager& mApplicationCommandManager;
         Accessor::Listener mListener{typeid(*this).name()};
         ResizerFn mResizerFn;

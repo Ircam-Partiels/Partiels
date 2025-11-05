@@ -23,7 +23,7 @@ namespace Track
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, ResizerFn resizerFn);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, PresetList::Accessor& presetListAcsr, ResizerFn resizerFn);
         ~Section() override;
 
         juce::Component const& getPlot() const;
@@ -47,7 +47,7 @@ namespace Track
         Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
 
-        Thumbnail mThumbnail{mDirector, mTimeZoomAccessor, mTransportAccessor};
+        Thumbnail mThumbnail;
         Decorator mThumbnailDecoration{mThumbnail};
 
         Snapshot mSnapshot{mAccessor, mTimeZoomAccessor, mTransportAccessor};

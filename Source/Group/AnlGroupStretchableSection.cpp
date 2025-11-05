@@ -2,10 +2,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::StretchableSection::StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, ResizerFn resizerFn)
+Group::StretchableSection::StretchableSection(Director& director, juce::ApplicationCommandManager& commandManager, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr, Track::PresetList::Accessor& presetListAcsr, ResizerFn resizerFn)
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mTrackPresetListAccessor(presetListAcsr)
 , mApplicationCommandManager(commandManager)
 , mResizerFn(resizerFn)
 , mSection(director, commandManager, transportAcsr, timeZoomAcsr, resizerFn)
@@ -210,7 +211,7 @@ void Group::StretchableSection::updateContent()
         {
             auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
             auto& trackDirector = mDirector.getTrackDirector(identifier);
-            auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor, mResizerFn);
+            auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor, mTrackPresetListAccessor, mResizerFn);
             MiscWeakAssert(trackSection != nullptr);
             if(trackSection != nullptr)
             {

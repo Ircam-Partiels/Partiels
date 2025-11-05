@@ -18,7 +18,7 @@ Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPa
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 }
 
-Track::PropertyPanel::PropertyPanel(Director& director)
+Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
 , mPropertyName("Name", "The name of the track", [&](juce::String text)
                 {
@@ -26,6 +26,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
                     mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
                 })
+, mPropertyProcessorSection(mDirector, presetListAcsr)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
