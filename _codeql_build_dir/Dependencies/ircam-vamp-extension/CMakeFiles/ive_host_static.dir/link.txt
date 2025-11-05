@@ -1,2 +1,0 @@
-/usr/bin/ar qc libive_host.a CMakeFiles/ive_host_static.dir/Source/IvePluginWrapper.cpp.o
-/usr/bin/ranlib libive_host.a

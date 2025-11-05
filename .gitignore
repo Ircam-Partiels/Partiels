@@ -1,5 +1,7 @@
 build
 build-*
 release
+_codeql_build_dir
+_codeql_detected_source_root
 *.DS_Store
 .lfs-assets-id
