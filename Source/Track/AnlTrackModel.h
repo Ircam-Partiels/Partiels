@@ -345,6 +345,36 @@ namespace Track
 
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
     };
+
+    namespace PresetList
+    {
+        // clang-format off
+        enum class AttrType : size_t
+        {
+            processor
+        };
+        
+        using AttrContainer = Model::Container
+        < Model::Attr<AttrType::processor, std::map<Plugin::Key, Plugin::State>, Model::Flag::basic>
+        >;
+        // clang-format on
+
+        class Accessor
+        : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
+        , public Broadcaster<Accessor, SignalType>
+        {
+        public:
+            using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
+
+            // clang-format off
+            Accessor()
+            : Accessor(AttrContainer(  {}
+                                     ))
+            {
+            }
+            // clang-format on
+        };
+    } // namespace PresetList
 } // namespace Track
 
 namespace XmlParser
