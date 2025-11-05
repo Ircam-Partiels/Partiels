@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Plugin/AnlPluginListModel.h"
+#include "../Plugin/AnlPluginListWebDownloader.h"
 #include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -38,6 +38,7 @@ namespace Application
 
         Accessor::Listener mApplicationListener{typeid(*this).name()};
         PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
+        PluginList::WebDownloader mWebDownloader;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Properties)
     };
