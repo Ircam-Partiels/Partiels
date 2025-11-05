@@ -30,6 +30,7 @@ namespace Application
               Application = 0
             , PluginList = 1
             , AudioSetup = 2
+            , TrackPresets = 3
         };
         // clang-format on
 
@@ -38,6 +39,7 @@ namespace Application
 
         Accessor::Listener mApplicationListener{typeid(*this).name()};
         PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
+        Track::PresetList::Accessor::Listener mTrackPresetsListener{typeid(*this).name()};
         PluginList::WebDownloader mWebDownloader;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Properties)
