@@ -5,10 +5,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr)
+Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
 , mTimeZoomAccessor(timeZoomAccessor)
 , mTransportAccessor(transportAcsr)
+, mPropertyPanel(mDirector, presetListAcsr)
 , mPropertiesButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
 , mResultsButton(juce::ImageCache::getFromMemory(AnlIconsData::sheetspread_png, AnlIconsData::sheetspread_pngSize))
 {

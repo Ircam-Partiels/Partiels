@@ -26,8 +26,9 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
     }
 }
 
-Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
+Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, Track::PresetList::Accessor& presetListAcsr)
 : mDirector(director)
+, mTrackPresetListAccessor(presetListAcsr)
 , mApplicationCommandManager(commandManager)
 , mHeader(director, commandManager)
 , mGridButton(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize))
@@ -602,7 +603,7 @@ void Document::Section::updateLayout()
         auto& groupDirector = mDirector.getGroupDirector(identifier);
         auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto groupSection = std::make_unique<Group::StretchableSection>(groupDirector, mApplicationCommandManager, transportAcsr, timeZoomAcsr, [this](juce::String const& itemIdentifier, int newHeight)
+        auto groupSection = std::make_unique<Group::StretchableSection>(groupDirector, mApplicationCommandManager, transportAcsr, timeZoomAcsr, mTrackPresetListAccessor, [this](juce::String const& itemIdentifier, int newHeight)
                                                                         {
                                                                             Tools::resizeItem(mAccessor, itemIdentifier, newHeight, mViewport.getHeight());
                                                                         });

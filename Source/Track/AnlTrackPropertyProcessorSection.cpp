@@ -21,8 +21,9 @@ static std::vector<std::string> getBlockSizeNames()
     return {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
 }
 
-Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
+Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
+, mPresetListAccessor(presetListAcsr)
 , mPropertyResultsFile(juce::translate("Results File"), juce::translate("The path of the results file"), [this]()
                        {
                            auto const file = mAccessor.getAttr<AttrType::file>();
@@ -79,38 +80,47 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                           }
                           updateState();
                       })
-, mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
+, mPropertyPreset(juce::translate("Preset"), juce::translate("The preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
                   {
-                      switch(index)
+                      auto const selectedId = mPropertyPreset.entry.getSelectedId();
+                      switch(selectedId)
                       {
-                          case 0:
+                          case MenuPresetId::factoryPresetId:
                           {
                               restoreDefaultPreset();
+                              break;
                           }
-                          break;
-                          case 1:
+                          case MenuPresetId::customPresetId:
                           {
                               // Ignore (custom)
                               updateState();
+                              break;
                           }
-                          break;
+                          case MenuPresetId::loadPresetId:
+                          {
+                              loadPreset();
+                              break;
+                          }
+                          case MenuPresetId::savePresetId:
+                          {
+                              savePreset();
+                              break;
+                          }
+                          case MenuPresetId::saveDefaultPresetId:
+                          {
+                              saveAsDefaultPreset();
+                              break;
+                          }
+                          case MenuPresetId::deleteDefaultPresetId:
+                          {
+                              deleteDefaultPreset();
+                              break;
+                          }
                           default:
                           {
-                              auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
-                              if(index - 2_z == programs.size())
-                              {
-                                  loadPreset();
-                              }
-                              else if(index - 2_z == programs.size() + 1)
-                              {
-                                  savePreset();
-                              }
-                              else
-                              {
-                                  changePreset(index - 2_z);
-                              }
+                              changePreset(selectedId);
+                              break;
                           }
-                          break;
                       };
                   })
 {
@@ -173,9 +183,9 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
 
-                mPropertyPreset.entry.addItem("Factory", 1);
-                mPropertyPreset.entry.addItem("Custom", 2);
-                mPropertyPreset.entry.setItemEnabled(2, false);
+                mPropertyPreset.entry.addItem("Factory", MenuPresetId::factoryPresetId);
+                mPropertyPreset.entry.addItem("Custom", MenuPresetId::customPresetId);
+                mPropertyPreset.entry.setItemEnabled(MenuPresetId::customPresetId, false);
                 mPropertyPreset.entry.addSeparator();
                 juce::StringArray items;
                 for(auto const& program : programs)
@@ -183,10 +193,13 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                     auto const name = Format::withFirstCharUpperCase(program.first);
                     items.add(juce::String(name));
                 }
-                mPropertyPreset.entry.addItemList(items, 3);
+                mPropertyPreset.entry.addItemList(items, MenuPresetId::pluginPresetId);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Load...", items.size() + 3);
-                mPropertyPreset.entry.addItem("Save...", items.size() + 4);
+                mPropertyPreset.entry.addItem("Load...", MenuPresetId::loadPresetId);
+                mPropertyPreset.entry.addItem("Save...", MenuPresetId::savePresetId);
+                mPropertyPreset.entry.addSeparator();
+                mPropertyPreset.entry.addItem("Save as Default", MenuPresetId::saveDefaultPresetId);
+                mPropertyPreset.entry.addItem("Delete Default", MenuPresetId::deleteDefaultPresetId);
                 resized();
                 [[fallthrough]];
             }
@@ -552,8 +565,9 @@ void Track::PropertyProcessorSection::savePreset()
                               });
 }
 
-void Track::PropertyProcessorSection::changePreset(size_t index)
+void Track::PropertyProcessorSection::changePreset(int presetId)
 {
+    auto const index = static_cast<size_t>(presetId - MenuPresetId::pluginPresetId);
     askToModifyProcessor([=, this](bool result)
                          {
                              auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
@@ -579,6 +593,22 @@ void Track::PropertyProcessorSection::changePreset(size_t index)
                              mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track preset properties"));
                          });
+}
+
+void Track::PropertyProcessorSection::saveAsDefaultPreset()
+{
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
+    preset[mAccessor.getAttr<AttrType::key>()] = mAccessor.getAttr<AttrType::state>();
+    mPresetListAccessor.setAttr<PresetList::AttrType::processor>(preset, NotificationType::synchronous);
+    updateState();
+}
+
+void Track::PropertyProcessorSection::deleteDefaultPreset()
+{
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
+    preset.erase(mAccessor.getAttr<AttrType::key>());
+    mPresetListAccessor.setAttr<PresetList::AttrType::processor>(preset, NotificationType::synchronous);
+    updateState();
 }
 
 void Track::PropertyProcessorSection::updateState()
@@ -660,22 +690,26 @@ void Track::PropertyProcessorSection::updateState()
         }
     }
 
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
+    mPropertyPreset.entry.setItemEnabled(MenuPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
+
     if(state == description.defaultState)
     {
-        mPropertyPreset.entry.setSelectedItemIndex(0, silent);
+        mPropertyPreset.entry.setSelectedId(MenuPresetId::factoryPresetId, silent);
         return;
     }
-    int index = 2;
+    int presetId = MenuPresetId::pluginPresetId;
     for(auto const& program : mAccessor.getAttr<AttrType::description>().programs)
     {
         if(state == program.second)
         {
-            mPropertyPreset.entry.setSelectedItemIndex(index, silent);
+            mPropertyPreset.entry.setSelectedId(presetId, silent);
             return;
         }
-        ++index;
+        ++presetId;
     }
-    mPropertyPreset.entry.setSelectedItemIndex(1, silent);
+    mPropertyPreset.entry.setSelectedId(MenuPresetId::customPresetId, silent);
 }
 
 ANALYSE_FILE_END

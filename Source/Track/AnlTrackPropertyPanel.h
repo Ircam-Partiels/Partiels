@@ -16,7 +16,7 @@ namespace Track
     , public juce::DragAndDropContainer
     {
     public:
-        PropertyPanel(Director& director);
+        PropertyPanel(Director& director, PresetList::Accessor& presetListAcsr);
         ~PropertyPanel() override;
 
         // juce::Component
@@ -42,7 +42,7 @@ namespace Track
 
         PropertyText mPropertyName;
 
-        PropertyProcessorSection mPropertyProcessorSection{mDirector};
+        PropertyProcessorSection mPropertyProcessorSection;
         ConcertinaTable mProcessorSection{juce::translate("PROCESSOR"), true,
                                           juce::translate("The processor parameters of the track")};
 

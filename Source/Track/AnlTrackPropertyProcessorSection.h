@@ -10,7 +10,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        PropertyProcessorSection(Director& director);
+        PropertyProcessorSection(Director& director, PresetList::Accessor& presetListAcsr);
         ~PropertyProcessorSection() override;
 
         // juce::Component
@@ -26,11 +26,14 @@ namespace Track
         void restoreDefaultPreset();
         void loadPreset();
         void savePreset();
-        void changePreset(size_t index);
+        void changePreset(int presetId);
+        void saveAsDefaultPreset();
+        void deleteDefaultPreset();
         void updateState();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
+        PresetList::Accessor& mPresetListAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
         HierarchyManager::Listener mHierarchyListener;
 
@@ -46,6 +49,16 @@ namespace Track
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};
 
         std::unique_ptr<juce::FileChooser> mFileChooser;
+        enum MenuPresetId : int
+        {
+            factoryPresetId = 1,
+            customPresetId,
+            loadPresetId,
+            savePresetId,
+            saveDefaultPresetId,
+            deleteDefaultPresetId,
+            pluginPresetId // The plugin presets start at this index.
+        };
     };
 } // namespace Track
 

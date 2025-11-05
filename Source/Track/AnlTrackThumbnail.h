@@ -21,7 +21,7 @@ namespace Track
         };
         // clang-format on
 
-        Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr);
+        Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr, PresetList::Accessor& presetListAcsr);
         ~Thumbnail() override;
 
         // juce::Component
@@ -40,7 +40,7 @@ namespace Track
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
 
-        PropertyPanel mPropertyPanel{mDirector};
+        PropertyPanel mPropertyPanel;
         PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
         Result::Table mResultsTable{mDirector, mTimeZoomAccessor, mTransportAccessor};
         Result::Table::WindowContainer mResultsWindowContainer{mResultsTable};

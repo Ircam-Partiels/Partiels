@@ -23,7 +23,7 @@ namespace Document
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, Track::PresetList::Accessor& presetListAcsr);
         ~Section() override;
 
         juce::Component const* getPlot(juce::String const& identifier) const;
@@ -73,6 +73,7 @@ namespace Document
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
+        Track::PresetList::Accessor& mTrackPresetListAccessor;
         juce::ApplicationCommandManager& mApplicationCommandManager;
         Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
