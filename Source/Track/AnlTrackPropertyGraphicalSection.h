@@ -82,7 +82,7 @@ namespace Track
 
         std::unique_ptr<juce::FileChooser> mFileChooser;
         bool mChannelLayoutActionStarted{false};
-        
+
         enum MenuGraphicsPresetId : int
         {
             loadPresetId = 1,

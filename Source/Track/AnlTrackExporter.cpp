@@ -106,17 +106,17 @@ juce::Result Track::Exporter::fromGraphicsPreset(Accessor& accessor, juce::File 
     {
         return juce::Result::fail(juce::translate("The plugin key of the graphics preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
     }
-    
+
     auto const settings = XmlParser::fromXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());
     accessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
-    
+
     // Also update individual attributes for backward compatibility
     accessor.setAttr<AttrType::colours>(settings.colours, NotificationType::synchronous);
     accessor.setAttr<AttrType::font>(settings.font, NotificationType::synchronous);
     accessor.setAttr<AttrType::lineWidth>(settings.lineWidth, NotificationType::synchronous);
     accessor.setAttr<AttrType::unit>(settings.unit, NotificationType::synchronous);
     accessor.setAttr<AttrType::labelLayout>(settings.labelLayout, NotificationType::synchronous);
-    
+
     return juce::Result::ok();
 }
 

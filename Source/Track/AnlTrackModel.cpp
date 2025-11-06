@@ -52,8 +52,8 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
             }
         }
         // Migrate individual graphic properties to graphicsSettings (backward compatibility)
-        if(copy->getChildByName("colours") != nullptr || copy->getChildByName("font") != nullptr || 
-           copy->getChildByName("lineWidth") != nullptr || copy->getChildByName("unit") != nullptr || 
+        if(copy->getChildByName("colours") != nullptr || copy->getChildByName("font") != nullptr ||
+           copy->getChildByName("lineWidth") != nullptr || copy->getChildByName("unit") != nullptr ||
            copy->getChildByName("labelLayout") != nullptr)
         {
             GraphicsSettings settings;
@@ -62,7 +62,7 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
             settings.lineWidth = XmlParser::fromXml(*copy.get(), "lineWidth", settings.lineWidth);
             settings.unit = XmlParser::fromXml(*copy.get(), "unit", settings.unit);
             settings.labelLayout = XmlParser::fromXml(*copy.get(), "labelLayout", settings.labelLayout);
-            
+
             // Remove old individual attributes
             if(auto* child = copy->getChildByName("colours"))
             {
@@ -84,7 +84,7 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
             {
                 copy->removeChildElement(child, true);
             }
-            
+
             // Add new graphicsSettings attribute
             XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
         }

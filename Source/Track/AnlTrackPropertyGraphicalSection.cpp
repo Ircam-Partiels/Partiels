@@ -272,34 +272,34 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change the visibility of the track in the group overlay view"));
                        })
 , mPropertyGraphicsPreset(juce::translate("Graphic Preset"), juce::translate("The graphic preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
-                         {
-                             auto const selectedId = mPropertyGraphicsPreset.entry.getSelectedId();
-                             switch(selectedId)
-                             {
-                                 case MenuGraphicsPresetId::loadPresetId:
-                                 {
-                                     loadGraphicsPreset();
-                                     break;
-                                 }
-                                 case MenuGraphicsPresetId::savePresetId:
-                                 {
-                                     saveGraphicsPreset();
-                                     break;
-                                 }
-                                 case MenuGraphicsPresetId::saveDefaultPresetId:
-                                 {
-                                     saveAsDefaultGraphicsPreset();
-                                     break;
-                                 }
-                                 case MenuGraphicsPresetId::deleteDefaultPresetId:
-                                 {
-                                     deleteDefaultGraphicsPreset();
-                                     break;
-                                 }
-                                 default:
-                                     break;
-                             };
-                         })
+                          {
+                              auto const selectedId = mPropertyGraphicsPreset.entry.getSelectedId();
+                              switch(selectedId)
+                              {
+                                  case MenuGraphicsPresetId::loadPresetId:
+                                  {
+                                      loadGraphicsPreset();
+                                      break;
+                                  }
+                                  case MenuGraphicsPresetId::savePresetId:
+                                  {
+                                      saveGraphicsPreset();
+                                      break;
+                                  }
+                                  case MenuGraphicsPresetId::saveDefaultPresetId:
+                                  {
+                                      saveAsDefaultGraphicsPreset();
+                                      break;
+                                  }
+                                  case MenuGraphicsPresetId::deleteDefaultPresetId:
+                                  {
+                                      deleteDefaultGraphicsPreset();
+                                      break;
+                                  }
+                                  default:
+                                      break;
+                              };
+                          })
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -1081,7 +1081,7 @@ void Track::PropertyGraphicalSection::saveGraphicsPreset()
                                   settings.unit = mAccessor.getAttr<AttrType::unit>();
                                   settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
                                   mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
-                                  
+
                                   auto const result = Exporter::toGraphicsPreset(mAccessor, results.getFirst());
                                   if(result.failed())
                                   {
@@ -1106,7 +1106,7 @@ void Track::PropertyGraphicalSection::saveAsDefaultGraphicsPreset()
     settings.unit = mAccessor.getAttr<AttrType::unit>();
     settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
     mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
-    
+
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
     preset[mAccessor.getAttr<AttrType::key>()] = settings;
     mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
