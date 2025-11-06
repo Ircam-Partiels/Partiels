@@ -368,7 +368,7 @@ namespace Track
 
             // clang-format off
             Accessor()
-            : Accessor(AttrContainer(  {}
+            : Accessor(AttrContainer(  {std::map<Plugin::Key, Plugin::State>{}}
                                      ))
             {
             }
