@@ -1,4 +1,5 @@
 #include "AnlTrackPropertyGraphicalSection.h"
+#include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 #include "AnlTrackTooltip.h"
 
@@ -35,8 +36,9 @@ static std::vector<std::string> getFontSizes()
     return names;
 }
 
-Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
+Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
+, mPresetListAccessor(presetListAcsr)
 , mZoomGridPropertyWindow(juce::translate("Grid Properties"), mZoomGridPropertyPanel)
 , mPropertyColourMap(juce::translate("Color Map"), juce::translate("The color map of the graphical renderer."), "", getColourMapNames(), [&](size_t index)
                      {
@@ -269,6 +271,35 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                            mAccessor.setAttr<AttrType::showInGroup>(state, NotificationType::synchronous);
                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change the visibility of the track in the group overlay view"));
                        })
+, mPropertyGraphicsPreset(juce::translate("Graphic Preset"), juce::translate("The graphic preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+                         {
+                             auto const selectedId = mPropertyGraphicsPreset.entry.getSelectedId();
+                             switch(selectedId)
+                             {
+                                 case MenuGraphicsPresetId::loadPresetId:
+                                 {
+                                     loadGraphicsPreset();
+                                     break;
+                                 }
+                                 case MenuGraphicsPresetId::savePresetId:
+                                 {
+                                     saveGraphicsPreset();
+                                     break;
+                                 }
+                                 case MenuGraphicsPresetId::saveDefaultPresetId:
+                                 {
+                                     saveAsDefaultGraphicsPreset();
+                                     break;
+                                 }
+                                 case MenuGraphicsPresetId::deleteDefaultPresetId:
+                                 {
+                                     deleteDefaultGraphicsPreset();
+                                     break;
+                                 }
+                                 default:
+                                     break;
+                             };
+                         })
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -456,6 +487,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::sampleRate:
+            case AttrType::graphicsSettings:
                 break;
         }
     };
@@ -576,8 +608,18 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyGrid);
     addAndMakeVisible(mPropertyChannelLayout);
     addAndMakeVisible(mPropertyShowInGroup);
+    addAndMakeVisible(mPropertyGraphicsPreset);
     addAndMakeVisible(mProgressBarRendering);
     setSize(300, 400);
+
+    // Setup graphics preset menu
+    mPropertyGraphicsPreset.entry.clear(juce::NotificationType::dontSendNotification);
+    mPropertyGraphicsPreset.entry.addItem("Load...", MenuGraphicsPresetId::loadPresetId);
+    mPropertyGraphicsPreset.entry.addItem("Save...", MenuGraphicsPresetId::savePresetId);
+    mPropertyGraphicsPreset.entry.addSeparator();
+    mPropertyGraphicsPreset.entry.addItem("Save as Default", MenuGraphicsPresetId::saveDefaultPresetId);
+    mPropertyGraphicsPreset.entry.addItem("Delete Default", MenuGraphicsPresetId::deleteDefaultPresetId);
+    updateGraphicsPresetState();
 
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
@@ -628,6 +670,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyShowInGroup);
     setBounds(mPropertyGrid);
     setBounds(mPropertyChannelLayout);
+    setBounds(mPropertyGraphicsPreset);
     setBounds(mProgressBarRendering);
     setSize(getWidth(), bounds.getY());
 }
@@ -966,6 +1009,123 @@ void Track::PropertyGraphicalSection::updateGridPanel()
     {
         mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
     }
+}
+
+void Track::PropertyGraphicalSection::loadGraphicsPreset()
+{
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load graphics preset from file..."), juce::File{}, "*.ptlgraphics");
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<juce::Component> weakReference(this);
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(weakReference.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  if(results.isEmpty())
+                                  {
+                                      updateGraphicsPresetState();
+                                      return;
+                                  }
+                                  mDirector.startAction();
+                                  auto const exportResult = Exporter::fromGraphicsPreset(mAccessor, results.getFirst());
+                                  if(exportResult.failed())
+                                  {
+                                      mDirector.endAction(ActionState::abort);
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to load from graphics preset file!"))
+                                                               .withMessage(exportResult.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
+                                  }
+                                  else
+                                  {
+                                      mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's graphic properties from preset file"));
+                                  }
+                                  updateGraphicsPresetState();
+                              });
+}
+
+void Track::PropertyGraphicalSection::saveGraphicsPreset()
+{
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as graphics preset..."), juce::File{}, "*.ptlgraphics");
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<juce::Component> weakReference(this);
+    mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(weakReference.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  if(results.isEmpty())
+                                  {
+                                      updateGraphicsPresetState();
+                                      return;
+                                  }
+                                  // Update graphicsSettings from individual attributes before saving
+                                  GraphicsSettings settings;
+                                  settings.colours = mAccessor.getAttr<AttrType::colours>();
+                                  settings.font = mAccessor.getAttr<AttrType::font>();
+                                  settings.lineWidth = mAccessor.getAttr<AttrType::lineWidth>();
+                                  settings.unit = mAccessor.getAttr<AttrType::unit>();
+                                  settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
+                                  mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+                                  
+                                  auto const result = Exporter::toGraphicsPreset(mAccessor, results.getFirst());
+                                  if(result.failed())
+                                  {
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to save a graphics preset file!"))
+                                                               .withMessage(result.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
+                                  }
+                                  updateGraphicsPresetState();
+                              });
+}
+
+void Track::PropertyGraphicalSection::saveAsDefaultGraphicsPreset()
+{
+    // Update graphicsSettings from individual attributes before saving
+    GraphicsSettings settings;
+    settings.colours = mAccessor.getAttr<AttrType::colours>();
+    settings.font = mAccessor.getAttr<AttrType::font>();
+    settings.lineWidth = mAccessor.getAttr<AttrType::lineWidth>();
+    settings.unit = mAccessor.getAttr<AttrType::unit>();
+    settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+    
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    preset[mAccessor.getAttr<AttrType::key>()] = settings;
+    mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
+    updateGraphicsPresetState();
+}
+
+void Track::PropertyGraphicalSection::deleteDefaultGraphicsPreset()
+{
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    preset.erase(mAccessor.getAttr<AttrType::key>());
+    mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
+    updateGraphicsPresetState();
+}
+
+void Track::PropertyGraphicalSection::updateGraphicsPresetState()
+{
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    mPropertyGraphicsPreset.entry.setItemEnabled(MenuGraphicsPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
 }
 
 ANALYSE_FILE_END

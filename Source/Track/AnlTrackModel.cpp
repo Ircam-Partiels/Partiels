@@ -51,6 +51,43 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
                 XmlParser::toXml(*child, "duration", foreground.withAlpha(0.4f));
             }
         }
+        // Migrate individual graphic properties to graphicsSettings (backward compatibility)
+        if(copy->getChildByName("colours") != nullptr || copy->getChildByName("font") != nullptr || 
+           copy->getChildByName("lineWidth") != nullptr || copy->getChildByName("unit") != nullptr || 
+           copy->getChildByName("labelLayout") != nullptr)
+        {
+            GraphicsSettings settings;
+            settings.colours = XmlParser::fromXml(*copy.get(), "colours", settings.colours);
+            settings.font = XmlParser::fromXml(*copy.get(), "font", settings.font);
+            settings.lineWidth = XmlParser::fromXml(*copy.get(), "lineWidth", settings.lineWidth);
+            settings.unit = XmlParser::fromXml(*copy.get(), "unit", settings.unit);
+            settings.labelLayout = XmlParser::fromXml(*copy.get(), "labelLayout", settings.labelLayout);
+            
+            // Remove old individual attributes
+            if(auto* child = copy->getChildByName("colours"))
+            {
+                copy->removeChildElement(child, true);
+            }
+            if(auto* child = copy->getChildByName("font"))
+            {
+                copy->removeChildElement(child, true);
+            }
+            if(auto* child = copy->getChildByName("lineWidth"))
+            {
+                copy->removeChildElement(child, true);
+            }
+            if(auto* child = copy->getChildByName("unit"))
+            {
+                copy->removeChildElement(child, true);
+            }
+            if(auto* child = copy->getChildByName("labelLayout"))
+            {
+                copy->removeChildElement(child, true);
+            }
+            
+            // Add new graphicsSettings attribute
+            XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
+        }
     }
     return copy;
 }

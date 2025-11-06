@@ -27,6 +27,7 @@ Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& pr
                     mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
                 })
 , mPropertyProcessorSection(mDirector, presetListAcsr)
+, mPropertyGraphicalSection(mDirector, presetListAcsr)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
