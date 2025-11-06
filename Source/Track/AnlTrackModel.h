@@ -159,6 +159,33 @@ namespace Track
     void to_json(nlohmann::json& j, LabelLayout const& labelLayout);
     void from_json(nlohmann::json const& j, LabelLayout& labelLayout);
 
+    struct GraphicsSettings
+    {
+        ColourSet colours{};
+        juce::FontOptions font{juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)};
+        float lineWidth = 1.0f;
+        std::optional<juce::String> unit{};
+        LabelLayout labelLayout{};
+
+        const auto tie() const
+        {
+            return std::tie(colours, font, lineWidth, unit, labelLayout);
+        }
+
+        bool operator==(GraphicsSettings const& rhs) const
+        {
+            return tie() == rhs.tie();
+        }
+
+        bool operator!=(GraphicsSettings const& rhs) const
+        {
+            return tie() != rhs.tie();
+        }
+    };
+
+    void to_json(nlohmann::json& j, GraphicsSettings const& settings);
+    void from_json(nlohmann::json const& j, GraphicsSettings& settings);
+
     // clang-format off
     enum class GridMode
     {
@@ -190,6 +217,7 @@ namespace Track
         , sampleRate
         
         , height
+        , graphicsSettings
         , colours
         , font
         , lineWidth
@@ -238,6 +266,7 @@ namespace Track
     , Model::Attr<AttrType::sampleRate, double, Model::Flag::notifying | Model::Flag::saveable>
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::graphicsSettings, GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::font, juce::FontOptions, Model::Flag::basic>
     , Model::Attr<AttrType::lineWidth, float, Model::Flag::basic>
@@ -288,6 +317,7 @@ namespace Track
                                  , {48000.0}
                                  
                                  , {120}
+                                 , {}
                                  , {}
                                  , {juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)}
                                  , {1.0f}
@@ -351,11 +381,13 @@ namespace Track
         // clang-format off
         enum class AttrType : size_t
         {
-            processor
+              processor
+            , graphic
         };
         
         using AttrContainer = Model::Container
         < Model::Attr<AttrType::processor, std::map<Plugin::Key, Plugin::State>, Model::Flag::basic>
+        , Model::Attr<AttrType::graphic, std::map<Plugin::Key, GraphicsSettings>, Model::Flag::basic>
         >;
         // clang-format on
 
@@ -369,6 +401,7 @@ namespace Track
             // clang-format off
             Accessor()
             : Accessor(AttrContainer(  {std::map<Plugin::Key, Plugin::State>{}}
+                                     , {std::map<Plugin::Key, GraphicsSettings>{}}
                                      ))
             {
             }
@@ -392,6 +425,13 @@ namespace XmlParser
     template <>
     auto fromXml<Track::LabelLayout>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::LabelLayout const& defaultValue)
         -> Track::LabelLayout;
+
+    template <>
+    void toXml<Track::GraphicsSettings>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::GraphicsSettings const& value);
+
+    template <>
+    auto fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::GraphicsSettings const& defaultValue)
+        -> Track::GraphicsSettings;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
