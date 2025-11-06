@@ -11,7 +11,7 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
 , mApplicationCommandManager(commandManager)
 , mPaintBackground(paintBackground)
 , mSnapshotName(mAccessor.getAttr<AttrType::name>())
-, mSnapshotColour(mAccessor.getAttr<AttrType::colours>().background)
+, mSnapshotColour(mAccessor.getAttr<AttrType::graphicsSettings>().colours.background)
 , mGetTooltip(std::move(getTooltip))
 , mWriter(director, mTimeZoomAccessor, transportAccessor)
 , mNavigator(mAccessor, mTimeZoomAccessor)
@@ -64,21 +64,18 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
             case AttrType::graphics:
-            case AttrType::font:
-            case AttrType::lineWidth:
             case AttrType::warnings:
             case AttrType::grid:
             case AttrType::processing:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::focused:
-            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
                 break;
-            case AttrType::colours:
+            case AttrType::graphicsSettings:
             {
                 if(mPaintBackground)
                 {
@@ -89,7 +86,6 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::file:
             case AttrType::description:
             case AttrType::name:
-            case AttrType::unit:
             {
                 juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));
                 break;
@@ -152,7 +148,7 @@ void Track::Editor::paint(juce::Graphics& g)
 {
     if(mPaintBackground)
     {
-        g.fillAll(mAccessor.getAttr<AttrType::colours>().background);
+        g.fillAll(mAccessor.getAttr<AttrType::graphicsSettings>().colours.background);
     }
 }
 

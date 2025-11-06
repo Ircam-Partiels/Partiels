@@ -218,11 +218,6 @@ namespace Track
         
         , height
         , graphicsSettings
-        , colours
-        , font
-        , lineWidth
-        , unit
-        , labelLayout
         , channelsLayout
         , showInGroup
         , oscIdentifier
@@ -267,11 +262,6 @@ namespace Track
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::graphicsSettings, GraphicsSettings, Model::Flag::basic>
-    , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
-    , Model::Attr<AttrType::font, juce::FontOptions, Model::Flag::basic>
-    , Model::Attr<AttrType::lineWidth, float, Model::Flag::basic>
-    , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
-    , Model::Attr<AttrType::labelLayout, LabelLayout, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::showInGroup, bool, Model::Flag::basic>
     , Model::Attr<AttrType::oscIdentifier, juce::String, Model::Flag::basic>
@@ -318,11 +308,6 @@ namespace Track
                                  
                                  , {120}
                                  , {}
-                                 , {}
-                                 , {juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)}
-                                 , {1.0f}
-                                 , {}
-                                 , {}
                                  , {std::vector<bool>{}}
                                  , {true}
                                  , {""}
@@ -347,11 +332,13 @@ namespace Track
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            if constexpr(type == AttrType::lineWidth)
+            if constexpr(type == AttrType::graphicsSettings)
             {
-                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(std::max(value, 1.0f), notification);
+                auto copy = value;
+                copy.lineWidth = std::max(copy.lineWidth, 1.0f);
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(copy, notification);
             }
-            if constexpr(type == AttrType::channelsLayout)
+            else if constexpr(type == AttrType::channelsLayout)
             {
                 if(!value.empty() && std::none_of(value.cbegin(), value.cend(), [](auto const& state)
                                                   {

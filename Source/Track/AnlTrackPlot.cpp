@@ -35,11 +35,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::results:
             case AttrType::edit:
             case AttrType::graphics:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::extraThresholds:
             case AttrType::channelsLayout:
             case AttrType::zoomLogScale:

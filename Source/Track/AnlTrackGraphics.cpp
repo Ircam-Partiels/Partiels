@@ -87,7 +87,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         }
     }
 
-    auto const colourMap = accessor.getAttr<AttrType::colours>().map;
+    auto const colourMap = accessor.getAttr<AttrType::graphicsSettings>().colours.map;
     DrawInfo info;
     info.numColumns = width;
     info.numRows = height;

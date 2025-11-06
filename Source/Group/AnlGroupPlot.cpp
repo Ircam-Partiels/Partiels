@@ -38,11 +38,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::results:
             case Track::AttrType::edit:
             case Track::AttrType::graphics:
-            case Track::AttrType::colours:
-            case Track::AttrType::font:
-            case Track::AttrType::lineWidth:
-            case Track::AttrType::unit:
-            case Track::AttrType::labelLayout:
+            case Track::AttrType::graphicsSettings:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
             case Track::AttrType::extraThresholds:

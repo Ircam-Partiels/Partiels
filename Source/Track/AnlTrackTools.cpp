@@ -198,7 +198,7 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
 
 juce::String Track::Tools::getUnit(Accessor const& acsr)
 {
-    return acsr.getAttr<AttrType::unit>().value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
+    return acsr.getAttr<AttrType::graphicsSettings>().unit.value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
 }
 
 juce::String Track::Tools::getBinName(Accessor const& acsr, size_t index)

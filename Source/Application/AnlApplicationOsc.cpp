@@ -405,11 +405,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             case Track::AttrType::state:
             case Track::AttrType::sampleRate:
             case Track::AttrType::height:
-            case Track::AttrType::colours:
-            case Track::AttrType::font:
-            case Track::AttrType::lineWidth:
-            case Track::AttrType::unit:
-            case Track::AttrType::labelLayout:
+            case Track::AttrType::graphicsSettings:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
             case Track::AttrType::zoomValueMode:

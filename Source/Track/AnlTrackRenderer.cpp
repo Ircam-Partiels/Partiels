@@ -449,7 +449,7 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
                 paintInternalGrid(accessor, timeZoomAcsr, g, internalBounds, channels, colour, showGridLabels);
                 paintChannels(g, internalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
-                                  g.setFont(accessor.getAttr<AttrType::font>());
+                                  g.setFont(accessor.getAttr<AttrType::graphicsSettings>().font);
                                   paintMarkers(accessor, channel, g, region, timeZoomAcsr);
                               });
             }
@@ -459,7 +459,7 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
                 paintInternalGrid(accessor, timeZoomAcsr, g, internalBounds, channels, colour, showGridLabels);
                 paintChannels(g, internalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t channel)
                               {
-                                  g.setFont(accessor.getAttr<AttrType::font>());
+                                  g.setFont(accessor.getAttr<AttrType::graphicsSettings>().font);
                                   paintPoints(accessor, channel, g, region, timeZoomAcsr);
                               });
             }
@@ -487,13 +487,13 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
 void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colours = accessor.getAttr<AttrType::colours>();
+    auto const& colours = accessor.getAttr<AttrType::graphicsSettings>().colours;
     auto const& unit = Tools::getUnit(accessor);
-    auto const& labelLayout = accessor.getAttr<AttrType::labelLayout>();
+    auto const& labelLayout = accessor.getAttr<AttrType::graphicsSettings>().labelLayout;
 
     auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
     auto const& edition = accessor.getAttr<AttrType::edit>();
-    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
+    auto const lineWidth = accessor.getAttr<AttrType::graphicsSettings>().lineWidth;
     if(edition.channel == channel)
     {
         auto* data = std::get_if<std::vector<Result::Data::Marker>>(&edition.data);
@@ -669,9 +669,9 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueZoomAcsr = accessor.getAcsr<AcsrType::valueZoom>();
     auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colours = accessor.getAttr<AttrType::colours>();
+    auto const& colours = accessor.getAttr<AttrType::graphicsSettings>().colours;
     auto const& unit = Tools::getUnit(accessor);
-    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
+    auto const lineWidth = accessor.getAttr<AttrType::graphicsSettings>().lineWidth;
     auto const& results = accessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))

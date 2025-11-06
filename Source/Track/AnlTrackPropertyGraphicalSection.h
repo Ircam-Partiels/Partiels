@@ -42,7 +42,6 @@ namespace Track
         void saveAsDefaultGraphicsPreset();
         void deleteDefaultGraphicsPreset();
         void updateGraphicsPresetState();
-        void syncGraphicsSettingsFromAttributes();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};

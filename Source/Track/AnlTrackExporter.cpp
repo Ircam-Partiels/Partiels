@@ -110,9 +110,6 @@ juce::Result Track::Exporter::fromGraphicsPreset(Accessor& accessor, juce::File 
     auto const settings = XmlParser::fromXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());
     accessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 
-    // Also update individual attributes for backward compatibility
-    syncGraphicsSettingsToIndividualAttributes(accessor, settings);
-
     return juce::Result::ok();
 }
 
@@ -137,15 +134,6 @@ juce::Result Track::Exporter::toGraphicsPreset(Accessor const& accessor, juce::F
     return juce::Result::ok();
 }
 
-void Track::Exporter::syncGraphicsSettingsToIndividualAttributes(Accessor& accessor, GraphicsSettings const& settings)
-{
-    accessor.setAttr<AttrType::colours>(settings.colours, NotificationType::synchronous);
-    accessor.setAttr<AttrType::font>(settings.font, NotificationType::synchronous);
-    accessor.setAttr<AttrType::lineWidth>(settings.lineWidth, NotificationType::synchronous);
-    accessor.setAttr<AttrType::unit>(settings.unit, NotificationType::synchronous);
-    accessor.setAttr<AttrType::labelLayout>(settings.labelLayout, NotificationType::synchronous);
-}
-
 juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridJustification)
 {
     juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
@@ -154,7 +142,7 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const scaleWidth = static_cast<float>(scaledWidth) / static_cast<float>(width);
     auto const scaleHeight = static_cast<float>(scaledHeight) / static_cast<float>(height);
     g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
-    g.fillAll(accessor.getAttr<AttrType::colours>().background);
+    g.fillAll(accessor.getAttr<AttrType::graphicsSettings>().colours.background);
     auto const bounds = juce::Rectangle<int>(0, 0, width, height);
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 

@@ -24,10 +24,6 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
@@ -44,7 +40,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
             case AttrType::name:
-            case AttrType::colours:
+            case AttrType::graphicsSettings:
                 break;
             case AttrType::height:
             {
