@@ -111,11 +111,7 @@ juce::Result Track::Exporter::fromGraphicsPreset(Accessor& accessor, juce::File 
     accessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 
     // Also update individual attributes for backward compatibility
-    accessor.setAttr<AttrType::colours>(settings.colours, NotificationType::synchronous);
-    accessor.setAttr<AttrType::font>(settings.font, NotificationType::synchronous);
-    accessor.setAttr<AttrType::lineWidth>(settings.lineWidth, NotificationType::synchronous);
-    accessor.setAttr<AttrType::unit>(settings.unit, NotificationType::synchronous);
-    accessor.setAttr<AttrType::labelLayout>(settings.labelLayout, NotificationType::synchronous);
+    syncGraphicsSettingsToIndividualAttributes(accessor, settings);
 
     return juce::Result::ok();
 }
@@ -139,6 +135,15 @@ juce::Result Track::Exporter::toGraphicsPreset(Accessor const& accessor, juce::F
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a graphics preset because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
+}
+
+void Track::Exporter::syncGraphicsSettingsToIndividualAttributes(Accessor& accessor, GraphicsSettings const& settings)
+{
+    accessor.setAttr<AttrType::colours>(settings.colours, NotificationType::synchronous);
+    accessor.setAttr<AttrType::font>(settings.font, NotificationType::synchronous);
+    accessor.setAttr<AttrType::lineWidth>(settings.lineWidth, NotificationType::synchronous);
+    accessor.setAttr<AttrType::unit>(settings.unit, NotificationType::synchronous);
+    accessor.setAttr<AttrType::labelLayout>(settings.labelLayout, NotificationType::synchronous);
 }
 
 juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridJustification)

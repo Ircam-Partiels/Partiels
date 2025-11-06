@@ -1074,13 +1074,7 @@ void Track::PropertyGraphicalSection::saveGraphicsPreset()
                                       return;
                                   }
                                   // Update graphicsSettings from individual attributes before saving
-                                  GraphicsSettings settings;
-                                  settings.colours = mAccessor.getAttr<AttrType::colours>();
-                                  settings.font = mAccessor.getAttr<AttrType::font>();
-                                  settings.lineWidth = mAccessor.getAttr<AttrType::lineWidth>();
-                                  settings.unit = mAccessor.getAttr<AttrType::unit>();
-                                  settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
-                                  mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+                                  syncGraphicsSettingsFromAttributes();
 
                                   auto const result = Exporter::toGraphicsPreset(mAccessor, results.getFirst());
                                   if(result.failed())
@@ -1099,16 +1093,10 @@ void Track::PropertyGraphicalSection::saveGraphicsPreset()
 void Track::PropertyGraphicalSection::saveAsDefaultGraphicsPreset()
 {
     // Update graphicsSettings from individual attributes before saving
-    GraphicsSettings settings;
-    settings.colours = mAccessor.getAttr<AttrType::colours>();
-    settings.font = mAccessor.getAttr<AttrType::font>();
-    settings.lineWidth = mAccessor.getAttr<AttrType::lineWidth>();
-    settings.unit = mAccessor.getAttr<AttrType::unit>();
-    settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
-    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+    syncGraphicsSettingsFromAttributes();
 
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
-    preset[mAccessor.getAttr<AttrType::key>()] = settings;
+    preset[mAccessor.getAttr<AttrType::key>()] = mAccessor.getAttr<AttrType::graphicsSettings>();
     mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
     updateGraphicsPresetState();
 }
@@ -1126,6 +1114,17 @@ void Track::PropertyGraphicalSection::updateGraphicsPresetState()
     auto const& key = mAccessor.getAttr<AttrType::key>();
     auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
     mPropertyGraphicsPreset.entry.setItemEnabled(MenuGraphicsPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
+}
+
+void Track::PropertyGraphicalSection::syncGraphicsSettingsFromAttributes()
+{
+    GraphicsSettings settings;
+    settings.colours = mAccessor.getAttr<AttrType::colours>();
+    settings.font = mAccessor.getAttr<AttrType::font>();
+    settings.lineWidth = mAccessor.getAttr<AttrType::lineWidth>();
+    settings.unit = mAccessor.getAttr<AttrType::unit>();
+    settings.labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

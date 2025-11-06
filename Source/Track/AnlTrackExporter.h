@@ -16,6 +16,8 @@ namespace Track
 
         juce::Result toGraphicsPreset(Accessor const& accessor, juce::File const& file);
 
+        void syncGraphicsSettingsToIndividualAttributes(Accessor& accessor, GraphicsSettings const& settings);
+
         juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification, std::atomic<bool> const& shouldAbort);
 
