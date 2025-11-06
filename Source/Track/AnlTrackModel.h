@@ -360,11 +360,10 @@ namespace Track
         // clang-format on
 
         class Accessor
-        : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
-        , public Broadcaster<Accessor, SignalType>
+        : public Model::Accessor<Accessor, AttrContainer>
         {
         public:
-            using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
+            using Model::Accessor<Accessor, AttrContainer>::Accessor;
 
             // clang-format off
             Accessor()
