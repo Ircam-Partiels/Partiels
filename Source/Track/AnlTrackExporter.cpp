@@ -89,6 +89,51 @@ juce::Result Track::Exporter::toProcessorPreset(Accessor const& accessor, juce::
     return juce::Result::ok();
 }
 
+juce::Result Track::Exporter::fromGraphicPreset(Accessor& accessor, juce::File const& file)
+{
+    auto xml = juce::XmlDocument::parse(file);
+    if(xml == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The graphic preset file FLNAME cannot be parsed.").replace("FLNAME", file.getFullPathName()));
+    }
+    if(!xml->hasTagName("graphicPreset"))
+    {
+        return juce::Result::fail(juce::translate("The graphic preset file FLNAME is not valid.").replace("FLNAME", file.getFullPathName()));
+    }
+
+    auto const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
+    if(key != accessor.getAttr<AttrType::key>())
+    {
+        return juce::Result::fail(juce::translate("The plugin key of the graphic preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
+    }
+
+    auto const settings = XmlParser::fromXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());
+    accessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+
+    return juce::Result::ok();
+}
+
+juce::Result Track::Exporter::toGraphicPreset(Accessor const& accessor, juce::File const& file)
+{
+    auto const name = accessor.getAttr<AttrType::name>();
+
+    auto xml = std::make_unique<juce::XmlElement>("graphicPreset");
+    anlWeakAssert(xml != nullptr);
+    if(xml == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a graphic preset because the track cannot be parsed.").replace("ANLNAME", name));
+    }
+
+    XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
+    XmlParser::toXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());
+
+    if(!xml->writeTo(file))
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a graphic preset because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+    return juce::Result::ok();
+}
+
 juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridJustification)
 {
     juce::Image image(juce::Image::PixelFormat::ARGB, scaledWidth, scaledHeight, true);
