@@ -1,4 +1,5 @@
 #include "AnlTrackPropertyGraphicalSection.h"
+#include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 #include "AnlTrackTooltip.h"
 
@@ -35,8 +36,9 @@ static std::vector<std::string> getFontSizes()
     return names;
 }
 
-Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
+Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
+, mPresetListAccessor(presetListAcsr)
 , mZoomGridPropertyWindow(juce::translate("Grid Properties"), mZoomGridPropertyPanel)
 , mPropertyColourMap(juce::translate("Color Map"), juce::translate("The color map of the graphical renderer."), "", getColourMapNames(), [&](size_t index)
                      {
@@ -274,6 +276,35 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                            mAccessor.setAttr<AttrType::showInGroup>(state, NotificationType::synchronous);
                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change the visibility of the track in the group overlay view"));
                        })
+, mPropertyPreset(juce::translate("Preset"), juce::translate("The graphic preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+                  {
+                      auto const selectedId = mPropertyPreset.entry.getSelectedId();
+                      switch(selectedId)
+                      {
+                          case MenuPresetId::loadPresetId:
+                          {
+                              loadPreset();
+                              break;
+                          }
+                          case MenuPresetId::savePresetId:
+                          {
+                              savePreset();
+                              break;
+                          }
+                          case MenuPresetId::saveDefaultPresetId:
+                          {
+                              saveAsDefaultPreset();
+                              break;
+                          }
+                          case MenuPresetId::deleteDefaultPresetId:
+                          {
+                              deleteDefaultPreset();
+                              break;
+                          }
+                          default:
+                              break;
+                      };
+                  })
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -318,6 +349,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyLabelPosition.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
                             mPropertyShowInGroup.setVisible(true);
+                            mPropertyPreset.setVisible(true);
                             break;
                         }
                         case Track::FrameType::value:
@@ -344,6 +376,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyGrid.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
                             mPropertyShowInGroup.setVisible(true);
+                            mPropertyPreset.setVisible(true);
                             break;
                         }
                         case Track::FrameType::vector:
@@ -367,6 +400,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyGrid.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
                             mPropertyShowInGroup.setVisible(true);
+                            mPropertyPreset.setVisible(true);
                             mProgressBarRendering.setVisible(true);
                             break;
                         }
@@ -569,8 +603,18 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyGrid);
     addAndMakeVisible(mPropertyChannelLayout);
     addAndMakeVisible(mPropertyShowInGroup);
+    addAndMakeVisible(mPropertyPreset);
     addAndMakeVisible(mProgressBarRendering);
     setSize(300, 400);
+
+    // Setup graphic preset menu
+    mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
+    mPropertyPreset.entry.addItem("Load...", MenuPresetId::loadPresetId);
+    mPropertyPreset.entry.addItem("Save...", MenuPresetId::savePresetId);
+    mPropertyPreset.entry.addSeparator();
+    mPropertyPreset.entry.addItem("Save as Default", MenuPresetId::saveDefaultPresetId);
+    mPropertyPreset.entry.addItem("Delete Default", MenuPresetId::deleteDefaultPresetId);
+    updatePresetState();
 
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
@@ -621,6 +665,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyShowInGroup);
     setBounds(mPropertyGrid);
     setBounds(mPropertyChannelLayout);
+    setBounds(mPropertyPreset);
     setBounds(mProgressBarRendering);
     setSize(getWidth(), bounds.getY());
 }
@@ -963,6 +1008,108 @@ void Track::PropertyGraphicalSection::updateGridPanel()
     {
         mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
     }
+}
+
+void Track::PropertyGraphicalSection::loadPreset()
+{
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load graphic preset from file..."), juce::File{}, App::getFileWildCardFor("graphic"));
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<juce::Component> weakReference(this);
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(weakReference.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  if(results.isEmpty())
+                                  {
+                                      updatePresetState();
+                                      return;
+                                  }
+                                  mDirector.startAction();
+                                  auto const exportResult = Exporter::fromGraphicPreset(mAccessor, results.getFirst());
+                                  if(exportResult.failed())
+                                  {
+                                      mDirector.endAction(ActionState::abort);
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to load from graphic preset file!"))
+                                                               .withMessage(exportResult.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
+                                  }
+                                  else
+                                  {
+                                      mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's graphic properties from preset file"));
+                                  }
+                                  updatePresetState();
+                              });
+}
+
+void Track::PropertyGraphicalSection::savePreset()
+{
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as graphic preset..."), juce::File{}, App::getFileWildCardFor("graphic"));
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<juce::Component> weakReference(this);
+    mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(weakReference.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  if(results.isEmpty())
+                                  {
+                                      updatePresetState();
+                                      return;
+                                  }
+
+                                  auto const result = Exporter::toGraphicPreset(mAccessor, results.getFirst());
+                                  if(result.failed())
+                                  {
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to save a graphic preset file!"))
+                                                               .withMessage(result.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
+                                  }
+                                  updatePresetState();
+                              });
+}
+
+void Track::PropertyGraphicalSection::saveAsDefaultPreset()
+{
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    preset[mAccessor.getAttr<AttrType::key>()] = mAccessor.getAttr<AttrType::graphicsSettings>();
+    mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
+    updatePresetState();
+}
+
+void Track::PropertyGraphicalSection::deleteDefaultPreset()
+{
+    auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    preset.erase(mAccessor.getAttr<AttrType::key>());
+    mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
+    updatePresetState();
+}
+
+void Track::PropertyGraphicalSection::updatePresetState()
+{
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
+    mPropertyPreset.entry.setItemEnabled(MenuPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
+    // There is nothing to mark as selected
+    mPropertyPreset.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
 }
 
 ANALYSE_FILE_END

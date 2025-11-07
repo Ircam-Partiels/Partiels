@@ -46,7 +46,7 @@ namespace Track
         ConcertinaTable mProcessorSection{juce::translate("PROCESSOR"), true,
                                           juce::translate("The processor parameters of the track")};
 
-        PropertyGraphicalSection mPropertyGraphicalSection{mDirector};
+        PropertyGraphicalSection mPropertyGraphicalSection;
         ConcertinaTable mGraphicalSection{juce::translate("GRAPHICAL"), true,
                                           juce::translate("The graphical parameters of the track")};
 
