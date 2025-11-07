@@ -191,11 +191,16 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::graphics:
             case AttrType::height:
                 break;
-            case AttrType::colours:
+            case AttrType::graphicsSettings:
             {
                 if(!mAccessor.getAttr<AttrType::hasPluginColourMap>())
                 {
-                    runRendering();
+                    auto const colourMap = mAccessor.getAttr<AttrType::graphicsSettings>().colours.map;
+                    if(!mLastColourMap.has_value() || mLastColourMap.value() != colourMap)
+                    {
+                        mLastColourMap = colourMap;
+                        runRendering();
+                    }
                 }
             }
             break;
@@ -239,10 +244,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::processing:
             case AttrType::focused:
             case AttrType::grid:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:

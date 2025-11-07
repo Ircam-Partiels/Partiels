@@ -148,35 +148,40 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     {
                         mDirector.startAction();
                         auto const name = mPropertyFontName.entry.getText();
-                        auto const font = mAccessor.getAttr<AttrType::font>();
-                        auto newFont = juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
-                        if(juce::Font(newFont).getAvailableStyles().contains(font.getStyle()))
+                        auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+                        auto newFont = juce::FontOptions(name, settings.font.getHeight(), juce::Font::FontStyleFlags::plain);
+                        if(juce::Font(newFont).getAvailableStyles().contains(settings.font.getStyle()))
                         {
-                            newFont = newFont.withStyle(font.getStyle());
+                            newFont = newFont.withStyle(settings.font.getStyle());
                         }
-                        mAccessor.setAttr<AttrType::font>(newFont, NotificationType::synchronous);
+                        settings.font = newFont;
+                        mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font name"));
                     })
 , mPropertyFontStyle(juce::translate("Font Style"), juce::translate("The style of the font for the graphical renderer."), "", {}, [&]([[maybe_unused]] size_t index)
                      {
                          mDirector.startAction();
                          auto const style = mPropertyFontStyle.entry.getText();
-                         auto const font = mAccessor.getAttr<AttrType::font>().withStyle(style);
-                         mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
+                         auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+                         settings.font = settings.font.withStyle(style);
+                         mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font style"));
                      })
 , mPropertyFontSize(juce::translate("Font Size"), juce::translate("The size of the font for the graphical renderer."), "", getFontSizes(), [&]([[maybe_unused]] size_t index)
                     {
                         mDirector.startAction();
                         auto const size = mPropertyFontSize.entry.getText().getFloatValue();
-                        auto const font = mAccessor.getAttr<AttrType::font>().withHeight(size);
-                        mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
+                        auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+                        settings.font = settings.font.withHeight(size);
+                        mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font size"));
                     })
 , mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
                      {
                          mDirector.startAction();
-                         mAccessor.setAttr<AttrType::lineWidth>(value, NotificationType::synchronous);
+                         auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+                         settings.lineWidth = value;
+                         mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change the line width for the graphical renderer"));
                      })
 , mPropertyUnit("Unit", "The unit of the values", [&](juce::String text)
@@ -186,7 +191,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 , mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
                               {
                                   mDirector.startAction();
-                                  setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(mAccessor.getAttr<AttrType::labelLayout>().justification));
+                                  setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(mAccessor.getAttr<AttrType::graphicsSettings>().labelLayout.justification));
                                   mDirector.endAction(ActionState::newTransaction, juce::translate("Change the justification of the labels"));
                               })
 , mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
@@ -276,10 +281,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
         {
             case AttrType::description:
             case AttrType::results:
-            case AttrType::unit:
             case AttrType::channelsLayout:
             case AttrType::zoomValueMode:
             case AttrType::hasPluginColourMap:
+            case AttrType::graphicsSettings:
             {
                 for(auto* child : getChildren())
                 {
@@ -361,8 +366,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                             mPropertyRangeLink.setVisible(true);
                             mPropertyGrid.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                            mProgressBarRendering.setVisible(true);
                             mPropertyShowInGroup.setVisible(true);
+                            mProgressBarRendering.setVisible(true);
                             break;
                         }
                     }
@@ -370,55 +375,43 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 updateZoomMode();
                 updateExtraTheshold();
                 resized();
-            }
-            break;
-            case AttrType::colours:
-            {
-                auto const colours = acsr.getAttr<AttrType::colours>();
-                mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
-                mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
-                mPropertyDurationColour.entry.setCurrentColour(colours.duration, juce::NotificationType::dontSendNotification);
-                mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
-                mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
-                mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
-            }
-            break;
-            case AttrType::font:
-            {
-                auto const font = acsr.getAttr<AttrType::font>();
-                mPropertyFontName.entry.setText(font.getName(), juce::NotificationType::dontSendNotification);
+                auto const settings = acsr.getAttr<AttrType::graphicsSettings>();
+                // Update colours
+                mPropertyBackgroundColour.entry.setCurrentColour(settings.colours.background, juce::NotificationType::dontSendNotification);
+                mPropertyForegroundColour.entry.setCurrentColour(settings.colours.foreground, juce::NotificationType::dontSendNotification);
+                mPropertyDurationColour.entry.setCurrentColour(settings.colours.duration, juce::NotificationType::dontSendNotification);
+                mPropertyTextColour.entry.setCurrentColour(settings.colours.text, juce::NotificationType::dontSendNotification);
+                mPropertyShadowColour.entry.setCurrentColour(settings.colours.shadow, juce::NotificationType::dontSendNotification);
+                mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(settings.colours.map), juce::NotificationType::dontSendNotification);
+
+                // Update font
+                mPropertyFontName.entry.setText(settings.font.getName(), juce::NotificationType::dontSendNotification);
                 mPropertyFontName.entry.setEnabled(mPropertyFontName.entry.getNumItems() > 1);
 
                 mPropertyFontStyle.entry.clear(juce::NotificationType::dontSendNotification);
-                mPropertyFontStyle.entry.addItemList(juce::Font(font).getAvailableStyles(), 1);
-                mPropertyFontStyle.entry.setText(font.getStyle(), juce::NotificationType::dontSendNotification);
+                mPropertyFontStyle.entry.addItemList(juce::Font(settings.font).getAvailableStyles(), 1);
+                mPropertyFontStyle.entry.setText(settings.font.getStyle(), juce::NotificationType::dontSendNotification);
                 mPropertyFontStyle.entry.setEnabled(mPropertyFontStyle.entry.getNumItems() > 1);
 
-                auto const roundedHeight = std::round(font.getHeight());
-                if(std::abs(font.getHeight() - roundedHeight) < 0.1f)
+                auto const roundedHeight = std::round(settings.font.getHeight());
+                if(std::abs(settings.font.getHeight() - roundedHeight) < 0.1f)
                 {
                     mPropertyFontSize.entry.setText(juce::String(static_cast<int>(roundedHeight)), juce::NotificationType::dontSendNotification);
                 }
                 else
                 {
-                    mPropertyFontSize.entry.setText(juce::String(font.getHeight(), 1), juce::NotificationType::dontSendNotification);
+                    mPropertyFontSize.entry.setText(juce::String(settings.font.getHeight(), 1), juce::NotificationType::dontSendNotification);
                 }
-            }
-            break;
-            case AttrType::lineWidth:
-            {
-                auto const& lineWidth = acsr.getAttr<AttrType::lineWidth>();
-                mPropertyLineWidth.entry.setValue(static_cast<double>(lineWidth), juce::NotificationType::dontSendNotification);
-            }
-            break;
-            case AttrType::labelLayout:
-            {
-                auto const& labelLayout = acsr.getAttr<AttrType::labelLayout>();
-                auto const index = magic_enum::enum_index(labelLayout.justification).value_or(mPropertyLabelJustification.entry.getSelectedItemIndex());
+
+                // Update lineWidth
+                mPropertyLineWidth.entry.setValue(static_cast<double>(settings.lineWidth), juce::NotificationType::dontSendNotification);
+
+                // Update labelLayout
+                auto const index = magic_enum::enum_index(settings.labelLayout.justification).value_or(mPropertyLabelJustification.entry.getSelectedItemIndex());
                 mPropertyLabelJustification.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
-                mPropertyLabelPosition.entry.setValue(static_cast<double>(labelLayout.position), juce::NotificationType::dontSendNotification);
+                mPropertyLabelPosition.entry.setValue(static_cast<double>(settings.labelLayout.position), juce::NotificationType::dontSendNotification);
+                break;
             }
-            break;
             case AttrType::zoomLink:
             {
                 mPropertyRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
@@ -703,44 +696,44 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
 
 void Track::PropertyGraphicalSection::setColourMap(ColourMap const& colourMap)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.map = colourMap;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.map = colourMap;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setForegroundColour(juce::Colour const& colour)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.foreground = colour;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.foreground = colour;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setDurationColour(juce::Colour const& colour)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.duration = colour;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.duration = colour;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setBackgroundColour(juce::Colour const& colour)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.background = colour;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.background = colour;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setTextColour(juce::Colour const& colour)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.text = colour;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.text = colour;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setShadowColour(juce::Colour const& colour)
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.shadow = colour;
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.colours.shadow = colour;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setUnit(juce::String const& unit)
@@ -757,37 +750,41 @@ void Track::PropertyGraphicalSection::setUnit(juce::String const& unit)
         juce::AlertWindow::showAsync(options, [=, this](int result)
                                      {
                                          mDirector.startAction();
+                                         auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
                                          if(result == 1)
                                          {
-                                             mAccessor.setAttr<AttrType::unit>(juce::String(), NotificationType::synchronous);
+                                             settings.unit = juce::String();
                                          }
                                          else
                                          {
-                                             mAccessor.setAttr<AttrType::unit>(std::optional<juce::String>(), NotificationType::synchronous);
+                                             settings.unit = std::optional<juce::String>();
                                          }
+                                         mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change unit of the values name"));
                                      });
     }
     else
     {
         mDirector.startAction();
-        mAccessor.setAttr<AttrType::unit>(unit, NotificationType::synchronous);
+        auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+        settings.unit = unit;
+        mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
         mDirector.endAction(ActionState::newTransaction, juce::translate("Change unit of the values name"));
     }
 }
 
 void Track::PropertyGraphicalSection::setLabelJustification(LabelLayout::Justification justification)
 {
-    auto labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
-    labelLayout.justification = justification;
-    mAccessor.setAttr<AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.labelLayout.justification = justification;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setLabelPosition(float position)
 {
-    auto labelLayout = mAccessor.getAttr<AttrType::labelLayout>();
-    labelLayout.position = position;
-    mAccessor.setAttr<AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.labelLayout.position = position;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setPluginValueRange()

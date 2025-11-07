@@ -202,7 +202,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::lineWidth, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::graphicsSettings, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
 , mThresholdsNotifier(mAccessor, [this]()
                       {
                           updateExtraThresholdStates();
@@ -283,9 +283,9 @@ void Group::PropertyGraphicalsSection::setColourMap(Track::ColourMap const& colo
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.map = colourMap;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.map = colourMap;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -301,9 +301,9 @@ void Group::PropertyGraphicalsSection::setForegroundColour(juce::Colour const& c
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.foreground = colour;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.foreground = colour;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -319,9 +319,9 @@ void Group::PropertyGraphicalsSection::setDurationColour(juce::Colour const& col
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.duration = colour;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.duration = colour;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -337,9 +337,9 @@ void Group::PropertyGraphicalsSection::setBackgroundColour(juce::Colour const& c
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.background = colour;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.background = colour;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -355,9 +355,9 @@ void Group::PropertyGraphicalsSection::setTextColour(juce::Colour const& colour)
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.text = colour;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.text = colour;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -373,9 +373,9 @@ void Group::PropertyGraphicalsSection::setShadowColour(juce::Colour const& colou
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
-        colours.shadow = colour;
-        trackAcsr.get().setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.colours.shadow = colour;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
 }
 
@@ -390,7 +390,7 @@ void Group::PropertyGraphicalsSection::setFontName(juce::String const& name)
         return;
     }
 
-    auto const font = trackAcsrs.front().get().getAttr<Track::AttrType::font>();
+    auto const font = trackAcsrs.front().get().getAttr<Track::AttrType::graphicsSettings>().font;
     auto newFont = juce::FontOptions(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
     if(juce::Font(newFont).getAvailableStyles().contains(font.getStyle()))
     {
@@ -398,7 +398,11 @@ void Group::PropertyGraphicalsSection::setFontName(juce::String const& name)
     }
     for(auto& trackAcsr : trackAcsrs)
     {
-        trackAcsr.get().setAttr<Track::AttrType::font>(font, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+        settings.font = font;
+
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
     updateFont();
 }
@@ -416,10 +420,14 @@ void Group::PropertyGraphicalsSection::setFontStyle(juce::String const& style)
 
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto const font = trackAcsr.get().getAttr<Track::AttrType::font>();
+        auto const font = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().font;
         if(juce::Font(font).getAvailableStyles().contains(style))
         {
-            trackAcsr.get().setAttr<Track::AttrType::font>(font.withStyle(style), NotificationType::synchronous);
+            auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+            settings.font = font.withStyle(style);
+
+            trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
         }
     }
     updateFont();
@@ -438,8 +446,12 @@ void Group::PropertyGraphicalsSection::setFontSize(float size)
 
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto const font = trackAcsr.get().getAttr<Track::AttrType::font>().withHeight(size);
-        trackAcsr.get().setAttr<Track::AttrType::font>(font, NotificationType::synchronous);
+        auto const font = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().font.withHeight(size);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+        settings.font = font;
+
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
     updateFont();
 }
@@ -457,7 +469,11 @@ void Group::PropertyGraphicalsSection::setLineWidth(float size)
 
     for(auto& trackAcsr : trackAcsrs)
     {
-        trackAcsr.get().setAttr<Track::AttrType::lineWidth>(size, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+        settings.lineWidth = size;
+
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
     updateLineWidth();
 }
@@ -494,14 +510,22 @@ void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
                                          {
                                              for(auto& trackAcsr : trackAcsrs)
                                              {
-                                                 trackAcsr.get().setAttr<Track::AttrType::unit>(juce::String(), NotificationType::synchronous);
+                                                 auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+                                                 settings.unit = juce::String();
+
+                                                 trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                                              }
                                          }
                                          else
                                          {
                                              for(auto& trackAcsr : trackAcsrs)
                                              {
-                                                 trackAcsr.get().setAttr<Track::AttrType::unit>(std::optional<juce::String>{}, NotificationType::synchronous);
+                                                 auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+                                                 settings.unit = std::optional<juce::String>{};
+
+                                                 trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                                              }
                                          }
                                          updateUnit();
@@ -513,7 +537,11 @@ void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
         mDirector.startAction(true);
         for(auto& trackAcsr : trackAcsrs)
         {
-            trackAcsr.get().setAttr<Track::AttrType::unit>(unit, NotificationType::synchronous);
+            auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+
+            settings.unit = unit;
+
+            trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
         }
         updateUnit();
         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change unit of the values name"));
@@ -533,9 +561,9 @@ void Group::PropertyGraphicalsSection::setLabelJustification(Track::LabelLayout:
 
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto labelLayout = trackAcsr.get().getAttr<Track::AttrType::labelLayout>();
-        labelLayout.justification = justification;
-        trackAcsr.get().setAttr<Track::AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.labelLayout.justification = justification;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
     updateLabel();
 }
@@ -553,9 +581,9 @@ void Group::PropertyGraphicalsSection::setLabelPosition(float position)
 
     for(auto& trackAcsr : trackAcsrs)
     {
-        auto labelLayout = trackAcsr.get().getAttr<Track::AttrType::labelLayout>();
-        labelLayout.position = position;
-        trackAcsr.get().setAttr<Track::AttrType::labelLayout>(labelLayout, NotificationType::synchronous);
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.labelLayout.position = position;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
     }
     updateLabel();
 }
@@ -646,7 +674,7 @@ void Group::PropertyGraphicalsSection::updateColourMap()
     {
         if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector && !trackAcsr.get().getAttr<Track::AttrType::hasPluginColourMap>())
         {
-            auto const colourMap = trackAcsr.get().getAttr<Track::AttrType::colours>().map;
+            auto const colourMap = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().colours.map;
             colourMaps.insert(colourMap);
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
@@ -677,7 +705,7 @@ void Group::PropertyGraphicalsSection::updateColours()
     {
         if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
-            auto const& colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
+            auto const& colours = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().colours;
             foregroundColours.insert(colours.foreground.getARGB());
             backgrounColours.insert(colours.background.getARGB());
             textColours.insert(colours.text.getARGB());
@@ -757,7 +785,7 @@ void Group::PropertyGraphicalsSection::updateFont()
     {
         if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
-            auto const font = trackAcsr.get().getAttr<Track::AttrType::font>();
+            auto const font = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().font;
             if(!currentFont.has_value())
             {
                 currentFont = font;
@@ -828,7 +856,7 @@ void Group::PropertyGraphicalsSection::updateLineWidth()
     {
         if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
-            lineWidth.insert(trackAcsr.get().getAttr<Track::AttrType::lineWidth>());
+            lineWidth.insert(trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().lineWidth);
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
@@ -900,7 +928,7 @@ void Group::PropertyGraphicalsSection::updateLabel()
     {
         if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label)
         {
-            labelLayouts.insert(trackAcsr.get().getAttr<Track::AttrType::labelLayout>());
+            labelLayouts.insert(trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().labelLayout);
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }

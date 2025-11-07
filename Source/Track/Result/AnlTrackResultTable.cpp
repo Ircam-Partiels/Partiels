@@ -32,11 +32,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
@@ -83,7 +79,6 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::file:
             case AttrType::results:
             case AttrType::description:
-            case AttrType::unit:
             {
                 mTabbedButtonBar.removeChangeListener(this);
                 auto const setNumChannels = [this](auto resultPtr)
@@ -161,15 +156,17 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 selectionUpdated();
             }
             break;
+            case AttrType::graphicsSettings:
+            {
+                mTable.repaint();
+                mTable.updateContent();
+                break;
+            }
             case AttrType::edit:
             case AttrType::key:
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::labelLayout:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:

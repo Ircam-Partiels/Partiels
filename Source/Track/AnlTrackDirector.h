@@ -92,6 +92,7 @@ namespace Track
         Processor mProcessor;
         Loader mLoader;
         Graphics mGraphics;
+        std::optional<ColourMap> mLastColourMap;
         std::optional<std::reference_wrapper<Zoom::Accessor>> mSharedZoomAccessor;
         Zoom::Accessor::Listener mSharedZoomListener{typeid(*this).name()};
         std::mutex mSharedZoomMutex;

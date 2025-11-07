@@ -27,11 +27,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::processing:
             case AttrType::focused:
             case AttrType::graphics:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
@@ -179,11 +175,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::input:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::channelsLayout:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
