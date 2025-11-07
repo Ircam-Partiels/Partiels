@@ -193,7 +193,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
 , mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
                               {
                                   mDirector.startAction();
-                                  setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(mAccessor.getAttr<AttrType::graphicsSettings>().labelLayout.justification));
+                                  auto fallbackJustification = mAccessor.getAttr<AttrType::graphicsSettings>().labelLayout.justification;
+                                  setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(fallbackJustification));
                                   mDirector.endAction(ActionState::newTransaction, juce::translate("Change the justification of the labels"));
                               })
 , mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
