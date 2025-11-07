@@ -224,8 +224,10 @@ endif()
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Preset/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
+    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
 else()
@@ -233,6 +235,8 @@ else()
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Preset"
+        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings "$<TARGET_FILE_DIR:Partiels>/Preset"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ "$<TARGET_FILE_DIR:Partiels>/Translations/"
@@ -255,6 +259,7 @@ if(WIN32)
 
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR})
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/PlugIns)
+    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Preset)
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Templates)
     file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Translations)
     file(COPY ${CMAKE_CURRENT_BINARY_DIR}/Install.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
@@ -270,6 +275,7 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:Partiels>" "${PARTIELS_PACKAGE_TEMPDIR}"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E copy "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings" "${PARTIELS_PACKAGE_TEMPDIR}/Preset"
         COMMAND ${CMAKE_COMMAND} -E copy "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" "${PARTIELS_PACKAGE_TEMPDIR}/Templates"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/Scripts/" "${PARTIELS_PACKAGE_TEMPDIR}/Scripts/"
     )
@@ -302,6 +308,7 @@ elseif(UNIX AND NOT APPLE)
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "mkdir -p ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp $PARTIELS_BINARY_PATH/Partiels ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/PlugIns ${PARTIELS_PACKAGE_DIR}/PlugIns\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Preset ${PARTIELS_PACKAGE_DIR}/Preset\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Templates ${PARTIELS_PACKAGE_DIR}/Templates\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Translations ${PARTIELS_PACKAGE_DIR}/Translations\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Scripts ${PARTIELS_PACKAGE_DIR}/Scripts\n")

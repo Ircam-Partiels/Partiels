@@ -186,6 +186,26 @@ void Application::Properties::loadFromFile(PropertyType type)
                 auto& acsr = Instance::get().getTrackPresetListAccessor();
                 acsr.fromXml(*xml, "TrackPresets", NotificationType::synchronous);
             }
+            else
+            {
+                auto const embeddedPresetFile = []()
+                {
+                    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+                    return exeFile.getParentDirectory().getSiblingFile("Resources");
+#else
+                    return exeFile;
+#endif
+                }()
+                                                    .getChildFile("Preset")
+                                                    .getChildFile("Partiels.trackpresets.settings");
+                xml = juce::parseXML(embeddedPresetFile);
+                if(xml != nullptr)
+                {
+                    auto& acsr = Instance::get().getTrackPresetListAccessor();
+                    acsr.fromXml(*xml, "TrackPresets", NotificationType::synchronous);
+                }
+            }
         }
         break;
     }
