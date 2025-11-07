@@ -243,7 +243,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         auto const trackIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
-        
+
         // Use global graphic preset
         auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>();
         auto settings = globalPreset;

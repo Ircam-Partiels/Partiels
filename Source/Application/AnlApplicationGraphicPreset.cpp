@@ -43,32 +43,27 @@ Application::GraphicPresetContent::GraphicPresetContent()
                             {
                                 setForegroundColour(colour);
                             },
-                            nullptr,
-                            nullptr)
+                            nullptr, nullptr)
 , mPropertyDurationColour(juce::translate("Duration Color"), juce::translate("The duration color of the graphical renderer."), juce::translate("Select the duration color"), [&](juce::Colour const& colour)
                           {
                               setDurationColour(colour);
                           },
-                          nullptr,
-                          nullptr)
+                          nullptr, nullptr)
 , mPropertyBackgroundColour(juce::translate("Background Color"), juce::translate("The background color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
                             {
                                 setBackgroundColour(colour);
                             },
-                            nullptr,
-                            nullptr)
+                            nullptr, nullptr)
 , mPropertyTextColour(juce::translate("Text Color"), juce::translate("The text color of the graphical renderer."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
                       {
                           setTextColour(colour);
                       },
-                      nullptr,
-                      nullptr)
+                      nullptr, nullptr)
 , mPropertyShadowColour(juce::translate("Shadow Color"), juce::translate("The shadow color of the graphical renderer."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
                         {
                             setShadowColour(colour);
                         },
-                        nullptr,
-                        nullptr)
+                        nullptr, nullptr)
 , mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
                     {
                         setFontName(mPropertyFontName.entry.getText());
@@ -176,7 +171,7 @@ void Application::GraphicPresetContent::resized()
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
-    
+
     auto const height = bounds.getY();
     setSize(getWidth(), height);
 }
@@ -184,21 +179,21 @@ void Application::GraphicPresetContent::resized()
 void Application::GraphicPresetContent::updateFromGlobalPreset()
 {
     auto const& preset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
-    
+
     // Update colour map
     mPropertyColourMap.entry.setSelectedId(static_cast<int>(preset.colours.map) + 1, juce::NotificationType::dontSendNotification);
-    
+
     // Update colours
     mPropertyForegroundColour.entry.setCurrentColour(preset.colours.foreground, juce::NotificationType::dontSendNotification);
     mPropertyDurationColour.entry.setCurrentColour(preset.colours.duration, juce::NotificationType::dontSendNotification);
     mPropertyBackgroundColour.entry.setCurrentColour(preset.colours.background, juce::NotificationType::dontSendNotification);
     mPropertyTextColour.entry.setCurrentColour(preset.colours.text, juce::NotificationType::dontSendNotification);
     mPropertyShadowColour.entry.setCurrentColour(preset.colours.shadow, juce::NotificationType::dontSendNotification);
-    
+
     // Update font
     auto const font = juce::Font(preset.font);
     mPropertyFontName.entry.setText(font.getTypefaceName(), juce::NotificationType::dontSendNotification);
-    
+
     // Update font style
     auto const styles = font.getAvailableStyles();
     mPropertyFontStyle.entry.clear(juce::NotificationType::dontSendNotification);
@@ -207,19 +202,19 @@ void Application::GraphicPresetContent::updateFromGlobalPreset()
         mPropertyFontStyle.entry.addItem(styles[i], i + 1);
     }
     mPropertyFontStyle.entry.setText(font.getTypefaceStyle(), juce::NotificationType::dontSendNotification);
-    
+
     // Update font size
     mPropertyFontSize.entry.setText(juce::String(static_cast<int>(font.getHeight())), juce::NotificationType::dontSendNotification);
-    
+
     // Update line width
     mPropertyLineWidth.entry.setValue(static_cast<double>(preset.lineWidth), juce::NotificationType::dontSendNotification);
-    
+
     // Update unit
     mPropertyUnit.entry.setText(preset.unit.has_value() ? preset.unit.value() : "", juce::NotificationType::dontSendNotification);
-    
+
     // Update label justification
     mPropertyLabelJustification.entry.setSelectedId(static_cast<int>(preset.labelLayout.justification) + 1, juce::NotificationType::dontSendNotification);
-    
+
     // Update label position
     mPropertyLabelPosition.entry.setValue(static_cast<double>(preset.labelLayout.position), juce::NotificationType::dontSendNotification);
 }
