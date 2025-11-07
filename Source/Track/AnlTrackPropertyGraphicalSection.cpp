@@ -610,11 +610,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
 
     // Setup graphic preset menu
     mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
-    mPropertyPreset.entry.addItem("Load...", MenuPresetId::loadPresetId);
-    mPropertyPreset.entry.addItem("Save...", MenuPresetId::savePresetId);
+    mPropertyPreset.entry.addItem("Load graphic track preset...", MenuPresetId::loadPresetId);
+    mPropertyPreset.entry.addItem("Save graphic track preset...", MenuPresetId::savePresetId);
     mPropertyPreset.entry.addSeparator();
-    mPropertyPreset.entry.addItem("Save as Default", MenuPresetId::saveDefaultPresetId);
-    mPropertyPreset.entry.addItem("Delete Default", MenuPresetId::deleteDefaultPresetId);
+    mPropertyPreset.entry.addItem("Save as default graphic preset for track", MenuPresetId::saveDefaultPresetId);
+    mPropertyPreset.entry.addItem("Delete the default graphic preset for the track", MenuPresetId::deleteDefaultPresetId);
     updatePresetState();
 
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);

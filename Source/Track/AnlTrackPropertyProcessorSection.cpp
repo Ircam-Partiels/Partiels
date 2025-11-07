@@ -195,11 +195,11 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 }
                 mPropertyPreset.entry.addItemList(items, MenuPresetId::pluginPresetId);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Load...", MenuPresetId::loadPresetId);
-                mPropertyPreset.entry.addItem("Save...", MenuPresetId::savePresetId);
+                mPropertyPreset.entry.addItem("Load processor track preset...", MenuPresetId::loadPresetId);
+                mPropertyPreset.entry.addItem("Save processor track preset...", MenuPresetId::savePresetId);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Save as Default", MenuPresetId::saveDefaultPresetId);
-                mPropertyPreset.entry.addItem("Delete Default", MenuPresetId::deleteDefaultPresetId);
+                mPropertyPreset.entry.addItem("Save as default processor preset for track", MenuPresetId::saveDefaultPresetId);
+                mPropertyPreset.entry.addItem("Delete the default processor preset for the track", MenuPresetId::deleteDefaultPresetId);
                 resized();
                 [[fallthrough]];
             }
