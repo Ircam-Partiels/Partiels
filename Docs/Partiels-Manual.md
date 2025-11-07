@@ -665,13 +665,15 @@ Depending on the plugin characteristics, the section provides access to the defa
 
 The section provides access to the plugin-specific parameters that are used to perform the analysis. According to their specifications, parameter values can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been modified, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking if you wish to continue (you can always cancel the operation to recover the previous analysis results).
 
+#### 9.1.3. Preset
+
 <p align="center">
-<img src="Images/section-track-properties.4-v2.3.0.png" width="196"/>
+<img src="Images/section-track-properties.4-v2.3.0.png" width="238"/>
 </p>
 
-The presets menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters to a file on your operating system and load this file to restore the state (the file can be used in any other track using the same plugin). You can also save the current state as the default preset for the plugin. This way, when you add a new track with this plugin, this preset will be used directly. Alternatively, you can delete the default preset to use the default state provided by the plugin.
+The presets menu allows you to restore the factory values of the processor parameters. You can also save the current state of the processor parameters to a file on your operating system and load this file to restore the processor state (the file can be used in any other track using the same plugin). You can also save the current processor state as the default processor preset for the plugin. This way, when you add a new track with this plugin, this processor preset will be used directly. Alternatively, you can delete the default processor preset to use the default processor state provided by the plugin.
 
-#### 9.1.3. State
+#### 9.1.4. State
 
 The current state of the plugin is displayed at the bottom of the section, indicating whether the analysis or loading succeeded or failed and whether the results have been modified.
 
@@ -769,6 +771,14 @@ The value range of point and column results can be adapted to optimize the graph
 - Show in the group overlay view: The toggle button allows showing or hiding the track in the group's overlay view. This property can also be modified with the other groups via the [group properties](#10-group-properties) window.
 
 - Channel Layout: The channel layout button allows showing or hiding the channels of analysis results. This channel layout is only graphical and does not change the audio analysis or the audio playback (please refer to the audio files layout section). This property can also be modified with the other groups via the [group properties](#10-group-properties) window.
+
+#### 9.2.5. Preset 
+
+<p align="center">
+<img src="Images/section-track-properties.10-v2.3.0.png" width="230"/>
+</p>
+
+The presets menu allows you to save the current graphic state to a file on your operating system and load this file to restore the graphic state (the file can be used in any other track using the same plugin). You can also save the current graphic state as the default graphic preset for the plugin. This way, when you add a new track with this plugin, this graphic preset will be used directly. Alternatively, you can delete the default graphic preset to use the default graphic state defined by the application.
 
 ### 9.3. OSC
 
