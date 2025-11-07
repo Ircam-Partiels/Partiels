@@ -87,11 +87,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::graphics:
             case AttrType::identifier:
             case AttrType::height:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::channelsLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:

@@ -40,11 +40,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::results:
             case AttrType::edit:
             case AttrType::graphics:
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
-            case AttrType::unit:
-            case AttrType::labelLayout:
+            case AttrType::graphicsSettings:
             case AttrType::channelsLayout:
             case AttrType::zoomLogScale:
             case AttrType::sampleRate:
@@ -275,8 +271,8 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     auto const scaleRatio = static_cast<float>((sampleRate / 2.0) / std::max(Tools::getMidiFromHertz(sampleRate / 2.0), 1.0));
     auto const scaledValue = isLog ? Tools::getMidiFromHertz(value.value()) * scaleRatio : value.value();
     auto const y = Tools::valueToPixel(scaledValue, valueRange, bounds.toFloat());
-    auto const shadowColour = accessor.getAttr<AttrType::colours>().shadow;
-    auto const lineWidth = accessor.getAttr<AttrType::lineWidth>();
+    auto const shadowColour = accessor.getAttr<AttrType::graphicsSettings>().colours.shadow;
+    auto const lineWidth = accessor.getAttr<AttrType::graphicsSettings>().lineWidth;
     if(!shadowColour.isTransparent())
     {
         g.setColour(juce::Colours::black.withAlpha(0.5f));
@@ -284,7 +280,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
         g.setColour(juce::Colours::black.withAlpha(0.75f));
         g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, lineWidth);
     }
-    g.setColour(accessor.getAttr<AttrType::colours>().foreground);
+    g.setColour(accessor.getAttr<AttrType::graphicsSettings>().colours.foreground);
     g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, lineWidth);
 }
 
@@ -403,15 +399,12 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::processing:
             case AttrType::results:
             case AttrType::edit:
-            case AttrType::labelLayout:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::hasPluginColourMap:
                 break;
-            case AttrType::colours:
-            case AttrType::font:
-            case AttrType::lineWidth:
+            case AttrType::graphicsSettings:
             {
                 repaint();
             }
@@ -425,7 +418,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             break;
             case AttrType::file:
             case AttrType::description:
-            case AttrType::unit:
             case AttrType::name:
             {
                 juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));
@@ -485,7 +477,7 @@ void Track::Snapshot::Overlay::resized()
 
 void Track::Snapshot::Overlay::paint(juce::Graphics& g)
 {
-    g.fillAll(mAccessor.getAttr<AttrType::colours>().background);
+    g.fillAll(mAccessor.getAttr<AttrType::graphicsSettings>().colours.background);
 }
 
 void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
