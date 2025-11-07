@@ -3,3 +3,4 @@ build-*
 release
 *.DS_Store
 .lfs-assets-id
+_codeql_build_dir/
