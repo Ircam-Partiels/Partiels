@@ -10,7 +10,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        PropertyGraphicalSection(Director& director);
+        PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr);
         ~PropertyGraphicalSection() override;
 
         // juce::Component
@@ -37,9 +37,15 @@ namespace Track
         void updateZoomMode();
         void updateExtraTheshold();
         void updateGridPanel();
+        void loadPreset();
+        void savePreset();
+        void saveAsDefaultPreset();
+        void deleteDefaultPreset();
+        void updatePresetState();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
+        PresetList::Accessor& mPresetListAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor::Listener mValueZoomListener{typeid(*this).name()};
         Zoom::Accessor::Listener mBinZoomListener{typeid(*this).name()};
@@ -71,9 +77,19 @@ namespace Track
         PropertyNumber mPropertyNumBins;
         PropertyTextButton mPropertyChannelLayout;
         PropertyToggle mPropertyShowInGroup;
+        PropertyList mPropertyPreset;
         ProgressBar mProgressBarRendering{mDirector, ProgressBar::Mode::rendering};
 
+        std::unique_ptr<juce::FileChooser> mFileChooser;
         bool mChannelLayoutActionStarted{false};
+
+        enum MenuPresetId : int
+        {
+            loadPresetId = 1,
+            savePresetId,
+            saveDefaultPresetId,
+            deleteDefaultPresetId
+        };
     };
 } // namespace Track
 
