@@ -1,0 +1,27 @@
+
+Changes in Vamp Plugin Tester v1.1 since the previous release v1.0:
+
+Features
+
+ * Add mechanism for listing the available tests and running only a
+   single test at a time
+ 
+ * Add test for reset() changing effective parameter values
+ 
+ * Add test for existence of .cat file
+
+ * Add test for boilerplate description text still in place for VamPy
+   plugins
+ 
+ * Make output more informative for some tests, and make some tests faster
+
+Bug fixes
+
+ * Fix erroneous verbose timestamp output for some tests
+
+ * Don't complain when two consecutive runs with different starting
+   times produce the same results, if neither set of results has any
+   timestamps anyway
+
+ * Link against pthread library on Linux, to support plugins with
+   threading

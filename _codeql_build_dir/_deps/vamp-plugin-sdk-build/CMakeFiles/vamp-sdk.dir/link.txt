@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvamp-sdk.a "CMakeFiles/vamp-sdk.dir/src/vamp-sdk/FFT.cpp.o" "CMakeFiles/vamp-sdk.dir/src/vamp-sdk/PluginAdapter.cpp.o" "CMakeFiles/vamp-sdk.dir/src/vamp-sdk/RealTime.cpp.o" "CMakeFiles/vamp-sdk.dir/src/vamp-sdk/acsymbols.c.o"
+/usr/bin/ranlib libvamp-sdk.a
