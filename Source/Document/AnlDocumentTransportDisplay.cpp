@@ -108,7 +108,7 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
         mTransportAccessor.setAttr<Transport::AttrType::gain>(gain, NotificationType::synchronous);
     };
 
-    mPosition.setTooltip("The time position of the playhead");
+    mPosition.setTooltip(juce::translate("The time position of the playhead"));
     mPosition.onTimeChanged = [&](double time)
     {
         mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(time, NotificationType::synchronous);

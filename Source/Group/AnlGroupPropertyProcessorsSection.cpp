@@ -611,7 +611,7 @@ void Group::PropertyProcessorsSection::updateParameters()
                     trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
                 }
             }
-            tooltipClient->setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
+            tooltipClient->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
         }
     }
 }
