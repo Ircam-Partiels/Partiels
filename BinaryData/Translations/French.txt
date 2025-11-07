@@ -828,3 +828,5 @@ countries: fr be
 "Channel INDEX" = "Canal INDEX"
 "Index" = "Index"
 "Erase Frame(s)" = "Effacer les trames"
+"Graphic Preset..." = "Préréglage graphique..."
+"Shows the graphic preset panel" = "Affiche le panneau de préréglage graphique"

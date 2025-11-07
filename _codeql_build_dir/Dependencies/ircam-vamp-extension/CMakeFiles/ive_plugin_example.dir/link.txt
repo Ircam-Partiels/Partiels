@@ -1,1 +1,0 @@
-/home/runner/work/Partiels/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/ive_plugin_example.dir/link.d -shared -Wl,-soname,ive_plugin_example.so -o Release/ive_plugin_example.so CMakeFiles/ive_plugin_example.dir/Example/IvePluginExample.cpp.o  libive_plugin.a libvamp_plugin.a
