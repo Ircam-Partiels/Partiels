@@ -117,22 +117,30 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
             trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
 
-            // Apply default preset if defined
+            // Apply default presets if defined
             auto const procPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::processor>();
             auto const procPresetIt = procPresets.find(key);
             if(procPresetIt != procPresets.cend())
             {
                 trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
             }
+            auto const graphicPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::graphic>();
+            auto const graphicPresetIt = graphicPresets.find(key);
+            if(graphicPresetIt != graphicPresets.cend())
+            {
+                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(graphicPresetIt->second, NotificationType::synchronous);
+            }
+            else
+            {
+                auto const colourChart = Instance::getColourChart();
+                auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
+                settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+                settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
+                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
             }
 
             trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
-            auto const colourChart = Instance::getColourChart();
-            auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
-            settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-            settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
-            trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
             trackIdentifiers.insert(identifier.value());
             ++trackPosition;
         }
