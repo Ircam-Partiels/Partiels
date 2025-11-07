@@ -53,6 +53,15 @@ Partiels is a C++20 audio analysis application built with the JUCE framework and
 - Tests require both Partiels plugins and Vamp example plugins to be available
 - **Set VAMP_PATH environment variable** for plugin-dependent tests: `VAMP_PATH=build/VampPlugins/Debug:build/Debug`
 
+### Verifying Translations
+- Check if `juce::translate` is used for all user-visible strings (must pass before committing)
+- Extract translation keys: `cmake --build build --target PartielsExtractTranslationKeys`
+- Update translation files in `BinaryData/Translations/` accordingly (must pass before committing)
+- The English translation file `English.txt` should remain empty as it is the source language.
+- All the other translation files should contain the keys generated and their respective translations.
+- When reviewing code, ensure new strings are properly wrapped for translation and that translation files are updated accordingly.
+- When committing changes, ensure that translation keys are extracted and translation files are up to date.
+
 ## Critical Build Information
 
 ### Timing Expectations
