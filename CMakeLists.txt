@@ -81,7 +81,7 @@ juce_add_gui_app(Partiels
     COMPANY_COPYRIGHT                   "Copyright 2024 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
-    ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png"
+    ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png"
     DOCUMENT_EXTENSIONS                 "ptldoc,aac,aiff,aif,flac,m4a,mp3,ogg,wav,wma"
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
