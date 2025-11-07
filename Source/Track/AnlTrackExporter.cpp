@@ -61,7 +61,7 @@ juce::Result Track::Exporter::fromProcessorPreset(Accessor& accessor, juce::File
     auto const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
     if(key != accessor.getAttr<AttrType::key>())
     {
-        return juce::Result::fail(juce::translate("The plugin key of the processor preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The plugin key of the processor preset file FLNAME doesn't correspond to the track.").replace("FLNAME", file.getFullPathName()));
     }
     accessor.setAttr<AttrType::state>(XmlParser::fromXml(*xml.get(), "state", accessor.getAttr<AttrType::state>()), NotificationType::synchronous);
     return juce::Result::ok();
@@ -104,7 +104,7 @@ juce::Result Track::Exporter::fromGraphicPreset(Accessor& accessor, juce::File c
     auto const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
     if(key != accessor.getAttr<AttrType::key>())
     {
-        return juce::Result::fail(juce::translate("The plugin key of the graphic preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The plugin key of the graphic preset file FLNAME doesn't correspond to the track.").replace("FLNAME", file.getFullPathName()));
     }
 
     auto const settings = XmlParser::fromXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());
