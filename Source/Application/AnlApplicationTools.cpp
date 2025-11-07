@@ -135,6 +135,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
                 auto const colourChart = Instance::getColourChart();
                 auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
                 settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+                settings.colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
                 settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
                 trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
             }
