@@ -37,6 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#MyBinaryDir}\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\Preset\Partiels.trackpresets.settings"; DestDir: "{app}\Preset"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\Templates\FactoryTemplate.ptldoc"; DestDir: "{app}\Templates"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\Translations\*"; DestDir: "{app}\Translations"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\Scripts\*"; DestDir: "{app}\Scripts"; Flags: ignoreversion

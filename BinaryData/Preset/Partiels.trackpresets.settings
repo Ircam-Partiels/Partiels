@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TrackPresets MiscModelVersion="131585">
+  <graphic>
+    <key identifier="partiels-vamp-plugins:partielswaveform" feature="peaks"/>
+    <value font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
+      <colours map="7" background="0" foreground="ff005dff" duration="660c65ff"
+               text="0" shadow="ff000000"/>
+      <labelLayout position="12.0" justification="0"/>
+    </value>
+  </graphic>
+</TrackPresets>
