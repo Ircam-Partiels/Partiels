@@ -369,11 +369,13 @@ namespace Track
         // clang-format off
         enum class AttrType : size_t
         {
-            processor
+              processor
+            , graphic
         };
         
         using AttrContainer = Model::Container
         < Model::Attr<AttrType::processor, std::map<Plugin::Key, Plugin::State>, Model::Flag::basic>
+        , Model::Attr<AttrType::graphic, std::map<Plugin::Key, GraphicsSettings>, Model::Flag::basic>
         >;
         // clang-format on
 
@@ -385,7 +387,8 @@ namespace Track
 
             // clang-format off
             Accessor()
-            : Accessor(AttrContainer(  {}
+            : Accessor(AttrContainer(  {std::map<Plugin::Key, Plugin::State>{}}
+                                     , {std::map<Plugin::Key, GraphicsSettings>{}}
                                      ))
             {
             }
