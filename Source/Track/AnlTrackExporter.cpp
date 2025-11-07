@@ -46,37 +46,37 @@ namespace
     }
 } // namespace
 
-juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& file)
+juce::Result Track::Exporter::fromProcessorPreset(Accessor& accessor, juce::File const& file)
 {
     auto xml = juce::XmlDocument::parse(file);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The preset file FLNAME cannot be parsed.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The processor preset file FLNAME cannot be parsed.").replace("FLNAME", file.getFullPathName()));
     }
     if(!xml->hasTagName("preset"))
     {
-        return juce::Result::fail(juce::translate("The preset file FLNAME is not valid.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The processor preset file FLNAME is not valid.").replace("FLNAME", file.getFullPathName()));
     }
 
     auto const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
     if(key != accessor.getAttr<AttrType::key>())
     {
-        return juce::Result::fail(juce::translate("The plugin key of the preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The plugin key of the processor preset file FLNAME doesn't correspond to track.").replace("FLNAME", file.getFullPathName()));
     }
     accessor.setAttr<AttrType::state>(XmlParser::fromXml(*xml.get(), "state", accessor.getAttr<AttrType::state>()), NotificationType::synchronous);
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File const& file)
+juce::Result Track::Exporter::toProcessorPreset(Accessor const& accessor, juce::File const& file)
 {
     auto const name = accessor.getAttr<AttrType::name>();
 
-    auto const title = juce::translate("Export as preset failed!");
+    auto const title = juce::translate("Export as processor preset failed!");
     auto xml = std::make_unique<juce::XmlElement>("preset");
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed.").replace("ANLNAME", name));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a processor preset because the track cannot be parsed.").replace("ANLNAME", name));
     }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
@@ -84,7 +84,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
 
     if(!xml->writeTo(file))
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a processor preset because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }

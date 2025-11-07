@@ -80,7 +80,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                           }
                           updateState();
                       })
-, mPropertyPreset(juce::translate("Preset"), juce::translate("The preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+, mPropertyPreset(juce::translate("Preset"), juce::translate("The processor preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
                   {
                       auto const selectedId = mPropertyPreset.entry.getSelectedId();
                       switch(selectedId)
@@ -478,7 +478,7 @@ void Track::PropertyProcessorSection::restoreDefaultPreset()
 
 void Track::PropertyProcessorSection::loadPreset()
 {
-    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load preset from file..."), juce::File{}, App::getFileWildCardFor("preset"));
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load processor preset from file..."), juce::File{}, App::getFileWildCardFor("preset"));
     if(mFileChooser == nullptr)
     {
         return;
@@ -507,20 +507,20 @@ void Track::PropertyProcessorSection::loadPreset()
                                                        },
                                                        [=, this, file = results.getFirst()]()
                                                        {
-                                                           auto const exportResult = Exporter::fromPreset(mAccessor, file);
+                                                           auto const exportResult = Exporter::fromProcessorPreset(mAccessor, file);
                                                            if(exportResult.failed())
                                                            {
                                                                mDirector.endAction(ActionState::abort);
                                                                auto const options = juce::MessageBoxOptions()
                                                                                         .withIconType(juce::AlertWindow::WarningIcon)
-                                                                                        .withTitle(juce::translate("Failed to load from preset file!"))
+                                                                                        .withTitle(juce::translate("Failed to load from processor preset file!"))
                                                                                         .withMessage(exportResult.getErrorMessage())
                                                                                         .withButton(juce::translate("Ok"));
                                                                juce::AlertWindow::showAsync(options, nullptr);
                                                            }
                                                            else
                                                            {
-                                                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's properties from preset file"));
+                                                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's properties from processor preset file"));
                                                            }
                                                        });
                               });
@@ -528,7 +528,7 @@ void Track::PropertyProcessorSection::loadPreset()
 
 void Track::PropertyProcessorSection::savePreset()
 {
-    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as preset..."), juce::File{}, App::getFileWildCardFor("preset"));
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as processor preset..."), juce::File{}, App::getFileWildCardFor("preset"));
     if(mFileChooser == nullptr)
     {
         return;
@@ -547,12 +547,12 @@ void Track::PropertyProcessorSection::savePreset()
                                       updateState();
                                       return;
                                   }
-                                  auto const result = Exporter::toPreset(mAccessor, results.getFirst());
+                                  auto const result = Exporter::toProcessorPreset(mAccessor, results.getFirst());
                                   if(result.failed())
                                   {
                                       auto const options = juce::MessageBoxOptions()
                                                                .withIconType(juce::AlertWindow::WarningIcon)
-                                                               .withTitle(juce::translate("Failed to save a preset file!"))
+                                                               .withTitle(juce::translate("Failed to save a processor preset file!"))
                                                                .withMessage(result.getErrorMessage())
                                                                .withButton(juce::translate("Ok"));
                                       juce::AlertWindow::showAsync(options, nullptr);
@@ -581,13 +581,13 @@ void Track::PropertyProcessorSection::changePreset(int presetId)
                              anlWeakAssert(index < programs.size());
                              if(index >= programs.size())
                              {
-                                 mDirector.endAction(ActionState::abort, juce::translate("Apply track preset properties"));
+                                 mDirector.endAction(ActionState::abort, juce::translate("Apply track processor preset"));
                                  return;
                              }
 
                              auto const it = std::next(programs.cbegin(), static_cast<long>(index));
                              mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track preset properties"));
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track processor preset"));
                          });
 }
 
