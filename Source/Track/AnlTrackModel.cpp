@@ -153,4 +153,63 @@ void Track::from_json(nlohmann::json const& j, LabelLayout& labelLayout)
     labelLayout.justification = j.value("justification", labelLayout.justification);
 }
 
+template <>
+void XmlParser::toXml<Track::GraphicsSettings>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::GraphicsSettings const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "colours", value.colours);
+        toXml(*child, "font", value.font);
+        toXml(*child, "lineWidth", value.lineWidth);
+        toXml(*child, "unit", value.unit);
+        toXml(*child, "labelLayout", value.labelLayout);
+        xml.addChildElement(child.release());
+    }
+}
+
+template <>
+auto XmlParser::fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::GraphicsSettings const& defaultValue)
+    -> Track::GraphicsSettings
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Track::GraphicsSettings value;
+    value.colours = fromXml(*child, "colours", defaultValue.colours);
+    value.font = fromXml(*child, "font", defaultValue.font);
+    value.lineWidth = fromXml(*child, "lineWidth", defaultValue.lineWidth);
+    value.unit = fromXml(*child, "unit", defaultValue.unit);
+    value.labelLayout = fromXml(*child, "labelLayout", defaultValue.labelLayout);
+    return value;
+}
+
+void Track::to_json(nlohmann::json& j, GraphicsSettings const& settings)
+{
+    Track::to_json(j["colours"], settings.colours);
+    j["font"] = settings.font;
+    j["lineWidth"] = settings.lineWidth;
+    j["unit"] = settings.unit;
+    Track::to_json(j["labelLayout"], settings.labelLayout);
+}
+
+void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
+{
+    if(j.contains("colours"))
+    {
+        Track::from_json(j["colours"], settings.colours);
+    }
+    settings.font = j.value("font", settings.font);
+    settings.lineWidth = j.value("lineWidth", settings.lineWidth);
+    settings.unit = j.value("unit", settings.unit);
+    if(j.contains("labelLayout"))
+    {
+        Track::from_json(j["labelLayout"], settings.labelLayout);
+    }
+}
+
 ANALYSE_FILE_END
