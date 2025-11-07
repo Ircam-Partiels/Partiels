@@ -344,6 +344,11 @@ void Application::Interface::showOscSettingsPanel()
     mPanelManager.show(mOscSettingsPanel);
 }
 
+void Application::Interface::showGraphicPresetPanel()
+{
+    mPanelManager.show(mGraphicPresetPanel);
+}
+
 void Application::Interface::showBatcherPanel()
 {
     mPanelManager.show(mBatcherPanel);

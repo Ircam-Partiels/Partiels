@@ -10,6 +10,7 @@
 #include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
+#include "AnlApplicationGraphicPreset.h"
 #include "AnlApplicationKeyMappings.h"
 #include "AnlApplicationLoader.h"
 
@@ -36,6 +37,7 @@ namespace Application
         void showAboutPanel();
         void showAudioSettingsPanel();
         void showOscSettingsPanel();
+        void showGraphicPresetPanel();
         void showBatcherPanel();
         void showConverterPanel();
         void showExporterPanel();
@@ -148,6 +150,7 @@ namespace Application
         AboutPanel mAboutPanel;
         AudioSettingsPanel mAudioSettingsPanel;
         Osc::SettingsPanel mOscSettingsPanel;
+        GraphicPresetPanel mGraphicPresetPanel;
         BatcherPanel mBatcherPanel;
         ConverterPanel mConverterPanel;
         ExporterPanel mExporterPanel;

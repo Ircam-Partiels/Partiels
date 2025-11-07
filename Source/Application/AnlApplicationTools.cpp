@@ -132,8 +132,10 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             }
             else
             {
+                // Use global graphic preset as fallback
+                auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>();
+                auto settings = globalPreset;
                 auto const colourChart = Instance::getColourChart();
-                auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
                 settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
                 settings.colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
                 settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
@@ -241,8 +243,11 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         auto const trackIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
+        
+        // Use global graphic preset
+        auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>();
+        auto settings = globalPreset;
         auto const colourChart = Instance::getColourChart();
-        auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
         settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
         settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
         settings.colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);

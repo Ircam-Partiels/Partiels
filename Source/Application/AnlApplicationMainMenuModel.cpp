@@ -156,6 +156,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenGraphicPreset);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
         addGlobalSettingsMenu(menu);
 #endif
