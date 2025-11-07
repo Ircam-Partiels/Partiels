@@ -8,9 +8,9 @@ namespace Track
 {
     namespace Exporter
     {
-        juce::Result fromPreset(Accessor& accessor, juce::File const& file);
+        juce::Result fromProcessorPreset(Accessor& accessor, juce::File const& file);
 
-        juce::Result toPreset(Accessor const& accessor, juce::File const& file);
+        juce::Result toProcessorPreset(Accessor const& accessor, juce::File const& file);
 
         juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification, std::atomic<bool> const& shouldAbort);
