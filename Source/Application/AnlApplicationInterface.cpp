@@ -262,6 +262,7 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mConverterPanel)
                              , std::ref<HideablePanel>(mExporterPanel)
                              , std::ref<HideablePanel>(mPluginSearchPathPanel)
+                             , std::ref<HideablePanel>(mGraphicPresetPanel)
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
                              , std::ref<HideablePanel>(mDocumentFileInfoPanel)
                              , std::ref<HideablePanel>(mKeyMappingsPanel)
@@ -342,6 +343,11 @@ void Application::Interface::showAudioSettingsPanel()
 void Application::Interface::showOscSettingsPanel()
 {
     mPanelManager.show(mOscSettingsPanel);
+}
+
+void Application::Interface::showGraphicPresetPanel()
+{
+    mPanelManager.show(mGraphicPresetPanel);
 }
 
 void Application::Interface::showBatcherPanel()
