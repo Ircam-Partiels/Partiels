@@ -33,6 +33,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::globalGraphicPreset:
                 break;
         }
     };

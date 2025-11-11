@@ -53,6 +53,7 @@ Application::ExporterContent::ExporterContent()
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::globalGraphicPreset:
                 break;
             case AttrType::exportOptions:
             {

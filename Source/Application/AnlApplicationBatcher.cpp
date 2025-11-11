@@ -60,6 +60,7 @@ Application::BatcherContent::BatcherContent()
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::globalGraphicPreset:
                 break;
             case AttrType::exportOptions:
             {
