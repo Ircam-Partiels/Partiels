@@ -380,6 +380,7 @@ countries: fr be
 "Current Size(s)" = "Taille(s) actuelle(s)"
 "Manual" = "Manuel"
 "Top" = "Haut"
+"Centred" = "Centré"
 "Bottom" = "Bas"
 "All (Document)" = "Tous (Document)"
 "GROUPNAME (Group)" = "GROUPNAME (Groupe)"
@@ -828,3 +829,5 @@ countries: fr be
 "Channel INDEX" = "Canal INDEX"
 "Index" = "Index"
 "Erase Frame(s)" = "Effacer les trames"
+"Graphic Preset..." = "Préréglage graphique..."
+"Shows the graphic preset panel" = "Affiche le panneau de préréglage graphique"
