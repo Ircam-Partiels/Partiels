@@ -132,12 +132,9 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
             }
             else
             {
-                auto const colourChart = Instance::getColourChart();
-                auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
-                settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-                settings.colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
-                settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
-                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+                // Use global graphic preset as fallback
+                auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
+                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
             }
 
             trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
@@ -241,12 +238,10 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         auto const trackIdentifier = newReferences.count(identifier.value()) > 0_z ? newReferences.at(identifier.value()) : identifier.value();
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
-        auto const colourChart = Instance::getColourChart();
-        auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
-        settings.colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-        settings.colours.duration = settings.colours.foreground.withAlpha(0.4f);
-        settings.colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
-        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+
+        // Use global graphic preset
+        auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
+        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
 
         trackAcsr.setAttr<Track::AttrType::file>(fileInfo, NotificationType::synchronous);
 
