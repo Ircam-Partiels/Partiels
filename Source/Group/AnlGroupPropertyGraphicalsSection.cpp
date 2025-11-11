@@ -36,6 +36,11 @@ static std::vector<std::string> getFontSizes()
     return names;
 }
 
+static std::vector<std::string> getLabelJustifications()
+{
+    return {juce::translate("Top").toStdString(), juce::translate("Centred").toStdString(), juce::translate("Bottom").toStdString()};
+}
+
 Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
 : mDirector(director)
 , mPropertyColourMap(juce::translate("Color Map"), juce::translate("The color map used by the graphical renderers of the tracks of the group."), "", getColourMapNames(), [&](size_t index)
@@ -172,7 +177,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                 {
                     setUnit(text);
                 })
-, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
+, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."), "", getLabelJustifications(), [&](size_t index)
                               {
                                   mDirector.startAction(true);
                                   setLabelJustification(magic_enum::enum_cast<Track::LabelLayout::Justification>(static_cast<int>(index)).value_or(Track::LabelLayout::Justification::top));
