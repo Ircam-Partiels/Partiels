@@ -130,6 +130,7 @@ enum ApplicationCommandIDs : int
     , helpOpenAudioSettings
     , helpOpenOscSettings
     , helpOpenPluginSettings
+    , helpOpenGraphicPreset
     , helpOpenAbout
     , helpOpenProjectPage
     , helpSdifConverter
