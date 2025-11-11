@@ -179,6 +179,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenAudioSettings
         , CommandIDs::helpOpenOscSettings
         , CommandIDs::helpOpenPluginSettings
+        , CommandIDs::helpOpenGraphicPreset
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
         , CommandIDs::helpSdifConverter
@@ -605,6 +606,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Application", 0);
 #else
             result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Shows the plugin settings panel"), "Help", 0);
+#endif
+            break;
+        }
+        case CommandIDs::helpOpenGraphicPreset:
+        {
+#if JUCE_MAC
+            result.setInfo(juce::translate("Graphic Preset..."), juce::translate("Shows the graphic preset panel"), "Application", 0);
+#else
+            result.setInfo(juce::translate("Graphic Preset..."), juce::translate("Shows the graphic preset panel"), "Help", 0);
 #endif
             break;
         }
@@ -1419,6 +1429,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(auto* window = Instance::get().getWindow())
             {
                 window->getInterface().showPluginSearchPathPanel();
+            }
+            return true;
+        }
+        case CommandIDs::helpOpenGraphicPreset:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showGraphicPresetPanel();
             }
             return true;
         }

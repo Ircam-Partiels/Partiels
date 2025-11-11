@@ -156,6 +156,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenGraphicPreset);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
         addGlobalSettingsMenu(menu);
 #endif
@@ -263,6 +264,7 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenOscSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenGraphicPreset);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
     addGlobalSettingsMenu(extraAppleMenuItems);
     // This is a hack to update the main menu when the translation changes
