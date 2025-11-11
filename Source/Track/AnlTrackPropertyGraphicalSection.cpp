@@ -36,6 +36,11 @@ static std::vector<std::string> getFontSizes()
     return names;
 }
 
+static std::vector<std::string> getLabelJustifications()
+{
+    return {juce::translate("Top").toStdString(), juce::translate("Centred").toStdString(), juce::translate("Bottom").toStdString()};
+}
+
 Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
 , mPresetListAccessor(presetListAcsr)
@@ -190,7 +195,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 {
                     setUnit(text);
                 })
-, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", std::vector<std::string>{"Top", "Centred", "Bottom"}, [&](size_t index)
+, mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", getLabelJustifications(), [&](size_t index)
                               {
                                   mDirector.startAction();
                                   auto fallbackJustification = mAccessor.getAttr<AttrType::graphicsSettings>().labelLayout.justification;
