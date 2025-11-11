@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Document/AnlDocumentExporter.h"
+#include "../Track/AnlTrackModel.h"
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationOsc.h"
 
@@ -35,6 +36,7 @@ namespace Application
         , autoUpdate
         , lastVersion
         , timeZoomAnchorOnPlayhead
+        , globalGraphicPreset
     };
     
     enum class AcsrType : size_t
@@ -59,6 +61,7 @@ namespace Application
     , Model::Attr<AttrType::autoUpdate, bool, Model::Flag::basic>
     , Model::Attr<AttrType::lastVersion, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -91,6 +94,7 @@ namespace Application
             , {true}
             , {ProjectInfo::versionString}
             , {false}
+            , {}
         }))
         {
         }
