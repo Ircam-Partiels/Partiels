@@ -782,7 +782,7 @@ The presets menu allows you to save the current graphic state to a file on your 
 
 ### 9.3. OSC
 
-A track's OSC properties allow you to enable or disable OSC support for the track. You can also edit the OSC identifer of the track used when sending OSC messages (when empty, a unique identifier is used). You can copy the identifier to the system clipboard by clicking on the corresponding button.
+A track's OSC properties allow you to enable or disable OSC support for the track. You can also edit the OSC identifier of the track used when sending OSC messages (when empty, a unique identifier is used). You can copy the identifier to the system clipboard by clicking on the corresponding button.
 
 ### 9.4. Plugin
 
