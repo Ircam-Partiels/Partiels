@@ -125,6 +125,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::routingMatrix:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::globalGraphicPreset:
                 break;
             case AttrType::currentTranslationFile:
             {

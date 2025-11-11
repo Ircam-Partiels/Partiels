@@ -165,6 +165,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::globalGraphicPreset:
                 break;
             case AttrType::autoLoadConvertedFile:
             {
