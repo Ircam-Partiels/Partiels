@@ -799,7 +799,7 @@ Default graphical presets are stored per-plugin and persist across application s
 
 ### 9.3. OSC
 
-A track's OSC properties allow you to enable or disable OSC support for the track. You can also edit the OSC identifier of the track used when sending OSC messages (when empty, a unique identifier is used). You can copy the identifier to the system clipboard by clicking on the corresponding button.
+A track's OSC properties allow you to enable or disable OSC support for the track. You can also edit the OSC identifier of the track used when sending OSC messages (when empty, a unique identifier is used). You can copy the identifier to the system clipboard by clicking on the corresponding button. Refer to [OSC section](#84-osc) for further information.
 
 ### 9.4. Plugin
 
