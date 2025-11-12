@@ -55,8 +55,9 @@
   * [11.3. Audio files recovery](#113-audio-files-recovery)
 * [12. Audio settings](#12-audio-settings)
 * [13. Plugins settings](#13-plugins-settings)
-* [14. Translations](#14-translations)
-* [15. Command-line tools](#15-command-line-tools)
+* [14. Graphic Preset](#14-graphic-preset)
+* [15. Translations](#15-translations)
+* [16. Command-line tools](#16-command-line-tools)
 
 <div style="page-break-after: always;"></div>
 
@@ -795,6 +796,8 @@ The presets menu allows you to manage graphical rendering configurations:
 
 Default graphical presets are stored per-plugin and persist across application sessions, enabling consistent visual representation across multiple analysis sessions.
 
+> 💡 **Tip**: Use the [global graphic preset](#14-graphic-preset) to define the default graphical state for newly created tracks whenever a plugin-specific preset is not available.
+
 > 💡 **Tip**: Processor and graphical presets are stored separately, allowing you to mix and match analysis parameters with different visual styles. Both types of default presets are automatically applied when creating new tracks with the corresponding plugin.
 
 ### 9.3. OSC
@@ -948,7 +951,23 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 <div style="page-break-after: always;"></div>
 
-## 14. Translations
+## 14. Graphic Preset
+
+The global graphic preset defines the default visual properties applied to newly created tracks whenever no plugin-specific graphical preset is available (see the [Graphical](#92-graphical) section).
+
+Open the **Graphic Presets** panel via `Partiels → Graphic Preset...`(macOS) or `Help → Graphic Preset...`(Linux/Windows).
+
+<p align="center">
+<img src="Images/section-graphic-preset-v2.3.0.png" width="201" alt="Graphic Preset Window"/>
+</p>
+
+Refer to the [Graphical](#92-graphical) section of the track properties for a detailed overview of every setting that the global graphic preset can control.
+
+Track-level presets continue to override these defaults when defined for a specific plugin.
+
+<div style="page-break-after: always;"></div>
+
+## 15. Translations
 
 Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now only the French version is available).
 By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back to English).
@@ -1007,7 +1026,7 @@ Follow these steps to create your own language file:
 
 <div style="page-break-after: always;"></div>
 
-## 15. Command-line tools
+## 16. Command-line tools
 
 The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
 
