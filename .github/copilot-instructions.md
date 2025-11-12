@@ -48,7 +48,7 @@ Partiels is a C++20 audio analysis application built with the JUCE framework and
 - The CI pipeline (`.github/workflows/ci.yml`) will fail if code formatting issues are introduced.
 
 ### Testing Requirements
-- All 58 tests must pass before committing changes
+- All tests must pass before committing changes
 - Test suite includes: unit tests, CLI functionality, export formats, image comparison, plugin validation
 - Tests require both Partiels plugins and Vamp example plugins to be available
 - **Set VAMP_PATH environment variable** for plugin-dependent tests: `VAMP_PATH=build/VampPlugins/Debug:build/Debug`
