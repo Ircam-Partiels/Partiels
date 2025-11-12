@@ -684,7 +684,7 @@ void Group::PropertyGraphicalsSection::updateColourMap()
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
-    mPropertyColourMap.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The color map used by the graphical renderers of the tracks of the group."));
+    mPropertyColourMap.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The color map used by the graphical renderers of the tracks of the group."));
     mPropertyColourMap.setVisible(!colourMaps.empty());
     if(colourMaps.size() == 1_z)
     {
@@ -723,7 +723,7 @@ void Group::PropertyGraphicalsSection::updateColours()
             }
         }
     }
-    mPropertyForegroundColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The foreground color used by the graphical renderers of the tracks of the group."));
+    mPropertyForegroundColour.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The foreground color used by the graphical renderers of the tracks of the group."));
     mPropertyForegroundColour.setVisible(!foregroundColours.empty());
     if(foregroundColours.size() == 1_z)
     {
@@ -734,7 +734,7 @@ void Group::PropertyGraphicalsSection::updateColours()
         mPropertyForegroundColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyDurationColour.setTooltip("Track(s): " + labelTrackNames.joinIntoString(", ") + " - " + juce::translate("The duration color used by the graphical renderers of the tracks of the group."));
+    mPropertyDurationColour.setTooltip(juce::translate("Track(s): ") + labelTrackNames.joinIntoString(", ") + " - " + juce::translate("The duration color used by the graphical renderers of the tracks of the group."));
     mPropertyDurationColour.setVisible(!durationColours.empty());
     if(durationColours.size() == 1_z)
     {
@@ -745,7 +745,7 @@ void Group::PropertyGraphicalsSection::updateColours()
         mPropertyDurationColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyBackgroundColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The background color used by the graphical renderers of the tracks of the group."));
+    mPropertyBackgroundColour.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The background color used by the graphical renderers of the tracks of the group."));
     mPropertyBackgroundColour.setVisible(!backgrounColours.empty());
     if(backgrounColours.size() == 1_z)
     {
@@ -756,7 +756,7 @@ void Group::PropertyGraphicalsSection::updateColours()
         mPropertyBackgroundColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyTextColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The text color used by the graphical renderers of the tracks of the group."));
+    mPropertyTextColour.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The text color used by the graphical renderers of the tracks of the group."));
     mPropertyTextColour.setVisible(!textColours.empty());
     if(textColours.size() == 1_z)
     {
@@ -767,7 +767,7 @@ void Group::PropertyGraphicalsSection::updateColours()
         mPropertyTextColour.entry.setCurrentColour(juce::Colours::transparentBlack, juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyShadowColour.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The shadow color used by the graphical renderers of the tracks of the group."));
+    mPropertyShadowColour.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The shadow color used by the graphical renderers of the tracks of the group."));
     mPropertyShadowColour.setVisible(!shadowColours.empty());
     if(shadowColours.size() == 1_z)
     {
@@ -802,7 +802,7 @@ void Group::PropertyGraphicalsSection::updateFont()
         }
     }
 
-    mPropertyFontName.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The font name used by the graphical renderers of the tracks of the group."));
+    mPropertyFontName.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The font name used by the graphical renderers of the tracks of the group."));
     mPropertyFontName.setVisible(currentFont.has_value());
     mPropertyFontName.entry.setEnabled(mPropertyFontName.entry.getNumItems() > 1);
     if(fontNames.size() == 1_z && currentFont.has_value())
@@ -814,7 +814,7 @@ void Group::PropertyGraphicalsSection::updateFont()
         mPropertyFontName.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyFontStyle.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The font style used by the graphical renderers of the tracks of the group."));
+    mPropertyFontStyle.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The font style used by the graphical renderers of the tracks of the group."));
     mPropertyFontStyle.setVisible(currentFont.has_value());
     mPropertyFontStyle.entry.clear(juce::NotificationType::dontSendNotification);
     for(auto name : fontNames)
@@ -831,7 +831,7 @@ void Group::PropertyGraphicalsSection::updateFont()
         mPropertyFontStyle.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
 
-    mPropertyFontSize.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The font size used by the graphical renderers of the tracks of the group."));
+    mPropertyFontSize.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The font size used by the graphical renderers of the tracks of the group."));
     mPropertyFontSize.setVisible(currentFont.has_value());
     if(fontSizes.size() == 1_z && currentFont.has_value())
     {
@@ -866,7 +866,7 @@ void Group::PropertyGraphicalsSection::updateLineWidth()
         }
     }
 
-    mPropertyLineWidth.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The line width used by the graphical renderers of the tracks of the group."));
+    mPropertyLineWidth.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The line width used by the graphical renderers of the tracks of the group."));
     mPropertyLineWidth.setVisible(!lineWidth.empty());
     if(lineWidth.size() == 1_z)
     {
@@ -892,7 +892,7 @@ void Group::PropertyGraphicalsSection::updateUnit()
         }
     }
 
-    mPropertyUnit.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The unit used by the graphical renderers of the tracks of the group."));
+    mPropertyUnit.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The unit used by the graphical renderers of the tracks of the group."));
     mPropertyUnit.setVisible(!units.empty());
     if(units.size() == 1_z)
     {
@@ -937,8 +937,8 @@ void Group::PropertyGraphicalsSection::updateLabel()
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
-    mPropertyLabelJustification.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."));
-    mPropertyLabelPosition.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The position of the labels for the graphical renderers of the tracks of the group."));
+    mPropertyLabelJustification.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The justification of the labels for the graphical renderers of the tracks of the group."));
+    mPropertyLabelPosition.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The position of the labels for the graphical renderers of the tracks of the group."));
     mPropertyLabelJustification.setVisible(!labelLayouts.empty());
     mPropertyLabelPosition.setVisible(!labelLayouts.empty());
     if(labelLayouts.size() == 1_z)
@@ -968,7 +968,7 @@ void Group::PropertyGraphicalsSection::updateLogScale()
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
-    mPropertyValueRangeLogScale.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The logarithmic scale of the zoom range of the tracks of the group."));
+    mPropertyValueRangeLogScale.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The logarithmic scale of the zoom range of the tracks of the group."));
     mPropertyValueRangeLogScale.setVisible(!logScales.empty());
     if(logScales.size() == 1_z)
     {

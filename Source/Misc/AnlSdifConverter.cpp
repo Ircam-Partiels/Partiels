@@ -1003,7 +1003,7 @@ void SdifConverter::Panel::selectedMatrixUpdated()
             auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
             if(matrixSize.first > 1_z)
             {
-                mPropertyToJsonRow.entry.addItem("All", 1);
+                mPropertyToJsonRow.entry.addItem(juce::translate("All"), 1);
             }
             for(auto row = 0_z; row < matrixSize.first; ++row)
             {
@@ -1014,7 +1014,7 @@ void SdifConverter::Panel::selectedMatrixUpdated()
 
             if(matrixSize.second.size() > 1_z)
             {
-                mPropertyToJsonColumn.entry.addItem("All", 1);
+                mPropertyToJsonColumn.entry.addItem(juce::translate("All"), 1);
             }
             for(auto column = 0_z; column < matrixSize.second.size(); ++column)
             {
