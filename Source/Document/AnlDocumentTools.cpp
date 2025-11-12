@@ -617,12 +617,12 @@ std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor
         RangeEditor(Zoom::Accessor& zoomAccessor)
         : mAccessor(zoomAccessor)
         , mName("Name", "Time")
-        , mPropertyStart("Start", "The start time of the visible range", [&](double time)
+        , mPropertyStart(juce::translate("Start"), juce::translate("The start time of the visible range"), [&](double time)
                          {
                              auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(time);
                              mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                          })
-        , mPropertyEnd("End", "The end time of the visible range", [&](double time)
+        , mPropertyEnd(juce::translate("End"), juce::translate("The end time of the visible range"), [&](double time)
                        {
                            auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(time);
                            mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);

@@ -183,8 +183,8 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
 
-                mPropertyPreset.entry.addItem("Factory", MenuPresetId::factoryPresetId);
-                mPropertyPreset.entry.addItem("Custom", MenuPresetId::customPresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Factory"), MenuPresetId::factoryPresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Custom"), MenuPresetId::customPresetId);
                 mPropertyPreset.entry.setItemEnabled(MenuPresetId::customPresetId, false);
                 mPropertyPreset.entry.addSeparator();
                 juce::StringArray items;
@@ -195,11 +195,11 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 }
                 mPropertyPreset.entry.addItemList(items, MenuPresetId::pluginPresetId);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Load processor track preset...", MenuPresetId::loadPresetId);
-                mPropertyPreset.entry.addItem("Save processor track preset...", MenuPresetId::savePresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Load processor track preset..."), MenuPresetId::loadPresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Save processor track preset..."), MenuPresetId::savePresetId);
                 mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Save as default processor preset for track", MenuPresetId::saveDefaultPresetId);
-                mPropertyPreset.entry.addItem("Delete the default processor preset for the track", MenuPresetId::deleteDefaultPresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Save as default processor preset for track"), MenuPresetId::saveDefaultPresetId);
+                mPropertyPreset.entry.addItem(juce::translate("Delete the default processor preset for the track"), MenuPresetId::deleteDefaultPresetId);
                 resized();
                 [[fallthrough]];
             }

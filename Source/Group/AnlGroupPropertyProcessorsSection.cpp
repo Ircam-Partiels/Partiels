@@ -381,7 +381,7 @@ void Group::PropertyProcessorsSection::updateWindowType()
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
-    mPropertyWindowType.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The window type of the FFT used by the tracks of the group."));
+    mPropertyWindowType.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The window type of the FFT used by the tracks of the group."));
     mPropertyWindowType.setVisible(!windowTypes.empty());
     if(windowTypes.size() == 1_z)
     {
@@ -412,7 +412,7 @@ void Group::PropertyProcessorsSection::updateBlockSize()
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
-    mPropertyBlockSize.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The block size used by the tracks of the group."));
+    mPropertyBlockSize.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The block size used by the tracks of the group."));
     mPropertyBlockSize.setVisible(!blockSizes.empty());
     if(blockSizes.size() == 1_z)
     {
@@ -456,7 +456,7 @@ void Group::PropertyProcessorsSection::updateStepSize()
                                                }
                                                return blkSize;
                                            });
-    mPropertyStepSize.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The step size used by the tracks of the group."));
+    mPropertyStepSize.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The step size used by the tracks of the group."));
     mPropertyStepSize.setVisible(!stepSizes.empty());
     if(stepSizes.size() == 1_z)
     {
@@ -518,7 +518,7 @@ void Group::PropertyProcessorsSection::updateInputTrack()
         return;
     }
 
-    mPropertyInputTrack.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The input tracks used by the tracks of the group."));
+    mPropertyInputTrack.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The input tracks used by the tracks of the group."));
     mPropertyInputTrack.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertyInputTrackList.clear();
     auto listId = 1;

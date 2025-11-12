@@ -191,7 +191,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                          mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change the line width for the graphical renderer"));
                      })
-, mPropertyUnit("Unit", "The unit of the values", [&](juce::String text)
+, mPropertyUnit(juce::translate("Unit"), juce::translate("The unit of the values"), [&](juce::String text)
                 {
                     setUnit(text);
                 })
@@ -615,11 +615,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
 
     // Setup graphic preset menu
     mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
-    mPropertyPreset.entry.addItem("Load graphic track preset...", MenuPresetId::loadPresetId);
-    mPropertyPreset.entry.addItem("Save graphic track preset...", MenuPresetId::savePresetId);
+    mPropertyPreset.entry.addItem(juce::translate("Load graphic track preset..."), MenuPresetId::loadPresetId);
+    mPropertyPreset.entry.addItem(juce::translate("Save graphic track preset..."), MenuPresetId::savePresetId);
     mPropertyPreset.entry.addSeparator();
-    mPropertyPreset.entry.addItem("Save as default graphic preset for track", MenuPresetId::saveDefaultPresetId);
-    mPropertyPreset.entry.addItem("Delete the default graphic preset for the track", MenuPresetId::deleteDefaultPresetId);
+    mPropertyPreset.entry.addItem(juce::translate("Save as default graphic preset for track"), MenuPresetId::saveDefaultPresetId);
+    mPropertyPreset.entry.addItem(juce::translate("Delete the default graphic preset for the track"), MenuPresetId::deleteDefaultPresetId);
     updatePresetState();
 
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
