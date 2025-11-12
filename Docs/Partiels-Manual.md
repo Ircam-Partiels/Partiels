@@ -671,7 +671,15 @@ The section provides access to the plugin-specific parameters that are used to p
 <img src="Images/section-track-properties.4-v2.3.0.png" width="238"/>
 </p>
 
-The presets menu allows you to restore the factory values of the processor parameters. You can also save the current state of the processor parameters to a file on your operating system and load this file to restore the processor state (the file can be used in any other track using the same plugin). You can also save the current processor state as the default processor preset for the plugin. This way, when you add a new track with this plugin, this processor preset will be used directly. Alternatively, you can delete the default processor preset to use the default processor state provided by the plugin.
+The presets menu allows you to manage processor parameter configurations:
+
+- **Factory Default**: Restore the plugin's factory default parameter values.
+- **Save Preset...**: Save the current processor parameters to a preset file on your system. This file can be loaded in any track using the same plugin.
+- **Load Preset...**: Load previously saved processor parameters from a preset file.
+- **Save as Default Preset**: Save the current processor state as the default preset for this plugin. When you add a new track with this plugin, these parameters will be applied automatically instead of the factory defaults.
+- **Delete Default Preset**: Remove the saved default preset and revert to using the plugin's factory defaults for new tracks.
+
+Default presets are stored per-plugin and persist across application sessions, making it easy to establish consistent analysis configurations.
 
 #### 9.1.4. State
 
@@ -778,7 +786,16 @@ The value range of point and column results can be adapted to optimize the graph
 <img src="Images/section-track-properties.10-v2.3.0.png" width="230"/>
 </p>
 
-The presets menu allows you to save the current graphic state to a file on your operating system and load this file to restore the graphic state (the file can be used in any other track using the same plugin). You can also save the current graphic state as the default graphic preset for the plugin. This way, when you add a new track with this plugin, this graphic preset will be used directly. Alternatively, you can delete the default graphic preset to use the default graphic state defined by the application.
+The presets menu allows you to manage graphical rendering configurations:
+
+- **Save Preset...**: Save the current graphical state (colors, fonts, ranges, visibility settings, etc.) to a preset file (`.json`) on your system. This file can be loaded in any track using the same plugin.
+- **Load Preset...**: Load previously saved graphical parameters from a preset file.
+- **Save as Default Preset**: Save the current graphical state as the default preset for this plugin. When you add a new track with this plugin, these graphical settings will be applied automatically instead of the application defaults.
+- **Delete Default Preset**: Remove the saved default graphical preset and revert to using the application's default graphical state for new tracks.
+
+Default graphical presets are stored per-plugin and persist across application sessions, enabling consistent visual representation across multiple analysis sessions.
+
+> 💡 **Tip**: Processor and graphical presets are stored separately, allowing you to mix and match analysis parameters with different visual styles. Both types of default presets are automatically applied when creating new tracks with the corresponding plugin.
 
 ### 9.3. OSC
 
@@ -988,7 +1005,7 @@ Follow these steps to create your own language file:
 
 > 💡 **Tip**: If you create a high-quality translation, consider contributing it to the Partiels project on [GitHub](https://github.com/Ircam-Partiels/Partiels) so other users can benefit from it.
 
-<div style="page-break-after: auto;"></div>
+<div style="page-break-after: always;"></div>
 
 ## 15. Command-line tools
 
