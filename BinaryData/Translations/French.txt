@@ -11,7 +11,7 @@ countries: fr be
 "The low value of the RANGENAME range" = "La valeur la plus basse de la plage RANGENAME"
 "High" = "Haut"
 "The high value of the visible range" = "La valeur haute de la plage visible"
-"Start" = "Démarrer"
+"Start" = "Début"
 "The start of the RANGENAME range" = "Le début de la plage RANGENAME"
 "End" = "Fin"
 "The end of the RANGENAME range" = "Fin de la plage RANGENAME"
