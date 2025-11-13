@@ -165,7 +165,7 @@ Application::LoaderContent::LoaderContent()
             {
                 if(auto* window = Instance::get().getWindow())
                 {
-                    window->getInterface().selectDefaultTemplateFile();
+                    window->getCommandTarget().selectDefaultTemplateFile();
                 }
             }
             break;

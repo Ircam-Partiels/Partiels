@@ -20,7 +20,8 @@ Application::Window::Window()
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
     setConstrainer(&mBoundsConstrainer);
 
-    setContentNonOwned(&mInterface, false);
+    refreshInterface();
+    setContentNonOwned(&mCommandTargetInterface, false);
 
     setVisible(true);
     setResizable(true, false);
@@ -107,12 +108,42 @@ void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBr
 
 Application::Interface& Application::Window::getInterface()
 {
-    return mInterface;
+    return *mInterface.get();
 }
 
 Application::Interface const& Application::Window::getInterface() const
 {
-    return mInterface;
+    return *mInterface.get();
+}
+
+Application::CommandTarget& Application::Window::getCommandTarget()
+{
+    return mCommandTargetInterface;
+}
+
+Application::CommandTarget const& Application::Window::getCommandTarget() const
+{
+    return mCommandTargetInterface;
+}
+
+void Application::Window::refreshInterface()
+{
+    mInterface = std::make_unique<Interface>();
+    mCommandTargetInterface.addAndMakeVisible(mInterface.get());
+    mCommandTargetInterface.resized();
+}
+
+void Application::Window::CommandTargetInterface::resized()
+{
+    MiscWeakAssert(getNumChildComponents() == 1);
+    if(getNumChildComponents() < 1)
+    {
+        return;
+    }
+    if(auto* child = getChildComponent(0))
+    {
+        child->setBounds(getLocalBounds());
+    }
 }
 
 ANALYSE_FILE_END
