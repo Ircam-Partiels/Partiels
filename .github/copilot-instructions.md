@@ -4,6 +4,20 @@ Partiels is a C++20 audio analysis application built with the JUCE framework and
 
 **ALWAYS reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
+## Repository Overview
+
+- **Language**: C++20
+- **Framework**: JUCE (cross-platform audio framework)
+- **Build System**: CMake 3.18+
+- **Supported Platforms**: Windows 10+, macOS 10.13+, Linux
+- **Key Technologies**: Vamp plugins, SDIF format, audio analysis
+
+### Architecture
+- GUI application for interactive audio analysis and visualization
+- Command-line interface for batch processing
+- Plugin-based architecture using Vamp plugin standard
+- Support for multiple audio formats and analysis algorithms
+
 ## Working Effectively
 
 ### Bootstrap and Build Process
@@ -61,6 +75,34 @@ Partiels is a C++20 audio analysis application built with the JUCE framework and
 - All the other translation files should contain the keys generated and their respective translations.
 - When reviewing code, ensure new strings are properly wrapped for translation and that translation files are updated accordingly.
 - When committing changes, ensure that translation keys are extracted and translation files are up to date.
+
+## Code Style and Standards
+
+### C++ Coding Conventions
+- **C++ Standard**: C++20 features are allowed and encouraged where appropriate
+- **Code Formatting**: Use the `.clang-format` configuration file provided in the repository
+- **Naming Conventions**:
+  - Classes: PascalCase (e.g., `AudioAnalyzer`)
+  - Functions/Methods: camelCase (e.g., `analyzeAudioFile()`)
+  - Variables: camelCase (e.g., `sampleRate`)
+  - Constants: UPPER_SNAKE_CASE or kPascalCase (e.g., `MAX_BUFFER_SIZE` or `kDefaultSampleRate`)
+- **JUCE Conventions**: Follow JUCE framework naming and patterns for GUI components and audio processing
+- **Header Guards**: Use `#pragma once` for header files
+
+### Code Organization
+- Keep classes focused and single-purpose
+- Separate interface (headers) from implementation (source files)
+- Use forward declarations where possible to minimize header dependencies
+- Place inline functions in headers only when performance-critical
+
+### Best Practices
+- Use modern C++ features: smart pointers, range-based for loops, auto keyword when appropriate
+- Avoid raw pointers; prefer `std::unique_ptr` and `std::shared_ptr`
+- Use const-correctness throughout
+- Prefer `nullptr` over `NULL` or `0`
+- Handle errors appropriately with exceptions or error codes
+- Document complex algorithms and non-obvious code with comments
+- Keep functions small and focused on a single task
 
 ## Critical Build Information
 
@@ -158,6 +200,53 @@ cmake --build build --target PartielsCheckFormat
 cmake --build build --target PartielsExtractTranslationKeys
 ```
 
+## Performance Considerations
+
+### Audio Processing
+- Audio processing must be real-time capable; avoid blocking operations in audio thread
+- Use double-buffering for audio data to prevent glitches
+- Minimize allocations in audio callback; pre-allocate buffers when possible
+- Profile performance-critical code paths using appropriate tools
+
+### GUI Responsiveness
+- Keep GUI responsive; move heavy computations to background threads
+- Use `std::thread` for parallel processing tasks
+- Update UI components on the message thread only
+- Implement progress feedback for long-running operations
+
+### Memory Management
+- Monitor memory usage, especially when processing large audio files
+- Release resources promptly when no longer needed
+- Be mindful of memory usage in plugin analysis chains
+- Test with various file sizes and channel configurations
+
+### Build Performance
+- Debug builds are fast (~7 seconds); use for active development
+- Release builds are slow (10+ minutes); only build when necessary
+- Use Ninja generator for faster builds compared to Make
+- Leverage ccache if available to speed up recompilation
+
+## Documentation Requirements
+
+### Code Documentation
+- Document public APIs with clear comments explaining purpose and usage
+- Use Doxygen-style comments for classes and functions intended for public use
+- Document parameters, return values, and exceptions
+- Explain non-obvious algorithms and design decisions
+- Keep comments up to date when code changes
+
+### User-Facing Documentation
+- Update `Docs/Partiels-Manual.md` for user-visible feature changes
+- Document new command-line options in help text
+- Update example code and tutorials if API changes
+- Maintain `ChangeLog.txt` for release notes
+
+### Translation Documentation
+- Wrap all user-visible strings with `juce::translate()`
+- Extract translation keys after adding new strings
+- Update all translation files in `BinaryData/Translations/`
+- Test with different language settings when possible
+
 ## Troubleshooting
 
 ### Common Issues
@@ -176,3 +265,56 @@ cmake --build build --target PartielsExtractTranslationKeys
 - **Plugin tests fail**: Ensure `VAMP_PATH` includes both `build/VampPlugins/Debug` and `build/Debug`
 
 Always use Debug builds for development and testing unless specifically building for release distribution.
+
+## Security and Compliance
+
+### Security Best Practices
+- **Never commit sensitive data**: API keys, passwords, certificates, or private keys
+- **Input Validation**: Always validate user input, especially file paths and audio data
+- **Buffer Safety**: Use safe string operations and bounds checking for audio buffers
+- **Plugin Security**: Be cautious when loading external Vamp plugins; validate plugin sources
+- **File Operations**: Sanitize file paths to prevent directory traversal attacks
+- **Memory Safety**: Use RAII and smart pointers to prevent memory leaks and use-after-free
+
+### Code Review Guidelines
+- All changes should be reviewed for security implications
+- Check for potential buffer overflows, especially in audio processing code
+- Verify proper error handling and resource cleanup
+- Ensure user-facing strings are properly translated
+- Validate that formatting rules are followed (use `PartielsCheckFormat`)
+
+### License Compliance
+- This project is licensed under GPL-3.0
+- All contributions must be compatible with GPL-3.0
+- Ensure proper attribution for third-party code
+- Do not introduce dependencies with incompatible licenses
+
+### Dependencies and Supply Chain
+- Keep dependencies up to date (monitored via Dependabot)
+- Verify checksums and signatures for external dependencies
+- Review security advisories for JUCE, Vamp SDK, and other dependencies
+- Test thoroughly after dependency updates
+
+## Contribution Workflow
+
+### Making Changes
+1. Create a feature branch from `main`
+2. Make minimal, focused changes that address a specific issue
+3. Run formatters: `cmake --build build --target PartielsApplyFormat`
+4. Build and test: `cmake --build build && ctest -C Debug -VV --test-dir build --output-on-failure`
+5. Verify translations are updated if user-visible strings changed
+6. Commit with clear, descriptive messages
+
+### Pull Request Process
+1. Ensure all tests pass locally before creating PR
+2. Provide clear description of changes and motivation
+3. Reference related issues with `Fixes #123` or `Closes #123`
+4. Wait for CI checks to complete (all must pass)
+5. Address code review feedback promptly
+6. Keep PR scope focused; avoid mixing unrelated changes
+
+### Code Review Expectations
+- Code reviews focus on correctness, security, maintainability, and performance
+- Reviewers will check formatting, test coverage, and documentation
+- Be responsive to feedback and questions
+- CI must pass before merging (format checks, tests, security scans)
