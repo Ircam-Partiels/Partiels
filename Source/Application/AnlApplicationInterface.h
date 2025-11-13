@@ -7,6 +7,7 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
+#include "AnlApplicationCoAnalyzer.h"
 #include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationGraphicPreset.h"
@@ -49,6 +50,11 @@ namespace Application
         void hidePluginListTablePanel();
         void togglePluginListTablePanel();
         bool isPluginListTablePanelVisible() const;
+
+        void showCoAnalyzerPanel();
+        void hideCoAnalyzerPanel();
+        void toggleCoAnalyzerPanel();
+        bool isCoAnalyzerPanelVisible() const;
 
     private:
         class TrackLoaderPanel
@@ -128,6 +134,11 @@ namespace Application
             void togglePluginListTablePanel();
             bool isPluginListTablePanelVisible() const;
 
+            void showCoAnalyzerPanel();
+            void hideCoAnalyzerPanel();
+            void toggleCoAnalyzerPanel();
+            bool isCoAnalyzerPanelVisible() const;
+
         private:
             Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
 
@@ -140,6 +151,10 @@ namespace Application
             PluginListTablePanel mPluginListTablePanel{mPluginListTable};
             bool mPluginListTableVisible{false};
             static auto constexpr pluginListTableWidth = 240;
+            
+            CoAnalyzerPanel mCoAnalyzerPanel;
+            bool mCoAnalyzerPanelVisible{false};
+            static auto constexpr coAnalyzerPanelHeight = 200;
         };
 
         Document::Accessor::Receiver mDocumentReceiver;

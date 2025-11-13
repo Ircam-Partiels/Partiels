@@ -120,6 +120,7 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mDocumentSection);
     addChildComponent(mLoaderDecorator);
     addAndMakeVisible(mPluginListTablePanel);
+    addAndMakeVisible(mCoAnalyzerPanel);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
 
@@ -185,7 +186,18 @@ void Application::Interface::DocumentContainer::resized()
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     auto& animator = juce::Desktop::getInstance().getAnimator();
     animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
+    animator.cancelAnimation(std::addressof(mCoAnalyzerPanel), false);
     animator.cancelAnimation(std::addressof(mDocumentSection), false);
+    
+    if(mCoAnalyzerPanelVisible)
+    {
+        mCoAnalyzerPanel.setBounds(bounds.removeFromBottom(coAnalyzerPanelHeight));
+    }
+    else
+    {
+        mCoAnalyzerPanel.setBounds(bounds.withY(bounds.getHeight()).withHeight(coAnalyzerPanelHeight));
+    }
+    
     if(mPluginListTableVisible)
     {
         mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));
@@ -245,6 +257,51 @@ void Application::Interface::DocumentContainer::togglePluginListTablePanel()
 bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() const
 {
     return mPluginListTableVisible;
+}
+
+void Application::Interface::DocumentContainer::showCoAnalyzerPanel()
+{
+    mCoAnalyzerPanelVisible = true;
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23);
+    auto panelBounds = bounds.removeFromBottom(coAnalyzerPanelHeight);
+    animator.animateComponent(std::addressof(mCoAnalyzerPanel), panelBounds, 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+    if(mPluginListTableVisible)
+    {
+        animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+    }
+    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+}
+
+void Application::Interface::DocumentContainer::hideCoAnalyzerPanel()
+{
+    mCoAnalyzerPanelVisible = false;
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23);
+    auto panelBounds = bounds.withY(bounds.getHeight()).withHeight(coAnalyzerPanelHeight);
+    animator.animateComponent(std::addressof(mCoAnalyzerPanel), panelBounds, 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+    if(mPluginListTableVisible)
+    {
+        animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+    }
+    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+}
+
+void Application::Interface::DocumentContainer::toggleCoAnalyzerPanel()
+{
+    if(mCoAnalyzerPanelVisible)
+    {
+        hideCoAnalyzerPanel();
+    }
+    else
+    {
+        showCoAnalyzerPanel();
+    }
+}
+
+bool Application::Interface::DocumentContainer::isCoAnalyzerPanelVisible() const
+{
+    return mCoAnalyzerPanelVisible;
 }
 
 Application::Interface::Interface()
@@ -408,6 +465,26 @@ void Application::Interface::togglePluginListTablePanel()
 bool Application::Interface::isPluginListTablePanelVisible() const
 {
     return mDocumentContainer.isPluginListTablePanelVisible();
+}
+
+void Application::Interface::showCoAnalyzerPanel()
+{
+    mDocumentContainer.showCoAnalyzerPanel();
+}
+
+void Application::Interface::hideCoAnalyzerPanel()
+{
+    mDocumentContainer.hideCoAnalyzerPanel();
+}
+
+void Application::Interface::toggleCoAnalyzerPanel()
+{
+    mDocumentContainer.toggleCoAnalyzerPanel();
+}
+
+bool Application::Interface::isCoAnalyzerPanelVisible() const
+{
+    return mDocumentContainer.isCoAnalyzerPanelVisible();
 }
 
 juce::Component const* Application::Interface::getPlot(juce::String const& identifier) const
