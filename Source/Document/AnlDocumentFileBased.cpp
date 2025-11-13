@@ -209,7 +209,7 @@ juce::Result Document::FileBased::consolidate()
         return audioResult;
     }
 
-    // Create a commmit for all tracks to for consolidation
+    // Create a commit for all tracks for consolidation
     for(auto& trackAcsr : trackAcsrs)
     {
         auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
