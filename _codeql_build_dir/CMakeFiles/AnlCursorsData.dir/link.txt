@@ -1,2 +1,0 @@
-/usr/bin/ar qc libAnlCursorsData.a CMakeFiles/AnlCursorsData.dir/juce_binarydata_AnlCursorsData/JuceLibraryCode/BinaryData1.cpp.o CMakeFiles/AnlCursorsData.dir/juce_binarydata_AnlCursorsData/JuceLibraryCode/BinaryData2.cpp.o
-/usr/bin/ranlib libAnlCursorsData.a
