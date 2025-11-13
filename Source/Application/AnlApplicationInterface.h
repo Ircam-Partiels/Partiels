@@ -7,7 +7,6 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
-#include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationGraphicPreset.h"
@@ -20,7 +19,6 @@ namespace Application
 {
     class Interface
     : public juce::Component
-    , public CommandTarget
     {
     public:
         Interface();

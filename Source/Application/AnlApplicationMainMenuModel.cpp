@@ -205,7 +205,7 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                          {
                              if(auto* window = Instance::get().getWindow())
                              {
-                                 window->getInterface().selectDefaultTemplateFile();
+                                 window->getCommandTarget().selectDefaultTemplateFile();
                              }
                          });
     globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);

@@ -135,6 +135,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 #ifdef JUCE_MAC
                 mMainMenuModel->updateAppleMenuItems();
 #endif
+                mWindow->refreshInterface();
                 break;
             }
             case AttrType::autoUpdate:
