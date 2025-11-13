@@ -188,7 +188,7 @@ void Application::Interface::DocumentContainer::resized()
     animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
     animator.cancelAnimation(std::addressof(mCoAnalyzerPanel), false);
     animator.cancelAnimation(std::addressof(mDocumentSection), false);
-    
+
     if(mCoAnalyzerPanelVisible)
     {
         mCoAnalyzerPanel.setBounds(bounds.removeFromBottom(coAnalyzerPanelHeight));
@@ -197,7 +197,7 @@ void Application::Interface::DocumentContainer::resized()
     {
         mCoAnalyzerPanel.setBounds(bounds.withY(bounds.getHeight()).withHeight(coAnalyzerPanelHeight));
     }
-    
+
     if(mPluginListTableVisible)
     {
         mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));

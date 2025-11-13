@@ -151,7 +151,7 @@ namespace Application
             PluginListTablePanel mPluginListTablePanel{mPluginListTable};
             bool mPluginListTableVisible{false};
             static auto constexpr pluginListTableWidth = 240;
-            
+
             CoAnalyzerPanel mCoAnalyzerPanel;
             bool mCoAnalyzerPanelVisible{false};
             static auto constexpr coAnalyzerPanelHeight = 200;

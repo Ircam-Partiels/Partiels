@@ -584,8 +584,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             auto* window = Instance::get().getWindow();
             auto const isVisible = window != nullptr && window->getInterface().isCoAnalyzerPanelVisible();
-            result.setInfo(isVisible ? juce::translate("Hide Co-Analyzer Panel") : juce::translate("Show Co-Analyzer Panel"), 
-                         juce::translate("Shows or hides the co-analyzer panel"), "View", 0);
+            result.setInfo(isVisible ? juce::translate("Hide Co-Analyzer Panel") : juce::translate("Show Co-Analyzer Panel"),
+                           juce::translate("Shows or hides the co-analyzer panel"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier, 0));
             result.setActive(true);
             result.setTicked(isVisible);

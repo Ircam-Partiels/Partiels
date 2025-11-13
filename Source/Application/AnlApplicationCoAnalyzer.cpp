@@ -59,16 +59,16 @@ void Application::CoAnalyzerContent::resized()
 {
     auto bounds = getLocalBounds().reduced(4);
     auto topBar = bounds.removeFromTop(32);
-    
+
     mApiKeyButton.setBounds(topBar.removeFromRight(80));
     topBar.removeFromRight(4);
     mSendButton.setBounds(topBar.removeFromRight(32));
     topBar.removeFromRight(4);
-    
+
     bounds.removeFromTop(4);
     auto bottomBar = bounds.removeFromBottom(20);
     mStatusLabel.setBounds(bottomBar);
-    
+
     bounds.removeFromBottom(4);
     mQueryEditor.setBounds(bounds);
 }
@@ -114,7 +114,7 @@ void Application::CoAnalyzerContent::handleAsyncUpdate()
     // Apply the XML to the document
     auto& director = Instance::get().getDocumentDirector();
     auto& accessor = director.getAccessor();
-    
+
     director.startAction();
     accessor.fromXml(*xmlElement, "Document", NotificationType::synchronous);
     director.endAction(ActionState::newTransaction, juce::translate("Co-Analyzer modification"));
@@ -182,23 +182,23 @@ void Application::CoAnalyzerContent::showApiKeyDialog()
 
     alertWindow->addTextEditor("apiKey", mApiKey.isEmpty() ? juce::SystemClipboard::getTextFromClipboard() : mApiKey, juce::translate("API Key"));
     alertWindow->getTextEditor("apiKey")->setInputRestrictions(0, "");
-    
+
     alertWindow->addButton(juce::translate("OK"), 1, juce::KeyPress(juce::KeyPress::returnKey));
     alertWindow->addButton(juce::translate("Cancel"), 0, juce::KeyPress(juce::KeyPress::escapeKey));
 
     auto* rawPtr = alertWindow.get();
     alertWindow->enterModalState(true, juce::ModalCallbackFunction::create([this, rawPtr](int result)
-                                                                             {
-                                                                                 if(result == 1)
-                                                                                 {
-                                                                                     mApiKey = rawPtr->getTextEditorContents("apiKey");
-                                                                                     if(!mApiKey.isEmpty())
-                                                                                     {
-                                                                                         mStatusLabel.setText(juce::translate("API key set"), juce::dontSendNotification);
-                                                                                     }
-                                                                                 }
-                                                                             }),
-                                  false);
+                                                                           {
+                                                                               if(result == 1)
+                                                                               {
+                                                                                   mApiKey = rawPtr->getTextEditorContents("apiKey");
+                                                                                   if(!mApiKey.isEmpty())
+                                                                                   {
+                                                                                       mStatusLabel.setText(juce::translate("API key set"), juce::dontSendNotification);
+                                                                                   }
+                                                                               }
+                                                                           }),
+                                 false);
     alertWindow.release(); // Release ownership as JUCE will handle deletion
 }
 
@@ -208,7 +208,7 @@ std::tuple<juce::Result, std::unique_ptr<juce::XmlElement>> Application::CoAnaly
     // Prepare the JSON payload for Mistral API
     auto escapedXmlData = xmlData.replace("\"", "\\\"").replace("\n", "\\n");
     auto escapedUserPrompt = userPrompt.replace("\"", "\\\"").replace("\n", "\\n");
-    
+
     juce::String payload = juce::String::formatted(
         R"({"model":"mistral-small-latest","messages":[{"role":"system","content":"You are an AI assistant for the Partiels audio analysis application. You will receive XML data representing the current document state and a user request. Generate ONLY the modified XML document without any additional text, explanations, or markdown formatting. The XML should be well-formed and represent the complete document structure."},{"role":"user","content":"Current document XML:\n%s\n\nUser request: %s\n\nGenerate the modified XML:"}],"temperature":0.3})",
         escapedXmlData.toRawUTF8(),
@@ -216,7 +216,7 @@ std::tuple<juce::Result, std::unique_ptr<juce::XmlElement>> Application::CoAnaly
 
     juce::URL url("https://api.mistral.ai/v1/chat/completions");
     url = url.withPOSTData(payload);
-    
+
     juce::String headers;
     headers << "Content-Type: application/json\r\n";
     headers << "Authorization: Bearer " << apiKey << "\r\n";
@@ -293,7 +293,7 @@ std::tuple<juce::Result, std::unique_ptr<juce::XmlElement>> Application::CoAnaly
     {
         content = content.substring(3);
     }
-    
+
     if(content.endsWith("```"))
     {
         content = content.dropLastCharacters(3);
@@ -316,7 +316,7 @@ Application::CoAnalyzerPanel::CoAnalyzerPanel()
 {
     mTitleLabel.setJustificationType(juce::Justification::centredLeft);
     mTitleLabel.setFont(juce::Font(juce::FontOptions(14.0f).withStyle("Bold")));
-    
+
     addAndMakeVisible(mTitleLabel);
     addAndMakeVisible(mTopSeparator);
     addAndMakeVisible(mContent);
