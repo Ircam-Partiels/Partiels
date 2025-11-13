@@ -103,7 +103,7 @@ namespace Document
         LayoutNotifier mLayoutNotifier;
         LayoutNotifier mExpandedNotifier;
         LayoutNotifier mFocusNotifier;
-        bool mIsLoading = true;
+        bool mIsLoading = false;
     };
 } // namespace Document
 
