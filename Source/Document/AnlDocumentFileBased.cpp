@@ -201,13 +201,13 @@ juce::Result Document::FileBased::consolidate()
     auto const directory = getConsolidateDirectory(file);
 
     auto const audioResult = Exporter::consolidateAudioFiles(mAccessor, directory);
+    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
+    mDirector.setAlertCatcher(nullptr);
     if(audioResult.failed())
     {
         mDirector.endAction(ActionState::abort);
         return audioResult;
     }
-    mAccessor.sendSignal(SignalType::isLoading, {false}, NotificationType::synchronous);
-    mDirector.setAlertCatcher(nullptr);
 
     // Create a commmit for all tracks to for consolidation
     for(auto& trackAcsr : trackAcsrs)
