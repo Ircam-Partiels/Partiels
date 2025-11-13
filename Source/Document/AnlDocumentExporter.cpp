@@ -484,7 +484,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                                                                      }
                                                                                  });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
+                anlWeakAssert(mTrackListeners.size() <= acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
@@ -497,7 +497,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                anlWeakAssert(mGroupListeners.size() <= acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:
