@@ -38,6 +38,7 @@ namespace Application
         void loadFromFile(PropertyType type);
 
         Accessor::Listener mApplicationListener{typeid(*this).name()};
+        Osc::Accessor::Listener mOscListener{typeid(*this).name()};
         PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
         Track::PresetList::Accessor::Listener mTrackPresetsListener{typeid(*this).name()};
         PluginList::WebDownloader mWebDownloader;

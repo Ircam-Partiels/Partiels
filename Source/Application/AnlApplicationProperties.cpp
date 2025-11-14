@@ -9,6 +9,10 @@ Application::Properties::Properties()
     {
         saveToFile(PropertyType::Application);
     };
+    mOscListener.onAttrChanged = [this]([[maybe_unused]] Osc::Accessor const& acsr, [[maybe_unused]] Osc::AttrType attribute)
+    {
+        saveToFile(PropertyType::Application);
+    };
 
     mPluginListListener.onAttrChanged = [this]([[maybe_unused]] PluginList::Accessor const& acsr, [[maybe_unused]] PluginList::AttrType attribute)
     {
@@ -30,7 +34,9 @@ Application::Properties::Properties()
     loadFromFile(PropertyType::AudioSetup);
     loadFromFile(PropertyType::TrackPresets);
 
-    Instance::get().getApplicationAccessor().addListener(mApplicationListener, NotificationType::synchronous);
+    auto& applicationAcsr = Instance::get().getApplicationAccessor();
+    applicationAcsr.addListener(mApplicationListener, NotificationType::synchronous);
+    applicationAcsr.getAcsr<AcsrType::osc>().addListener(mOscListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getTrackPresetListAccessor().addListener(mTrackPresetsListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
@@ -58,7 +64,9 @@ Application::Properties::~Properties()
     Instance::get().getAudioDeviceManager().removeChangeListener(this);
     Instance::get().getTrackPresetListAccessor().removeListener(mTrackPresetsListener);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
-    Instance::get().getApplicationAccessor().removeListener(mApplicationListener);
+    auto& applicationAcsr = Instance::get().getApplicationAccessor();
+    applicationAcsr.getAcsr<AcsrType::osc>().removeListener(mOscListener);
+    applicationAcsr.removeListener(mApplicationListener);
 }
 
 void Application::Properties::changeListenerCallback(juce::ChangeBroadcaster* source)
