@@ -87,19 +87,93 @@ void Application::Interface::PluginListTablePanel::resized()
     mContent.setBounds(bounds);
 }
 
-void Application::Interface::PluginListTablePanel::colourChanged()
+Application::Interface::NeuralyzerPanel::NeuralyzerPanel(juce::Component& content)
+: mTitleLabel("Title", juce::translate("Neuralyzer (Beta)"))
+, mCloseButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
+, mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
+, mContent(content)
 {
-    setOpaque(findColour(juce::ResizableWindow::backgroundColourId).isOpaque());
+    mCloseButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().hideNeuralyzerPanel();
+        }
+    };
+    mSettingsButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().showNeuralyzerSettingsPanel();
+        }
+    };
+    mTitleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(mTitleLabel);
+    addAndMakeVisible(mCloseButton);
+    addAndMakeVisible(mSettingsButton);
+    addAndMakeVisible(mTopSeparator);
+    addAndMakeVisible(mLeftSeparator);
+    addAndMakeVisible(mContent);
 }
 
-void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
+void Application::Interface::NeuralyzerPanel::resized()
 {
-    colourChanged();
+    auto bounds = getLocalBounds();
+    mLeftSeparator.setBounds(bounds.removeFromLeft(1));
+    auto top = bounds.removeFromTop(24);
+    mCloseButton.setBounds(top.removeFromLeft(24).reduced(4));
+    mSettingsButton.setBounds(top.removeFromRight(24).reduced(4));
+    mTitleLabel.setBounds(top);
+    mTopSeparator.setBounds(bounds.removeFromTop(1));
+    mContent.setBounds(bounds);
+}
+
+void Application::Interface::NeuralyzerPanel::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+Application::Interface::RightBorder::RightBorder()
+: pluginListButton(juce::ImageCache::getFromMemory(AnlIconsData::plugin_png, AnlIconsData::plugin_pngSize))
+, neuralyzerButton(juce::ImageCache::getFromMemory(AnlIconsData::neuralyzer_png, AnlIconsData::neuralyzer_pngSize))
+{
+    pluginListButton.setToggleable(true);
+    pluginListButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().togglePluginListTablePanel();
+        }
+    };
+
+    neuralyzerButton.setToggleable(true);
+    neuralyzerButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().toggleNeuralyzerPanel();
+        }
+    };
+    addAndMakeVisible(pluginListButton);
+    addAndMakeVisible(neuralyzerButton);
+}
+
+void Application::Interface::RightBorder::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+void Application::Interface::RightBorder::resized()
+{
+    auto bounds = getLocalBounds();
+    pluginListButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
+    neuralyzerButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
 }
 
 Application::Interface::DocumentContainer::DocumentContainer()
 : mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getTrackPresetListAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+, mNeuralyzerChat(Instance::get().getApplicationAccessor().getAcsr<AcsrType::neuralyzer>(), Instance::get().getNeuralyzerAgent())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);
     mPluginListTable.onAddPlugins = [](std::vector<Plugin::Key> keys)
@@ -111,18 +185,11 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mDocumentSection);
     addChildComponent(mLoaderDecorator);
     addAndMakeVisible(mPluginListTablePanel);
+    addAndMakeVisible(mNeuralyzerChatPanel);
+    addAndMakeVisible(mRightBorder);
+    addAndMakeVisible(mRightSeparator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
-
-    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font(juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 8.0, juce::Font::plain)).toString());
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
-    mDocumentSection.pluginListButton.onClick = []()
-    {
-        if(auto* window = Instance::get().getWindow())
-        {
-            window->getInterface().togglePluginListTablePanel();
-        }
-    };
 
     auto const showHideLoader = [this]()
     {
@@ -175,16 +242,24 @@ void Application::Interface::DocumentContainer::resized()
     mToolTipDisplay.setBounds(bounds.removeFromBottom(22));
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     auto& animator = juce::Desktop::getInstance().getAnimator();
-    animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
-    animator.cancelAnimation(std::addressof(mDocumentSection), false);
-    if(mPluginListTableVisible)
+    animator.cancelAnimation(&mPluginListTablePanel, false);
+    animator.cancelAnimation(&mNeuralyzerChatPanel, false);
+    animator.cancelAnimation(&mDocumentSection, false);
+    mRightBorder.setBounds(bounds.removeFromRight(30));
+    mRightSeparator.setBounds(bounds.removeFromRight(1));
+    auto const setRightPanelBounds = [&](juce::Component& component, bool visible)
     {
-        mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));
-    }
-    else
-    {
-        mPluginListTablePanel.setBounds(bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth));
-    }
+        if(visible)
+        {
+            component.setBounds(bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth));
+        }
+        else
+        {
+            component.setBounds(bounds.withX(bounds.getWidth()).withWidth(rightPanelsWidth));
+        }
+    };
+    setRightPanelBounds(mNeuralyzerChatPanel, mNeuralyzerChatVisible);
+    setRightPanelBounds(mPluginListTablePanel, mPluginListTableVisible);
     mDocumentSection.setBounds(bounds);
     Document::Section::getMainSectionBorderSize().subtractFrom(bounds);
     bounds.reduce(4, 4);
@@ -208,24 +283,42 @@ PluginList::Table& Application::Interface::DocumentContainer::getPluginListTable
     return mPluginListTable;
 }
 
+void Application::Interface::DocumentContainer::setRightPanelsVisible(bool const pluginListTableVisible, bool const neuralyzerPanelVisible)
+{
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23).withTrimmedRight(31);
+    auto const right = bounds.getRight();
+    auto const setPanelBounds = [&](juce::Component& component, bool visible, bool& previousState)
+    {
+        auto const panelBounds = [&]()
+        {
+            if(visible)
+            {
+                return bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth);
+            }
+            else
+            {
+                return bounds.withX(right).withWidth(rightPanelsWidth);
+            }
+        }();
+        animator.animateComponent(&component, panelBounds, 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+        previousState = visible;
+    };
+    setPanelBounds(mNeuralyzerChatPanel, neuralyzerPanelVisible, mNeuralyzerChatVisible);
+    setPanelBounds(mPluginListTablePanel, pluginListTableVisible, mPluginListTableVisible);
+    animator.animateComponent(&mDocumentSection, bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+}
+
 void Application::Interface::DocumentContainer::showPluginListTablePanel()
 {
-    mPluginListTableVisible = true;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x92"));
+    mRightBorder.pluginListButton.setToggleState(true, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(true, mNeuralyzerChatVisible);
 }
 
 void Application::Interface::DocumentContainer::hidePluginListTablePanel()
 {
-    mPluginListTableVisible = false;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto const bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
+    mRightBorder.pluginListButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(false, mNeuralyzerChatVisible);
 }
 
 void Application::Interface::DocumentContainer::togglePluginListTablePanel()
@@ -245,8 +338,38 @@ bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() 
     return mPluginListTableVisible;
 }
 
+void Application::Interface::DocumentContainer::showNeuralyzerPanel()
+{
+    mRightBorder.neuralyzerButton.setToggleState(true, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(mPluginListTableVisible, true);
+}
+
+void Application::Interface::DocumentContainer::hideNeuralyzerPanel()
+{
+    mRightBorder.neuralyzerButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(mPluginListTableVisible, false);
+}
+
+void Application::Interface::DocumentContainer::toggleNeuralyzerPanel()
+{
+    if(mNeuralyzerChatVisible)
+    {
+        hideNeuralyzerPanel();
+    }
+    else
+    {
+        showNeuralyzerPanel();
+    }
+}
+
+bool Application::Interface::DocumentContainer::isNeuralyzerPanelVisible() const
+{
+    return mNeuralyzerChatVisible;
+}
+
 Application::Interface::Interface()
 : mOscSettingsPanel(Instance::get().getOscSender())
+, mNeuralyzerSettingsPanel(Instance::get().getApplicationAccessor().getAcsr<AcsrType::neuralyzer>())
 , mDocumentFileInfoPanel(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
 {
     addAndMakeVisible(mPanelManager);
@@ -256,6 +379,7 @@ Application::Interface::Interface()
                              { std::ref<HideablePanel>(mAboutPanel)
                              , std::ref<HideablePanel>(mAudioSettingsPanel)
                              , std::ref<HideablePanel>(mOscSettingsPanel)
+                             , std::ref<HideablePanel>(mNeuralyzerSettingsPanel)
                              , std::ref<HideablePanel>(mBatcherPanel)
                              , std::ref<HideablePanel>(mConverterPanel)
                              , std::ref<HideablePanel>(mExporterPanel)
@@ -330,6 +454,11 @@ void Application::Interface::showOscSettingsPanel()
     mPanelManager.show(mOscSettingsPanel);
 }
 
+void Application::Interface::showNeuralyzerSettingsPanel()
+{
+    mPanelManager.show(mNeuralyzerSettingsPanel);
+}
+
 void Application::Interface::showGraphicPresetPanel()
 {
     mPanelManager.show(mGraphicPresetPanel);
@@ -388,6 +517,26 @@ void Application::Interface::togglePluginListTablePanel()
 bool Application::Interface::isPluginListTablePanelVisible() const
 {
     return mDocumentContainer.isPluginListTablePanelVisible();
+}
+
+void Application::Interface::showNeuralyzerPanel()
+{
+    mDocumentContainer.showNeuralyzerPanel();
+}
+
+void Application::Interface::hideNeuralyzerPanel()
+{
+    mDocumentContainer.hideNeuralyzerPanel();
+}
+
+void Application::Interface::toggleNeuralyzerPanel()
+{
+    mDocumentContainer.toggleNeuralyzerPanel();
+}
+
+bool Application::Interface::isNeuralyzerPanelVisible() const
+{
+    return mDocumentContainer.isNeuralyzerPanelVisible();
 }
 
 juce::Component const* Application::Interface::getPlot(juce::String const& identifier) const
