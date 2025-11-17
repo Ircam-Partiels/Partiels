@@ -126,11 +126,11 @@ PluginList::Table::~Table()
 void PluginList::Table::resized()
 {
     auto bounds = getLocalBounds();
-    auto headerBar = bounds.removeFromTop(20);
-    mSearchIcon.setBounds(headerBar.removeFromLeft(20).reduced(2));
-    mIrcamIcon.setBounds(headerBar.removeFromRight(22).reduced(2));
-    mSearchField.setBounds(headerBar);
-    mSeparator1.setBounds(bounds.removeFromTop(1));
+    auto searchBar = bounds.removeFromBottom(20);
+    mSearchIcon.setBounds(searchBar.removeFromLeft(20).reduced(2));
+    mIrcamIcon.setBounds(searchBar.removeFromRight(22).reduced(2));
+    mSearchField.setBounds(searchBar);
+    mSeparator1.setBounds(bounds.removeFromBottom(1));
     mDescriptionPanel.setBounds(bounds.removeFromBottom(Plugin::DescriptionPanel::optimalHeight).withTrimmedRight(2));
     mSeparator2.setBounds(bounds.removeFromBottom(1));
     mPluginTable.setBounds(bounds);
