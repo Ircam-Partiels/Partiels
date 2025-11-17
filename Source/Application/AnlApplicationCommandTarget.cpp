@@ -184,6 +184,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewInfoBubble
         , CommandIDs::viewTooltipBubble
         , CommandIDs::viewShowItemProperties
+        , CommandIDs::viewShowNeuralyzerPanel
         
         , CommandIDs::helpOpenAudioSettings
         , CommandIDs::helpOpenOscSettings
@@ -657,6 +658,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             }
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
             result.setActive(!groups.empty() || !tracks.empty());
+            break;
+        }
+        case CommandIDs::viewShowNeuralyzerPanel:
+        {
+            auto* window = Instance::get().getWindow();
+            auto const isVisible = window != nullptr && window->getInterface().isNeuralyzerPanelVisible();
+            result.setInfo(isVisible ? juce::translate("Hide Agent Panel") : juce::translate("Show Agent Panel"),
+                           juce::translate("Shows or hides the agent panel"), "View", 0);
+            result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(true);
+            result.setTicked(isVisible);
             break;
         }
 
@@ -1558,6 +1570,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto& accessor = Instance::get().getApplicationAccessor();
             accessor.setAttr<AttrType::showTooltipBubble>(!accessor.getAttr<AttrType::showTooltipBubble>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::viewShowNeuralyzerPanel:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().toggleNeuralyzerPanel();
+            }
             return true;
         }
         case CommandIDs::viewShowItemProperties:
