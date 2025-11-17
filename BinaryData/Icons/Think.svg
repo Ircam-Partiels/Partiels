@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <g style="fill:none" transform="translate(-5,-1.55)">
+    <path d="m 17.997181,31.198548 c -4.870254,0 -9.8337494,-5.192115 -9.8337494,-10.314801 0,-5.122685 3.9446854,-9.271827 8.8149404,-9.271827 0.804363,0 1.586689,0.115904 2.324939,0.336101 1.68586,-4.2766286 5.685638,-7.2899727 10.346538,-7.2899727 6.390832,0 11.569609,5.4471987 11.569609,12.1692737 0,0.197027 0,0.382464 -0.01101,0.579489 4.936368,0.579491 8.825959,4.983608 8.825959,10.430806 0,6.084639 -4.682937,11.010297 -10.467741,11.010297 H 24.691441 c -3.085229,0 -5.784804,-4.536088 -6.765466,-7.491485" stroke="#000000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="fill:none;fill-opacity:1;stroke-width:4.40158;stroke-dasharray:none" />
+    <path style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.77953;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke" d="m 20.932508,24.405566 11.095856,-7.58691 7.871419,11.759711" />
+    <ellipse style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.58625;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke" cx="11.354036" cy="43.375805" rx="4.2055535" ry="4.1077499" />
+    <ellipse style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.867;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke" cx="20.979929" cy="24.405563" rx="2.608" ry="2.4657457" />
+    <ellipse style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.86709;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke" cx="32.128456" cy="17.061001" rx="2.608" ry="2.4657457" />
+    <ellipse style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.86709;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke" cx="39.749107" cy="28.303328" rx="2.608" ry="2.4657457" />
+  </g>
+</svg>
