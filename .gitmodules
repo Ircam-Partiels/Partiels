@@ -4,3 +4,6 @@
 [submodule "Dependencies/ircam-vamp-extension"]
 	path = Dependencies/ircam-vamp-extension
 	url = https://github.com/Ircam-Partiels/ircam-vamp-extension.git
+[submodule "Dependencies/llama.cpp"]
+	path = Dependencies/llama.cpp
+	url = https://github.com/Ircam-Partiels/llama.cpp.git
