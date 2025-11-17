@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
 set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "")
 
 set(CMAKE_XCODE_GENERATE_SCHEME true)
@@ -77,11 +77,35 @@ if(NOT EXISTS ${VAMP_SDK_PATH})
     message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
 endif()
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "ggml: build shared libraries" FORCE)
+set(GGML_USE_METAL ON CACHE BOOL "ggml: use Metal" FORCE)
+set(GGML_NATIVE OFF CACHE BOOL "ggml: optimize the build for the current system" FORCE)
+option(GGML_METAL_EMBED_LIBRARY "ggml: embed Metal library" ON)
+option(GGML_LTO "ggml: use LTO" ON)
+option(GGML_OPENMP "ggml: use OpenMP" OFF)
+option(GGML_CCACHE "ggml: use ccache" OFF)
+option(GGML_BLAS "ggml: use BLAS" OFF)
+
 add_subdirectory(JUCE)
+add_subdirectory(Dependencies/llama.cpp)
 add_subdirectory(Dependencies/ircam-vamp-extension)
 add_subdirectory(Dependencies/sdif)
 include(Dependencies/Misc/Misc.cmake)
 add_subdirectory(VampPlugins)
+
+if(APPLE)
+    target_compile_options(llama PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-metal PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-cpu PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-base PRIVATE -Wno-shorten-64-to-32)
+    set_target_properties(ggml-metal PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION "NO")
+elseif(UNIX)
+    target_compile_options(ggml PRIVATE -Wno-unused-function -Wno-unused-parameter)
+elseif(MSVC)
+    set_target_properties(ggml PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    target_compile_options(ggml-base PRIVATE /wd4005)
+endif()
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -184,6 +208,7 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 target_link_libraries(Partiels PRIVATE
     ive_host_static
     sdif
+    llama
     MiscData
     TestResultsData
     AnlResourceData
