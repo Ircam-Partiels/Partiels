@@ -3,6 +3,7 @@
 #include "../Document/AnlDocumentExporter.h"
 #include "../Track/AnlTrackModel.h"
 #include "AnlApplicationLookAndFeel.h"
+#include "AnlApplicationNeuralyzerModel.h"
 #include "AnlApplicationOsc.h"
 
 ANALYSE_FILE_BEGIN
@@ -47,6 +48,7 @@ namespace Application
     enum class AcsrType : size_t
     {
           osc
+        , neuralyzer
     };
 
     using AttrContainer = Model::Container
@@ -76,6 +78,7 @@ namespace Application
     
     using AcsrContainer = Model::Container
     < Model::Acsr<AcsrType::osc, Osc::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    , Model::Acsr<AcsrType::neuralyzer, Neuralyzer::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     >;
     // clang-format on
 
