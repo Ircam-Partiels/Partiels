@@ -13,6 +13,10 @@ Application::Properties::Properties()
     {
         saveToFile(PropertyType::Application);
     };
+    mNeuralyzerListener.onAttrChanged = [this]([[maybe_unused]] Neuralyzer::Accessor const& acsr, [[maybe_unused]] Neuralyzer::AttrType attribute)
+    {
+        saveToFile(PropertyType::Application);
+    };
 
     mPluginListListener.onAttrChanged = [this]([[maybe_unused]] PluginList::Accessor const& acsr, [[maybe_unused]] PluginList::AttrType attribute)
     {
@@ -37,6 +41,7 @@ Application::Properties::Properties()
     auto& applicationAcsr = Instance::get().getApplicationAccessor();
     applicationAcsr.addListener(mApplicationListener, NotificationType::synchronous);
     applicationAcsr.getAcsr<AcsrType::osc>().addListener(mOscListener, NotificationType::synchronous);
+    applicationAcsr.getAcsr<AcsrType::neuralyzer>().addListener(mNeuralyzerListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getTrackPresetListAccessor().addListener(mTrackPresetsListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
@@ -65,6 +70,7 @@ Application::Properties::~Properties()
     Instance::get().getTrackPresetListAccessor().removeListener(mTrackPresetsListener);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
     auto& applicationAcsr = Instance::get().getApplicationAccessor();
+    applicationAcsr.getAcsr<AcsrType::neuralyzer>().removeListener(mNeuralyzerListener);
     applicationAcsr.getAcsr<AcsrType::osc>().removeListener(mOscListener);
     applicationAcsr.removeListener(mApplicationListener);
 }
