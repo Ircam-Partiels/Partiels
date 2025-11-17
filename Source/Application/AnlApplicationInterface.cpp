@@ -107,9 +107,111 @@ void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
     colourChanged();
 }
 
+Application::Interface::CoAnalyzerPanel::CoAnalyzerPanel(juce::Component& content)
+: mTitleLabel("Title", juce::translate("Co-Analyzer"))
+, mCloseButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
+, mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
+, mContent(content)
+{
+    mCloseButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().hideCoAnalyzerPanel();
+        }
+    };
+    mSettingsButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().showCoAnalyzerSettingsPanel();
+        }
+    };
+    mTitleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(mTitleLabel);
+    addAndMakeVisible(mCloseButton);
+    addAndMakeVisible(mSettingsButton);
+    addAndMakeVisible(mTopSeparator);
+    addAndMakeVisible(mLeftSeparator);
+    addAndMakeVisible(mContent);
+}
+
+void Application::Interface::CoAnalyzerPanel::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+void Application::Interface::CoAnalyzerPanel::resized()
+{
+    auto bounds = getLocalBounds();
+    mLeftSeparator.setBounds(bounds.removeFromLeft(1));
+    auto top = bounds.removeFromTop(24);
+    mCloseButton.setBounds(top.removeFromLeft(24).reduced(4));
+    mSettingsButton.setBounds(top.removeFromRight(24).reduced(4));
+    mTitleLabel.setBounds(top);
+    mTopSeparator.setBounds(bounds.removeFromTop(1));
+    mContent.setBounds(bounds);
+}
+
+void Application::Interface::CoAnalyzerPanel::colourChanged()
+{
+    setOpaque(findColour(juce::ResizableWindow::backgroundColourId).isOpaque());
+}
+
+void Application::Interface::CoAnalyzerPanel::parentHierarchyChanged()
+{
+    colourChanged();
+}
+
+Application::Interface::RightBorder::RightBorder()
+: mPluginListButton(juce::ImageCache::getFromMemory(AnlIconsData::plugin_png, AnlIconsData::plugin_pngSize))
+, mCoAnalyzerButton(juce::ImageCache::getFromMemory(AnlIconsData::coanalyzer_png, AnlIconsData::coanalyzer_pngSize))
+{
+    mPluginListButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().togglePluginListTablePanel();
+        }
+    };
+
+    mCoAnalyzerButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().toggleCoAnalyzerPanel();
+        }
+    };
+    addAndMakeVisible(mPluginListButton);
+    addAndMakeVisible(mCoAnalyzerButton);
+}
+
+void Application::Interface::RightBorder::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+void Application::Interface::RightBorder::resized()
+{
+    auto bounds = getLocalBounds();
+    mPluginListButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
+    mCoAnalyzerButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
+}
+
+void Application::Interface::RightBorder::colourChanged()
+{
+    setOpaque(findColour(juce::ResizableWindow::backgroundColourId).isOpaque());
+}
+
+void Application::Interface::RightBorder::parentHierarchyChanged()
+{
+    colourChanged();
+}
+
 Application::Interface::DocumentContainer::DocumentContainer()
 : mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getTrackPresetListAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+, mCoAnalyzerChat(Instance::get().getApplicationAccessor().getAcsr<AcsrType::coAnalyzer>())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);
     mPluginListTable.onAddPlugins = [](std::set<Plugin::Key> keys)
@@ -120,18 +222,11 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mDocumentSection);
     addChildComponent(mLoaderDecorator);
     addAndMakeVisible(mPluginListTablePanel);
+    addAndMakeVisible(mCoAnalyzerChatPanel);
+    addAndMakeVisible(mRightBorder);
+    addAndMakeVisible(mRightSeparator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
-
-    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font(juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 8.0, juce::Font::plain)).toString());
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
-    mDocumentSection.pluginListButton.onClick = []()
-    {
-        if(auto* window = Instance::get().getWindow())
-        {
-            window->getInterface().togglePluginListTablePanel();
-        }
-    };
 
     auto const showHideLoader = [this]()
     {
@@ -184,16 +279,24 @@ void Application::Interface::DocumentContainer::resized()
     mToolTipDisplay.setBounds(bounds.removeFromBottom(22));
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     auto& animator = juce::Desktop::getInstance().getAnimator();
-    animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
-    animator.cancelAnimation(std::addressof(mDocumentSection), false);
-    if(mPluginListTableVisible)
+    animator.cancelAnimation(&mPluginListTablePanel, false);
+    animator.cancelAnimation(&mCoAnalyzerChatPanel, false);
+    animator.cancelAnimation(&mDocumentSection, false);
+    mRightBorder.setBounds(bounds.removeFromRight(30));
+    mRightSeparator.setBounds(bounds.removeFromRight(1));
+    auto const setRightPanelBounds = [&](juce::Component& component, bool visible)
     {
-        mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));
-    }
-    else
-    {
-        mPluginListTablePanel.setBounds(bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth));
-    }
+        if(visible)
+        {
+            component.setBounds(bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth));
+        }
+        else
+        {
+            component.setBounds(bounds.withX(bounds.getWidth()).withWidth(rightPanelsWidth));
+        }
+    };
+    setRightPanelBounds(mCoAnalyzerChatPanel, mCoAnalyzerChatVisible);
+    setRightPanelBounds(mPluginListTablePanel, mPluginListTableVisible);
     mDocumentSection.setBounds(bounds);
     Document::Section::getMainSectionBorderSize().subtractFrom(bounds);
     bounds.reduce(4, 4);
@@ -210,24 +313,40 @@ PluginList::Table& Application::Interface::DocumentContainer::getPluginListTable
     return mPluginListTable;
 }
 
+void Application::Interface::DocumentContainer::setRightPanelsVisible(bool const pluginListTableVisible, bool const coAnalyzerPanelVisible)
+{
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23).withTrimmedRight(31);
+    auto const right = bounds.getRight();
+    auto const setPanelBounds = [&](juce::Component& component, bool visible, bool& previousState)
+    {
+        auto const panelBounds = [&]()
+        {
+            if(visible)
+            {
+                return bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth);
+            }
+            else
+            {
+                return bounds.withX(right).withWidth(rightPanelsWidth);
+            }
+        }();
+        animator.animateComponent(&component, panelBounds, 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+        previousState = visible;
+    };
+    setPanelBounds(mCoAnalyzerChatPanel, coAnalyzerPanelVisible, mCoAnalyzerChatVisible);
+    setPanelBounds(mPluginListTablePanel, pluginListTableVisible, mPluginListTableVisible);
+    animator.animateComponent(&mDocumentSection, bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+}
+
 void Application::Interface::DocumentContainer::showPluginListTablePanel()
 {
-    mPluginListTableVisible = true;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x92"));
+    setRightPanelsVisible(true, mCoAnalyzerChatVisible);
 }
 
 void Application::Interface::DocumentContainer::hidePluginListTablePanel()
 {
-    mPluginListTableVisible = false;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto const bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
+    setRightPanelsVisible(false, mCoAnalyzerChatVisible);
 }
 
 void Application::Interface::DocumentContainer::togglePluginListTablePanel()
@@ -247,6 +366,33 @@ bool Application::Interface::DocumentContainer::isPluginListTablePanelVisible() 
     return mPluginListTableVisible;
 }
 
+void Application::Interface::DocumentContainer::showCoAnalyzerPanel()
+{
+    setRightPanelsVisible(mPluginListTableVisible, true);
+}
+
+void Application::Interface::DocumentContainer::hideCoAnalyzerPanel()
+{
+    setRightPanelsVisible(mPluginListTableVisible, false);
+}
+
+void Application::Interface::DocumentContainer::toggleCoAnalyzerPanel()
+{
+    if(mCoAnalyzerChatVisible)
+    {
+        hideCoAnalyzerPanel();
+    }
+    else
+    {
+        showCoAnalyzerPanel();
+    }
+}
+
+bool Application::Interface::DocumentContainer::isCoAnalyzerPanelVisible() const
+{
+    return mCoAnalyzerChatVisible;
+}
+
 Application::Interface::Interface()
 : mOscSettingsPanel(Instance::get().getOscSender())
 , mDocumentFileInfoPanel(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
@@ -258,6 +404,7 @@ Application::Interface::Interface()
                              { std::ref<HideablePanel>(mAboutPanel)
                              , std::ref<HideablePanel>(mAudioSettingsPanel)
                              , std::ref<HideablePanel>(mOscSettingsPanel)
+                             , std::ref<HideablePanel>(mCoAnalyzerSettingsPanel)
                              , std::ref<HideablePanel>(mBatcherPanel)
                              , std::ref<HideablePanel>(mConverterPanel)
                              , std::ref<HideablePanel>(mExporterPanel)
@@ -345,6 +492,11 @@ void Application::Interface::showOscSettingsPanel()
     mPanelManager.show(mOscSettingsPanel);
 }
 
+void Application::Interface::showCoAnalyzerSettingsPanel()
+{
+    mPanelManager.show(mCoAnalyzerSettingsPanel);
+}
+
 void Application::Interface::showGraphicPresetPanel()
 {
     mPanelManager.show(mGraphicPresetPanel);
@@ -408,6 +560,26 @@ void Application::Interface::togglePluginListTablePanel()
 bool Application::Interface::isPluginListTablePanelVisible() const
 {
     return mDocumentContainer.isPluginListTablePanelVisible();
+}
+
+void Application::Interface::showCoAnalyzerPanel()
+{
+    mDocumentContainer.showCoAnalyzerPanel();
+}
+
+void Application::Interface::hideCoAnalyzerPanel()
+{
+    mDocumentContainer.hideCoAnalyzerPanel();
+}
+
+void Application::Interface::toggleCoAnalyzerPanel()
+{
+    mDocumentContainer.toggleCoAnalyzerPanel();
+}
+
+bool Application::Interface::isCoAnalyzerPanelVisible() const
+{
+    return mDocumentContainer.isCoAnalyzerPanelVisible();
 }
 
 juce::Component const* Application::Interface::getPlot(juce::String const& identifier) const
