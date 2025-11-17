@@ -28,8 +28,6 @@ namespace Document
 
         juce::Component const* getPlot(juce::String const& identifier) const;
 
-        juce::TextButton pluginListButton;
-
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

@@ -185,7 +185,6 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAddGroupButton.setMouseClickGrabsKeyboardFocus(false);
     mAddGroupButton.setCommandToTrigger(std::addressof(mApplicationCommandManager), ApplicationCommandIDs::editNewGroup, true);
 
-    addAndMakeVisible(pluginListButton);
     addAndMakeVisible(mTimeRulerDecoration);
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mTopSeparator);
@@ -363,7 +362,6 @@ void Document::Section::resized()
         auto bottomPart = bounds.removeFromBottom(14).reduced(0, 1);
         mAddGroupButton.setBounds(bottomPart.removeFromLeft(48));
         bottomPart = bottomPart.withTrimmedLeft(36);
-        pluginListButton.setBounds(bottomPart.removeFromRight(24 + scrollbarWidth));
         mTimeScrollBar.setBounds(bottomPart);
         mBottomSeparator.setBounds(bounds.removeFromBottom(1));
     }
@@ -802,7 +800,6 @@ void Document::Section::applicationCommandInvoked(juce::ApplicationCommandTarget
 
 void Document::Section::applicationCommandListChanged()
 {
-    pluginListButton.setTooltip(Utils::getCommandDescriptionWithKey(mApplicationCommandManager, ApplicationCommandIDs::editNewTrack));
     Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble});
 }
 
