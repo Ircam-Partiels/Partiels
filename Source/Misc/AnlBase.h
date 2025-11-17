@@ -127,6 +127,7 @@ enum ApplicationCommandIDs : int
     , viewInfoBubble
     , viewTooltipBubble
     , viewShowItemProperties
+    , viewShowNeuralyzerPanel
     
     , helpOpenAudioSettings
     , helpOpenOscSettings
