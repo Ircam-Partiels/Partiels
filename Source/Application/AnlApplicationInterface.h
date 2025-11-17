@@ -12,6 +12,8 @@
 #include "AnlApplicationGraphicPreset.h"
 #include "AnlApplicationKeyMappings.h"
 #include "AnlApplicationLoader.h"
+#include "AnlApplicationNeuralyzerChat.h"
+#include "AnlApplicationNeuralyzerSettings.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,6 +36,7 @@ namespace Application
         void showAboutPanel();
         void showAudioSettingsPanel();
         void showOscSettingsPanel();
+        void showNeuralyzerSettingsPanel();
         void showGraphicPresetPanel();
         void showBatcherPanel();
         void showConverterPanel();
@@ -48,6 +51,11 @@ namespace Application
         void hidePluginListTablePanel();
         void togglePluginListTablePanel();
         bool isPluginListTablePanelVisible() const;
+
+        void showNeuralyzerPanel();
+        void hideNeuralyzerPanel();
+        void toggleNeuralyzerPanel();
+        bool isNeuralyzerPanelVisible() const;
 
     private:
         class ReaderLayoutPanel
@@ -98,6 +106,26 @@ namespace Application
             juce::Component& mContent;
         };
 
+        class NeuralyzerPanel
+        : public juce::Component
+        {
+        public:
+            NeuralyzerPanel(juce::Component& content);
+            ~NeuralyzerPanel() override = default;
+
+            // juce::Component
+            void paint(juce::Graphics& g) override;
+            void resized() override;
+
+        private:
+            juce::Label mTitleLabel;
+            Icon mCloseButton;
+            Icon mSettingsButton;
+            ColouredPanel mTopSeparator;
+            ColouredPanel mLeftSeparator;
+            juce::Component& mContent;
+        };
+
         class RightBorder
         : public juce::Component
         , private juce::ApplicationCommandManagerListener
@@ -111,6 +139,7 @@ namespace Application
             void resized() override;
 
             Icon pluginListButton;
+            Icon neuralyzerButton;
 
         private:
             // juce::ApplicationCommandManagerListener
@@ -132,11 +161,17 @@ namespace Application
             Document::Section const& getDocumentSection() const;
             PluginList::Table& getPluginListTable();
 
-            void setRightPanelsVisible(bool const pluginListTableVisible);
+            void setRightPanelsVisible(bool const pluginListTableVisible, bool const coAnalyzerPanelVisible);
+
             void showPluginListTablePanel();
             void hidePluginListTablePanel();
             void togglePluginListTablePanel();
             bool isPluginListTablePanelVisible() const;
+
+            void showNeuralyzerPanel();
+            void hideNeuralyzerPanel();
+            void toggleNeuralyzerPanel();
+            bool isNeuralyzerPanelVisible() const;
 
         private:
             Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
@@ -151,6 +186,9 @@ namespace Application
             PluginList::Table mPluginListTable;
             PluginListTablePanel mPluginListTablePanel{mPluginListTable};
             bool mPluginListTableVisible{false};
+            Neuralyzer::Chat mNeuralyzerChat;
+            NeuralyzerPanel mNeuralyzerChatPanel{mNeuralyzerChat};
+            bool mNeuralyzerChatVisible{false};
             static auto constexpr rightPanelsWidth = 240;
             static auto constexpr rightBorderWidth = 30;
             static auto constexpr rightSeparatorWidth = 1;
@@ -162,6 +200,7 @@ namespace Application
         AboutPanel mAboutPanel;
         AudioSettingsPanel mAudioSettingsPanel;
         Osc::SettingsPanel mOscSettingsPanel;
+        Neuralyzer::SettingsPanel mNeuralyzerSettingsPanel;
         GraphicPresetPanel mGraphicPresetPanel;
         BatcherPanel mBatcherPanel;
         ConverterPanel mConverterPanel;
