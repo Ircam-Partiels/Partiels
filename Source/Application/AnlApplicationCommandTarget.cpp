@@ -180,6 +180,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewTimeZoomAnchorOnPlayhead
         , CommandIDs::viewInfoBubble
         , CommandIDs::viewShowItemProperties
+        , CommandIDs::viewShowCoAnalyzerPanel
         
         , CommandIDs::helpOpenAudioSettings
         , CommandIDs::helpOpenOscSettings
@@ -646,6 +647,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             }
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier, 0));
             result.setActive(!groups.empty() || !tracks.empty());
+            break;
+        }
+        case CommandIDs::viewShowCoAnalyzerPanel:
+        {
+            auto* window = Instance::get().getWindow();
+            auto const isVisible = window != nullptr && window->getInterface().isCoAnalyzerPanelVisible();
+            result.setInfo(isVisible ? juce::translate("Hide Neuralyzer Panel") : juce::translate("Show Neuralyzer Panel"),
+                           juce::translate("Shows or hides the co-analyzer panel"), "View", 0);
+            result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(true);
+            result.setTicked(isVisible);
             break;
         }
 
@@ -1601,6 +1613,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto& accessor = Instance::get().getApplicationAccessor();
             accessor.setAttr<AttrType::showInfoBubble>(!accessor.getAttr<AttrType::showInfoBubble>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::viewShowCoAnalyzerPanel:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().toggleCoAnalyzerPanel();
+            }
             return true;
         }
         case CommandIDs::viewShowItemProperties:
