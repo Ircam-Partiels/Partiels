@@ -39,6 +39,7 @@ namespace Application
 
         Accessor::Listener mApplicationListener{typeid(*this).name()};
         Osc::Accessor::Listener mOscListener{typeid(*this).name()};
+        Neuralyzer::Accessor::Listener mNeuralyzerListener{typeid(*this).name()};
         PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
         Track::PresetList::Accessor::Listener mTrackPresetsListener{typeid(*this).name()};
         PluginList::WebDownloader mWebDownloader;
