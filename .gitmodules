@@ -7,3 +7,6 @@
 [submodule "Dependencies/vamp-plugin-sdk"]
 	path = Dependencies/vamp-plugin-sdk
 	url = https://github.com/Ircam-Partiels/vamp-plugin-sdk.git
+[submodule "Dependencies/llama.cpp"]
+	path = Dependencies/llama.cpp
+	url = https://github.com/Ircam-Partiels/llama.cpp.git
