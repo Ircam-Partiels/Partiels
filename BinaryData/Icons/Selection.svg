@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <marker style="overflow:visible" id="RoundedArrow" refX="0" refY="0" orient="auto-start-reverse" markerWidth="0.5" markerHeight="0.5" viewBox="0 0 1 1" preserveAspectRatio="xMidYMid">
+      <path transform="scale(0.7)" d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z" style="fill:context-stroke;fill-rule:evenodd;stroke:none" />
+    </marker>
+  </defs>
+  <path style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:6.80315, 6.80315;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers" d="M 33,45 H 3 V 3 h 42 v 30" />
+  <path style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#RoundedArrow);paint-order:stroke fill markers" d="M 27.933036,28.024322 44.903599,44.994885" />
+</svg>
