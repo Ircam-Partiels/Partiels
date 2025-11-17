@@ -13,6 +13,10 @@ Application::Properties::Properties()
     {
         saveToFile(PropertyType::Application);
     };
+    mCoAnalyzerListener.onAttrChanged = [this]([[maybe_unused]] CoAnalyzer::Accessor const& acsr, [[maybe_unused]] CoAnalyzer::AttrType attribute)
+    {
+        saveToFile(PropertyType::Application);
+    };
 
     mPluginListListener.onAttrChanged = [this]([[maybe_unused]] PluginList::Accessor const& acsr, [[maybe_unused]] PluginList::AttrType attribute)
     {
@@ -37,6 +41,7 @@ Application::Properties::Properties()
     auto& applicationAcsr = Instance::get().getApplicationAccessor();
     applicationAcsr.addListener(mApplicationListener, NotificationType::synchronous);
     applicationAcsr.getAcsr<AcsrType::osc>().addListener(mOscListener, NotificationType::synchronous);
+    applicationAcsr.getAcsr<AcsrType::coAnalyzer>().addListener(mCoAnalyzerListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getTrackPresetListAccessor().addListener(mTrackPresetsListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
@@ -65,6 +70,7 @@ Application::Properties::~Properties()
     Instance::get().getTrackPresetListAccessor().removeListener(mTrackPresetsListener);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
     auto& applicationAcsr = Instance::get().getApplicationAccessor();
+    applicationAcsr.getAcsr<AcsrType::coAnalyzer>().removeListener(mCoAnalyzerListener);
     applicationAcsr.getAcsr<AcsrType::osc>().removeListener(mOscListener);
     applicationAcsr.removeListener(mApplicationListener);
 }
