@@ -66,6 +66,8 @@ namespace Document
             bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
+            ColumnSeparator labSeparator{ColumnSeparator::space};
+            bool disableLabelEscaping{false};
             bool includeDescription{true};
             juce::String sdifFrameSignature{"????"};
             juce::String sdifMatrixSignature{"????"};
@@ -84,6 +86,7 @@ namespace Document
             juce::String getFormatWilcard() const;
 
             char getSeparatorChar() const;
+            char getLabSeparatorChar() const;
 
             bool isValid() const;
             bool isCompatible(Track::FrameType frameType) const;
@@ -133,6 +136,8 @@ namespace Document
             PropertyNumber mPropertyPpi;
             PropertyToggle mPropertyRowHeader;
             PropertyList mPropertyColumnSeparator;
+            PropertyList mPropertyLabSeparator;
+            PropertyToggle mPropertyDisableLabelEscaping;
             PropertyList mPropertyReaperType;
             PropertyToggle mPropertyIncludeDescription;
             PropertyText mPropertySdifFrame;
