@@ -221,6 +221,19 @@ static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets
     return presets;
 }
 
+static std::vector<std::string> getTimePresetName()
+{
+    // clang-format off
+    return
+    {
+          juce::translate("Global").toStdString()
+        , juce::translate("Visible").toStdString()
+        , juce::translate("Selection").toStdString()
+        , juce::translate("Manual").toStdString()
+    };
+    // clang-format on
+}
+
 static std::vector<std::string> getColumnSeparatorNames()
 {
     // clang-format off
@@ -239,11 +252,11 @@ static std::vector<std::string> getColumnSeparatorNames()
 Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize)
 : mAccessor(accessor)
 , mShowAutoSize(showAutoSize)
-, mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this]([[maybe_unused]] size_t index)
+, mPropertyItem(juce::translate("Item"), juce::translate("The item to export"), "", std::vector<std::string>{""}, [this]([[maybe_unused]] size_t index)
                 {
                     sanitizeProperties(true);
                 })
-, mPropertyTimePreset("Time Preset", "The preset of the time range to export", "", std::vector<std::string>{"Global", "Visible", "Selection", "Manual"}, [this](size_t index)
+, mPropertyTimePreset(juce::translate("Time Preset"), juce::translate("The preset of the time range to export"), "", getTimePresetName(), [this](size_t index)
                       {
                           auto options = mOptions;
                           options.timePreset = magic_enum::enum_value<Document::Exporter::Options::TimePreset>(index);
@@ -261,19 +274,19 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX (coll)", "SDIF"}, [this](size_t index)
+, mPropertyFormat(juce::translate("Format"), juce::translate("Select the export format"), "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX (coll)", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyGroupMode("Preserve Group Overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
+, mPropertyGroupMode(juce::translate("Preserve Group Overlay"), juce::translate("Preserve group overlay of tracks when exporting"), [this](bool state)
                      {
                          auto options = mOptions;
                          options.useGroupOverview = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertySizePreset("Image Size", "Select the size preset of the image", "", std::vector<std::string>{}, [this](size_t index)
+, mPropertySizePreset(juce::translate("Image Size"), juce::translate("Select the size preset of the image"), "", std::vector<std::string>{}, [this](size_t index)
                       {
                           auto options = mOptions;
                           options.useAutoSize = mShowAutoSize && index == 0_z;
@@ -304,7 +317,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                           }
                           setOptions(options, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyWidth("Image Width", "Set the width of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyWidth(juce::translate("Image Width"), juce::translate("Set the width of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                  {
                      auto options = mOptions;
                      auto const identifier = getSelectedIdentifier();
@@ -322,7 +335,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                      options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
                      setOptions(options, juce::NotificationType::sendNotificationSync);
                  })
-, mPropertyHeight("Image Height", "Set the height of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyHeight(juce::translate("Image Height"), juce::translate("Set the height of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                   {
                       auto options = mOptions;
                       auto const identifier = getSelectedIdentifier();
@@ -340,7 +353,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyPpi("Image PPI", "Set the pixel density of the image", "pixels/inch", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyPpi(juce::translate("Image PPI"), juce::translate("Set the pixel density of the image"), juce::translate("pixels/inch"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                {
                    auto options = mOptions;
                    auto const identifier = getSelectedIdentifier();
@@ -358,43 +371,43 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                    options.imagePpi = std::max(static_cast<int>(std::round(value)), 1);
                    setOptions(options, juce::NotificationType::sendNotificationSync);
                })
-, mPropertyRowHeader("Include Header Row", "Include header row before the data rows", [this](bool state)
+, mPropertyRowHeader(juce::translate("Include Header Row"), juce::translate("Include header row before the data rows"), [this](bool state)
                      {
                          auto options = mOptions;
                          options.includeHeaderRaw = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyColumnSeparator("Column Separator", "The separator character between colummns", "", getColumnSeparatorNames(), [this](size_t index)
+, mPropertyColumnSeparator(juce::translate("Column Separator"), juce::translate("The separator character between colummns"), "", getColumnSeparatorNames(), [this](size_t index)
                            {
                                auto options = mOptions;
                                options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                                setOptions(options, juce::NotificationType::sendNotificationSync);
                            })
-, mPropertyLabSeparator("Lab Separator", "The separator character for .lab format", "", getColumnSeparatorNames(), [this](size_t index)
+, mPropertyLabSeparator(juce::translate("Lab Separator"), juce::translate("The separator character for .lab format"), "", getColumnSeparatorNames(), [this](size_t index)
                         {
                             auto options = mOptions;
                             options.labSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                             setOptions(options, juce::NotificationType::sendNotificationSync);
                         })
-, mPropertyDisableLabelEscaping("Disable Label Escaping", "Disable escaping of special characters in labels", [this](bool state)
+, mPropertyDisableLabelEscaping(juce::translate("Disable Label Escaping"), juce::translate("Disable escaping of special characters in labels"), [this](bool state)
                                 {
                                     auto options = mOptions;
                                     options.disableLabelEscaping = state;
                                     setOptions(options, juce::NotificationType::sendNotificationSync);
                                 })
-, mPropertyReaperType("Reaper Type", "The Reaper data type", "", std::vector<std::string>{"Marker", "Region"}, [this](size_t index)
+, mPropertyReaperType(juce::translate("Reaper Type"), juce::translate("The Reaper data type"), "", std::vector<std::string>{juce::translate("Marker").toStdString(), juce::translate("Region").toStdString()}, [this](size_t index)
                       {
                           auto options = mOptions;
                           options.reaperType = magic_enum::enum_value<Document::Exporter::Options::ReaperType>(index);
                           setOptions(options, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyIncludeDescription("Include Extra Description", "Include the extra description of the track in the results", [this](bool state)
+, mPropertyIncludeDescription(juce::translate("Include Extra Description"), juce::translate("Include the extra description of the track in the results"), [this](bool state)
                               {
                                   auto options = mOptions;
                                   options.includeDescription = state;
                                   setOptions(options, juce::NotificationType::sendNotificationSync);
                               })
-, mPropertySdifFrame("Frame Signature", "Define the frame signature to encode the results in the SDIF file", [this](juce::String text)
+, mPropertySdifFrame(juce::translate("Frame Signature"), juce::translate("Define the frame signature to encode the results in the SDIF file"), [this](juce::String text)
                      {
                          while(text.length() < 4)
                          {
@@ -405,7 +418,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                          options.sdifFrameSignature = text;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertySdifMatrix("Matrix Signature", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String text)
+, mPropertySdifMatrix(juce::translate("Matrix Signature"), juce::translate("Define the matrix signature to encode the results in the SDIF file"), [this](juce::String text)
                       {
                           while(text.length() < 4)
                           {
@@ -416,25 +429,25 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                           options.sdifMatrixSignature = text;
                           setOptions(options, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertySdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", [this](juce::String text)
+, mPropertySdifColName(juce::translate("Column Name"), juce::translate("Define the name of the column to encode the results in the SDIF file"), [this](juce::String text)
                        {
                            auto options = mOptions;
                            options.sdifColumnName = text;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
-, mPropertyIgnoreGrids("Ignore Matrix Tracks", "Ignore tracks with matrix results (such as a spectrogram)", [this](bool state)
+, mPropertyIgnoreGrids(juce::translate("Ignore Matrix Tracks"), juce::translate("Ignore tracks with matrix results (such as a spectrogram)"), [this](bool state)
                        {
                            auto options = mOptions;
                            options.ignoreGridResults = state;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
-, mPropertyApplyExtraThresholds("Apply Extra Thresholds", "Apply extra threshold filters to exclude values below thresholds when exporting", [this](bool state)
+, mPropertyApplyExtraThresholds(juce::translate("Apply Extra Thresholds"), juce::translate("Apply extra threshold filters to exclude values below thresholds when exporting"), [this](bool state)
                                 {
                                     auto options = mOptions;
                                     options.applyExtraThresholds = state;
                                     setOptions(options, juce::NotificationType::sendNotificationSync);
                                 })
-, mPropertyOutsideGridJustification("Outside Grid", "Draw grid ticks and labels outside the frame bounds", "", {}, nullptr)
+, mPropertyOutsideGridJustification(juce::translate("Outside Grid"), juce::translate("Draw grid ticks and labels outside the frame bounds"), "", {}, nullptr)
 , mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                           {
                               updateItems();
