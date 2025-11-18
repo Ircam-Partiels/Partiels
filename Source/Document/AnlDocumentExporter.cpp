@@ -43,6 +43,8 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            ignoreGridResults == rhd.ignoreGridResults &&
            applyExtraThresholds == rhd.applyExtraThresholds &&
            columnSeparator == rhd.columnSeparator &&
+           labSeparator == rhd.labSeparator &&
+           disableLabelEscaping == rhd.disableLabelEscaping &&
            reaperType == rhd.reaperType &&
            includeDescription == rhd.includeDescription &&
            sdifFrameSignature == rhd.sdifFrameSignature &&
@@ -129,6 +131,41 @@ char Document::Exporter::Options::getSeparatorChar() const
         default:
         {
             return ',';
+        }
+    }
+}
+
+char Document::Exporter::Options::getLabSeparatorChar() const
+{
+    switch(labSeparator)
+    {
+        case ColumnSeparator::comma:
+        {
+            return ',';
+        }
+        case ColumnSeparator::space:
+        {
+            return ' ';
+        }
+        case ColumnSeparator::tab:
+        {
+            return '\t';
+        }
+        case ColumnSeparator::pipe:
+        {
+            return '|';
+        }
+        case ColumnSeparator::slash:
+        {
+            return '/';
+        }
+        case ColumnSeparator::colon:
+        {
+            return ':';
+        }
+        default:
+        {
+            return ' ';
         }
     }
 }
@@ -318,6 +355,18 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                                setOptions(options, juce::NotificationType::sendNotificationSync);
                            })
+, mPropertyLabSeparator("Lab Separator", "The separator character for .lab format", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
+                        {
+                            auto options = mOptions;
+                            options.labSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
+                            setOptions(options, juce::NotificationType::sendNotificationSync);
+                        })
+, mPropertyDisableLabelEscaping("Disable Label Escaping", "Disable escaping of special characters in labels", [this](bool state)
+                                {
+                                    auto options = mOptions;
+                                    options.disableLabelEscaping = state;
+                                    setOptions(options, juce::NotificationType::sendNotificationSync);
+                                })
 , mPropertyReaperType("Reaper Type", "The Reaper data type", "", std::vector<std::string>{"Marker", "Region"}, [this](size_t index)
                       {
                           auto options = mOptions;
@@ -393,6 +442,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
     addAndMakeVisible(mPropertyPpi);
     addChildComponent(mPropertyRowHeader);
     addChildComponent(mPropertyColumnSeparator);
+    addChildComponent(mPropertyLabSeparator);
+    addChildComponent(mPropertyDisableLabelEscaping);
     addChildComponent(mPropertyReaperType);
     addChildComponent(mPropertyIncludeDescription);
     addChildComponent(mPropertySdifFrame);
@@ -607,6 +658,8 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertyPpi);
     setBounds(mPropertyRowHeader);
     setBounds(mPropertyColumnSeparator);
+    setBounds(mPropertyLabSeparator);
+    setBounds(mPropertyDisableLabelEscaping);
     setBounds(mPropertyReaperType);
     setBounds(mPropertyIncludeDescription);
     setBounds(mPropertySdifFrame);
@@ -840,6 +893,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
 
     mPropertyRowHeader.entry.setToggleState(options.includeHeaderRaw, silent);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
+    mPropertyLabSeparator.entry.setSelectedItemIndex(static_cast<int>(options.labSeparator), silent);
+    mPropertyDisableLabelEscaping.entry.setToggleState(options.disableLabelEscaping, silent);
     mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
     mPropertyApplyExtraThresholds.entry.setToggleState(options.applyExtraThresholds, silent);
@@ -855,6 +910,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyPpi.setVisible(options.useImageFormat());
     mPropertyRowHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyColumnSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyLabSeparator.setVisible(options.format == Document::Exporter::Options::Format::lab);
+    mPropertyDisableLabelEscaping.setVisible(options.format == Document::Exporter::Options::Format::csv || options.format == Document::Exporter::Options::Format::lab);
     mPropertyReaperType.setVisible(options.format == Document::Exporter::Options::Format::reaper);
     mPropertyIncludeDescription.setVisible(options.format == Document::Exporter::Options::Format::json);
     mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
@@ -1299,9 +1356,9 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, '\t', true, options.applyExtraThresholds, "\n", false, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, options.getLabSeparatorChar(), true, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::puredata:
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";", true, false, shouldAbort);
             case Options::Format::max:
