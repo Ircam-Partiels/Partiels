@@ -221,6 +221,21 @@ static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets
     return presets;
 }
 
+static std::vector<std::string> getColumnSeparatorNames()
+{
+    // clang-format off
+    return
+    {
+          juce::translate("Comma (,)").toStdString()
+        , juce::translate("Space ( )").toStdString()
+        , juce::translate("Tab (\\t)").toStdString()
+        , juce::translate("Pipe (|)").toStdString()
+        , juce::translate("Slash (/)").toStdString()
+        , juce::translate("Colon (:)").toStdString()
+    };
+    // clang-format on
+}
+
 Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize)
 : mAccessor(accessor)
 , mShowAutoSize(showAutoSize)
@@ -349,13 +364,13 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                          options.includeHeaderRaw = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
+, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", getColumnSeparatorNames(), [this](size_t index)
                            {
                                auto options = mOptions;
                                options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                                setOptions(options, juce::NotificationType::sendNotificationSync);
                            })
-, mPropertyLabSeparator("Lab Separator", "The separator character for .lab format", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
+, mPropertyLabSeparator("Lab Separator", "The separator character for .lab format", "", getColumnSeparatorNames(), [this](size_t index)
                         {
                             auto options = mOptions;
                             options.labSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
