@@ -10,10 +10,7 @@ Application::CommandLine::CommandLine()
                                               {
                                                   auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
 #if JUCE_MAC
-                                                  auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
-                                                  auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
-                                                  PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
-                                                  return pluginPackage;
+                                                  return exeFile.getParentDirectory().getSiblingFile("PlugIns");
 #else
                                                   return exeFile.getSiblingFile("PlugIns");
 #endif
