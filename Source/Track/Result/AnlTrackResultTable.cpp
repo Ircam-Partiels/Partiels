@@ -192,6 +192,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                         if(focused.test(index))
                         {
                             mTabbedButtonBar.setCurrentTabIndex(static_cast<int>(index), false);
+                            mTable.updateContent();
+                            mTable.repaint();
                             break;
                         }
                     }
