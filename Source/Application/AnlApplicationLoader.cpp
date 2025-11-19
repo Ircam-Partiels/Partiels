@@ -21,6 +21,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::windowState:
             case AttrType::currentDocumentFile:
             case AttrType::defaultTemplateFile:
+            case AttrType::quickExportDirectory:
             case AttrType::currentTranslationFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
@@ -284,6 +285,7 @@ Application::LoaderContent::LoaderContent()
             }
             break;
             case AttrType::defaultTemplateFile:
+            case AttrType::quickExportDirectory:
             {
                 auto const file = acsr.getAttr<AttrType::defaultTemplateFile>();
                 if(!file.existsAsFile())

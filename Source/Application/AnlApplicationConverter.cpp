@@ -154,6 +154,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
             case AttrType::defaultTemplateFile:
+            case AttrType::quickExportDirectory:
             case AttrType::currentTranslationFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
