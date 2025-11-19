@@ -82,7 +82,8 @@ Application::CommandLine::CommandLine()
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
-         "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
+         "--separator <character> Defines the separator character between columns (optional with the csv and lab formats, default is ',' for csv and ' ' for lab).\n\t"
+         "--noescape Disables escaping of special characters in labels (optional with the csv and lab formats).\n\t"
          "--reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').\n\t"
          "--description Includes the plugin description (optional with the json format).\n\t"
          "--thresholds Applies extra thresholds filtering to the exported results (optional with the csv, lab, json, cue, and reaper formats).\n\t"
@@ -191,6 +192,7 @@ Application::CommandLine::CommandLine()
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
                  options.applyExtraThresholds = args.containsOption("--thresholds");
+                 options.disableLabelEscaping = args.containsOption("--noescape");
                  options.reaperType = args.getValueForOption("--reapertype").toLowerCase() == "marker" ? Options::ReaperType::marker : Options::ReaperType::region;
                  options.sdifFrameSignature = args.getValueForOption("--frame").removeCharacters("\"").toUpperCase();
                  options.sdifMatrixSignature = args.getValueForOption("--matrix").removeCharacters("\"").toUpperCase();
@@ -199,6 +201,7 @@ Application::CommandLine::CommandLine()
                  if(separator.has_value())
                  {
                      options.columnSeparator = *separator;
+                     options.labSeparator = *separator;
                  }
              }
              else
