@@ -873,7 +873,7 @@ countries: fr be
 "Include Header Row" = "Inclure la ligne d'en-tête"
 "Include header row before the data rows" = "Inclure la ligne d'en-tête avant les lignes de données"
 "Column Separator" = "Séparateur de colonne"
-"The separator character between colummns" = "Le caractère séparateur entre les colonnes"
+"The separator character between columns" = "Le caractère séparateur entre les colonnes"
 "Global" = "Global"
 "Visible" = "Visible"
 "Selection" = "Sélection"
