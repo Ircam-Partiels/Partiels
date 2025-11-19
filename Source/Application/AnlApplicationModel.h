@@ -25,6 +25,7 @@ namespace Application
         , recentlyOpenedFilesList
         , currentDocumentFile
         , defaultTemplateFile
+        , quickExportDirectory
         , currentTranslationFile
         , colourMode
         , showInfoBubble
@@ -50,6 +51,7 @@ namespace Application
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Model::Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::defaultTemplateFile, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::quickExportDirectory, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::currentTranslationFile, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::colourMode, ColourMode, Model::Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Model::Flag::basic>
@@ -83,6 +85,7 @@ namespace Application
             , {std::vector<juce::File>{}}
             , {juce::File{}}
             , {getFactoryTemplateFile()}
+            , {juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory)}
             , {juce::File{}}
             , {ColourMode::automatic}
             , {true}
@@ -111,6 +114,10 @@ namespace Application
             {
                 setDesktopGlobalScaleFactor(value, notification);
             }
+            else if constexpr(type == AttrType::quickExportDirectory)
+            {
+                setQuickExportDirectory(value, notification);
+            }
             else
             {
                 Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
@@ -120,6 +127,7 @@ namespace Application
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
         void setRecentlyOpenedFilesList(std::vector<juce::File> const& value, NotificationType notification);
         void setDesktopGlobalScaleFactor(float const& value, NotificationType notification);
+        void setQuickExportDirectory(juce::File const& value, NotificationType notification);
         static juce::File getFactoryTemplateFile();
     };
 } // namespace Application

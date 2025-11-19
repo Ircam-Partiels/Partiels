@@ -53,4 +53,10 @@ void Application::Accessor::setDesktopGlobalScaleFactor(float const& value, Noti
     Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, float>(std::clamp(value, 1.0f, 2.0f), notification);
 }
 
+void Application::Accessor::setQuickExportDirectory(juce::File const& value, NotificationType notification)
+{
+    auto const directory = value.isDirectory() ? value : juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::quickExportDirectory, juce::File>(directory, notification);
+}
+
 ANALYSE_FILE_END
