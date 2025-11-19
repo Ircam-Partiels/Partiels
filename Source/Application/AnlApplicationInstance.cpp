@@ -141,6 +141,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::autoUpdate:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::defaultTemplateFile:
+            case AttrType::quickExportDirectory:
             case AttrType::showInfoBubble:
             {
                 mMainMenuModel->menuItemsChanged();
