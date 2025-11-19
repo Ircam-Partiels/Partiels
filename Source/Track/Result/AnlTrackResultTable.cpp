@@ -149,8 +149,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                         mTabbedButtonBar.clearTabs();
                     }
                 }
-                mTable.repaint();
                 mTable.updateContent();
+                mTable.repaint();
                 resized();
                 mTabbedButtonBar.addChangeListener(this);
                 selectionUpdated();
@@ -158,8 +158,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             break;
             case AttrType::graphicsSettings:
             {
-                mTable.repaint();
                 mTable.updateContent();
+                mTable.repaint();
                 break;
             }
             case AttrType::edit:
@@ -250,8 +250,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
         {
             case Zoom::AttrType::globalRange:
             {
-                mTable.repaint();
                 mTable.updateContent();
+                mTable.repaint();
             }
             break;
             case Zoom::AttrType::minimumLength:
