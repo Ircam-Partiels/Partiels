@@ -208,6 +208,25 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                              }
                          });
     globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);
+    juce::PopupMenu quickExportMenu;
+    auto const quickExportDirectory = accessor.getAttr<AttrType::quickExportDirectory>();
+    auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+    quickExportMenu.addItem(juce::translate("Desktop"), true, quickExportDirectory == desktop, [=]()
+                            {
+                                Instance::get().getApplicationAccessor().setAttr<AttrType::quickExportDirectory>(desktop, NotificationType::synchronous);
+                            });
+    if(quickExportDirectory.isDirectory() && quickExportDirectory != desktop)
+    {
+        quickExportMenu.addItem(quickExportDirectory.getFileName(), false, true, nullptr);
+    }
+    quickExportMenu.addItem(juce::translate("Select..."), true, false, []()
+                            {
+                                if(auto* window = Instance::get().getWindow())
+                                {
+                                    window->getCommandTarget().selectQuickExportDirectory();
+                                }
+                            });
+    globalSettingsMenu.addSubMenu(juce::translate("Quick Export Directory"), quickExportMenu);
     addTranslationsMenu(globalSettingsMenu);
     menu.addSubMenu(juce::translate("Global Settings"), globalSettingsMenu);
 }
