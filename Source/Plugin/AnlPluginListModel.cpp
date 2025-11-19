@@ -106,7 +106,7 @@ juce::File PluginList::getBlackListFile()
 
 std::vector<juce::File> PluginList::findLibrariesInQuarantine(Accessor const& accessor)
 {
-    auto isInQuarantine = [](juce::File const& file)
+    auto const isInQuarantine = [](juce::File const& file)
     {
         auto const path = file.getFullPathName();
         auto valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", nullptr, 0, 0, 0);
