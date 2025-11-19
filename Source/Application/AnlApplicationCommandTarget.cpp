@@ -15,6 +15,7 @@ Application::CommandTarget::CommandTarget()
         {
             case AttrType::recentlyOpenedFilesList:
             case AttrType::defaultTemplateFile:
+            case AttrType::quickExportDirectory:
             case AttrType::currentTranslationFile:
             case AttrType::silentFileManagement:
             {
@@ -408,7 +409,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameExport:
         {
-            result.setInfo(juce::translate("Export Frame(s) to Desktop"), juce::translate("Export the selected frame(s) using the current export options to the desktop"), "Edit", 0);
+            auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
+            auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+            auto const directoryName = exportDirectory == desktop ? juce::translate("Desktop") : exportDirectory.getFileName();
+            result.setInfo(juce::translate("Export Frame(s) to DIRNAME").replace("DIRNAME", directoryName), juce::translate("Export the selected frame(s) using the current export options to DIRNAME").replace("DIRNAME", directoryName), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::altModifier, 0));
             auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
             auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
@@ -1186,11 +1190,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
             auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
             auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
-            auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+            auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
 
             auto const exportItem = [&](juce::String const& identifier)
             {
-                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, desktop, selection, {}, date, identifier, options, mShouldAbort);
+                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, exportDirectory, selection, {}, date, identifier, options, mShouldAbort);
                 MiscWeakAssert(results.wasOk() && "Exporting track failed!");
             };
 
@@ -1537,6 +1541,27 @@ void Application::CommandTarget::selectDefaultTemplateFile()
                                   }
                                   auto& appAccessor = Instance::get().getApplicationAccessor();
                                   appAccessor.setAttr<AttrType::defaultTemplateFile>(results.getFirst(), NotificationType::synchronous);
+                              });
+}
+
+void Application::CommandTarget::selectQuickExportDirectory()
+{
+    auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a directory for quick export..."), currentDirectory);
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  auto& appAccessor = Instance::get().getApplicationAccessor();
+                                  appAccessor.setAttr<AttrType::quickExportDirectory>(results.getFirst(), NotificationType::synchronous);
                               });
 }
 

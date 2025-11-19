@@ -28,6 +28,7 @@ namespace Application
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
         void selectDefaultTemplateFile();
+        void selectQuickExportDirectory();
 
     private:
         // juce::ChangeListener
