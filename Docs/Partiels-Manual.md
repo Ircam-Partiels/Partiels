@@ -161,6 +161,8 @@ If you have loaded one or more audio files, a second interface prompts you to ad
 
 You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the main menu `Partiels → Global Settings → Default Template` (Mac) or `Help → Global Settings → Default Template`.
 
+You can also configure the quick export directory used for exporting frames with the keyboard shortcut via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows). The default quick export directory is the Desktop, but you can select any directory on your system.
+
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
 If you add a new track with an analysis plugin, you can refer to the [corresponding section](#41-analysis-tracks) of this manual.
@@ -326,7 +328,7 @@ Other editing actions can be performed at any time:
 - Use the keyboard shortcut `b` to insert a point with no value (to break the continuity of the segments) at the playhead position (if the playback is running) or at the start of the selected time range (if the playback is not running). 
 - Double-click on a marker to display the results table, focusing on the selected element.
 
-> 💡 **Tip**: You can edit the selected tracks and groups via the main menu `Frame → Export Frame(s) to Desktop` or by right-clicking on the group or track plots to display the popup menu.
+> 💡 **Tip**: You can edit the selected tracks and groups via the main menu `Frame → Export Frame(s) to [Directory]` or by right-clicking on the group or track plots to display the popup menu.
 
 ### 6.2. Table
 
@@ -351,7 +353,7 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
-> 💡 **Tip**: You can export the selected tracks and groups to your desktop according to the last configuration used via the main menu `Frame → Export Frame(s) to Desktop`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows).
+> 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
 
 ### 7.1. General options
 
