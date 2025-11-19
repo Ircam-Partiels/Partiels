@@ -2,13 +2,15 @@
 
 ANALYSE_FILE_BEGIN
 
+// clang-format off
 PluginList::Accessor::Accessor()
-: Accessor(AttrContainer({// clang-format off
-      {true}
-    , {QuarantineMode::force}
-    , {getDefaultSearchPath()}
-    , {}
-}))
+: Accessor(AttrContainer({
+                              {true}
+                            , {QuarantineMode::force}
+                            , {getDefaultSearchPath()}
+                            , {}
+                        })
+           )
 // clang-format on
 {
 }
@@ -150,13 +152,18 @@ bool PluginList::removeLibrariesFromQuarantine(std::vector<juce::File> const& fi
         auto valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", nullptr, 0_z, 0_z, 0);
         if(valLength > 0)
         {
-            if(removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0 || (file.setExecutePermission(true) && removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0))
+            char attrValue[2048];
+            valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", attrValue, static_cast<size_t>(valLength), 0, 0);
+            if(valLength > 0 && std::string(attrValue).substr(0, 4) != "00c1")
             {
-                names.push_back(file.getFileNameWithoutExtension().toStdString());
-            }
-            else
-            {
-                std::cerr << "remove from quaratine failed: " << file.getFullPathName() << "\n";
+                if(removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0 || (file.setExecutePermission(true) && removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0))
+                {
+                    names.push_back(file.getFileNameWithoutExtension().toStdString());
+                }
+                else
+                {
+                    std::cerr << juce::translate("remove from quaratine failed: ") << file.getFullPathName() << " errno: " << errno << std::endl;
+                }
             }
         }
     }
