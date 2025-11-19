@@ -377,7 +377,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                          options.includeHeaderRaw = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyColumnSeparator(juce::translate("Column Separator"), juce::translate("The separator character between colummns"), "", getColumnSeparatorNames(), [this](size_t index)
+, mPropertyColumnSeparator(juce::translate("Column Separator"), juce::translate("The separator character between columns"), "", getColumnSeparatorNames(), [this](size_t index)
                            {
                                auto options = mOptions;
                                options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);

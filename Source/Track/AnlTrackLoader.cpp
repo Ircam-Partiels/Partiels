@@ -1158,7 +1158,7 @@ juce::String Track::Loader::getWildCardForAllFormats()
 
 Track::Loader::ArgumentSelector::ArgumentSelector()
 : mPropertyName("File", "The file to import", nullptr)
-, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, nullptr)
+, mPropertyColumnSeparator("Column Separator", "The separator character between columns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, nullptr)
 , mLoadButton("Load", "Load the file with the arguments", nullptr)
 {
     mPropertyName.entry.setEnabled(false);
