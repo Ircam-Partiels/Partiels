@@ -32,6 +32,15 @@ void Application::Instance::initialise(juce::String const& commandLine)
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
 
+#if JUCE_MAC
+    {
+        auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+        auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
+        auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
+        PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
+    }
+#endif
+
     mCommandLine = CommandLine::createAndRun(commandLine);
     if(mCommandLine != nullptr)
     {
