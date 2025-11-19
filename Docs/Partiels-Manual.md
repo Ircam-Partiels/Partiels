@@ -401,9 +401,12 @@ The `Apply Extra Thresholds` button offers an option to filter exported results 
 
 Export to CSV format offers two options:
 - `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
-- `Column Separator` allows to define the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). This can facilitate the parsing of files in other applications. 
+- `Column Separator` allows to define the separator character between each column: *Comma* (default), *Space*, *Tab*, *Pipe*, *Slash*, *Colon*. This can facilitate the parsing of files in other applications. 
+- `Disable Label Escaping` disables the automatic escaping of special characters in labels (quotes, separators). This option is also available for the LAB format.
 
-Export to Lab format corresponds to the CSV format, with the *Tab* character as separator and the end time used instead of the duration.
+Export to Lab format corresponds to the CSV format with the end time used instead of the duration. Two additional options are available:
+- `Lab Separator` allows you to define the separator character for the Lab format: *Comma*, *Space* (default), *Tab*, *Pipe*, *Slash*, *Colon*.
+- `Disable Label Escaping` disables the automatic escaping of special characters in labels (quotes, separators).
 
 Export in Reaper format corresponds to the CSV format supported by the application, with an option for markers or regions.
 
@@ -1053,7 +1056,8 @@ Usage:
         --groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).
         --nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).
         --header Includes header row before the data rows (optional with the csv format).
-        --separator <character> Defines the separator character between columns (optional with the csv format, default is ',').
+        --separator <character> Defines the separator character between columns (optional with the csv and lab formats, default is ',' for csv and ' ' for lab).
+        --noescape Disables escaping of special characters in labels (optional with the csv and lab formats).
         --reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').
         --description Includes the plugin description (optional with the json format).
         --thresholds Applies extra thresholds filtering to the exported results (optional with the csv, lab, json, cue, and reaper formats).
