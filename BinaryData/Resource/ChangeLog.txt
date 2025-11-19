@@ -1,4 +1,25 @@
 
+- Add: References to plugins listed on vamp-plugin.org
+- Add: Default preset system for plug-in processors
+- Add: Preset system for track graphic properties (save, load, default)
+- Add: Global graphic preset applied to all new tracks
+- Add: Configurable separator and label escaping for LAB and CSV export formats
+- Add: Configurable quick export directory for frame exports
+- Add: Quick frame export command with interactive destination selection
+- Imp: Update French translations and add missing juce::translate() calls
+- Imp: Add translation instructions for Copilot and improve Copilot guidelines
+- Imp: Replace rounded app icon with a square icon
+- Imp: Base magnetism solely on the markers of the selected track channels
+- Fix: Interface language change not reflected in some graphical interfaces
+- Fix: Automatic resizing of tracks and groups not always taken into account
+- Fix: OSC parameters not automatically saved in properties when modified
+- Fix: Results table values not updating when selected track channels change
+- Fix: Effective version for development that triggered false update notifications
+- Fix: Editing when only one result is selected
+- Fix: When to use a directory or file with the file chooser when exporting results
+
+v2.2.1
+
 - Fix: Removed Windows codesigning due to expired certificate
 - Fix: Corrected case typo in the View menu
 - Fix: Corrected offset in image size preset selection in export panel
