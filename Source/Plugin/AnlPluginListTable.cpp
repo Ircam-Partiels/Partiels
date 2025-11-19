@@ -175,14 +175,16 @@ void PluginList::Table::notifyAddSelectedPlugins()
     for(int i = 0; i < indices.size(); ++i)
     {
         auto const index = indices[i];
-        MiscWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
         if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
         {
             selection.insert(mFilteredList[static_cast<size_t>(index)].first);
         }
     }
-    MiscWeakAssert(!selection.empty());
-    onAddPlugins(std::move(selection));
+    if(!selection.empty())
+    {
+        MiscWeakAssert(!selection.empty());
+        onAddPlugins(std::move(selection));
+    }
 }
 
 void PluginList::Table::updateContent()
