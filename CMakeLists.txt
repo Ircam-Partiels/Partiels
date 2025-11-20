@@ -38,6 +38,15 @@ if(NOT PARTIELS_BUILD_TAG OR PARTIELS_BUILD_TAG STREQUAL "")
     set(PARTIELS_BUILD_TAG ${CMAKE_PROJECT_VERSION})
 endif()
 message(STATUS "Partiels: " ${PARTIELS_BUILD_TAG} " (" ${PARTIELS_BUILD_ID} ")")
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ ${PARTIELS_BUILD_TAG})
+if(DEFINED CMAKE_MATCH_1 AND DEFINED CMAKE_MATCH_2 AND DEFINED CMAKE_MATCH_3)
+    set(PARTIELS_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(PARTIELS_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(PARTIELS_VERSION_PATCH ${CMAKE_MATCH_3})
+else()
+    message(FATAL_ERROR "PARTIELS_BUILD_TAG is not in the format X.Y.Z")
+endif()
+set(PARTIELS_VERSION_STRING "${PARTIELS_VERSION_MAJOR}.${PARTIELS_VERSION_MINOR}.${PARTIELS_VERSION_PATCH}")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${PARTIELS_BUILD_TAG})
 
@@ -76,7 +85,7 @@ add_subdirectory(VampPlugins)
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
-    VERSION                             ${CMAKE_PROJECT_VERSION}
+    VERSION                             ${PARTIELS_VERSION_STRING}
     BUNDLE_ID                           fr.ircam.dev.partiels
     COMPANY_COPYRIGHT                   "Copyright 2024 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
