@@ -261,12 +261,46 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     mQueryEditor.setTextToShowWhenEmpty(juce::translate("Initializing..."), juce::Colours::grey);
 
     mShouldQuit.store(false);
+    MiscWeakAssert(!mRequestFuture.valid());
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>()]()
                                 {
-                                    juce::Thread::setCurrentThreadName("CoAnalyzer::ChatRequest");
-                                    auto const initialized = mChat.initialize(model, model.withFileExtension("bin"));
+                                    juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
+                                    auto const initialized = mChat.initialize(model);
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+
+                                    MiscWeakAssert(initialized.ok());
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/README.md");
+                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/README.md").loadFileAsString());
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/build/Partiels-Manual.md");
+                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/build/Partiels-Manual.md").loadFileAsString());
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/BinaryData/Resource/FactoryTemplate.ptldoc");
+                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/BinaryData/Resource/FactoryTemplate.ptldoc").loadFileAsString());
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+                                    mChat.loadState({"/Users/guillot/Git/Partiels-training/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k-cache.bin"});
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+                                    auto result = mChat.generate(Role::system, "Can you introduce you?");
                                     mIsInitialized.store(initialized.ok());
-                                    auto result = mChat.generate(Role::system, "Can you introduce you?", mShouldQuit);
                                     triggerAsyncUpdate();
                                     return result;
                                 });
@@ -318,10 +352,11 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
 
     mHistory.push_back(std::make_tuple(Role::user, query));
     mShouldQuit.store(false);
+    MiscWeakAssert(!mRequestFuture.valid());
     mRequestFuture = std::async(std::launch::async, [this, query]()
                                 {
-                                    juce::Thread::setCurrentThreadName("CoAnalyzer::ChatRequest");
-                                    auto result = mChat.generate(Role::user, query, mShouldQuit);
+                                    juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
+                                    auto result = mChat.generate(Role::user, query);
                                     triggerAsyncUpdate();
                                     return result;
                                 });

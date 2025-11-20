@@ -89,9 +89,9 @@ namespace Application
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
-            std::atomic<bool> mShouldQuit{false};
             std::atomic<bool> mIsInitialized{false};
-            Llama::Chat mChat;
+            std::atomic<bool> mShouldQuit{false};
+            Llama::Chat mChat{mShouldQuit};
             juce::TextEditor mHistoryEditor;
             ColouredPanel mSeparator1;
             juce::TextEditor mQueryEditor;

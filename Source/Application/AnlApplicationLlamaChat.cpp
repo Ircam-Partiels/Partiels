@@ -2,7 +2,52 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Llama::Chat::Chat()
+static std::tuple<juce::Result, std::vector<llama_token>> tokenize(llama_context const* context, char const* promptContent, size_t promptSize, bool specialCharacters)
+{
+    auto const* vocab = llama_model_get_vocab(llama_get_model(context));
+    auto const isFirst = llama_memory_seq_pos_max(llama_get_memory(context), 0) == -1;
+    auto const numPromptTokens = -llama_tokenize(vocab, promptContent, static_cast<int32_t>(promptSize), nullptr, 0, isFirst, specialCharacters);
+    MiscWeakAssert(numPromptTokens >= 0);
+    if(numPromptTokens < 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to tokenize the prompt");
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to tokenize the prompt.")), std::vector<llama_token>{});
+    }
+    std::vector<llama_token> tokens(static_cast<uint32_t>(numPromptTokens));
+    if(llama_tokenize(vocab, promptContent, static_cast<int32_t>(promptSize), tokens.data(), static_cast<int32_t>(tokens.size()), isFirst, specialCharacters) < 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to tokenize the prompt");
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to tokenize the prompt.")), std::vector<llama_token>{});
+    }
+    return std::make_tuple(juce::Result::ok(), std::move(tokens));
+}
+
+static juce::Result decode(llama_context* context, llama_batch const& batch)
+{
+    // Check if we have enough space in the context
+    auto const numCtx = llama_n_ctx(context);
+    auto const numCtxUsed = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
+    MiscDebug("Application::Llama::Chat", "Decoding batch: numCtxUsed = " + juce::String(numCtxUsed) + ", batch.n_tokens = " + juce::String(batch.n_tokens) + ", numCtx = " + juce::String(numCtx));
+    MiscWeakAssert(static_cast<uint32_t>(numCtxUsed + batch.n_tokens) <= numCtx);
+    if(static_cast<uint32_t>(numCtxUsed + batch.n_tokens) > numCtx)
+    {
+        MiscDebug("Application::Llama::Chat", "Context size exceeded");
+        return juce::Result::fail(juce::translate("Context size exceeded."));
+    }
+
+    // Decode the batch
+    auto const ret = llama_decode(context, batch);
+    MiscWeakAssert(ret == 0);
+    if(ret != 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to decode, ret = " + juce::String(ret));
+        return juce::Result::fail(juce::translate("Failed to decode ERRORCODE.").replace("ERRORCODE", juce::String(ret)));
+    }
+    return juce::Result::ok();
+}
+
+Application::Llama::Chat::Chat(std::atomic<bool> const& shouldQuit)
+: mShouldQuit(shouldQuit)
 {
     // Set log callback to suppress unnecessary output
     llama_log_set([](ggml_log_level level, char const* text, void*)
@@ -16,17 +61,19 @@ Application::Llama::Chat::Chat()
 
     // Load dynamic backends
     ggml_backend_load_all();
+    llama_backend_init();
 }
 
 Application::Llama::Chat::~Chat()
 {
     llama_log_set(nullptr, nullptr);
+    llama_backend_free();
 }
 
-juce::Result Application::Llama::Chat::initialize(juce::File model, juce::File state)
+juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
     static int32_t constexpr numGpuLayers = 30;
-    static uint32_t constexpr contextSize = 8192;
+    static uint32_t constexpr contextSize = 65536;
     static auto constexpr temperature = 0.3f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
@@ -52,16 +99,13 @@ juce::Result Application::Llama::Chat::initialize(juce::File model, juce::File s
         return juce::Result::fail(juce::translate("Failed to load model from: FLNAME").replace("FLNAME", model.getFullPathName()));
     }
 
-    mVocab = llama_model_get_vocab(mModel.get());
-
     // Initialize the context
     auto ctx_params = llama_context_default_params();
     ctx_params.n_ctx = contextSize;
     ctx_params.n_batch = contextSize;
     ctx_params.abort_callback = [](void* data)
     {
-        auto const* shouldQuit = reinterpret_cast<Chat*>(data)->mShouldQuit;
-        return shouldQuit != nullptr && shouldQuit->load();
+        return reinterpret_cast<Chat*>(data)->mShouldQuit.load();
     };
     ctx_params.abort_callback_data = static_cast<void*>(this);
 
@@ -84,27 +128,83 @@ juce::Result Application::Llama::Chat::initialize(juce::File model, juce::File s
     mFormattedMessage.resize(llama_n_ctx(mContext.get()));
     mPrevMessageLength = 0;
     MiscDebug("Application::Llama::Chat", "Successfully initialized model: " + model.getFullPathName());
-
-    if(state.existsAsFile())
-    {
-        size_t nloaded = 0;
-        llama_state_load_file(mContext.get(), state.getFullPathName().toRawUTF8(), nullptr, 0, &nloaded);
-        MiscDebug("Application::Llama::Chat", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
-    }
-
     return juce::Result::ok();
 }
 
-std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::generate(Role const role, juce::String const& userMessage, std::atomic<bool> const& shouldQuit)
+juce::Result Application::Llama::Chat::addContext(juce::String const& content)
+{
+    if(mContext == nullptr || mSampler == nullptr)
+    {
+        MiscDebug("Application::Llama::Chat", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    auto const promptSize = std::strlen(content.toUTF8());
+    //    MiscWeakAssert(promptSize == static_cast<size_t>(content.length()));
+    auto tokenResult = tokenize(mContext.get(), content.toUTF8(), promptSize, false);
+    if(std::get<0_z>(tokenResult).failed())
+    {
+        return std::get<0_z>(tokenResult);
+    }
+
+    auto const tokenData = std::get<1_z>(tokenResult).data();
+    auto const tokenSize = std::get<1_z>(tokenResult).size();
+    auto const numCtx = llama_n_ctx(mContext.get());
+    auto position = 0_z;
+#if JUCE_DEBUG
+    auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
+#endif
+    while(position < tokenSize)
+    {
+        auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
+        auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
+#if JUCE_DEBUG
+        for(int i = 0; i < batch.n_tokens; i++)
+        {
+            MiscWeakAssert(batch.token[i] > 0 && batch.token[i] < vocabSize);
+        }
+#endif
+        auto const result = decode(mContext.get(), batch);
+        if(result.failed())
+        {
+            return result;
+        }
+        position += size;
+    }
+    return juce::Result::ok();
+}
+
+juce::Result Application::Llama::Chat::loadState(juce::File state)
+{
+    if(mContext == nullptr || mSampler == nullptr)
+    {
+        MiscDebug("Application::Llama::Chat", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    size_t nloaded = 0;
+    auto const numCtx = llama_n_ctx(mContext.get());
+    std::vector<llama_token> array(numCtx);
+    if(!llama_state_load_file(mContext.get(), state.getFullPathName().toRawUTF8(), array.data(), array.size(), &nloaded))
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to load state from file: " + state.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to load state from file: FLNAME").replace("FLNAME", state.getFullPathName()));
+    }
+    if(nloaded == 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
+    }
+    MiscDebug("Application::Llama::Chat", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
+    return juce::Result::ok();
+}
+
+std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::generate(Role const role, juce::String const& userMessage)
 {
     MiscWeakAssert(role != Role::assistant);
-    if(mContext == nullptr || mVocab == nullptr || mSampler == nullptr)
+    if(mContext == nullptr || mSampler == nullptr)
     {
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return std::make_tuple(juce::Result::fail(juce::translate("The model is not initialized.")), juce::String{}, juce::String{});
     }
 
-    mShouldQuit = &shouldQuit;
     auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
     auto const addMessage = [this](Role const erole, std::string const& content)
     {
@@ -139,86 +239,51 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
     MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
     std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength), std::next(mFormattedMessage.cbegin(), newLength));
 
-    // Check if this is the first generation in the sequence
-    auto const is_first = llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) == -1;
-
-    // Tokenize the prompt
-    auto const n_prompt_tokens = -llama_tokenize(mVocab, prompt.c_str(), static_cast<int32_t>(prompt.size()), nullptr, 0, is_first, true);
-    MiscWeakAssert(n_prompt_tokens >= 0);
-    if(n_prompt_tokens < 0)
+    auto tokenResult = tokenize(mContext.get(), prompt.c_str(), prompt.size(), true);
+    if(std::get<0_z>(tokenResult).failed())
     {
-        MiscDebug("Application::Llama::Chat", "Failed to tokenize the prompt");
-        mShouldQuit = nullptr;
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to tokenize the prompt.")), juce::String{}, juce::String{});
-    }
-    std::vector<llama_token> prompt_tokens(static_cast<uint32_t>(n_prompt_tokens));
-
-    if(shouldQuit.load())
-    {
-        mShouldQuit = nullptr;
-        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+        return std::make_tuple(std::get<0_z>(tokenResult), juce::String{}, juce::String{});
     }
 
-    if(llama_tokenize(mVocab, prompt.c_str(), static_cast<int32_t>(prompt.size()), prompt_tokens.data(), static_cast<int32_t>(prompt_tokens.size()), is_first, true) < 0)
+    if(mShouldQuit.load())
     {
-        MiscDebug("Application::Llama::Chat", "Failed to tokenize the prompt");
-        mShouldQuit = nullptr;
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to tokenize the prompt.")), juce::String{}, juce::String{});
-    }
-    if(shouldQuit.load())
-    {
-        mShouldQuit = nullptr;
         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
     }
 
     std::string response;
     // Prepare a batch for the prompt
-    auto batch = llama_batch_get_one(prompt_tokens.data(), static_cast<int32_t>(prompt_tokens.size()));
+    auto batch = llama_batch_get_one(std::get<1_z>(tokenResult).data(), static_cast<int32_t>(std::get<1_z>(tokenResult).size()));
     while(true)
     {
-        if(shouldQuit.load())
+        if(mShouldQuit.load())
         {
-            mShouldQuit = nullptr;
             return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
         }
-        // Check if we have enough space in the context
-        auto const n_ctx = llama_n_ctx(mContext.get());
-        auto const n_ctx_used = llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1;
-        MiscWeakAssert(static_cast<uint32_t>(n_ctx_used + batch.n_tokens) <= n_ctx);
-        if(static_cast<uint32_t>(n_ctx_used + batch.n_tokens) > n_ctx)
+        auto result = decode(mContext.get(), batch);
+        if(result.failed())
         {
-            MiscDebug("Application::Llama::Chat", "Context size exceeded");
             break;
         }
 
-        // Decode the batch
-        auto const ret = llama_decode(mContext.get(), batch);
-        MiscWeakAssert(ret == 0);
-        if(ret != 0)
+        if(mShouldQuit.load())
         {
-            MiscDebug("Application::Llama::Chat", "Failed to decode, ret = " + juce::String(ret));
-            break;
-        }
-        if(shouldQuit.load())
-        {
-            mShouldQuit = nullptr;
             return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
         }
 
         // Sample the next token
         auto new_token_id = llama_sampler_sample(mSampler.get(), mContext.get(), -1);
-
+        auto const* vocab = llama_model_get_vocab(llama_get_model(mContext.get()));
         // Check if it's an end-of-generation token
-        if(llama_vocab_is_eog(mVocab, new_token_id))
+        if(llama_vocab_is_eog(vocab, new_token_id))
         {
             break;
         }
 
-        auto const piece = [&, this]()
+        auto const piece = [&]()
         {
             // Convert the token to a string and add it to the response
             char buf[1024];
-            auto const n = llama_token_to_piece(mVocab, new_token_id, buf, sizeof(buf), 0, true);
+            auto const n = llama_token_to_piece(vocab, new_token_id, buf, sizeof(buf), 0, true);
             MiscWeakAssert(n >= 0);
             if(n < 0)
             {
@@ -239,10 +304,8 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
     if(mPrevMessageLength < 0)
     {
         MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
-        mShouldQuit = nullptr;
         return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), juce::String{}, juce::String{});
     }
-    mShouldQuit = nullptr;
 
     // Split the text of the response in the form <response>text</response><document>text</document> into two strings
     auto const split = [&](const char* start, const char* end) -> std::string
