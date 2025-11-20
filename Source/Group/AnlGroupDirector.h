@@ -32,6 +32,7 @@ namespace Group
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
         std::function<void(NotificationType notification)> onNameUpdated = nullptr;
         std::function<void(NotificationType notification)> onLayoutUpdated = nullptr;
+        std::function<void(NotificationType notification)> onFocusUpdated = nullptr;
 
     private:
         Accessor& mAccessor;

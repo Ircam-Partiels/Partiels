@@ -162,6 +162,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     {
                         updateMarkers(localNotification);
                     };
+                    director->onFocusUpdated = [this](NotificationType localNotification)
+                    {
+                        updateMarkers(localNotification);
+                    };
 
                     Track::SafeAccessorRetriever sav;
                     sav.getAccessorFn = getSafeTrackAccessorFn(trackAcsr.getAttr<Track::AttrType::identifier>());
@@ -204,6 +208,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     director->onLayoutUpdated = [this](NotificationType n)
                     {
                         mHierarchyManager.notifyHierarchyChanged(n);
+                    };
+                    director->onFocusUpdated = [this](NotificationType n)
+                    {
+                        updateMarkers(n);
                     };
                     director->setSafeAccessorRetriever(getSafeGroupAccessorFn(groupAcsr.getAttr<Group::AttrType::identifier>()));
                 }
@@ -1074,24 +1082,30 @@ void Document::Director::updateMarkers(NotificationType notification)
     auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     for(auto const& trackAcsr : trackAcsrs)
     {
+        auto const channels = Tools::getEffectiveSelectedChannelsForTrack(mAccessor, trackAcsr.get());
+        if(channels.empty())
+        {
+            continue;
+        }
         auto const& results = trackAcsr.get().getAttr<Track::AttrType::results>();
         auto const access = results.getReadAccess();
-        if(static_cast<bool>(access))
+        if(!static_cast<bool>(access))
         {
-            auto const channelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
-            auto const markerResults = results.getMarkers();
-            if(markerResults != nullptr)
+            continue;
+        }
+        auto const markerResults = results.getMarkers();
+        if(markerResults == nullptr)
+        {
+            continue;
+        }
+        for(auto channelIndex = 0_z; channelIndex < markerResults->size(); ++channelIndex)
+        {
+            if(channels.count(channelIndex) > 0_z)
             {
-                for(auto channelIndex = 0_z; channelIndex < std::min(markerResults->size(), channelsLayout.size()); ++channelIndex)
+                auto const& channelMarkers = markerResults->at(channelIndex);
+                for(auto const& marker : channelMarkers)
                 {
-                    if(channelsLayout[channelIndex])
-                    {
-                        auto const& channelMarkers = markerResults->at(channelIndex);
-                        for(auto const& marker : channelMarkers)
-                        {
-                            markers.insert(std::get<0_z>(marker));
-                        }
-                    }
+                    markers.insert(std::get<0_z>(marker));
                 }
             }
         }

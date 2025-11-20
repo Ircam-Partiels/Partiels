@@ -225,6 +225,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 }
             }
             break;
+            case AttrType::focused:
+            {
+                if(onFocusUpdated != nullptr)
+                {
+                    onFocusUpdated(notification);
+                }
+            }
+            break;
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             {
@@ -242,7 +250,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             break;
             case AttrType::warnings:
             case AttrType::processing:
-            case AttrType::focused:
             case AttrType::grid:
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:

@@ -50,6 +50,7 @@ namespace Track
         std::function<void(NotificationType notification)> onInputUpdated = nullptr;
         std::function<void(NotificationType notification)> onResultsUpdated = nullptr;
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
+        std::function<void(NotificationType notification)> onFocusUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
