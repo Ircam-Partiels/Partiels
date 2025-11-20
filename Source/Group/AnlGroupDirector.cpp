@@ -32,9 +32,16 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             case AttrType::height:
             case AttrType::colour:
             case AttrType::expanded:
-            case AttrType::focused:
             case AttrType::referenceid:
                 break;
+            case AttrType::focused:
+            {
+                if(onFocusUpdated != nullptr)
+                {
+                    onFocusUpdated(notification);
+                }
+            }
+            break;
             case AttrType::layout:
             {
                 if(onLayoutUpdated != nullptr)
