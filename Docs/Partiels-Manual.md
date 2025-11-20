@@ -468,7 +468,7 @@ You can change the general theme of the application via the `View → Theme` men
 
 Modify the global scale of the application via the `View → Scale` menu to enlarge the overall view of the application.
 
-Enable or disable the magnetize option by clicking the `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. When the magnetize option is enabled, the position snaps to the nearest markers of all tracks in the document.
+Enable or disable the magnetize option by clicking the `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. When the magnetize option is enabled, the position snaps to the nearest markers of the selected channels in the document.
 
 ### 8.1. View
 
