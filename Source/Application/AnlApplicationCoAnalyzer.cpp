@@ -272,27 +272,19 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                     }
 
                                     MiscWeakAssert(initialized.ok());
-                                    if(mShouldQuit.load())
+                                    for(auto i = 1; i <= 4; ++i)
                                     {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                    }
-                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/README.md");
-                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/README.md").loadFileAsString());
-                                    if(mShouldQuit.load())
-                                    {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                    }
-                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/build/Partiels-Manual.md");
-                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/build/Partiels-Manual.md").loadFileAsString());
-                                    if(mShouldQuit.load())
-                                    {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                    }
-                                    MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels/BinaryData/Resource/FactoryTemplate.ptldoc");
-                                    mChat.addContext(juce::File("/Users/guillot/Git/Partiels/BinaryData/Resource/FactoryTemplate.ptldoc").loadFileAsString());
-                                    if(mShouldQuit.load())
-                                    {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                        // Load /Users/guillot/Git/Partiels-training/data/Resource_i.md
+                                        if(mShouldQuit.load())
+                                        {
+                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                        }
+                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md");
+                                        mChat.addContext(juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md").loadFileAsString());
+                                        if(mShouldQuit.load())
+                                        {
+                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                        }
                                     }
                                     mChat.loadState({"/Users/guillot/Git/Partiels-training/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k-cache.bin"});
                                     if(mShouldQuit.load())
@@ -340,8 +332,8 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
 
     // Get current document XML
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto xmlElement = documentAccessor.toXml("Document");
-    if(xmlElement == nullptr)
+    auto xml = documentAccessor.toXml("Document");
+    if(xml == nullptr)
     {
         mStatusLabel.setText(juce::translate("Error: Could not export document"), juce::dontSendNotification);
         return;
@@ -353,9 +345,11 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     mHistory.push_back(std::make_tuple(Role::user, query));
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
-    mRequestFuture = std::async(std::launch::async, [this, query]()
+    mRequestFuture = std::async(std::launch::async, [this, query, xmld = std::move(xml)]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
+                                    auto const data = "Here is the content of the current document: ```xml" + xmld->toString() + "```";
+                                    mChat.addContext(data);
                                     auto result = mChat.generate(Role::user, query);
                                     triggerAsyncUpdate();
                                     return result;
@@ -384,7 +378,7 @@ void Application::CoAnalyzer::Chat::updateHistory()
             case Role::system:
                 break;
         }
-        mHistoryEditor.insertTextAtCaret(roleStr + ": " + request + "\n");
+        mHistoryEditor.insertTextAtCaret(roleStr + ": " + request.trim() + "\n\n");
     }
 }
 

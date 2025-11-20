@@ -27,7 +27,7 @@ static juce::Result decode(llama_context* context, llama_batch const& batch)
     // Check if we have enough space in the context
     auto const numCtx = llama_n_ctx(context);
     auto const numCtxUsed = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
-    MiscDebug("Application::Llama::Chat", "Decoding batch: numCtxUsed = " + juce::String(numCtxUsed) + ", batch.n_tokens = " + juce::String(batch.n_tokens) + ", numCtx = " + juce::String(numCtx));
+    // MiscDebug("Application::Llama::Chat", "Decoding batch: numCtxUsed = " + juce::String(numCtxUsed) + ", batch.n_tokens = " + juce::String(batch.n_tokens) + ", numCtx = " + juce::String(numCtx));
     MiscWeakAssert(static_cast<uint32_t>(numCtxUsed + batch.n_tokens) <= numCtx);
     if(static_cast<uint32_t>(numCtxUsed + batch.n_tokens) > numCtx)
     {
@@ -101,7 +101,7 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
 
     // Initialize the context
     auto ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = contextSize;
+    ctx_params.n_ctx = 0; // Use the model's default context size
     ctx_params.n_batch = contextSize;
     ctx_params.abort_callback = [](void* data)
     {
@@ -138,9 +138,8 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
-    auto const promptSize = std::strlen(content.toUTF8());
-    //    MiscWeakAssert(promptSize == static_cast<size_t>(content.length()));
-    auto tokenResult = tokenize(mContext.get(), content.toUTF8(), promptSize, false);
+    auto const text = content.toStdString();
+    auto tokenResult = tokenize(mContext.get(), text.c_str(), text.size(), false);
     if(std::get<0_z>(tokenResult).failed())
     {
         return std::get<0_z>(tokenResult);
@@ -160,7 +159,11 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
 #if JUCE_DEBUG
         for(int i = 0; i < batch.n_tokens; i++)
         {
-            MiscWeakAssert(batch.token[i] > 0 && batch.token[i] < vocabSize);
+            MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
+            if(batch.token[i] < 0 || batch.token[i] > vocabSize)
+            {
+                MiscDebug("Application::Llama::Chat", "Invalid token id: " + juce::String(batch.token[i]));
+            }
         }
 #endif
         auto const result = decode(mContext.get(), batch);
