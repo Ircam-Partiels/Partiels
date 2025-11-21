@@ -328,7 +328,7 @@ Other editing actions can be performed at any time:
 - Use the keyboard shortcut `b` to insert a point with no value (to break the continuity of the segments) at the playhead position (if the playback is running) or at the start of the selected time range (if the playback is not running). 
 - Double-click on a marker to display the results table, focusing on the selected element.
 
-> 💡 **Tip**: You can edit the selected tracks and groups via the main menu `Frame → Export Frame(s) to [Directory]` or by right-clicking on the group or track plots to display the popup menu.
+> 💡 **Tip**: You can edit the selected tracks and groups via the main menu `Frame → Export Frame(s) to [Directory]` or `Frame → Export Frame(s) To...` to choose a custom destination, or by right-clicking on the group or track plots to display the popup menu.
 
 ### 6.2. Table
 
@@ -353,7 +353,7 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
-> 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
+> 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). You can also choose a custom destination using `Frame → Export Frame(s) To...` or by using the `⌘ Command + ⎇ Option + E` (Mac) or `Ctrl + Alt + E` (Linux/Windows). The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
 
 ### 7.1. General options
 
