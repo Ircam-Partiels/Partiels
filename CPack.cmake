@@ -21,8 +21,8 @@
 #
 # Arguments:
 #   target        - The target to add resources to (e.g., Partiels)
-#   resource_type - Type of resource: FILE, DIRECTORY
-#   source_path   - Source directory or file path (relative or absolute)
+#   resource_type - Type of resource: FILE, DIRECTORY, PLUGIN
+#   source_path   - Source directory, file path, or plugin target name (for PLUGIN type)
 #   DESTINATION   - Optional destination subdirectory (default: derived from source)
 #
 function(set_target_resources target resource_type source_path)
@@ -36,12 +36,36 @@ function(set_target_resources target resource_type source_path)
     if(ARG_DESTINATION)
         set(dest_dir "${ARG_DESTINATION}")
     else()
-        get_filename_component(dest_dir "${source_path}" NAME)
-        # Remove trailing slash if present
-        string(REGEX REPLACE "/$" "" dest_dir "${dest_dir}")
+        if(resource_type STREQUAL "PLUGIN")
+            set(dest_dir "PlugIns")
+        else()
+            get_filename_component(dest_dir "${source_path}" NAME)
+            # Remove trailing slash if present
+            string(REGEX REPLACE "/$" "" dest_dir "${dest_dir}")
+        endif()
     endif()
     
-    if(APPLE)
+    if(resource_type STREQUAL "PLUGIN")
+        # Handle plugin target
+        if(NOT APPLE)
+            # For Windows/Linux: copy plugin and catalog files
+            add_custom_command(TARGET ${target} POST_BUILD 
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
+                COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${source_path}>" "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
+                COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${source_path}>/${source_path}.cat" "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
+            )
+        endif()
+        # Note: macOS plugins are embedded via XCODE_EMBED_PLUGINS property, not here
+        
+        # Add install rules for CPack
+        if(WIN32)
+            install(TARGETS ${source_path} LIBRARY DESTINATION ${dest_dir} RUNTIME DESTINATION ${dest_dir} COMPONENT Runtime)
+            install(FILES "$<TARGET_FILE_DIR:${source_path}>/${source_path}.cat" DESTINATION ${dest_dir} COMPONENT Runtime)
+        elseif(UNIX AND NOT APPLE)
+            install(TARGETS ${source_path} LIBRARY DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+            install(FILES "$<TARGET_FILE_DIR:${source_path}>/${source_path}.cat" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+        endif()
+    elseif(APPLE)
         # For macOS: copy to build directory and add to bundle
         if(resource_type STREQUAL "FILE")
             get_filename_component(parent_dir "${CMAKE_CURRENT_BINARY_DIR}/${dest_dir}" DIRECTORY)
@@ -74,19 +98,21 @@ function(set_target_resources target resource_type source_path)
         endif()
     endif()
     
-    # Add install rules for CPack
-    if(WIN32)
-        if(resource_type STREQUAL "FILE")
-            get_filename_component(file_name "${source_path}" NAME)
-            install(FILES "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
-        elseif(resource_type STREQUAL "DIRECTORY")
-            install(DIRECTORY "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
-        endif()
-    elseif(UNIX AND NOT APPLE)
-        if(resource_type STREQUAL "FILE")
-            install(FILES "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
-        elseif(resource_type STREQUAL "DIRECTORY")
-            install(DIRECTORY "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+    # Add install rules for CPack (for FILE and DIRECTORY types)
+    if(NOT resource_type STREQUAL "PLUGIN")
+        if(WIN32)
+            if(resource_type STREQUAL "FILE")
+                get_filename_component(file_name "${source_path}" NAME)
+                install(FILES "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
+            elseif(resource_type STREQUAL "DIRECTORY")
+                install(DIRECTORY "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
+            endif()
+        elseif(UNIX AND NOT APPLE)
+            if(resource_type STREQUAL "FILE")
+                install(FILES "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+            elseif(resource_type STREQUAL "DIRECTORY")
+                install(DIRECTORY "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+            endif()
         endif()
     endif()
 endfunction()
@@ -151,9 +177,7 @@ if(WIN32)
     
     # Install components for Windows
     install(TARGETS Partiels RUNTIME DESTINATION . COMPONENT Runtime)
-    install(TARGETS partiels-vamp-plugins LIBRARY DESTINATION PlugIns RUNTIME DESTINATION PlugIns COMPONENT Runtime)
-    install(FILES "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" DESTINATION PlugIns COMPONENT Runtime)
-    # Note: Resource files (Preset, Templates, Scripts, Translations) are installed via set_target_resources()
+    # Note: Plugins and resource files are installed via set_target_resources()
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt" DESTINATION . COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt" DESTINATION . COMPONENT Runtime)
     
@@ -198,9 +222,7 @@ elseif(UNIX AND NOT APPLE)
     
     # Install components for Linux
     install(TARGETS Partiels RUNTIME DESTINATION opt/Partiels COMPONENT Runtime)
-    install(TARGETS partiels-vamp-plugins LIBRARY DESTINATION opt/Partiels/PlugIns COMPONENT Runtime)
-    install(FILES "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" DESTINATION opt/Partiels/PlugIns COMPONENT Runtime)
-    # Note: Resource files (Preset, Templates, Scripts, Translations) are installed via set_target_resources()
+    # Note: Plugins and resource files are installed via set_target_resources()
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png" DESTINATION opt/Partiels COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop" DESTINATION share/applications COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt" DESTINATION opt/Partiels COMPONENT Runtime)

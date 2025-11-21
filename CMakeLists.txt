@@ -228,31 +228,25 @@ add_dependencies(Partiels partiels-vamp-plugins)
 # Include early to make set_target_resources() available
 include(CPack.cmake)
 
-# Copy translation script to build directory
-if(WIN32)
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
-else()
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
-endif()
-
 # Set up resources for the target (bundle on macOS, build directory on Windows/Linux, install for CPack)
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
 endif()
 
+# Add translation script
+if(WIN32)
+    set_target_resources(Partiels FILE ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION Scripts)
+else()
+    set_target_resources(Partiels FILE ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh DESTINATION Scripts)
+endif()
+
+# Add resource files
 set_target_resources(Partiels FILE "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" DESTINATION Templates)
 set_target_resources(Partiels DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/" DESTINATION Preset)
 set_target_resources(Partiels DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Translations/" DESTINATION Translations)
-set_target_resources(Partiels DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Scripts/" DESTINATION Scripts)
 
-# Copy PlugIns for non-macOS platforms (macOS uses XCODE_EMBED_PLUGINS)
-if(NOT APPLE)
-    add_custom_command(TARGET Partiels POST_BUILD 
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-    )
-endif()
+# Add plugin
+set_target_resources(Partiels PLUGIN partiels-vamp-plugins)
 
 ### Manual ###
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
