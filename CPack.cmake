@@ -1,5 +1,16 @@
 # CPack configuration for Partiels
 # This file configures CPack to generate installers for Windows, Linux, and macOS
+#
+# Usage:
+#   Windows: cpack -C <Config> -G WIX        # Generates .msi installer (requires WiX Toolset)
+#            cpack -C <Config> -G NSIS       # Generates .exe installer (fallback)
+#   Linux:   cpack -G TGZ                    # Generates .tar.gz archive (default for CI)
+#            cpack -G DEB                    # Generates .deb package
+#            cpack -G RPM                    # Generates .rpm package
+#   macOS:   DMG creation remains in CI workflow (uses appdmg)
+#
+# The configuration uses component-based installation to separate runtime files from
+# development files, ensuring only necessary files are packaged.
 
 # Common CPack settings
 set(CPACK_PACKAGE_NAME "Partiels")
