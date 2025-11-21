@@ -19,24 +19,45 @@ set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};Partiels;Runtime;/
 
 # Platform-specific configurations
 if(WIN32)
-    # Windows Configuration - Use NSIS
-    set(CPACK_GENERATOR "NSIS;ZIP")
+    # Windows Configuration - Try WiX for MSI, fallback to NSIS
+    # Check if WiX is available for MSI generation
+    find_program(WIX_CANDLE_EXECUTABLE candle)
+    if(WIX_CANDLE_EXECUTABLE)
+        set(CPACK_GENERATOR "WIX;ZIP")
+        message(STATUS "WiX found - using MSI generator")
+        
+        # WiX specific settings
+        set(CPACK_WIX_UPGRADE_GUID "2BE88D38-04D3-44AE-B6F6-2D78BD410D58")
+        set(CPACK_WIX_PRODUCT_GUID "*") # Generate new GUID for each version
+        set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png")
+        set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp")
+        set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp")
+        set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
+        set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CPACK_PACKAGE_HOMEPAGE_URL}")
+        set(CPACK_WIX_PROGRAM_MENU_FOLDER "Partiels")
+        # Create start menu shortcut
+        set(CPACK_WIX_CMAKE_PACKAGE_REGISTRY "Partiels")
+    else()
+        set(CPACK_GENERATOR "NSIS;ZIP")
+        message(STATUS "WiX not found - using NSIS generator")
+        
+        # NSIS specific settings
+        set(CPACK_NSIS_DISPLAY_NAME "Partiels")
+        set(CPACK_NSIS_PACKAGE_NAME "Partiels")
+        set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+        set(CPACK_NSIS_MODIFY_PATH OFF)
+        set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png")
+        set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png")
+        set(CPACK_NSIS_INSTALLED_ICON_NAME "Partiels.exe")
+        set(CPACK_NSIS_HELP_LINK "${CPACK_PACKAGE_HOMEPAGE_URL}")
+        set(CPACK_NSIS_URL_INFO_ABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
+        set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
+        set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '\$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Partiels.lnk' '\$INSTDIR\\\\Partiels.exe'")
+        set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '\$SMPROGRAMS\\\\$START_MENU\\\\Partiels.lnk'")
+    endif()
+    
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "Partiels")
     set(CPACK_PACKAGE_FILE_NAME "Partiels-Windows")
-    
-    # NSIS specific settings
-    set(CPACK_NSIS_DISPLAY_NAME "Partiels")
-    set(CPACK_NSIS_PACKAGE_NAME "Partiels")
-    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-    set(CPACK_NSIS_MODIFY_PATH OFF)
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png")
-    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "Partiels.exe")
-    set(CPACK_NSIS_HELP_LINK "${CPACK_PACKAGE_HOMEPAGE_URL}")
-    set(CPACK_NSIS_URL_INFO_ABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
-    set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
-    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '\$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Partiels.lnk' '\$INSTDIR\\\\Partiels.exe'")
-    set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '\$SMPROGRAMS\\\\$START_MENU\\\\Partiels.lnk'")
     
     # Install components for Windows
     install(TARGETS Partiels RUNTIME DESTINATION . COMPONENT Runtime)
@@ -48,6 +69,28 @@ if(WIN32)
     install(DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Translations/" DESTINATION Translations COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt" DESTINATION . COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt" DESTINATION . COMPONENT Runtime)
+    
+    # Code signing support (if enabled)
+    if(PARTIELS_NOTARIZE AND PARTIELS_CODESIGN_WINDOWS_KEYFILE)
+        # Find signtool for Windows code signing
+        file(GLOB_RECURSE SIGNTOOL_CANDIDATES
+            "$ENV{ProgramFiles}/Windows Kits/*/bin/*/x64/signtool.exe"
+            "$ENV{ProgramFiles\(x86\)}/Windows Kits/*/bin/*/x64/signtool.exe"
+        )
+        foreach(SIGNTOOL_CANDIDATE IN LISTS SIGNTOOL_CANDIDATES)
+            get_filename_component(SIGNTOOL_CANDIDATE_DIR ${SIGNTOOL_CANDIDATE} DIRECTORY)
+            list(APPEND SIGNTOOL_CANDIDATE_DIRS ${SIGNTOOL_CANDIDATE_DIR})
+        endforeach()
+        find_program(SIGNTOOL_EXE "signtool" HINTS ${SIGNTOOL_CANDIDATE_DIRS})
+        if(SIGNTOOL_EXE)
+            # Configure post-build signing for the installer
+            set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_CURRENT_BINARY_DIR}/sign_installer.cmake")
+            file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/sign_installer.cmake" 
+                "execute_process(COMMAND \"${SIGNTOOL_EXE}\" sign /f \"${PARTIELS_CODESIGN_WINDOWS_KEYFILE}\" /p \"${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD}\" /fd SHA256 /td SHA256 /tr \"${TIMESTAMP_SERVER_URL}\" \"\${CPACK_PACKAGE_FILES}\")\n"
+                "execute_process(COMMAND \"${SIGNTOOL_EXE}\" verify /pa \"\${CPACK_PACKAGE_FILES}\")\n"
+            )
+        endif()
+    endif()
     
 elseif(UNIX AND NOT APPLE)
     # Linux Configuration
@@ -85,11 +128,6 @@ elseif(UNIX AND NOT APPLE)
             RENAME Partiels-install.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
             COMPONENT Runtime)
-    
-    # Create a symlink in /usr/bin for easy command-line access (DEB and RPM only)
-    # Note: This will only work during installation, not during package creation
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/debian-postinst")
-    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/rpm-post.sh")
     
 elseif(APPLE)
     # macOS Configuration - Bundle resources only (DMG remains in CI)
