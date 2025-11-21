@@ -92,6 +92,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::frameResetDurationToFull);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameExport);
+        menu.addCommandItem(&commandManager, CommandIDs::frameExportTo);
         menu.addCommandItem(&commandManager, CommandIDs::frameSystemCopy);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::frameToggleDrawing);

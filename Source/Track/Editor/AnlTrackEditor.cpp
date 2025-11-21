@@ -256,6 +256,7 @@ void Track::Editor::fillPopupMenu(juce::PopupMenu& menu)
     }
     menu.addSeparator();
     menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameExport);
+    menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameExportTo);
     menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameSystemCopy);
     menu.addSeparator();
     menu.addCommandItem(&mApplicationCommandManager, CommandIDs::frameToggleDrawing);
