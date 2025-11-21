@@ -149,14 +149,12 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
     auto const tokenSize = std::get<1_z>(tokenResult).size();
     auto const numCtx = llama_n_ctx(mContext.get());
     auto position = 0_z;
-#if JUCE_DEBUG
-    auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
-#endif
     while(position < tokenSize)
     {
         auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
         auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
 #if JUCE_DEBUG
+        auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
         for(int i = 0; i < batch.n_tokens; i++)
         {
             MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
