@@ -1367,13 +1367,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
 
             // Show confirmation dialog
-            auto const message = trackNames.size() == 1 
-                ? juce::translate("Are you sure you want to overwrite the original file for track \"TRACKNAME\"?\n\nFile: FILEPATH\n\nThis action cannot be undone.")
-                    .replace("TRACKNAME", trackNames[0])
-                    .replace("FILEPATH", trackFiles[0])
-                : juce::translate("Are you sure you want to overwrite the original files for NUMTRACKS track(s)?\n\nTracks: TRACKNAMES\n\nThis action cannot be undone.")
-                    .replace("NUMTRACKS", juce::String(trackNames.size()))
-                    .replace("TRACKNAMES", trackNames.joinIntoString(", "));
+            auto const message = trackNames.size() == 1
+                                     ? juce::translate("Are you sure you want to overwrite the original file for track \"TRACKNAME\"?\n\nFile: FILEPATH\n\nThis action cannot be undone.")
+                                           .replace("TRACKNAME", trackNames[0])
+                                           .replace("FILEPATH", trackFiles[0])
+                                     : juce::translate("Are you sure you want to overwrite the original files for NUMTRACKS track(s)?\n\nTracks: TRACKNAMES\n\nThis action cannot be undone.")
+                                           .replace("NUMTRACKS", juce::String(trackNames.size()))
+                                           .replace("TRACKNAMES", trackNames.joinIntoString(", "));
 
             auto const options = juce::MessageBoxOptions()
                                      .withIconType(juce::AlertWindow::WarningIcon)
@@ -1412,23 +1412,23 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  {
                                                      continue;
                                                  }
-                                                 
+
                                                  auto const originalFile = trackAcsr.getAttr<Track::AttrType::file>().file;
                                                  auto const& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
                                                  auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
                                                  auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
-                                                 
+
                                                  std::atomic<bool> shouldAbort{false};
                                                  auto const result = Document::Exporter::toFile(documentAcsr, originalFile.getParentDirectory(), selection, selectedChannels, originalFile.getFileNameWithoutExtension(), trackId, exportOptions, shouldAbort);
-                                                 
+
                                                  if(result.failed())
                                                  {
                                                      auto const errorOptions = juce::MessageBoxOptions()
                                                                                    .withIconType(juce::AlertWindow::WarningIcon)
                                                                                    .withTitle(juce::translate("Failed to overwrite file"))
                                                                                    .withMessage(juce::translate("Failed to overwrite file for track \"TRACKNAME\": ERROR")
-                                                                                                .replace("TRACKNAME", trackAcsr.getAttr<Track::AttrType::name>())
-                                                                                                .replace("ERROR", result.getErrorMessage()))
+                                                                                                    .replace("TRACKNAME", trackAcsr.getAttr<Track::AttrType::name>())
+                                                                                                    .replace("ERROR", result.getErrorMessage()))
                                                                                    .withButton(juce::translate("Ok"));
                                                      juce::AlertWindow::showAsync(errorOptions, nullptr);
                                                  }
