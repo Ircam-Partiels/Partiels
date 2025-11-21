@@ -897,3 +897,7 @@ countries: fr be
 "Apply extra threshold filters to exclude values below thresholds when exporting" = "Appliquer des filtres de seuil supplémentaires pour exclure les valeurs en dessous des seuils lors de l'exportation"
 "Outside Grid" = "Grille extérieure"
 "Draw grid ticks and labels outside the frame bounds" = "Dessiner les graduations et les étiquettes de la grille en dehors des limites du cadre"
+"Export Frame(s) To..." = "Exporter la/les trame(s) vers..."
+"Export the selected frame(s) using the current export options to a selected destination" = "Exporter la/les trame(s) sélectionnée(s) en utilisant les options d'exportation actuelles vers une destination sélectionnée"
+"Select export directory" = "Sélectionner le répertoire d'exportation"
+"Export track to file" = "Exporter la piste vers un fichier"
