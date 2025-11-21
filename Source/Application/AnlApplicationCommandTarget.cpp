@@ -378,7 +378,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Duplicate Frame(s)"), juce::translate("Duplicate the selected frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('d', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
+            result.setActive(isFrameMode && !selection.isEmpty() && Document::Tools::containsFrames(documentAcsr, selection));
             break;
         }
         case CommandIDs::frameInsert:

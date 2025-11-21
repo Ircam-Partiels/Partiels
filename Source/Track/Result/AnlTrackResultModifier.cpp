@@ -176,6 +176,10 @@ bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t con
         }
         auto const& channelFrames = results.at(channel);
         auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
+        if(range.isEmpty())
+        {
+            return start != channelFrames.cend() && std::get<0_z>(*start) <= range.getStart();
+        }
         return start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd();
     };
 
@@ -250,9 +254,19 @@ Track::Result::ChannelData Track::Result::Modifier::copyFrames(Accessor const& a
         auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
         auto const end = std::upper_bound(start, channelFrames.cend(), range.getEnd(), Result::upper_cmp<data_type>);
         copy.reserve(static_cast<size_t>(std::distance(start, end)));
-        while(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
+        if(range.isEmpty())
         {
-            copy.push_back(*start++);
+            if(start != channelFrames.cend() && std::get<0_z>(*start) <= range.getStart())
+            {
+                copy.push_back(*start);
+            }
+        }
+        else
+        {
+            while(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
+            {
+                copy.push_back(*start++);
+            }
         }
         return copy;
     };
@@ -323,6 +337,15 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
         }
         auto& channelFrames = results[channel];
         auto const start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
+        if(range.isEmpty())
+        {
+            if(start != channelFrames.end() && std::get<0_z>(*start) <= range.getStart())
+            {
+                channelFrames.erase(start);
+                return true;
+            }
+            return false;
+        }
         auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
         channelFrames.erase(start, end);
         return true;
