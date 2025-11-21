@@ -1074,7 +1074,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::frameDuplicate:
         {
             perform({CommandIDs::frameCopy});
-            transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboard.range.getEnd(), NotificationType::synchronous);
+            transportAcsr.setAttr<Transport::AttrType::startPlayhead>(selection.getEnd(), NotificationType::synchronous);
             perform({CommandIDs::framePaste});
             undoManager.setCurrentTransactionName(juce::translate("Duplicate Frame(s)"));
             return true;
