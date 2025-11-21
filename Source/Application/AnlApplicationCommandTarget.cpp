@@ -1382,12 +1382,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                      .withButton(juce::translate("Overwrite"))
                                      .withButton(juce::translate("Cancel"));
 
-            juce::AlertWindow::showAsync(options, [=, &documentAcsr](int windowResult)
+            juce::AlertWindow::showAsync(options, [=](int windowResult)
                                          {
                                              if(windowResult != 1)
                                              {
                                                  return;
                                              }
+
+                                             // Re-query document accessor to ensure it's still valid
+                                             auto& documentAcsr = Instance::get().getDocumentAccessor();
 
                                              // Perform the overwrite for each track
                                              for(auto const& trackId : std::get<1_z>(selectedItems))
