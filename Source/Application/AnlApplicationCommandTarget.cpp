@@ -705,7 +705,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
     };
 
-    auto const exportTo = [this, weakRef = juce::WeakReference<CommandTarget>(this)](juce::File const& exportDirectory, juce::String const& prefix)
+    auto const exportTo = [this, weakRef = juce::WeakReference<CommandTarget>(this)](juce::File const& fileOrDirectory, juce::String const& prefix)
     {
         if(weakRef.get() == nullptr)
         {
@@ -717,7 +717,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
         auto const exportItem = [&](juce::String const& identifier)
         {
-            [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, exportDirectory, selection, {}, prefix, identifier, options, mShouldAbort);
+            [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, fileOrDirectory, selection, {}, prefix, identifier, options, mShouldAbort);
             MiscWeakAssert(results.wasOk() && "Exporting track failed!");
         };
 
@@ -1243,13 +1243,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::frameExportTo:
         {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
-            auto const hasGroups = !std::get<0_z>(selectedItems).empty();
-            auto const hasTracks = !std::get<1_z>(selectedItems).empty();
+            auto allItem = std::get<0_z>(selectedItems);
+            allItem.insert(std::get<1_z>(selectedItems).begin(), std::get<1_z>(selectedItems).end());
+            auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            auto const numFiles = Document::Exporter::getNumFilesToExport(documentAcsr, allItem, options);
 
-            // Determine what we're exporting to decide on file chooser mode
-            if(hasGroups || (hasTracks && std::get<1_z>(selectedItems).size() > 1))
+            if(numFiles > 1_z)
             {
-                // Multiple items or group: choose directory
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
                 mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select export directory"), currentDirectory);
                 if(mFileChooser == nullptr)
@@ -1264,12 +1264,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              exportTo(results.getFirst(), "");
+                                              exportTo(results.getFirst(), {});
                                           });
             }
-            else if(hasTracks && std::get<1_z>(selectedItems).size() == 1)
+            else if(numFiles == 1_z)
             {
-                // Single track: choose file
                 auto const trackIdentifier = *std::get<1_z>(selectedItems).begin();
                 MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
                 if(!Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
@@ -1279,7 +1278,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
                 auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
-                auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
                 auto const defaultFile = currentDirectory.getChildFile(trackName).withFileExtension(options.getFormatExtension());
 
                 mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export track to file"), defaultFile, options.getFormatWilcard());
@@ -1295,8 +1293,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              auto const exportFile = results.getFirst();
-                                              exportTo(exportFile.getParentDirectory(), exportFile.getFileNameWithoutExtension());
+                                              exportTo(results.getFirst(), {});
                                           });
             }
             return true;
