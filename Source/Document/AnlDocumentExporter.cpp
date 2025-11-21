@@ -31,6 +31,21 @@ std::tuple<int, int, int> Document::Exporter::getPlotDimension(juce::String cons
     return std::make_tuple(bounds.getWidth(), bounds.getHeight(), dpi);
 }
 
+size_t Document::Exporter::getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifier, Options const& options)
+{
+    if(options.useImageFormat() && options.useGroupOverview)
+    {
+        return std::accumulate(identifier.begin(), identifier.end(), 0_z, [&](auto const total, auto const& id)
+                               {
+                                   return total + (Document::Tools::hasItem(accessor, id) ? 1_z : 0_z);
+                               });
+    }
+    return std::accumulate(identifier.begin(), identifier.end(), 0_z, [&](auto const total, auto const& id)
+                           {
+                               return total + (Document::Tools::hasTrackAcsr(accessor, id) ? 1_z : (Document::Tools::hasGroupAcsr(accessor, id) ? Document::Tools::getGroupAcsr(accessor, id).template getAttr<Group::AttrType::layout>().size() : 0_z));
+                           });
+}
+
 bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
 {
     return format == rhd.format &&
