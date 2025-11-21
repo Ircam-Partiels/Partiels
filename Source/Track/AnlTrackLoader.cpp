@@ -1283,9 +1283,9 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sam
                 }
             }
             return false;
-        };
+        }();
 
-        if(isReaper())
+        if(isReaper)
         {
             FileInfo fileInfo;
             fileInfo.file = file;
@@ -1314,7 +1314,7 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sam
             FileInfo fileInfo;
             fileInfo.file = file;
             fileInfo.args.set("separator", fileSeparator.value());
-            fileInfo.args.set("useendtime", "true");
+            fileInfo.args.set("useendtime", file.hasFileExtension("lab") ? "true" : "false");
             callback(fileInfo);
             return false;
         }

@@ -452,18 +452,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
                                                                  {
                                                                      return false;
                                                                  }
-                                                                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
-                                                                 if(!Track::Tools::hasResultFile(trackAcsr))
+                                                                 Track::Accessor const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                Track::FileInfo const& fileInfo = trackAcsr.getAttr<Track::AttrType::file>();
+                if(!fileInfo.file.existsAsFile())
                                                                  {
                                                                      return false;
                                                                  }
-                                                                 auto const frameType = Track::Tools::getFrameType(trackAcsr);
-                                                                 if(!frameType.has_value())
-                                                                 {
-                                                                     return false;
-                                                                 }
-                                                                 auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
-                                                                 return exportOptions.isCompatible(frameType.value());
+                if(fileInfo.file.getFileExtension() == "json" || fileInfo.file.getFileExtension() == "csv" || fileInfo.file.getFileExtension() == "lab")
+                {
+                    return true;
+                }
+                return false;
                                                              });
             result.setActive(isFrameMode && hasSupportedResultFiles);
             break;
@@ -1410,7 +1409,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  {
                                                      continue;
                                                  }
-                                                 auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+                                                 auto exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
                                                  if(!exportOptions.isCompatible(frameType.value()))
                                                  {
                                                      continue;
@@ -1421,6 +1420,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
                                                  auto const selectedChannels = Document::Tools::getEffectiveSelectedChannelsForTrack(documentAcsr, trackAcsr);
 
+                                                 // JSON, REAPER, LAB, CSV
+                                                 // Separator
+                                                 // inlude header
+                                                 exportOptions.format =
+                                                 //file.hasFileExtension("lab") ? "true" : "false"
                                                  std::atomic<bool> shouldAbort{false};
                                                  auto const result = Document::Exporter::toFile(documentAcsr, originalFile.getParentDirectory(), selection, selectedChannels, originalFile.getFileNameWithoutExtension(), trackId, exportOptions, shouldAbort);
 
