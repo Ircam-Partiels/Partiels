@@ -47,7 +47,10 @@ function(set_target_resources target resource_type source_path)
     
     if(resource_type STREQUAL "PLUGIN")
         # Handle plugin target
-        if(NOT APPLE)
+        if(APPLE)
+            # For macOS: embed plugin via XCODE_EMBED_PLUGINS property
+            set_target_properties(${target} PROPERTIES XCODE_EMBED_PLUGINS ${source_path} XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
+        else()
             # For Windows/Linux: copy plugin and catalog files
             add_custom_command(TARGET ${target} POST_BUILD 
                 COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
@@ -55,7 +58,6 @@ function(set_target_resources target resource_type source_path)
                 COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${source_path}>/${source_path}.cat" "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
             )
         endif()
-        # Note: macOS plugins are embedded via XCODE_EMBED_PLUGINS property, not here
         
         # Add install rules for CPack
         if(WIN32)

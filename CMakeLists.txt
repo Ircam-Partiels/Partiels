@@ -228,11 +228,6 @@ add_dependencies(Partiels partiels-vamp-plugins)
 # Include early to make set_target_resources() available
 include(CPack.cmake)
 
-# Set up resources for the target (bundle on macOS, build directory on Windows/Linux, install for CPack)
-if(APPLE)
-    set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
-endif()
-
 # Add translation script
 if(WIN32)
     set_target_resources(Partiels FILE ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION Scripts)
