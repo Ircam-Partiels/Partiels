@@ -1,0 +1,21 @@
+# ninja log v7
+0	4	1763724804884927305	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-mkdir	bbb2881814005bc9
+0	4	1763724804884927305	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-mkdir	bbb2881814005bc9
+4	487	1763724805367934059	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-download	8dc1cb602eb37a56
+4	487	1763724805367934059	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-download	8dc1cb602eb37a56
+487	498	1763724805377934199	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-update_disconnected	20cf6b72f29ece02
+487	498	1763724805377934199	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-update_disconnected	20cf6b72f29ece02
+498	518	1763724805398934492	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-patch_disconnected	9e750d2c24c4c434
+498	518	1763724805398934492	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-patch_disconnected	9e750d2c24c4c434
+518	522	1763724805401934534	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-configure	a635572eb59da3d2
+518	522	1763724805401934534	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-configure	a635572eb59da3d2
+522	526	1763724805405934590	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-build	a14ab1f003baebc3
+522	526	1763724805405934590	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-build	a14ab1f003baebc3
+526	529	1763724805409934646	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-install	9a0f8a8c2e69f6e9
+526	529	1763724805409934646	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-install	9a0f8a8c2e69f6e9
+529	533	1763724805412934688	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-test	d0e5ef01a31e6577
+529	533	1763724805412934688	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-test	d0e5ef01a31e6577
+533	538	1763724805417934758	CMakeFiles/vamp-plugin-sdk-populate-complete	6745a1b251409456
+533	538	1763724805417934758	vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-done	6745a1b251409456
+533	538	1763724805417934758	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/CMakeFiles/vamp-plugin-sdk-populate-complete	6745a1b251409456
+533	538	1763724805417934758	/home/runner/work/Partiels/Partiels/build_test/_deps/vamp-plugin-sdk-subbuild/vamp-plugin-sdk-populate-prefix/src/vamp-plugin-sdk-populate-stamp/vamp-plugin-sdk-populate-done	6745a1b251409456

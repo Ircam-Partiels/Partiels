@@ -12,6 +12,85 @@
 # The configuration uses component-based installation to separate runtime files from
 # development files, ensuring only necessary files are packaged.
 
+# Helper function to set target resources
+# This function simplifies adding resources to the bundle (macOS), build directory (Windows/Linux),
+# and install rules for CPack.
+#
+# Usage:
+#   set_target_resources(<target> <resource_type> <source_path> [DESTINATION <dest>])
+#
+# Arguments:
+#   target        - The target to add resources to (e.g., Partiels)
+#   resource_type - Type of resource: FILE, DIRECTORY
+#   source_path   - Source directory or file path (relative or absolute)
+#   DESTINATION   - Optional destination subdirectory (default: derived from source)
+#
+function(set_target_resources target resource_type source_path)
+    # Parse optional DESTINATION argument
+    set(options "")
+    set(oneValueArgs DESTINATION)
+    set(multiValueArgs "")
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
+    # Determine destination directory
+    if(ARG_DESTINATION)
+        set(dest_dir "${ARG_DESTINATION}")
+    else()
+        get_filename_component(dest_dir "${source_path}" NAME)
+        # Remove trailing slash if present
+        string(REGEX REPLACE "/$" "" dest_dir "${dest_dir}")
+    endif()
+    
+    if(APPLE)
+        # For macOS: copy to build directory and add to bundle
+        if(resource_type STREQUAL "FILE")
+            get_filename_component(parent_dir "${CMAKE_CURRENT_BINARY_DIR}/${dest_dir}" DIRECTORY)
+            file(MAKE_DIRECTORY "${parent_dir}")
+            file(COPY "${source_path}" DESTINATION "${parent_dir}")
+            juce_add_bundle_resources_directory(${target} "${parent_dir}/")
+        elseif(resource_type STREQUAL "DIRECTORY")
+            # For directory, copy contents to dest_dir in build directory
+            file(COPY "${source_path}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+            get_filename_component(src_name "${source_path}" NAME)
+            string(REGEX REPLACE "/$" "" src_name "${src_name}")
+            # If DESTINATION is specified and different from source name, rename it
+            if(ARG_DESTINATION AND NOT "${src_name}" STREQUAL "${dest_dir}")
+                file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/${src_name}" "${CMAKE_CURRENT_BINARY_DIR}/${dest_dir}")
+            endif()
+            juce_add_bundle_resources_directory(${target} "${CMAKE_CURRENT_BINARY_DIR}/${dest_dir}/")
+        endif()
+    else()
+        # For Windows/Linux: copy to target output directory
+        if(resource_type STREQUAL "FILE")
+            get_filename_component(file_name "${source_path}" NAME)
+            add_custom_command(TARGET ${target} POST_BUILD 
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
+                COMMAND ${CMAKE_COMMAND} -E copy "${source_path}" "$<TARGET_FILE_DIR:${target}>/${dest_dir}/${file_name}"
+            )
+        elseif(resource_type STREQUAL "DIRECTORY")
+            add_custom_command(TARGET ${target} POST_BUILD 
+                COMMAND ${CMAKE_COMMAND} -E copy_directory "${source_path}" "$<TARGET_FILE_DIR:${target}>/${dest_dir}"
+            )
+        endif()
+    endif()
+    
+    # Add install rules for CPack
+    if(WIN32)
+        if(resource_type STREQUAL "FILE")
+            get_filename_component(file_name "${source_path}" NAME)
+            install(FILES "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
+        elseif(resource_type STREQUAL "DIRECTORY")
+            install(DIRECTORY "${source_path}" DESTINATION ${dest_dir} COMPONENT Runtime)
+        endif()
+    elseif(UNIX AND NOT APPLE)
+        if(resource_type STREQUAL "FILE")
+            install(FILES "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+        elseif(resource_type STREQUAL "DIRECTORY")
+            install(DIRECTORY "${source_path}" DESTINATION opt/Partiels/${dest_dir} COMPONENT Runtime)
+        endif()
+    endif()
+endfunction()
+
 # Common CPack settings
 set(CPACK_PACKAGE_NAME "Partiels")
 set(CPACK_PACKAGE_VENDOR "Ircam")
@@ -74,10 +153,7 @@ if(WIN32)
     install(TARGETS Partiels RUNTIME DESTINATION . COMPONENT Runtime)
     install(TARGETS partiels-vamp-plugins LIBRARY DESTINATION PlugIns RUNTIME DESTINATION PlugIns COMPONENT Runtime)
     install(FILES "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" DESTINATION PlugIns COMPONENT Runtime)
-    install(FILES "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings" DESTINATION Preset COMPONENT Runtime)
-    install(FILES "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" DESTINATION Templates COMPONENT Runtime)
-    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Scripts/" DESTINATION Scripts COMPONENT Runtime)
-    install(DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Translations/" DESTINATION Translations COMPONENT Runtime)
+    # Note: Resource files (Preset, Templates, Scripts, Translations) are installed via set_target_resources()
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt" DESTINATION . COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt" DESTINATION . COMPONENT Runtime)
     
@@ -124,10 +200,7 @@ elseif(UNIX AND NOT APPLE)
     install(TARGETS Partiels RUNTIME DESTINATION opt/Partiels COMPONENT Runtime)
     install(TARGETS partiels-vamp-plugins LIBRARY DESTINATION opt/Partiels/PlugIns COMPONENT Runtime)
     install(FILES "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" DESTINATION opt/Partiels/PlugIns COMPONENT Runtime)
-    install(FILES "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings" DESTINATION opt/Partiels/Preset COMPONENT Runtime)
-    install(FILES "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" DESTINATION opt/Partiels/Templates COMPONENT Runtime)
-    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Scripts/" DESTINATION opt/Partiels/Scripts COMPONENT Runtime)
-    install(DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Translations/" DESTINATION opt/Partiels/Translations COMPONENT Runtime)
+    # Note: Resource files (Preset, Templates, Scripts, Translations) are installed via set_target_resources()
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png" DESTINATION opt/Partiels COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop" DESTINATION share/applications COMPONENT Runtime)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt" DESTINATION opt/Partiels COMPONENT Runtime)

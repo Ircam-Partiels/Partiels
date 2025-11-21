@@ -1,0 +1,6 @@
+# ninja log v7
+1	41	1763724806895955489	/home/runner/work/Partiels/Partiels/build_test/JUCE/tools/CMakeFiles/cmake.verify_globs	9e9630293fbed677
+46	391	1763724806940956125	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_graphics/juce_graphics_Sheenbidi.c.o	fa5c0de7bdab10eb
+391	8218	1763724807285960999	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_events/juce_events.cpp.o	fd42f8fea91ec9e0
+41	9524	1763724806935956054	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/juce_build_tools/juce_build_tools.cpp.o	bd06a5878a4c7ea6
+41	9635	1763724806935956054	extras/Build/juceaide/CMakeFiles/juceaide.dir/Main.cpp.o	2ec32d3abf46ae24
