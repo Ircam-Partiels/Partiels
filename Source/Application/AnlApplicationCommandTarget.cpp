@@ -157,6 +157,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::frameResetDurationToZero
         , CommandIDs::frameResetDurationToFull
         , CommandIDs::frameExport
+        , CommandIDs::frameExportTo
         , CommandIDs::frameSystemCopy
         , CommandIDs::frameToggleDrawing
         
@@ -414,6 +415,18 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             auto const directoryName = exportDirectory == desktop ? juce::translate("Desktop") : exportDirectory.getFileName();
             result.setInfo(juce::translate("Export Frame(s) to DIRNAME").replace("DIRNAME", directoryName), juce::translate("Export the selected frame(s) using the current export options to DIRNAME").replace("DIRNAME", directoryName), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::altModifier, 0));
+            auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
+            auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+            result.setActive(isFrameMode && std::any_of(frameTypes.cbegin(), frameTypes.cend(), [&](auto const& type)
+                                                        {
+                                                            return exportOptions.isCompatible(type);
+                                                        }));
+            break;
+        }
+        case CommandIDs::frameExportTo:
+        {
+            result.setInfo(juce::translate("Export Frame(s) To..."), juce::translate("Export the selected frame(s) using the current export options to a selected destination"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::altModifier, 0));
             auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
             auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
             result.setActive(isFrameMode && std::any_of(frameTypes.cbegin(), frameTypes.cend(), [&](auto const& type)
@@ -688,6 +701,41 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
                 fn(trackAcsr.get(), Document::Tools::getEffectiveSelectedChannelsForTrack(Instance::get().getDocumentAccessor(), trackAcsr.get()));
+            }
+        }
+    };
+
+    auto const exportTo = [this, weakRef = juce::WeakReference<CommandTarget>(this)](juce::File const& exportDirectory, juce::String const& prefix)
+    {
+        if(weakRef.get() == nullptr)
+        {
+            return;
+        }
+        auto& documentAcsr = Instance::get().getDocumentAccessor();
+        auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+        auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
+        auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
+        auto const exportItem = [&](juce::String const& identifier)
+        {
+            [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, exportDirectory, selection, {}, prefix, identifier, options, mShouldAbort);
+            MiscWeakAssert(results.wasOk() && "Exporting track failed!");
+        };
+
+        auto const selectedItems = Document::Selection::getItems(documentAcsr);
+        for(auto const& groupIdentifier : std::get<0_z>(selectedItems))
+        {
+            MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
+            if(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
+            {
+                exportItem(groupIdentifier);
+            }
+        }
+        for(auto const& trackIdentifier : std::get<1_z>(selectedItems))
+        {
+            MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
+            if(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
+            {
+                exportItem(trackIdentifier);
             }
         }
     };
@@ -1187,33 +1235,69 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::frameExport:
         {
-            auto options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
-            auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
-            auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
             auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
-
-            auto const exportItem = [&](juce::String const& identifier)
-            {
-                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, exportDirectory, selection, {}, date, identifier, options, mShouldAbort);
-                MiscWeakAssert(results.wasOk() && "Exporting track failed!");
-            };
-
+            auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
+            exportTo(exportDirectory, date);
+            return true;
+        }
+        case CommandIDs::frameExportTo:
+        {
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
-            for(auto const& groupIdentifier : std::get<0_z>(selectedItems))
+            auto const hasGroups = !std::get<0_z>(selectedItems).empty();
+            auto const hasTracks = !std::get<1_z>(selectedItems).empty();
+
+            // Determine what we're exporting to decide on file chooser mode
+            if(hasGroups || (hasTracks && std::get<1_z>(selectedItems).size() > 1))
             {
-                MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
-                if(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
+                // Multiple items or group: choose directory
+                auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
+                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select export directory"), currentDirectory);
+                if(mFileChooser == nullptr)
                 {
-                    exportItem(groupIdentifier);
+                    return true;
                 }
+                using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=](juce::FileChooser const& fileChooser)
+                                          {
+                                              auto const results = fileChooser.getResults();
+                                              if(results.isEmpty())
+                                              {
+                                                  return;
+                                              }
+                                              exportTo(results.getFirst(), "");
+                                          });
             }
-            for(auto const& trackIdentifier : std::get<1_z>(selectedItems))
+            else if(hasTracks && std::get<1_z>(selectedItems).size() == 1)
             {
+                // Single track: choose file
+                auto const trackIdentifier = *std::get<1_z>(selectedItems).begin();
                 MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
-                if(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
+                if(!Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
                 {
-                    exportItem(trackIdentifier);
+                    return true;
                 }
+                auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
+                auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
+                auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
+                auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
+                auto const defaultFile = currentDirectory.getChildFile(trackName).withFileExtension(options.getFormatExtension());
+
+                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export track to file"), defaultFile, options.getFormatWilcard());
+                if(mFileChooser == nullptr)
+                {
+                    return true;
+                }
+                using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=](juce::FileChooser const& fileChooser)
+                                          {
+                                              auto const results = fileChooser.getResults();
+                                              if(results.isEmpty())
+                                              {
+                                                  return;
+                                              }
+                                              auto const exportFile = results.getFirst();
+                                              exportTo(exportFile.getParentDirectory(), exportFile.getFileNameWithoutExtension());
+                                          });
             }
             return true;
         }
