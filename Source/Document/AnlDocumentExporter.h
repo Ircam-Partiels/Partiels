@@ -92,6 +92,8 @@ namespace Document
             bool isCompatible(Track::FrameType frameType) const;
         };
 
+        size_t getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifier, Options const& options);
+
         class Panel
         : public juce::Component
         , private juce::AsyncUpdater
