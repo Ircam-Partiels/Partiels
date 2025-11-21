@@ -64,7 +64,7 @@ if(WIN32)
         set(CPACK_NSIS_URL_INFO_ABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
         set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
         set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '\$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Partiels.lnk' '\$INSTDIR\\\\Partiels.exe'")
-        set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '\$SMPROGRAMS\\\\$START_MENU\\\\Partiels.lnk'")
+        set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '\$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Partiels.lnk'")
     endif()
     
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "Partiels")
