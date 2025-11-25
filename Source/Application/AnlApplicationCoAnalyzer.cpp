@@ -375,6 +375,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     mQueryEditor.setText({}, juce::sendNotificationSync);
     mStatusLabel.setText(juce::translate("Processing query"), juce::dontSendNotification);
     mSendButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+    mSendButton.setTooltip(juce::translate("Stop Query"));
 
     mHistory.push_back(std::make_tuple(Role::user, query));
     mShouldQuit.store(false);
