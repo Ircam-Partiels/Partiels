@@ -295,6 +295,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         }
                                     }
                                     {
+                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
                                         auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
                                         juce::XmlElement xml("plugins");
                                         for(auto const& plugin : std::get<0>(plugins))
@@ -311,12 +312,13 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         mChat.addContext(xml.toString());
                                     }
                                     {
+                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
                                         auto pluginXml = std::make_unique<juce::XmlElement>("webReferences");
                                         XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
                                         mChat.addContext(pluginXml->toString());
                                     }
 
-                                    mChat.loadState({"/Users/guillot/Git/Partiels-training/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k-cache.bin"});
+                                    mChat.loadState(model.withFileExtension("bin"));
                                     if(mShouldQuit.load())
                                     {
                                         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});

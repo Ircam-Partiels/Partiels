@@ -2,6 +2,14 @@
 
 ANALYSE_FILE_BEGIN
 
+static void llama_log_callback(enum ggml_log_level level, const char* text, void*)
+{
+    if(level >= GGML_LOG_LEVEL_ERROR)
+    {
+        MiscDebug("Application::Llama::Chat", text);
+    }
+}
+
 static std::tuple<juce::Result, std::vector<llama_token>> tokenize(llama_context const* context, char const* promptContent, size_t promptSize, bool specialCharacters)
 {
     auto const* vocab = llama_model_get_vocab(llama_get_model(context));
@@ -50,16 +58,7 @@ Application::Llama::Chat::Chat(std::atomic<bool> const& shouldQuit)
 : mShouldQuit(shouldQuit)
 {
     // Set log callback to suppress unnecessary output
-    llama_log_set([]([[maybe_unused]] ggml_log_level level, [[maybe_unused]] char const* text, void*)
-                  {
-#if LLAMA_DEBUG
-                      if(level >= GGML_LOG_LEVEL_ERROR)
-                      {
-                          MiscDebug("Application::Llama::Chat", text);
-                      }
-#endif
-                  },
-                  nullptr);
+    llama_log_set(llama_log_callback, nullptr);
 
     // Load dynamic backends
     ggml_backend_load_all();
@@ -76,7 +75,7 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
     static int32_t constexpr numGpuLayers = 30;
     static uint32_t constexpr contextSize = 65536;
-    static auto constexpr temperature = 0.3f;
+    static auto constexpr temperature = 0.1f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
     if(model == juce::File())
@@ -89,6 +88,8 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
         MiscDebug("Application::Llama::Chat", "The model file does not exist: " + model.getFullPathName());
         return juce::Result::fail(juce::translate("The model file does not exist: FLNAME").replace("FLNAME", model.getFullPathName()));
     }
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
 
     // Initialize the model
     llama_model_params model_params = llama_model_default_params();
@@ -140,6 +141,10 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
+
     auto const text = content.toStdString();
     auto tokenResult = tokenize(mContext.get(), text.c_str(), text.size(), false);
     if(std::get<0_z>(tokenResult).failed())
@@ -183,6 +188,10 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
+
     size_t nloaded = 0;
     auto const numCtx = llama_n_ctx(mContext.get());
     std::vector<llama_token> array(numCtx);
@@ -195,6 +204,13 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
     {
         MiscDebug("Application::Llama::Chat", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
     }
+    // The KV cache now contains the llama-cli instructions; keep the UI history empty so the
+    // prefill stays hidden from the user and future prompts only contain interactive messages.
+    mMessages.clear();
+    mMessageData.clear();
+    mFormattedMessage.clear();
+    mFormattedMessage.resize(numCtx);
+    mPrevMessageLength = 0;
     MiscDebug("Application::Llama::Chat", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
     return juce::Result::ok();
 }
@@ -207,6 +223,9 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return std::make_tuple(juce::Result::fail(juce::translate("The model is not initialized.")), juce::String{}, juce::String{});
     }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
 
     auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
     auto const addMessage = [this](Role const erole, std::string const& content)
