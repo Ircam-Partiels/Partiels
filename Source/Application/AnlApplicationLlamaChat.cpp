@@ -50,12 +50,14 @@ Application::Llama::Chat::Chat(std::atomic<bool> const& shouldQuit)
 : mShouldQuit(shouldQuit)
 {
     // Set log callback to suppress unnecessary output
-    llama_log_set([](ggml_log_level level, char const* text, void*)
+    llama_log_set([]([[maybe_unused]] ggml_log_level level, [[maybe_unused]] char const* text, void*)
                   {
+#if LLAMA_DEBUG
                       if(level >= GGML_LOG_LEVEL_ERROR)
                       {
-                          fprintf(stderr, "%s", text);
+                          MiscDebug("Application::Llama::Chat", text);
                       }
+#endif
                   },
                   nullptr);
 
@@ -309,22 +311,25 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
     }
 
     // Split the text of the response in the form <response>text</response><document>text</document> into two strings
-    auto const split = [&](const char* start, const char* end) -> std::string
+    auto const split = [&](const char* start, const char* end, bool include) -> std::string
     {
         auto startIt = response.find(start);
         if(startIt != std::string::npos)
         {
-            startIt += std::strlen(start);
-            auto const endIt = response.find(end, startIt);
+            auto const startLength = std::strlen(start);
+            auto endIt = response.find(end, startIt + startLength);
             if(endIt != std::string::npos)
             {
+                auto const endLength = std::strlen(end);
+                startIt = include ? startIt : startIt + startLength;
+                endIt = include ? endIt + endLength : endIt;
                 return response.substr(startIt, endIt - startIt);
             }
         }
         return {};
     };
-    auto const message = split("<response>", "</response>");
-    auto const document = split("<document>", "</document>");
+    auto const message = split("<response>", "</response>", false);
+    auto const document = split("<document>", "</document>", true);
     return std::make_tuple(juce::Result::ok(), message, document);
 }
 

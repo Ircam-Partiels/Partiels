@@ -107,7 +107,7 @@ Application::CoAnalyzer::SettingsPanel::~SettingsPanel()
 
 Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
 : mAccessor(accessor)
-, mSendButton(juce::ImageCache::getFromMemory(AnlIconsData::send_png, AnlIconsData::send_pngSize))
+, mSendButton(juce::ImageCache::getFromMemory(AnlIconsData::stop_png, AnlIconsData::stop_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::send_png, AnlIconsData::send_pngSize))
 {
     mHistoryEditor.setReadOnly(true);
     mHistoryEditor.setMultiLine(true);
@@ -124,20 +124,26 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     mQueryEditor.setFont(juce::Font(juce::FontOptions(14.0f)));
     mQueryEditor.onReturnKey = [this]()
     {
-        if(canSendQuery())
+        if(mQueryEditor.getText().isNotEmpty())
         {
             sendUserQuery();
         }
     };
     mQueryEditor.onTextChange = [this]()
     {
-        mSendButton.setEnabled(canSendQuery());
+        mSendButton.setEnabled(mIsInitialized.load() && (mRequestFuture.valid() || mQueryEditor.getText().isNotEmpty()));
     };
 
-    mSendButton.setTooltip(juce::translate("Send Query"));
     mSendButton.onClick = [this]()
     {
-        sendUserQuery();
+        if(mRequestFuture.valid())
+        {
+            stopUserQuery();
+        }
+        else
+        {
+            sendUserQuery();
+        }
     };
 
     mStatusLabel.setJustificationType(juce::Justification::centredLeft);
@@ -204,6 +210,7 @@ void Application::CoAnalyzer::Chat::parentHierarchyChanged()
 
 void Application::CoAnalyzer::Chat::handleAsyncUpdate()
 {
+    stopTimer();
     if(mRequestFuture.valid())
     {
         auto const result = mRequestFuture.get();
@@ -218,47 +225,47 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
             {
                 mHistory.push_back(std::make_tuple(Role::assistant, std::get<1>(result)));
             }
+            if(std::get<2>(result).isNotEmpty())
+            {
+                auto& documentAccessor = Instance::get().getDocumentAccessor();
+                auto const xml = juce::parseXML(std::get<2>(result));
+                if(xml != nullptr)
+                {
+                    MiscDebug("Application::CoAnalyzer::Chat", xml->toString());
+                    Instance::get().getDocumentDirector().startAction();
+                    for(auto* trackElement : xml->getChildWithTagNameIterator("tracks"))
+                    {
+                        if(trackElement != nullptr && trackElement->hasAttribute("identifier"))
+                        {
+                            auto const identifier = trackElement->getStringAttribute("identifier");
+                            if(Document::Tools::hasTrackAcsr(documentAccessor, identifier))
+                            {
+                                Document::Tools::getTrackAcsr(documentAccessor, identifier).fromXml(*trackElement, "tracks", NotificationType::synchronous);
+                            }
+                        }
+                    }
+                    Instance::get().getDocumentDirector().endAction(ActionState::newTransaction, juce::translate("Co-Analyzer update document"));
+                }
+            }
             updateHistory();
         }
     }
-    auto const enabled = canSendQuery();
-    mQueryEditor.setEnabled(!mRequestFuture.valid());
-    mSendButton.setEnabled(enabled);
     mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
-}
-
-bool Application::CoAnalyzer::Chat::canSendQuery() const
-{
-    if(mRequestFuture.valid())
-    {
-        return false;
-    }
-    auto const query = mQueryEditor.getText();
-    if(query.isEmpty())
-    {
-        return false;
-    }
-    return true;
+    mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
+    mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
+    mSendButton.setTooltip(juce::translate("Send Query"));
 }
 
 void Application::CoAnalyzer::Chat::initializeSystem()
 {
-    if(mRequestFuture.valid())
-    {
-        mShouldQuit.store(true);
-        cancelPendingUpdate();
-        handleAsyncUpdate();
-    }
-
+    stopUserQuery();
     mIsInitialized = false;
 
     mIsInitialized.store(false);
     mHistory.clear();
     updateHistory();
-    mQueryEditor.setEnabled(!mRequestFuture.valid());
     mSendButton.setEnabled(false);
     mStatusLabel.setText(juce::translate("Initializing..."), juce::dontSendNotification);
-    mQueryEditor.setTextToShowWhenEmpty(juce::translate("Initializing..."), juce::Colours::grey);
 
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
@@ -281,11 +288,34 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         }
                                         MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md");
                                         mChat.addContext(juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md").loadFileAsString());
+
                                         if(mShouldQuit.load())
                                         {
                                             return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
                                         }
                                     }
+                                    {
+                                        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
+                                        juce::XmlElement xml("plugins");
+                                        for(auto const& plugin : std::get<0>(plugins))
+                                        {
+                                            auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
+                                            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
+                                            if(pluginXml != nullptr)
+                                            {
+                                                XmlParser::toXml(*pluginXml, "key", plugin.first);
+                                                XmlParser::toXml(*pluginXml, "description", plugin.second);
+                                                xml.addChildElement(pluginXml.release());
+                                            }
+                                        }
+                                        mChat.addContext(xml.toString());
+                                    }
+                                    {
+                                        auto pluginXml = std::make_unique<juce::XmlElement>("webReferences");
+                                        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
+                                        mChat.addContext(pluginXml->toString());
+                                    }
+
                                     mChat.loadState({"/Users/guillot/Git/Partiels-training/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k-cache.bin"});
                                     if(mShouldQuit.load())
                                     {
@@ -296,6 +326,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                     triggerAsyncUpdate();
                                     return result;
                                 });
+    startTimer(250);
 }
 
 void Application::CoAnalyzer::Chat::sendUserQuery()
@@ -340,7 +371,8 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     }
 
     mQueryEditor.setText({}, juce::sendNotificationSync);
-    mStatusLabel.setText(juce::translate("Sending query..."), juce::dontSendNotification);
+    mStatusLabel.setText(juce::translate("Processing query"), juce::dontSendNotification);
+    mSendButton.setToggleState(false, juce::NotificationType::dontSendNotification);
 
     mHistory.push_back(std::make_tuple(Role::user, query));
     mShouldQuit.store(false);
@@ -354,8 +386,18 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     triggerAsyncUpdate();
                                     return result;
                                 });
-
+    startTimer(250);
     updateHistory();
+}
+
+void Application::CoAnalyzer::Chat::stopUserQuery()
+{
+    if(mRequestFuture.valid())
+    {
+        mShouldQuit.store(true);
+        cancelPendingUpdate();
+        handleAsyncUpdate();
+    }
 }
 
 void Application::CoAnalyzer::Chat::updateHistory()
@@ -380,6 +422,20 @@ void Application::CoAnalyzer::Chat::updateHistory()
         }
         mHistoryEditor.insertTextAtCaret(roleStr + ": " + request.trim() + "\n\n");
     }
+}
+
+void Application::CoAnalyzer::Chat::timerCallback()
+{
+    auto const text = mStatusLabel.getText();
+    // Find the number of dots at the end of the text
+    auto const index = text.indexOf(".");
+    auto const numDots = (index >= 0) ? text.length() - index : 0;
+    juce::String newText = mIsInitialized.load() ? juce::translate("Processing query") : juce::translate("Initializing");
+    for(auto i = 0; i < (numDots + 1) % 4; ++i)
+    {
+        newText += ".";
+    }
+    mStatusLabel.setText(newText, juce::dontSendNotification);
 }
 
 ANALYSE_FILE_END

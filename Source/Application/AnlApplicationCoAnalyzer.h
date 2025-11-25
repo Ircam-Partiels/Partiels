@@ -65,6 +65,7 @@ namespace Application
         class Chat
         : public juce::Component
         , private juce::AsyncUpdater
+        , private juce::Timer
         {
         public:
             Chat(Accessor& accessor);
@@ -82,9 +83,12 @@ namespace Application
             // juce::AsyncUpdater
             void handleAsyncUpdate() override;
 
-            bool canSendQuery() const;
+            // juce::Timer
+            void timerCallback() override;
+
             void initializeSystem();
             void sendUserQuery();
+            void stopUserQuery();
             void updateHistory();
 
             Accessor& mAccessor;
