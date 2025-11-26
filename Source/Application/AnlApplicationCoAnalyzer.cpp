@@ -240,7 +240,10 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
                             auto const identifier = trackElement->getStringAttribute("identifier");
                             if(Document::Tools::hasTrackAcsr(documentAccessor, identifier))
                             {
-                                Document::Tools::getTrackAcsr(documentAccessor, identifier).fromXml(*trackElement, "tracks", NotificationType::synchronous);
+                                auto& srcAcsr = Document::Tools::getTrackAcsr(documentAccessor, identifier);
+                                auto const layout = srcAcsr.getAttr<Track::AttrType::channelsLayout>();
+                                srcAcsr.fromXml(*trackElement, "tracks", NotificationType::synchronous);
+                                srcAcsr.setAttr<Track::AttrType::channelsLayout>(layout, NotificationType::synchronous);
                             }
                         }
                     }
@@ -305,7 +308,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                             if(pluginXml != nullptr)
                                             {
                                                 XmlParser::toXml(*pluginXml, "key", plugin.first);
-                                                XmlParser::toXml(*pluginXml, "description", plugin.second);
+                                                //XmlParser::toXml(*pluginXml, "description", plugin.second);
                                                 xml.addChildElement(pluginXml.release());
                                             }
                                         }
@@ -318,12 +321,15 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         mChat.addContext(pluginXml->toString());
                                     }
 
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Load state");
                                     mChat.loadState(model.withFileExtension("bin"));
                                     if(mShouldQuit.load())
                                     {
                                         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
                                     }
-                                    auto result = mChat.generate(Role::system, "Can you introduce you?");
+        
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Generate the first reponse");
+                                    auto result = mChat.generate(Role::system, "Please, introduce yourself briefly.");
                                     mIsInitialized.store(initialized.ok());
                                     triggerAsyncUpdate();
                                     return result;
