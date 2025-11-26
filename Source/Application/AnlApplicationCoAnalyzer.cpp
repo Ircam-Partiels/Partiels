@@ -211,52 +211,162 @@ void Application::CoAnalyzer::Chat::parentHierarchyChanged()
 void Application::CoAnalyzer::Chat::handleAsyncUpdate()
 {
     stopTimer();
-    if(mRequestFuture.valid())
+
+    MiscWeakAssert(mRequestFuture.valid());
+    if(!mRequestFuture.valid())
     {
-        auto const result = mRequestFuture.get();
-        if(std::get<0>(result).failed())
+        return;
+    }
+
+    auto const state = mRequestFuture.wait_for(std::chrono::milliseconds(0));
+    MiscWeakAssert(state == std::future_status::ready);
+    if(state != std::future_status::ready)
+    {
+        return;
+    }
+
+    auto const result = mRequestFuture.get();
+    if(std::get<0>(result).failed())
+    {
+        mStatusLabel.setText(juce::translate("Error: ERROR").replace("ERROR", std::get<0>(result).getErrorMessage()), juce::dontSendNotification);
+    }
+    else
+    {
+        mStatusLabel.setText(juce::translate("Please enter a query"), juce::dontSendNotification);
+        if(std::get<1>(result).isNotEmpty())
         {
-            mStatusLabel.setText(juce::translate("Error: ERROR").replace("ERROR", std::get<0>(result).getErrorMessage()), juce::dontSendNotification);
+            mHistory.push_back(std::make_tuple(Role::assistant, std::get<1>(result)));
         }
-        else
+        if(std::get<2>(result).isNotEmpty())
         {
-            mStatusLabel.setText(juce::translate("Please enter a query"), juce::dontSendNotification);
-            if(std::get<1>(result).isNotEmpty())
+            auto& documentAccessor = Instance::get().getDocumentAccessor();
+            auto const xml = juce::parseXML(std::get<2>(result));
+            if(xml != nullptr)
             {
-                mHistory.push_back(std::make_tuple(Role::assistant, std::get<1>(result)));
-            }
-            if(std::get<2>(result).isNotEmpty())
-            {
-                auto& documentAccessor = Instance::get().getDocumentAccessor();
-                auto const xml = juce::parseXML(std::get<2>(result));
-                if(xml != nullptr)
+                MiscDebug("Application::CoAnalyzer::Chat", xml->toString());
+                Instance::get().getDocumentDirector().startAction();
+                for(auto* trackElement : xml->getChildWithTagNameIterator("tracks"))
                 {
-                    MiscDebug("Application::CoAnalyzer::Chat", xml->toString());
-                    Instance::get().getDocumentDirector().startAction();
-                    for(auto* trackElement : xml->getChildWithTagNameIterator("tracks"))
+                    if(trackElement != nullptr && trackElement->hasAttribute("identifier"))
                     {
-                        if(trackElement != nullptr && trackElement->hasAttribute("identifier"))
+                        auto const identifier = trackElement->getStringAttribute("identifier");
+                        if(Document::Tools::hasTrackAcsr(documentAccessor, identifier))
                         {
-                            auto const identifier = trackElement->getStringAttribute("identifier");
-                            if(Document::Tools::hasTrackAcsr(documentAccessor, identifier))
-                            {
-                                auto& srcAcsr = Document::Tools::getTrackAcsr(documentAccessor, identifier);
-                                auto const layout = srcAcsr.getAttr<Track::AttrType::channelsLayout>();
-                                srcAcsr.fromXml(*trackElement, "tracks", NotificationType::synchronous);
-                                srcAcsr.setAttr<Track::AttrType::channelsLayout>(layout, NotificationType::synchronous);
-                            }
+                            auto& srcAcsr = Document::Tools::getTrackAcsr(documentAccessor, identifier);
+                            auto const layout = srcAcsr.getAttr<Track::AttrType::channelsLayout>();
+                            srcAcsr.fromXml(*trackElement, "tracks", NotificationType::synchronous);
+                            srcAcsr.setAttr<Track::AttrType::channelsLayout>(layout, NotificationType::synchronous);
                         }
                     }
-                    Instance::get().getDocumentDirector().endAction(ActionState::newTransaction, juce::translate("Co-Analyzer update document"));
                 }
+                Instance::get().getDocumentDirector().endAction(ActionState::newTransaction, juce::translate("Co-Analyzer update document"));
             }
-            updateHistory();
         }
+        updateHistory();
     }
     mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
     mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
     mSendButton.setTooltip(juce::translate("Send Query"));
+}
+
+Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit)
+{
+    auto const initialized = chat.initialize(model);
+    if(shouldQuit.load())
+    {
+        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+    }
+
+    MiscWeakAssert(initialized.wasOk());
+    if(initialized.failed())
+    {
+        return std::make_tuple(initialized, juce::String{}, juce::String{});
+    }
+
+    // Load the saved state of the model
+    MiscDebug("Application::CoAnalyzer::Chat", "Load state");
+    chat.loadState(model.withFileExtension("bin"));
+    if(shouldQuit.load())
+    {
+        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+    }
+
+    // Inject documentation resources as raw context (faster than addContext for large files)
+    // These files should be embedded in BinaryData or stored in application resources
+    for(auto i = 1; i <= 4; ++i)
+    {
+        MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource " + juce::String(i));
+
+        // TODO: Replace hardcoded path with embedded resource or application data directory
+        // Example: auto content = String::createStringFromData(BinaryData::Resource_1_md, BinaryData::Resource_1_mdSize);
+        auto const resourcePath = juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md");
+        if(!resourcePath.existsAsFile())
+        {
+            MiscDebug("Application::CoAnalyzer::Chat", "Warning: Resource file not found: " + resourcePath.getFullPathName());
+            continue;
+        }
+
+        auto const content = resourcePath.loadFileAsString();
+        if(content.isEmpty())
+        {
+            MiscDebug("Application::CoAnalyzer::Chat", "Warning: Resource file is empty: " + resourcePath.getFullPathName());
+            continue;
+        }
+
+        // Use injectRawContext instead of addContext - much faster for large documents
+        auto result = chat.injectRawContext(content);
+        if(result.failed())
+        {
+            MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + result.getErrorMessage());
+            return std::make_tuple(result, juce::String{}, juce::String{});
+        }
+
+        if(shouldQuit.load())
+        {
+            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+        }
+    }
+
+    // Initialize the installed plugin list as context
+    {
+        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
+        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
+        juce::XmlElement xml("plugins");
+        for(auto const& plugin : std::get<0>(plugins))
+        {
+            auto pluginXml = std::make_unique<juce::XmlElement>("installed_plugin");
+            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
+            if(pluginXml != nullptr)
+            {
+                XmlParser::toXml(*pluginXml, "key", plugin.first);
+                // XmlParser::toXml(*pluginXml, "description", plugin.second);
+                xml.addChildElement(pluginXml.release());
+            }
+        }
+        // Use injectRawContext for structured data - faster than addContext
+        chat.injectRawContext(xml.toString());
+        if(shouldQuit.load())
+        {
+            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+        }
+    }
+    // Initialize the web references of the plugins as context
+    {
+        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
+        auto pluginXml = std::make_unique<juce::XmlElement>("plugin_web_references");
+        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
+        // Use injectRawContext for structured data - faster than addContext
+        chat.injectRawContext(pluginXml->toString());
+        if(shouldQuit.load())
+        {
+            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+        }
+    }
+
+    // Generate the first response to confirm initialization
+    MiscDebug("Application::CoAnalyzer::Chat", "Generate the first reponse");
+    return chat.generate(Role::system, "Please, introduce yourself briefly.");
 }
 
 void Application::CoAnalyzer::Chat::initializeSystem()
@@ -275,66 +385,8 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>()]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
-                                    auto const initialized = mChat.initialize(model);
-                                    if(mShouldQuit.load())
-                                    {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                    }
-
-                                    MiscWeakAssert(initialized.ok());
-
-                                    //MiscDebug("Application::CoAnalyzer::Chat", "Load state");
-                                    //mChat.loadState(model.withFileExtension("bin"));
-                                    if(mShouldQuit.load())
-                                    {
-                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                    }
-//                                    for(auto i = 1; i <= 1; ++i)
-//                                    {
-//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from Resource " + juce::String(i));
-//                                        mChat.addContext(juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md").loadFileAsString());
-//                                        if(mShouldQuit.load())
-//                                        {
-//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-//                                        }
-//                                    }
-//                                    if(false)
-//                                    {
-//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
-//                                        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
-//                                        juce::XmlElement xml("plugins");
-//                                        for(auto const& plugin : std::get<0>(plugins))
-//                                        {
-//                                            auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
-//                                            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
-//                                            if(pluginXml != nullptr)
-//                                            {
-//                                                XmlParser::toXml(*pluginXml, "key", plugin.first);
-//                                                // XmlParser::toXml(*pluginXml, "description", plugin.second);
-//                                                xml.addChildElement(pluginXml.release());
-//                                            }
-//                                        }
-//                                        mChat.addContext(xml.toString());
-//                                        if(mShouldQuit.load())
-//                                        {
-//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-//                                        }
-//                                    }
-//                                    if(false)
-//                                    {
-//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
-//                                        auto pluginXml = std::make_unique<juce::XmlElement>("webReferences");
-//                                        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
-//                                        mChat.addContext(pluginXml->toString());
-//                                        if(mShouldQuit.load())
-//                                        {
-//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-//                                        }
-//                                    }
-
-                                    MiscDebug("Application::CoAnalyzer::Chat", "Generate the first reponse");
-                                    auto result = mChat.generate(Role::system, "Please, introduce yourself briefly.");
-                                    mIsInitialized.store(initialized.ok());
+                                    auto result = performSystemInitialization(mChat, model, mShouldQuit);
+                                    mIsInitialized.store(std::get<0_z>(result).wasOk());
                                     triggerAsyncUpdate();
                                     return result;
                                 });
@@ -394,7 +446,13 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
                                     auto const data = "Here is the content of the current document: ```xml" + xmld->toString() + "```";
-                                    mChat.addContext(data);
+                                    // Use injectRawContext for large document XML - faster than addContext
+                                    auto contextResult = mChat.injectRawContext(data);
+                                    if(contextResult.failed())
+                                    {
+                                        triggerAsyncUpdate();
+                                        return std::make_tuple(std::move(contextResult), juce::String{}, juce::String{});
+                                    }
                                     auto result = mChat.generate(Role::user, query);
                                     triggerAsyncUpdate();
                                     return result;

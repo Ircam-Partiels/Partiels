@@ -26,6 +26,7 @@ namespace Application
 
             juce::Result initialize(juce::File model);
             juce::Result addContext(juce::String const& content);
+            juce::Result injectRawContext(juce::String const& content);
             juce::Result loadState(juce::File state);
             std::tuple<juce::Result, juce::String, juce::String> generate(Role const role, juce::String const& prompt);
 

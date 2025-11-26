@@ -182,7 +182,7 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
     }
 
     MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
-    
+
     // remove previous messages to obtain the prompt to generate the response
     MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
     std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength), std::next(mFormattedMessage.cbegin(), newLength));
@@ -219,7 +219,7 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
         }
         position += size;
     }
-    
+
     mPrevMessageLength = newLength;
     return juce::Result::ok();
 }
@@ -248,17 +248,47 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
         MiscDebug("Application::Llama::Chat", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
     }
     MiscDebug("Application::Llama::Chat", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
-    
-    // Restore the loaded tokens
-    auto position = 0_z;
-    while(position < nloaded)
+    return juce::Result::ok();
+}
+
+juce::Result Application::Llama::Chat::injectRawContext(juce::String const& content)
+{
+    if(mContext == nullptr || mSampler == nullptr)
     {
-        auto const size = std::min(static_cast<size_t>(numCtx), nloaded - position);
-        auto batch = llama_batch_get_one(array.data() + position, static_cast<int32_t>(size));
+        MiscDebug("Application::Llama::Chat", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
+    
+    // Tokenize the raw content WITHOUT chat template formatting
+    // This is much faster for large documents that don't need a response
+    auto const text = content.toStdString();
+    auto tokenResult = tokenize(mContext.get(), text.c_str(), text.size(), false);
+    if(std::get<0_z>(tokenResult).failed())
+    {
+        return std::get<0_z>(tokenResult);
+    }
+    
+    // Decode tokens in batches to populate KV cache
+    auto const tokenData = std::get<1_z>(tokenResult).data();
+    auto const tokenSize = std::get<1_z>(tokenResult).size();
+    auto const numCtx = llama_n_ctx(mContext.get());
+    auto position = 0_z;
+    while(position < tokenSize)
+    {
+        if(mShouldQuit.load())
+        {
+            return juce::Result::fail(juce::translate("Operation aborted."));
+        }
+        
+        auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
+        auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
 #if JUCE_DEBUG
         auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
         for(int i = 0; i < batch.n_tokens; i++)
-        {    
+        {
             MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
             if(batch.token[i] < 0 || batch.token[i] > vocabSize)
             {
@@ -274,8 +304,10 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
         position += size;
     }
     
+    MiscDebug("Application::Llama::Chat", juce::String("Injected ") + juce::String(tokenSize) + juce::String(" tokens of raw context"));
     return juce::Result::ok();
 }
+
 
 std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::generate(Role const role, juce::String const& userMessage)
 {

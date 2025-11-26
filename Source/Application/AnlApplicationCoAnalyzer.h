@@ -86,6 +86,9 @@ namespace Application
             // juce::Timer
             void timerCallback() override;
 
+            using Results = std::tuple<juce::Result, juce::String, juce::String>;
+            static Results performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit);
+
             void initializeSystem();
             void sendUserQuery();
             void stopUserQuery();
@@ -103,7 +106,7 @@ namespace Application
             ColouredPanel mSeparator2;
             juce::Label mStatusLabel;
             std::vector<std::tuple<Role, juce::String>> mHistory;
-            std::future<std::tuple<juce::Result, juce::String, juce::String>> mRequestFuture;
+            std::future<Results> mRequestFuture;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)
         };
