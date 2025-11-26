@@ -282,52 +282,56 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                     }
 
                                     MiscWeakAssert(initialized.ok());
-                                    for(auto i = 1; i <= 4; ++i)
-                                    {
-                                        // Load /Users/guillot/Git/Partiels-training/data/Resource_i.md
-                                        if(mShouldQuit.load())
-                                        {
-                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                        }
-                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from /Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md");
-                                        mChat.addContext(juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md").loadFileAsString());
 
-                                        if(mShouldQuit.load())
-                                        {
-                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-                                        }
-                                    }
-                                    {
-                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
-                                        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
-                                        juce::XmlElement xml("plugins");
-                                        for(auto const& plugin : std::get<0>(plugins))
-                                        {
-                                            auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
-                                            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
-                                            if(pluginXml != nullptr)
-                                            {
-                                                XmlParser::toXml(*pluginXml, "key", plugin.first);
-                                                //XmlParser::toXml(*pluginXml, "description", plugin.second);
-                                                xml.addChildElement(pluginXml.release());
-                                            }
-                                        }
-                                        mChat.addContext(xml.toString());
-                                    }
-                                    {
-                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
-                                        auto pluginXml = std::make_unique<juce::XmlElement>("webReferences");
-                                        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
-                                        mChat.addContext(pluginXml->toString());
-                                    }
-
-                                    MiscDebug("Application::CoAnalyzer::Chat", "Load state");
-                                    mChat.loadState(model.withFileExtension("bin"));
+                                    //MiscDebug("Application::CoAnalyzer::Chat", "Load state");
+                                    //mChat.loadState(model.withFileExtension("bin"));
                                     if(mShouldQuit.load())
                                     {
                                         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
                                     }
-        
+//                                    for(auto i = 1; i <= 1; ++i)
+//                                    {
+//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from Resource " + juce::String(i));
+//                                        mChat.addContext(juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md").loadFileAsString());
+//                                        if(mShouldQuit.load())
+//                                        {
+//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+//                                        }
+//                                    }
+//                                    if(false)
+//                                    {
+//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
+//                                        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
+//                                        juce::XmlElement xml("plugins");
+//                                        for(auto const& plugin : std::get<0>(plugins))
+//                                        {
+//                                            auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
+//                                            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
+//                                            if(pluginXml != nullptr)
+//                                            {
+//                                                XmlParser::toXml(*pluginXml, "key", plugin.first);
+//                                                // XmlParser::toXml(*pluginXml, "description", plugin.second);
+//                                                xml.addChildElement(pluginXml.release());
+//                                            }
+//                                        }
+//                                        mChat.addContext(xml.toString());
+//                                        if(mShouldQuit.load())
+//                                        {
+//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+//                                        }
+//                                    }
+//                                    if(false)
+//                                    {
+//                                        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
+//                                        auto pluginXml = std::make_unique<juce::XmlElement>("webReferences");
+//                                        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
+//                                        mChat.addContext(pluginXml->toString());
+//                                        if(mShouldQuit.load())
+//                                        {
+//                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+//                                        }
+//                                    }
+
                                     MiscDebug("Application::CoAnalyzer::Chat", "Generate the first reponse");
                                     auto result = mChat.generate(Role::system, "Please, introduce yourself briefly.");
                                     mIsInitialized.store(initialized.ok());

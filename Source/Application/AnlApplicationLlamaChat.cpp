@@ -74,7 +74,7 @@ Application::Llama::Chat::~Chat()
 juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
     static int32_t constexpr numGpuLayers = 30;
-    static uint32_t constexpr contextSize = 65536;
+    static uint32_t constexpr contextSize = 65536 * 2;
     static auto constexpr temperature = 0.1f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
@@ -134,6 +134,35 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
     return juce::Result::ok();
 }
 
+long Application::Llama::Chat::addMessage(Role const role, std::string const& content)
+{
+    static const char* const chatRoles[] = {"assistant", "system", "user"};
+    mMessageData.push_back(content);
+    mMessages.push_back({chatRoles[magic_enum::enum_index(role).value_or(0)], mMessageData.back().c_str()});
+
+    auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
+    auto const startAssistant = role == Role::user;
+    auto const applyChatTemplate = [&, this]()
+    {
+        auto const* messagePtr = mMessages.data();
+        auto const messageSize = mMessages.size();
+        auto* formattedPtr = startAssistant ? mFormattedMessage.data() : nullptr;
+        auto const formattedSize = startAssistant ? static_cast<int32_t>(mFormattedMessage.size()) : 0;
+        return static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, formattedPtr, formattedSize));
+    };
+    auto newLength = applyChatTemplate();
+    if(newLength > static_cast<long>(mFormattedMessage.size()))
+    {
+        mFormattedMessage.resize(static_cast<size_t>(newLength));
+        newLength = applyChatTemplate();
+    }
+    if(newLength < 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
+    }
+    return newLength;
+}
+
 juce::Result Application::Llama::Chat::addContext(juce::String const& content)
 {
     if(mContext == nullptr || mSampler == nullptr)
@@ -145,8 +174,20 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
     // Set log callback to suppress unnecessary output
     llama_log_set(llama_log_callback, nullptr);
 
-    auto const text = content.toStdString();
-    auto tokenResult = tokenize(mContext.get(), text.c_str(), text.size(), false);
+    auto const newLength = addMessage(Role::system, content.toStdString());
+    MiscWeakAssert(newLength >= 0);
+    if(newLength < 0)
+    {
+        return juce::Result::fail(juce::translate("Failed to apply the chat template."));
+    }
+
+    MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
+    
+    // remove previous messages to obtain the prompt to generate the response
+    MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
+    std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength), std::next(mFormattedMessage.cbegin(), newLength));
+
+    auto tokenResult = tokenize(mContext.get(), prompt.c_str(), prompt.size(), false);
     if(std::get<0_z>(tokenResult).failed())
     {
         return std::get<0_z>(tokenResult);
@@ -178,6 +219,8 @@ juce::Result Application::Llama::Chat::addContext(juce::String const& content)
         }
         position += size;
     }
+    
+    mPrevMessageLength = newLength;
     return juce::Result::ok();
 }
 
@@ -204,14 +247,33 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
     {
         MiscDebug("Application::Llama::Chat", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
     }
-    // The KV cache now contains the llama-cli instructions; keep the UI history empty so the
-    // prefill stays hidden from the user and future prompts only contain interactive messages.
-    mMessages.clear();
-    mMessageData.clear();
-    mFormattedMessage.clear();
-    mFormattedMessage.resize(numCtx);
-    mPrevMessageLength = 0;
     MiscDebug("Application::Llama::Chat", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
+    
+    // Restore the loaded tokens
+    auto position = 0_z;
+    while(position < nloaded)
+    {
+        auto const size = std::min(static_cast<size_t>(numCtx), nloaded - position);
+        auto batch = llama_batch_get_one(array.data() + position, static_cast<int32_t>(size));
+#if JUCE_DEBUG
+        auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
+        for(int i = 0; i < batch.n_tokens; i++)
+        {    
+            MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
+            if(batch.token[i] < 0 || batch.token[i] > vocabSize)
+            {
+                MiscDebug("Application::Llama::Chat", "Invalid token id: " + juce::String(batch.token[i]));
+            }
+        }
+#endif
+        auto const result = decode(mContext.get(), batch);
+        if(result.failed())
+        {
+            return result;
+        }
+        position += size;
+    }
+    
     return juce::Result::ok();
 }
 
@@ -227,35 +289,13 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
     // Set log callback to suppress unnecessary output
     llama_log_set(llama_log_callback, nullptr);
 
-    auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
-    auto const addMessage = [this](Role const erole, std::string const& content)
-    {
-        static const char* const chatRoles[] = {"assistant", "system", "user"};
-        mMessageData.push_back(content);
-        mMessages.push_back({chatRoles[magic_enum::enum_index(erole).value_or(0)], mMessageData.back().c_str()});
-        MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
-    };
-    auto const applyChatTemplate = [&, this](bool add)
-    {
-        auto const* messagePtr = mMessages.data();
-        auto const messageSize = mMessages.size();
-        auto* formattedPtr = add ? mFormattedMessage.data() : nullptr;
-        auto const formattedSize = add ? static_cast<int32_t>(mFormattedMessage.size()) : 0;
-        return static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, add, formattedPtr, formattedSize));
-    };
-
-    addMessage(role, userMessage.toStdString());
-    auto newLength = applyChatTemplate(true);
-    if(newLength > static_cast<long>(mFormattedMessage.size()))
-    {
-        mFormattedMessage.resize(static_cast<size_t>(newLength));
-        newLength = applyChatTemplate(true);
-    }
+    auto newLength = addMessage(role, userMessage.toStdString());
+    MiscWeakAssert(newLength >= 0);
     if(newLength < 0)
     {
-        MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
         return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), juce::String{}, juce::String{});
     }
+    MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
 
     // remove previous messages to obtain the prompt to generate the response
     MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
@@ -320,15 +360,14 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
         batch = llama_batch_get_one(&new_token_id, 1);
     }
 
-    addMessage(Role::assistant, response);
-    mPrevMessageLength = applyChatTemplate(false);
+    mPrevMessageLength = addMessage(Role::assistant, response);
     MiscWeakAssert(mPrevMessageLength >= 0);
     if(mPrevMessageLength < 0)
     {
-        MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
         return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), juce::String{}, juce::String{});
     }
 
+    MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
     // Split the text of the response in the form <response>text</response><document>text</document> into two strings
     auto const split = [&](const char* start, const char* end, bool include) -> std::string
     {

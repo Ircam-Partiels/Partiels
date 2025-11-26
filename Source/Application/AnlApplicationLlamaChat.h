@@ -30,6 +30,8 @@ namespace Application
             std::tuple<juce::Result, juce::String, juce::String> generate(Role const role, juce::String const& prompt);
 
         private:
+            long addMessage(Role const role, std::string const& content);
+
             using ModelPtr = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
             using ContextPtr = std::unique_ptr<llama_context, decltype(&llama_free)>;
             using SamplerPtr = std::unique_ptr<llama_sampler, decltype(&llama_sampler_free)>;
