@@ -1,7 +1,7 @@
 #include "AnlApplicationCoAnalyzer.h"
-#include "AnlApplicationInstance.h"
 #include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
+#include "AnlApplicationInstance.h"
 #include <AnlIconsData.h>
 #include <AnlResourceData.h>
 
@@ -293,7 +293,7 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
     {
         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
     }
-    
+
     // Inject documentation resources as raw context (faster than addContext for large files)
     for(auto resource : context)
     {
@@ -328,7 +328,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
 
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
-    
+
     auto installedPluginList = []()
     {
         auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
@@ -353,7 +353,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
         XmlParser::toXml(xml, "webPlugins", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
         return xml.toString();
     }();
-    
+
     std::vector<juce::String> context;
     JUCE_COMPILER_WARNING("Replace with data embedded in BinaryData or application resources")
     context.push_back(juce::File("/Users/guillot/Git/Partiels/README.md").loadFileAsString());
@@ -361,7 +361,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     context.push_back(juce::File("/Users/guillot/Git/Partiels/Features.ptldoc").loadFileAsString());
     context.push_back(std::move(installedPluginList));
     context.push_back(std::move(webPluginList));
-    
+
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>(), ctxt = std::move(context)]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");

@@ -26,6 +26,7 @@ namespace Application
 
             juce::Result initialize(juce::File model);
             juce::Result loadState(juce::File state);
+            juce::Result saveState(juce::File state);
             juce::Result injectContext(juce::String const& content);
             std::tuple<juce::Result, juce::String, juce::String> generate(Role const role, juce::String const& prompt);
 

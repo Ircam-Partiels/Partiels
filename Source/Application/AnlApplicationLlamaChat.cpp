@@ -137,8 +137,21 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
 long Application::Llama::Chat::addMessage(Role const role, std::string const& content)
 {
     static const char* const chatRoles[] = {"assistant", "system", "user"};
+    auto const roleIndex = [&]() -> size_t
+    {
+        switch(role)
+        {
+            case Role::assistant:
+                return 0;
+            case Role::system:
+                return 1;
+            case Role::user:
+                return 2;
+        }
+        return 0;
+    }();
     mMessageData.push_back(content);
-    mMessages.push_back({chatRoles[magic_enum::enum_index(role).value_or(0)], mMessageData.back().c_str()});
+    mMessages.push_back({chatRoles[roleIndex], mMessageData.back().c_str()});
 
     auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
     auto const startAssistant = role == Role::user;
@@ -170,7 +183,7 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
-    
+
     if(!state.existsAsFile())
     {
         return juce::Result::fail(juce::translate("The state file does not exist: FLNAME").replace("FLNAME", state.getFullPathName()));
@@ -195,6 +208,46 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
     return juce::Result::ok();
 }
 
+juce::Result Application::Llama::Chat::saveState(juce::File state)
+{
+    if(mContext == nullptr || mSampler == nullptr)
+    {
+        MiscDebug("Application::Llama::Chat", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+
+    if(state == juce::File())
+    {
+        return juce::Result::fail(juce::translate("The state file is not set."));
+    }
+
+    // Ensure directory exists
+    auto const parentDir = state.getParentDirectory();
+    if(!parentDir.exists())
+    {
+        if(!parentDir.createDirectory())
+        {
+            MiscDebug("Application::Llama::Chat", "Failed to create directory: " + parentDir.getFullPathName());
+            return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", parentDir.getFullPathName()));
+        }
+    }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
+
+    // Save KV cache state. We don't persist prompt tokens here (nullptr, 0) since
+    // the KV cache is sufficient for restoring the model state.
+    bool const ok = llama_state_save_file(mContext.get(), state.getFullPathName().toRawUTF8(), nullptr, 0);
+    if(!ok)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to save state to file: " + state.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", state.getFullPathName()));
+    }
+
+    MiscDebug("Application::Llama::Chat", juce::String("Saved KV cache to state file: ") + state.getFullPathName());
+    return juce::Result::ok();
+}
+
 juce::Result Application::Llama::Chat::injectContext(juce::String const& content)
 {
     if(mContext == nullptr || mSampler == nullptr)
@@ -202,15 +255,15 @@ juce::Result Application::Llama::Chat::injectContext(juce::String const& content
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
-    
+
     if(content.isEmpty())
     {
         return juce::Result::fail(juce::translate("The context content is empty."));
     }
-    
+
     // Set log callback to suppress unnecessary output
     llama_log_set(llama_log_callback, nullptr);
-    
+
     // Tokenize the raw content WITHOUT chat template formatting
     // This is much faster for large documents that don't need a response
     auto const text = content.toStdString();
@@ -219,7 +272,7 @@ juce::Result Application::Llama::Chat::injectContext(juce::String const& content
     {
         return std::get<0_z>(tokenResult);
     }
-    
+
     // Decode tokens in batches to populate KV cache
     auto const tokenData = std::get<1_z>(tokenResult).data();
     auto const tokenSize = std::get<1_z>(tokenResult).size();
@@ -231,7 +284,7 @@ juce::Result Application::Llama::Chat::injectContext(juce::String const& content
         {
             return juce::Result::fail(juce::translate("Operation aborted."));
         }
-        
+
         auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
         auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
 #if JUCE_DEBUG
@@ -252,7 +305,7 @@ juce::Result Application::Llama::Chat::injectContext(juce::String const& content
         }
         position += size;
     }
-    
+
     MiscDebug("Application::Llama::Chat", juce::String("Injected ") + juce::String(tokenSize) + juce::String(" tokens of raw context"));
     return juce::Result::ok();
 }
