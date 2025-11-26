@@ -176,7 +176,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                     if(numChannels.has_value())
                     {
                         auto channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
-                        channelsLayout.resize(*numChannels, true);
+                        channelsLayout.resize(numChannels.value(), true);
                         mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
                     }
                 }
