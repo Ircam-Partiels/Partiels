@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document MiscModelVersion="131840" viewport_x="0" viewport_y="0" path="/Users/guillot/Desktop/Features.ptldoc"
+<document MiscModelVersion="131840" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/Features.ptldoc"
           grid="1" autoresize="1" samplerate="44100.0" channels="2" description="">
   <reader>
     <value file="/Users/guillot/Git/Partiels/BinaryData/Tests/Sound.wav"
@@ -18,7 +18,7 @@
     <grid MiscModelVersion="131840" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport MiscModelVersion="131840" startPlayhead="2.483956118511518" looping="0"
+  <transport MiscModelVersion="131840" startPlayhead="2.721143763" looping="0"
              loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0" autoScroll="1"
              gain="1.0" magnetize="1"/>
   <groups MiscModelVersion="131840" identifier="2c15a17d1fae45e8a18a524f934532cf"
@@ -62,12 +62,10 @@
     <key identifier="partiels-vamp-plugins:partielswaveform" feature="peaks"/>
     <state blockSize="1024" stepSize="0" windowType="3"/>
     <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
-      <colours map="7" background="0" foreground="ff007f93" duration="660c65ff"
-               text="0" shadow="ff000000"/>
+      <colours map="7" background="0" foreground="ff0000ff" duration="660c65ff"
+               text="ff000000" shadow="ff000000"/>
       <labelLayout position="12.0" justification="0"/>
     </graphicsSettings>
-    <channelsLayout value="1"/>
-    <channelsLayout value="1"/>
     <valueZoom MiscModelVersion="131840" globalRange_start="-1.0" globalRange_end="1.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="-1.0"
                visibleRange_end="1.0">

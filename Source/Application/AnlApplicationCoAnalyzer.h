@@ -87,7 +87,7 @@ namespace Application
             void timerCallback() override;
 
             using Results = std::tuple<juce::Result, juce::String, juce::String>;
-            static Results performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit);
+            static Results performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::vector<juce::String> const& context, std::atomic<bool> const& shouldQuit);
 
             void initializeSystem();
             void sendUserQuery();

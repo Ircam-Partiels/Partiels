@@ -270,7 +270,7 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
     mSendButton.setTooltip(juce::translate("Send Query"));
 }
 
-Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit)
+Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::vector<juce::String> const& context, std::atomic<bool> const& shouldQuit)
 {
     auto const initialized = chat.initialize(model);
     if(shouldQuit.load())
@@ -291,73 +291,17 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
     {
         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
     }
-
+    
     // Inject documentation resources as raw context (faster than addContext for large files)
-    // These files should be embedded in BinaryData or stored in application resources
-    for(auto i = 1; i <= 4; ++i)
+    for(auto resource : context)
     {
-        MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource " + juce::String(i));
-
-        // TODO: Replace hardcoded path with embedded resource or application data directory
-        // Example: auto content = String::createStringFromData(BinaryData::Resource_1_md, BinaryData::Resource_1_mdSize);
-        auto const resourcePath = juce::File("/Users/guillot/Git/Partiels-training/data/Resource_" + juce::String(i) + ".md");
-        if(!resourcePath.existsAsFile())
-        {
-            MiscDebug("Application::CoAnalyzer::Chat", "Warning: Resource file not found: " + resourcePath.getFullPathName());
-            continue;
-        }
-
-        auto const content = resourcePath.loadFileAsString();
-        if(content.isEmpty())
-        {
-            MiscDebug("Application::CoAnalyzer::Chat", "Warning: Resource file is empty: " + resourcePath.getFullPathName());
-            continue;
-        }
-
-        // Use injectRawContext instead of addContext - much faster for large documents
-        auto result = chat.injectRawContext(content);
+        MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource...");
+        auto result = chat.injectContext(resource);
         if(result.failed())
         {
             MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + result.getErrorMessage());
             return std::make_tuple(result, juce::String{}, juce::String{});
         }
-
-        if(shouldQuit.load())
-        {
-            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-        }
-    }
-
-    // Initialize the installed plugin list as context
-    {
-        MiscDebug("Application::CoAnalyzer::Chat", "Load context from plugin list");
-        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
-        juce::XmlElement xml("plugins");
-        for(auto const& plugin : std::get<0>(plugins))
-        {
-            auto pluginXml = std::make_unique<juce::XmlElement>("installed_plugin");
-            MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
-            if(pluginXml != nullptr)
-            {
-                XmlParser::toXml(*pluginXml, "key", plugin.first);
-                // XmlParser::toXml(*pluginXml, "description", plugin.second);
-                xml.addChildElement(pluginXml.release());
-            }
-        }
-        // Use injectRawContext for structured data - faster than addContext
-        chat.injectRawContext(xml.toString());
-        if(shouldQuit.load())
-        {
-            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-        }
-    }
-    // Initialize the web references of the plugins as context
-    {
-        MiscDebug("Application::CoAnalyzer::Chat", "Load context from web references");
-        auto pluginXml = std::make_unique<juce::XmlElement>("plugin_web_references");
-        XmlParser::toXml(*pluginXml.get(), "webReferences", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
-        // Use injectRawContext for structured data - faster than addContext
-        chat.injectRawContext(pluginXml->toString());
         if(shouldQuit.load())
         {
             return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
@@ -382,10 +326,44 @@ void Application::CoAnalyzer::Chat::initializeSystem()
 
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
-    mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>()]()
+    
+    auto installedPluginList = []()
+    {
+        auto const plugins = Instance::get().getPluginListScanner().getPlugins(48000.0);
+        juce::XmlElement xml("installedPlugins");
+        for(auto const& plugin : std::get<0>(plugins))
+        {
+            auto plugXml = std::make_unique<juce::XmlElement>("plugin");
+            MiscWeakAssert(plugXml != nullptr && "Cannot allocate plugin XML element!");
+            if(plugXml != nullptr)
+            {
+                XmlParser::toXml(*plugXml, "key", plugin.first);
+                JUCE_COMPILER_WARNING("Replace with proper serialization of PluginDescription")
+                // XmlParser::toXml(*pluginXml, "description", plugin.second);
+                xml.addChildElement(plugXml.release());
+            }
+        }
+        return xml.toString();
+    }();
+    auto webPluginList = []()
+    {
+        juce::XmlElement xml("webPlugins");
+        XmlParser::toXml(xml, "webPlugins", Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::webReferences>());
+        return xml.toString();
+    }();
+    
+    std::vector<juce::String> context;
+    JUCE_COMPILER_WARNING("Replace with data embedded in BinaryData or application resources")
+    context.push_back(juce::File("/Users/guillot/Git/Partiels/README.md").loadFileAsString());
+    context.push_back(juce::File("/Users/guillot/Git/Partiels/build/Partiels-Manual.md").loadFileAsString());
+    context.push_back(juce::File("/Users/guillot/Git/Partiels/Features.ptldoc").loadFileAsString());
+    context.push_back(std::move(installedPluginList));
+    context.push_back(std::move(webPluginList));
+    
+    mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>(), ctxt = std::move(context)]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
-                                    auto result = performSystemInitialization(mChat, model, mShouldQuit);
+                                    auto result = performSystemInitialization(mChat, model, ctxt, mShouldQuit);
                                     mIsInitialized.store(std::get<0_z>(result).wasOk());
                                     triggerAsyncUpdate();
                                     return result;
@@ -447,7 +425,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
                                     auto const data = "Here is the content of the current document: ```xml" + xmld->toString() + "```";
                                     // Use injectRawContext for large document XML - faster than addContext
-                                    auto contextResult = mChat.injectRawContext(data);
+                                    auto contextResult = mChat.injectContext(data);
                                     if(contextResult.failed())
                                     {
                                         triggerAsyncUpdate();

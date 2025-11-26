@@ -74,8 +74,8 @@ Application::Llama::Chat::~Chat()
 juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
     static int32_t constexpr numGpuLayers = 30;
-    static uint32_t constexpr contextSize = 65536 * 2;
-    static auto constexpr temperature = 0.1f;
+    static uint32_t constexpr contextSize = 65536;
+    static auto constexpr temperature = 0.2f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
     if(model == juce::File())
@@ -163,73 +163,17 @@ long Application::Llama::Chat::addMessage(Role const role, std::string const& co
     return newLength;
 }
 
-juce::Result Application::Llama::Chat::addContext(juce::String const& content)
-{
-    if(mContext == nullptr || mSampler == nullptr)
-    {
-        MiscDebug("Application::Llama::Chat", "Not initialized");
-        return juce::Result::fail(juce::translate("The model is not initialized."));
-    }
-
-    // Set log callback to suppress unnecessary output
-    llama_log_set(llama_log_callback, nullptr);
-
-    auto const newLength = addMessage(Role::system, content.toStdString());
-    MiscWeakAssert(newLength >= 0);
-    if(newLength < 0)
-    {
-        return juce::Result::fail(juce::translate("Failed to apply the chat template."));
-    }
-
-    MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
-
-    // remove previous messages to obtain the prompt to generate the response
-    MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
-    std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength), std::next(mFormattedMessage.cbegin(), newLength));
-
-    auto tokenResult = tokenize(mContext.get(), prompt.c_str(), prompt.size(), false);
-    if(std::get<0_z>(tokenResult).failed())
-    {
-        return std::get<0_z>(tokenResult);
-    }
-
-    auto const tokenData = std::get<1_z>(tokenResult).data();
-    auto const tokenSize = std::get<1_z>(tokenResult).size();
-    auto const numCtx = llama_n_ctx(mContext.get());
-    auto position = 0_z;
-    while(position < tokenSize)
-    {
-        auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
-        auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
-#if JUCE_DEBUG
-        auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
-        for(int i = 0; i < batch.n_tokens; i++)
-        {
-            MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
-            if(batch.token[i] < 0 || batch.token[i] > vocabSize)
-            {
-                MiscDebug("Application::Llama::Chat", "Invalid token id: " + juce::String(batch.token[i]));
-            }
-        }
-#endif
-        auto const result = decode(mContext.get(), batch);
-        if(result.failed())
-        {
-            return result;
-        }
-        position += size;
-    }
-
-    mPrevMessageLength = newLength;
-    return juce::Result::ok();
-}
-
 juce::Result Application::Llama::Chat::loadState(juce::File state)
 {
     if(mContext == nullptr || mSampler == nullptr)
     {
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    
+    if(!state.existsAsFile())
+    {
+        return juce::Result::fail(juce::translate("The state file does not exist: FLNAME").replace("FLNAME", state.getFullPathName()));
     }
 
     // Set log callback to suppress unnecessary output
@@ -251,12 +195,17 @@ juce::Result Application::Llama::Chat::loadState(juce::File state)
     return juce::Result::ok();
 }
 
-juce::Result Application::Llama::Chat::injectRawContext(juce::String const& content)
+juce::Result Application::Llama::Chat::injectContext(juce::String const& content)
 {
     if(mContext == nullptr || mSampler == nullptr)
     {
         MiscDebug("Application::Llama::Chat", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    
+    if(content.isEmpty())
+    {
+        return juce::Result::fail(juce::translate("The context content is empty."));
     }
     
     // Set log callback to suppress unnecessary output
@@ -307,7 +256,6 @@ juce::Result Application::Llama::Chat::injectRawContext(juce::String const& cont
     MiscDebug("Application::Llama::Chat", juce::String("Injected ") + juce::String(tokenSize) + juce::String(" tokens of raw context"));
     return juce::Result::ok();
 }
-
 
 std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::generate(Role const role, juce::String const& userMessage)
 {
