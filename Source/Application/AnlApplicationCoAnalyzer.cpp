@@ -1,5 +1,7 @@
 #include "AnlApplicationCoAnalyzer.h"
 #include "AnlApplicationInstance.h"
+#include "../Document/AnlDocumentSelection.h"
+#include "../Document/AnlDocumentTools.h"
 #include <AnlIconsData.h>
 #include <AnlResourceData.h>
 
@@ -404,11 +406,26 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     };
 
     // Get current document XML
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto xml = documentAccessor.toXml("Document");
+    auto xml = []()
+    {
+        auto& documentAcsr = Instance::get().getDocumentAccessor();
+        JUCE_COMPILER_WARNING("Optimize XML export for large documents - stream to file or use a more efficient format?")
+        auto const items = Document::Selection::getItems(documentAcsr);
+        if(!std::get<0_z>(items).empty())
+        {
+            auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *std::get<0_z>(items).cbegin());
+            return groupAcsr.toXml("groups");
+        }
+        if(!std::get<1_z>(items).empty())
+        {
+            auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
+            return trackAcsr.toXml("tracks");
+        }
+        return documentAcsr.toXml("Document");
+    }();
     if(xml == nullptr)
     {
-        mStatusLabel.setText(juce::translate("Error: Could not export document"), juce::dontSendNotification);
+        mStatusLabel.setText(juce::translate("Error: Could not export selection as XML"), juce::dontSendNotification);
         return;
     }
 
