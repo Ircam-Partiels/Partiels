@@ -177,19 +177,16 @@ long Application::Llama::Chat::addMessage(Role const role, std::string const& co
         return newLength;
     }
     
-    // Only format into buffer if we're starting an assistant response (user message)
-    if(startAssistant)
+    // Resize buffer if needed and format the messages
+    if(newLength > static_cast<long>(mFormattedMessage.size()))
     {
-        if(newLength > static_cast<long>(mFormattedMessage.size()))
-        {
-            mFormattedMessage.resize(static_cast<size_t>(newLength));
-        }
-        newLength = static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, mFormattedMessage.data(), static_cast<int32_t>(mFormattedMessage.size())));
-        if(newLength < 0)
-        {
-            MiscDebug("Application::Llama::Chat", "Failed to format the chat template");
-            return newLength;
-        }
+        mFormattedMessage.resize(static_cast<size_t>(newLength));
+    }
+    newLength = static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, mFormattedMessage.data(), static_cast<int32_t>(mFormattedMessage.size())));
+    if(newLength < 0)
+    {
+        MiscDebug("Application::Llama::Chat", "Failed to format the chat template");
+        return newLength;
     }
     
     return newLength;

@@ -31,13 +31,11 @@ The foreground colour of the waveform track has been changed to green.
 </response>
 
 <document>
-<root>
-  <tracks identifier="4dc11944062f4eafbeb5717a8fca099b">
-    <graphicsSettings>
-      <colours foreground="ff00ff00"></colours>
-    </graphicsSettings>
-  </tracks>
-</root>
+    <tracks identifier="4dc11944062f4eafbeb5717a8fca099b">
+      <graphicsSettings>
+        <colours foreground="ff00ff00"></colours>
+      </graphicsSettings>
+    </tracks>
 </document>
 
 ### IMPORTANT FORMATTING RULES
@@ -46,7 +44,7 @@ The foreground colour of the waveform track has been changed to green.
 
 2. The XML must be **well-formed**. When elements of the document are modified, you can output only those elements that have been modified, added or deleted, but you must preserve the hierarchy of the elements and the identifiers of the tracks and groups, otherwise it will be impossible to reconstruct the document. 
 
-For example, if the foreground colour of a track is changed from the AARRGGBB colour "660c65ff" to the new colour "ff0c65ff", the XML must contain `<tracks identifier="4dc11944062f4eafbeb5717a8fca099b"><graphicsSettings><colours foreground="ff0c65ff"></colours></colours></graphicsSettings></tracks>`.
+For example, if the foreground colour of a track is changed from the AARRGGBB colour "660c65ff" to the new colour "ff0c65ff", the XML must contain `<document><tracks identifier="4dc11944062f4eafbeb5717a8fca099b"><graphicsSettings><colours foreground="ff0c65ff"></colours></colours></graphicsSettings></tracks></document>`.
 
 3. If the user does **NOT** explicitly request a document modification, output an **empty document block**: `<document></document>`.
 
