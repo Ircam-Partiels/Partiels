@@ -110,6 +110,8 @@ namespace Application
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)
         };
+        
+        juce::Result createModelCache(Llama::Chat& chat, juce::File const& model, juce::File const& cache);
     } // namespace CoAnalyzer
 } // namespace Application
 

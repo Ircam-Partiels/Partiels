@@ -288,17 +288,10 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
 
     // Load the saved state of the model
     MiscDebug("Application::CoAnalyzer::Chat", "Load state");
-    chat.loadState(model.withFileExtension("bin"));
-    if(shouldQuit.load())
+    auto const state = model.withFileExtension("bin");
+    if(state.existsAsFile())
     {
-        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-    }
-
-    // Inject documentation resources as raw context (faster than addContext for large files)
-    for(auto resource : context)
-    {
-        MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource...");
-        auto result = chat.injectContext(resource);
+        auto const result = chat.loadState(state);
         if(result.failed())
         {
             MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + result.getErrorMessage());
@@ -308,6 +301,37 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
         {
             return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
         }
+    }
+    else
+    {
+        JUCE_COMPILER_WARNING("create instruction with old addContext");
+        auto const instructionResult = chat.generate(Role::system, "");
+        if(std::get<0>(instructionResult).failed())
+        {
+            MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + std::get<0>(instructionResult).getErrorMessage());
+            return std::make_tuple(std::get<0>(instructionResult), juce::String{}, juce::String{});
+        }
+        if(shouldQuit.load())
+        {
+            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+        }
+        
+        // Inject documentation resources as raw context (faster than addContext for large files)
+        for(auto const& resource : context)
+        {
+            MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource...");
+            auto const result = chat.injectContext(resource);
+            if(result.failed())
+            {
+                MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + result.getErrorMessage());
+                return std::make_tuple(result, juce::String{}, juce::String{});
+            }
+            if(shouldQuit.load())
+            {
+                return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+            }
+        }
+        chat.saveState(state);
     }
 
     // Generate the first response to confirm initialization
@@ -502,6 +526,33 @@ void Application::CoAnalyzer::Chat::timerCallback()
         newText += ".";
     }
     mStatusLabel.setText(newText, juce::dontSendNotification);
+}
+
+juce::Result Application::CoAnalyzer::createModelCache(Llama::Chat& chat, juce::File const& model, juce::File const& cache)
+{
+    auto const instructionResult = chat.generate(Llama::Chat::Role::system, "");
+    if(std::get<0>(instructionResult).failed())
+    {
+        MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + std::get<0>(instructionResult).getErrorMessage());
+        return std::get<0>(instructionResult);
+    }
+    
+//    // Inject documentation resources as raw context (faster than addContext for large files)
+//    for(auto const& resource : context)
+//    {
+//        MiscDebug("Application::CoAnalyzer::Chat", "Injecting context from Resource...");
+//        auto const result = chat.injectContext(resource);
+//        if(result.failed())
+//        {
+//            MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject resource: " + result.getErrorMessage());
+//            return std::make_tuple(result, juce::String{}, juce::String{});
+//        }
+//        if(shouldQuit.load())
+//        {
+//            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+//        }
+//    }
+    chat.saveState(cache);
 }
 
 ANALYSE_FILE_END
