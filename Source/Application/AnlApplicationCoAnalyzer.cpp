@@ -373,11 +373,11 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
     }
     MiscDebug("Application::CoAnalyzer::Chat", juce::String("Total context injection took: ") + juce::String((juce::Time::getMillisecondCounterHiRes() - contextStart) / 1000.0, 2) + " seconds");
 
-    // Generate the first response to confirm initialization
+    // Generate a brief introduction with strict token limit (50 tokens = ~2-3 sentences)
     auto const generateStart = juce::Time::getMillisecondCounterHiRes();
-    MiscDebug("Application::CoAnalyzer::Chat", "Generate the first response");
-    auto result = chat.generate(Role::system, "Please, introduce yourself briefly.");
-    MiscDebug("Application::CoAnalyzer::Chat", juce::String("First generation took: ") + juce::String((juce::Time::getMillisecondCounterHiRes() - generateStart) / 1000.0, 2) + " seconds");
+    MiscDebug("Application::CoAnalyzer::Chat", "Generate brief introduction");
+    auto result = chat.generate(Role::user, "Introduce yourself in one sentence.");
+    MiscDebug("Application::CoAnalyzer::Chat", juce::String("Introduction generation took: ") + juce::String((juce::Time::getMillisecondCounterHiRes() - generateStart) / 1000.0, 2) + " seconds");
     MiscDebug("Application::CoAnalyzer::Chat", juce::String("=== Total initialization took: ") + juce::String((juce::Time::getMillisecondCounterHiRes() - startTime) / 1000.0, 2) + " seconds ===");
     return result;
 }
@@ -385,8 +385,7 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
 void Application::CoAnalyzer::Chat::initializeSystem()
 {
     stopUserQuery();
-    mIsInitialized = false;
-
+    
     mIsInitialized.store(false);
     mHistory.clear();
     updateHistory();
@@ -422,8 +421,8 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     }();
 
     std::vector<juce::String> context;
-    context.push_back(std::move(installedPluginList));
-    context.push_back(std::move(webPluginList));
+//    context.push_back(std::move(installedPluginList));
+//    context.push_back(std::move(webPluginList));
 
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>(), ctxt = std::move(context)]()
                                 {

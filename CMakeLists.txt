@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
-set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "")
+set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
 
 set(CMAKE_XCODE_GENERATE_SCHEME true)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
@@ -79,12 +79,13 @@ endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "ggml: build shared libraries" FORCE)
 set(GGML_USE_METAL ON CACHE BOOL "ggml: use Metal" FORCE)
-set(GGML_NATIVE OFF CACHE BOOL "ggml: optimize the build for the current system" FORCE)
+set(GGML_NATIVE ON CACHE BOOL "ggml: optimize the build for the current system" FORCE)
 option(GGML_METAL_EMBED_LIBRARY "ggml: embed Metal library" ON)
 option(GGML_LTO "ggml: use LTO" ON)
 option(GGML_OPENMP "ggml: use OpenMP" OFF)
 option(GGML_CCACHE "ggml: use ccache" OFF)
 option(GGML_BLAS "ggml: use BLAS" ON)
+option(GGML_CPU  "ggml: enable CPU backend" OFF)
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/llama.cpp)

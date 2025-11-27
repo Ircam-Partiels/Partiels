@@ -165,24 +165,33 @@ long Application::Llama::Chat::addMessage(Role const role, std::string const& co
 
     auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
     auto const startAssistant = role == Role::user;
-    auto const applyChatTemplate = [&, this]()
-    {
-        auto const* messagePtr = mMessages.data();
-        auto const messageSize = mMessages.size();
-        auto* formattedPtr = startAssistant ? mFormattedMessage.data() : nullptr;
-        auto const formattedSize = startAssistant ? static_cast<int32_t>(mFormattedMessage.size()) : 0;
-        return static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, formattedPtr, formattedSize));
-    };
-    auto newLength = applyChatTemplate();
-    if(newLength > static_cast<long>(mFormattedMessage.size()))
-    {
-        mFormattedMessage.resize(static_cast<size_t>(newLength));
-        newLength = applyChatTemplate();
-    }
+    
+    // Get the required size first
+    auto const* messagePtr = mMessages.data();
+    auto const messageSize = mMessages.size();
+    auto newLength = static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, nullptr, 0));
+    
     if(newLength < 0)
     {
         MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
+        return newLength;
     }
+    
+    // Only format into buffer if we're starting an assistant response (user message)
+    if(startAssistant)
+    {
+        if(newLength > static_cast<long>(mFormattedMessage.size()))
+        {
+            mFormattedMessage.resize(static_cast<size_t>(newLength));
+        }
+        newLength = static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, mFormattedMessage.data(), static_cast<int32_t>(mFormattedMessage.size())));
+        if(newLength < 0)
+        {
+            MiscDebug("Application::Llama::Chat", "Failed to format the chat template");
+            return newLength;
+        }
+    }
+    
     return newLength;
 }
 
@@ -398,9 +407,6 @@ juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& inst
         }
         position += size;
     }
-
-    // Update position for next message
-    mPrevMessageLength = newLength;
 
     MiscDebug("Application::Llama::Chat",
               juce::String("Added system message with ") + juce::String(tokenSize) + juce::String(" tokens"));
