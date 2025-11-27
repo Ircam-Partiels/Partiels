@@ -435,10 +435,10 @@ Application::CommandLine::CommandLine()
              {
                  fail(initializeResult.getErrorMessage());
              }
-             auto const generateResult = chat.generate(Llama::Chat::Role::system, dataPath.loadFileAsString());
-             if(std::get<0_z>(generateResult).failed())
+             auto const systemResult = chat.addSystemMessage(dataPath.loadFileAsString());
+             if(systemResult.failed())
              {
-                 fail(std::get<0_z>(generateResult).getErrorMessage());
+                 fail(systemResult.getErrorMessage());
              }
              auto const saveResult = chat.saveState(outputModelPath);
              if(saveResult.failed())

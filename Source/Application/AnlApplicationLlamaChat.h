@@ -28,6 +28,7 @@ namespace Application
             juce::Result loadState(juce::File state);
             juce::Result saveState(juce::File state);
             juce::Result injectContext(juce::String const& content);
+            juce::Result addSystemMessage(juce::String const& instruction);
             std::tuple<juce::Result, juce::String, juce::String> generate(Role const role, juce::String const& prompt);
 
         private:

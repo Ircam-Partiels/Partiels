@@ -48,7 +48,7 @@ The foreground colour of the waveform track has been changed to green.
 
 For example, if the foreground colour of a track is changed from the AARRGGBB colour "660c65ff" to the new colour "ff0c65ff", the XML must contain `<tracks identifier="4dc11944062f4eafbeb5717a8fca099b"><graphicsSettings><colours foreground="ff0c65ff"></colours></colours></graphicsSettings></tracks>`.
 
-3. If the user does **NOT** explicitly request a document modification, uutput an **empty document block**: `<document></document>`.
+3. If the user does **NOT** explicitly request a document modification, output an **empty document block**: `<document></document>`.
 
 4. If the user request is **ambiguous**, **impossible**, or you cannot generate a well-formed XML, output **no XML** (empty block), and ask for clarification in `<response>`.
 

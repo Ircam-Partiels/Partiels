@@ -310,6 +310,88 @@ juce::Result Application::Llama::Chat::injectContext(juce::String const& content
     return juce::Result::ok();
 }
 
+juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& instruction)
+{
+    if(mContext == nullptr || mSampler == nullptr)
+    {
+        MiscDebug("Application::Llama::Chat", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+
+    if(instruction.isEmpty())
+    {
+        return juce::Result::fail(juce::translate("The instruction content is empty."));
+    }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(llama_log_callback, nullptr);
+
+    // Add to message history with chat template formatting
+    auto newLength = addMessage(Role::system, instruction.toStdString());
+    MiscWeakAssert(newLength >= 0);
+    if(newLength < 0)
+    {
+        return juce::Result::fail(juce::translate("Failed to apply the chat template."));
+    }
+
+    MiscDebug("Application::Llama::Chat", juce::String("System message: ") + instruction.substring(0, std::min(100, instruction.length())));
+
+    // Extract just the new prompt portion (since last message)
+    MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
+    std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength),
+                       std::next(mFormattedMessage.cbegin(), newLength));
+
+    // Tokenize the formatted system message
+    auto tokenResult = tokenize(mContext.get(), prompt.c_str(), prompt.size(), false);
+    if(std::get<0_z>(tokenResult).failed())
+    {
+        return std::get<0_z>(tokenResult);
+    }
+
+    // Decode tokens in batches to populate KV cache (no generation/sampling)
+    auto const tokenData = std::get<1_z>(tokenResult).data();
+    auto const tokenSize = std::get<1_z>(tokenResult).size();
+    auto const numCtx = llama_n_ctx(mContext.get());
+    auto position = 0_z;
+
+    while(position < tokenSize)
+    {
+        if(mShouldQuit.load())
+        {
+            return juce::Result::fail(juce::translate("Operation aborted."));
+        }
+
+        auto const size = std::min(static_cast<size_t>(numCtx), tokenSize - position);
+        auto batch = llama_batch_get_one(tokenData + position, static_cast<int32_t>(size));
+
+#if JUCE_DEBUG
+        auto const vocabSize = llama_vocab_n_tokens(llama_model_get_vocab(llama_get_model(mContext.get())));
+        for(int i = 0; i < batch.n_tokens; i++)
+        {
+            MiscWeakAssert(batch.token[i] >= 0 && batch.token[i] < vocabSize);
+            if(batch.token[i] < 0 || batch.token[i] > vocabSize)
+            {
+                MiscDebug("Application::Llama::Chat", "Invalid token id: " + juce::String(batch.token[i]));
+            }
+        }
+#endif
+
+        auto const result = decode(mContext.get(), batch);
+        if(result.failed())
+        {
+            return result;
+        }
+        position += size;
+    }
+
+    // Update position for next message
+    mPrevMessageLength = newLength;
+
+    MiscDebug("Application::Llama::Chat",
+              juce::String("Added system message with ") + juce::String(tokenSize) + juce::String(" tokens"));
+    return juce::Result::ok();
+}
+
 std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::generate(Role const role, juce::String const& userMessage)
 {
     MiscWeakAssert(role != Role::assistant);
