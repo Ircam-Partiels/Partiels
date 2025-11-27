@@ -385,7 +385,7 @@ Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSys
 void Application::CoAnalyzer::Chat::initializeSystem()
 {
     stopUserQuery();
-    
+
     mIsInitialized.store(false);
     mHistory.clear();
     updateHistory();
@@ -421,8 +421,8 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     }();
 
     std::vector<juce::String> context;
-//    context.push_back(std::move(installedPluginList));
-//    context.push_back(std::move(webPluginList));
+    //    context.push_back(std::move(installedPluginList));
+    //    context.push_back(std::move(webPluginList));
 
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>(), ctxt = std::move(context)]()
                                 {

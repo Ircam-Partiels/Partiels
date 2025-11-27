@@ -165,18 +165,18 @@ long Application::Llama::Chat::addMessage(Role const role, std::string const& co
 
     auto const* chatTemplate = llama_model_chat_template(mModel.get(), nullptr);
     auto const startAssistant = role == Role::user;
-    
+
     // Get the required size first
     auto const* messagePtr = mMessages.data();
     auto const messageSize = mMessages.size();
     auto newLength = static_cast<long>(llama_chat_apply_template(chatTemplate, messagePtr, messageSize, startAssistant, nullptr, 0));
-    
+
     if(newLength < 0)
     {
         MiscDebug("Application::Llama::Chat", "Failed to apply the chat template");
         return newLength;
     }
-    
+
     // Resize buffer if needed and format the messages
     if(newLength > static_cast<long>(mFormattedMessage.size()))
     {
@@ -188,7 +188,7 @@ long Application::Llama::Chat::addMessage(Role const role, std::string const& co
         MiscDebug("Application::Llama::Chat", "Failed to format the chat template");
         return newLength;
     }
-    
+
     return newLength;
 }
 
