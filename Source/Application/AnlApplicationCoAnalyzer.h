@@ -77,6 +77,8 @@ namespace Application
             void colourChanged() override;
             void parentHierarchyChanged() override;
 
+            static juce::Result initializeModelState(Llama::Chat& chat);
+
         private:
             using Role = Llama::Chat::Role;
 
@@ -110,8 +112,6 @@ namespace Application
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)
         };
-        
-        juce::Result createModelCache(Llama::Chat& chat, juce::File const& model, juce::File const& cache);
     } // namespace CoAnalyzer
 } // namespace Application
 

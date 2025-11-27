@@ -57,12 +57,22 @@ static juce::Result decode(llama_context* context, llama_batch const& batch)
 Application::Llama::Chat::Chat(std::atomic<bool> const& shouldQuit)
 : mShouldQuit(shouldQuit)
 {
+    static bool isBackendInitialized = false;
+    if(!isBackendInitialized)
+    {
+        llama_log_set([](enum ggml_log_level, char const* text, void*)
+                      {
+                          MiscDebug("Application::Llama::Chat::Init", text);
+                      },
+                      nullptr);
+        // Load dynamic backends
+        ggml_backend_load_all();
+        // Initialize llama backend (required for Metal GPU on macOS)
+        llama_backend_init();
+        isBackendInitialized = true;
+    }
     // Set log callback to suppress unnecessary output
     llama_log_set(llama_log_callback, nullptr);
-
-    // Load dynamic backends
-    ggml_backend_load_all();
-    llama_backend_init();
 }
 
 Application::Llama::Chat::~Chat()
@@ -73,8 +83,8 @@ Application::Llama::Chat::~Chat()
 
 juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
-    static int32_t constexpr numGpuLayers = 30;
-    static uint32_t constexpr contextSize = 65536;
+    static int32_t constexpr numGpuLayers = 99;
+    static uint32_t constexpr batchSize = 65536;
     static auto constexpr temperature = 0.2f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
@@ -105,7 +115,7 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
     // Initialize the context
     auto ctx_params = llama_context_default_params();
     ctx_params.n_ctx = 0; // Use the model's default context size
-    ctx_params.n_batch = contextSize;
+    ctx_params.n_batch = batchSize;
     ctx_params.abort_callback = [](void* data)
     {
         return reinterpret_cast<Chat*>(data)->mShouldQuit.load();
@@ -333,9 +343,14 @@ juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& inst
     {
         return juce::Result::fail(juce::translate("Failed to apply the chat template."));
     }
+    if(mShouldQuit.load())
+    {
+        return juce::Result::fail(juce::translate("Operation aborted."));
+    }
 
     MiscDebug("Application::Llama::Chat", juce::String("System message: ") + instruction.substring(0, std::min(100, instruction.length())));
 
+    JUCE_COMPILER_WARNING("duplicate code")
     // Extract just the new prompt portion (since last message)
     MiscWeakAssert(mPrevMessageLength >= 0 && static_cast<size_t>(mPrevMessageLength) < mFormattedMessage.size());
     std::string prompt(std::next(mFormattedMessage.cbegin(), mPrevMessageLength),
@@ -422,6 +437,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::g
         return std::make_tuple(std::get<0_z>(tokenResult), juce::String{}, juce::String{});
     }
 
+    JUCE_COMPILER_WARNING("use fail with abort message");
     if(mShouldQuit.load())
     {
         return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
