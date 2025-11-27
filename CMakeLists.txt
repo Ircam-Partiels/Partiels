@@ -237,6 +237,7 @@ elseif(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER} AND DEFINED ENV{PART
 endif()
 set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_COPY_PHASE_STRIP "NO")
 set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
+# set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ARGUMENTS "--finetune-model --model='/Library/Application Support/Ircam/partielsmodels/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.gguf' --data='${PARTIELS_BINARYDATA_DIRECTORY}/CoAnalyzer/Instructions_0.md' --output='${CMAKE_CURRENT_BINARY_DIR}/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.bin'")
 
 include(${PARTIELS_BINARYDATA_DIRECTORY}/Resource/XcodeSetupWarnings.cmake)
 target_enable_xcode_full_warnings(Partiels)
@@ -359,6 +360,9 @@ elseif(UNIX AND NOT APPLE)
     add_custom_target(PartielsPackage ALL COMMAND ${PARTIELS_PACKAGE_SCRIPT} $<TARGET_FILE_DIR:Partiels>)
     add_dependencies(PartielsPackage Partiels)
 endif()
+
+### Partiels Model Cache generation ###
+add_custom_target(PartielsFinetuneModel COMMAND Partiels --finetune-model --model='/Library/Application Support/Ircam/partielsmodels/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.gguf' --data=${PARTIELS_BINARYDATA_DIRECTORY}/CoAnalyzer/Instructions_0.md --output="${CMAKE_CURRENT_BINARY_DIR}/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.bin")
 
 ### Manual ###
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
