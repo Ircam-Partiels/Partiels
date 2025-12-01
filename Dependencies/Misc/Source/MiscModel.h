@@ -460,7 +460,7 @@ namespace Model
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
-            auto copy = parseXml(xml, xml.getIntAttribute("MiscModelVersion", 0));
+            auto copy = parseXml(xml, xml.getIntAttribute("MiscModelVersion", ProjectInfo::versionNumber));
             if(copy != nullptr)
             {
                 fromXml(*this, *copy.get(), name, notification);
