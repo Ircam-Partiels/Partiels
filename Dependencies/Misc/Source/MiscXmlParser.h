@@ -305,6 +305,9 @@ namespace XmlParser
 
     //! @brief Replaces all occurrences of a specific attribute value in the XML element with a new value.
     void replaceAllAttributeValues(juce::XmlElement& element, juce::String const& previousValue, juce::String const& newValue);
+
+    //! @brief Migrates from old container format (< 2.3.1) to the new container format
+    void migrateContainerFormat(juce::XmlElement& parent, juce::String const& name, juce::String const& subname);
 } // namespace XmlParser
 
 MISC_FILE_END

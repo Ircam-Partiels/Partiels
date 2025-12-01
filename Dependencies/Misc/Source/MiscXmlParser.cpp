@@ -159,6 +159,22 @@ void XmlParser::replaceAllAttributeValues(juce::XmlElement& element, juce::Strin
     }
 }
 
+void XmlParser::migrateContainerFormat(juce::XmlElement& parent, juce::String const& name, juce::String const& subname)
+{
+    auto const* firstChild = parent.getChildByName(name);
+    if(firstChild != nullptr && (firstChild->hasAttribute(subname) || firstChild->getChildByName(subname) != nullptr))
+    {
+        auto newElement = std::make_unique<juce::XmlElement>(name);
+        while(auto* child = parent.getChildByName(name))
+        {
+            auto childCopy = std::make_unique<juce::XmlElement>(*child);
+            parent.removeChildElement(child, true);
+            newElement->addChildElement(childCopy.release());
+        }
+        parent.addChildElement(newElement.release());
+    }
+}
+
 class XmlParserUnitTest
 : public juce::UnitTest
 {

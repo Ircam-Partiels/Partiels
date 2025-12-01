@@ -82,26 +82,11 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
         // Add new graphicsSettings attribute
         XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
     }
-    if(version < 0x20300)
+    if(version < 0x20301)
     {
         // Migrate old container format (multiple sibling elements) to new format (parent with children)
-        auto migrateContainerFormat = [](juce::XmlElement& parent, juce::Identifier const& name)
-        {
-            auto const* firstChild = parent.getChildByName(name);
-            if(firstChild != nullptr && firstChild->hasAttribute("value"))
-            {
-                auto newElement = std::make_unique<juce::XmlElement>(name);
-                while(auto* child = parent.getChildByName(name))
-                {
-                    auto childCopy = std::make_unique<juce::XmlElement>(*child);
-                    parent.removeChildElement(child, true);
-                    newElement->addChildElement(childCopy.release());
-                }
-                parent.addChildElement(newElement.release());
-            }
-        };
-        migrateContainerFormat(*copy.get(), "channelsLayout");
-        migrateContainerFormat(*copy.get(), "extraThresholds");
+        XmlParser::migrateContainerFormat(*copy.get(), "channelsLayout", "value");
+        XmlParser::migrateContainerFormat(*copy.get(), "extraThresholds", "value");
     }
     return copy;
 }
@@ -266,27 +251,12 @@ void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
 std::unique_ptr<juce::XmlElement> Track::PresetList::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(version < 0x20300)
+    if(version < 0x20301)
     {
         // Migrate old container format (multiple sibling elements) to new format (parent with children)
         // For maps, check if the first child has a "key" child element (indicating old format with pair entries)
-        auto migrateMapContainerFormat = [](juce::XmlElement& parent, juce::Identifier const& name)
-        {
-            auto const* firstChild = parent.getChildByName(name);
-            if(firstChild != nullptr && firstChild->getChildByName("key") != nullptr)
-            {
-                auto newElement = std::make_unique<juce::XmlElement>(name);
-                while(auto* child = parent.getChildByName(name))
-                {
-                    auto childCopy = std::make_unique<juce::XmlElement>(*child);
-                    parent.removeChildElement(child, true);
-                    newElement->addChildElement(childCopy.release());
-                }
-                parent.addChildElement(newElement.release());
-            }
-        };
-        migrateMapContainerFormat(*copy.get(), "processor");
-        migrateMapContainerFormat(*copy.get(), "graphic");
+        XmlParser::migrateContainerFormat(*copy.get(), "processor", "key");
+        XmlParser::migrateContainerFormat(*copy.get(), "graphic", "key");
     }
     return copy;
 }
