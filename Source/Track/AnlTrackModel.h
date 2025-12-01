@@ -393,6 +393,8 @@ namespace Track
             {
             }
             // clang-format on
+
+            std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
         };
     } // namespace PresetList
 } // namespace Track

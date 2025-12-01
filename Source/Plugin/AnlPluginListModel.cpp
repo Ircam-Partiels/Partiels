@@ -16,10 +16,16 @@ PluginList::Accessor::Accessor()
 std::unique_ptr<juce::XmlElement> PluginList::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(copy != nullptr && version <= 0x8)
+    if(version <= 0x8)
     {
         XmlParser::toXml(*copy.get(), "useEnvVariable", true);
         XmlParser::toXml(*copy.get(), "searchPath", getDefaultSearchPath());
+    }
+    if(version < 0x20301)
+    {
+        // Migrate old container format (multiple sibling elements) to new format (parent with children)
+        XmlParser::migrateContainerFormat(*copy.get(), "searchPath");
+        XmlParser::migrateContainerFormat(*copy.get(), "webReferences");
     }
     return copy;
 }
