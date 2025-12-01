@@ -60,7 +60,7 @@ namespace Track
         std::thread mRenderingProcess;
         std::mutex mRenderingMutex;
         std::atomic<float> mAdvancement{0.0f};
-        Chrono mChrono{"Track", "graphics rendering ended"};
+        Chrono mChrono{"Track"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Graphics)
     };

@@ -234,7 +234,7 @@ void Track::Processor::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
-            mChrono.stop();
+            mChrono.stop("Processor analysis ended");
             if(onAnalysisEnded != nullptr)
             {
                 onAnalysisEnded(results);

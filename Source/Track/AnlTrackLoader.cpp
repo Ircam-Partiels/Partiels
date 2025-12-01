@@ -128,7 +128,7 @@ void Track::Loader::handleAsyncUpdate()
             auto* results = std::get_if<Results>(&vResults);
             anlWeakAssert(results != nullptr && results->isEmpty());
 #endif
-            mChrono.stop();
+            mChrono.stop("Loading file ended");
             if(onLoadingAborted != nullptr)
             {
                 onLoadingAborted();
@@ -137,7 +137,7 @@ void Track::Loader::handleAsyncUpdate()
         else
         {
             auto const vResults = mLoadingProcess.get();
-            mChrono.stop();
+            mChrono.stop("Loading file ended");
             if(auto* results = std::get_if<Results>(&vResults))
             {
                 if(onLoadingSucceeded != nullptr)

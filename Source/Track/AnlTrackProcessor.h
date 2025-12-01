@@ -44,7 +44,7 @@ namespace Track
         std::future<Results> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         std::atomic<float> mAdvancement{0.0f};
-        Chrono mChrono{"Track", "processor analysis ended"};
+        Chrono mChrono{"Track"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };

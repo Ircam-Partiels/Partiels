@@ -136,7 +136,7 @@ void Track::Graphics::handleAsyncUpdate()
         else if(mRenderingState.compare_exchange_weak(expected, ProcessState::available))
         {
             mRenderingProcess.join();
-            mChrono.stop();
+            mChrono.stop("Graphics rendering ended");
             std::unique_lock<std::mutex> graphLock(mMutex);
             if(onRenderingEnded != nullptr)
             {
