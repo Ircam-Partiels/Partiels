@@ -66,7 +66,7 @@ namespace Track
         std::atomic<float> mAdvancement{0.0f};
         std::mutex mLoadingMutex;
         std::future<std::variant<Results, juce::String>> mLoadingProcess;
-        Chrono mChrono{"Track", "loading file ended"};
+        Chrono mChrono{"Track"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Loader)
 
