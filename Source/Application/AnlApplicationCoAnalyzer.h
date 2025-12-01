@@ -65,6 +65,7 @@ namespace Application
         class Chat
         : public juce::Component
         , private juce::AsyncUpdater
+        , private juce::Timer
         {
         public:
             Chat(Accessor& accessor);
@@ -77,29 +78,42 @@ namespace Application
             void parentHierarchyChanged() override;
 
         private:
-            using Role = Llama::Chat::Role;
+            // clang-format off
+            enum class MessageType
+            {
+                  assistant
+                , user
+                , error
+            };
+            // clang-format on
 
             // juce::AsyncUpdater
             void handleAsyncUpdate() override;
 
-            bool canSendQuery() const;
+            // juce::Timer
+            void timerCallback() override;
+
+            using Results = std::tuple<juce::Result, juce::String, juce::String>;
+            static Results performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit);
+
             void initializeSystem();
             void sendUserQuery();
+            void stopUserQuery();
             void updateHistory();
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
-            std::atomic<bool> mShouldQuit{false};
             std::atomic<bool> mIsInitialized{false};
-            Llama::Chat mChat;
+            std::atomic<bool> mShouldQuit{false};
+            Llama::Chat mChat{mShouldQuit};
             juce::TextEditor mHistoryEditor;
             ColouredPanel mSeparator1;
             juce::TextEditor mQueryEditor;
             Icon mSendButton;
             ColouredPanel mSeparator2;
             juce::Label mStatusLabel;
-            std::vector<std::tuple<Role, juce::String>> mHistory;
-            std::future<std::tuple<juce::Result, juce::String, juce::String>> mRequestFuture;
+            std::vector<std::tuple<MessageType, juce::String>> mHistory;
+            std::future<Results> mRequestFuture;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)
         };
