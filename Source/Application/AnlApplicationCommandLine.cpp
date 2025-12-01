@@ -1,5 +1,6 @@
 #include "AnlApplicationCommandLine.h"
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationLlamaChat.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -410,6 +411,41 @@ Application::CommandLine::CommandLine()
                      json.push_back(plug);
                  }
                  std::cout << json.dump(4) << std::endl;
+             }
+         }});
+    addCommand(
+        {"--finetune-model",
+         "--finetune-model [options]",
+         "Finetunes a Llama model with a given system instruction.\n\t"
+         "--model|-m <modelpath> Defines the path to the base Llama model (required).\n\t"
+         "--data|-d <instructionpath> Defines the path to the system instruction file (required).\n\t"
+         "--output|-o <outputmodelpath> Defines the path to save the finetuned model (required).",
+         "",
+         [](juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("-m|--model");
+             args.failIfOptionIsMissing("-d|--data");
+             args.failIfOptionIsMissing("-o|--output");
+             auto const modelPath = args.getExistingFileForOption("-m|--model");
+             auto const dataPath = args.getExistingFileForOption("-d|--data");
+             auto const outputModelPath = args.getFileForOption("-o|--output");
+
+             std::atomic<bool> shoudlQuit{false};
+             Llama::Chat chat(shoudlQuit);
+             auto const initializeResult = chat.initialize(modelPath);
+             if(initializeResult.failed())
+             {
+                 fail(initializeResult.getErrorMessage());
+             }
+             auto const systemResult = chat.addSystemMessage(dataPath.loadFileAsString());
+             if(systemResult.failed())
+             {
+                 fail(systemResult.getErrorMessage());
+             }
+             auto const saveResult = chat.saveState(outputModelPath);
+             if(saveResult.failed())
+             {
+                 fail(saveResult.getErrorMessage());
              }
          }});
 }
