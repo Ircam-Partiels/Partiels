@@ -23,6 +23,8 @@ set(VAMP_SDK_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/vamp-plugin-
 
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
+option(MANUAL_ONLY "Build only the manual-related target" OFF)
+
 project(Partiels VERSION 2.3.0 LANGUAGES C CXX)
 
 set(PARTIELS_CODESIGN_WINDOWS_KEYFILE "" CACHE PATH "The Windows (.pfx) certificate file")
@@ -60,6 +62,7 @@ file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
+if(NOT MANUAL_ONLY)
 if(NOT EXISTS ${VAMP_SDK_PATH})
     include(FetchContent)
     find_package(Git REQUIRED)
@@ -364,6 +367,8 @@ endif()
 ### Partiels Model Cache generation ###
 add_custom_target(PartielsFinetuneModel COMMAND Partiels --finetune-model --model='/Library/Application Support/Ircam/partielsmodels/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.gguf' --data=${PARTIELS_BINARYDATA_DIRECTORY}/CoAnalyzer/Instructions_0.md --output="${CMAKE_CURRENT_BINARY_DIR}/raethehacker_Llama-3.1-8B-Instruct-Q2_K-GGUF_llama-3.1-8b-instruct-q2_k.bin")
 
+endif()
+
 ### Manual ###
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
 string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
@@ -380,6 +385,7 @@ else()
 endif()
 add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
 
+if(NOT MANUAL_ONLY)
 ### Format ###
 find_program(CLANG_FORMAT_EXE "clang-format" HINTS "C:/Program Files/LLVM/bin")
 if(CLANG_FORMAT_EXE)
@@ -671,3 +677,5 @@ add_test(NAME ConvCompareColumns1 COMMAND Partiels --compare-files ${TESTS_DIREC
 set_tests_properties(ConvCompareColumns1 PROPERTIES DEPENDS "ConvFromSdifColumns")
 add_test(NAME ConvCompareColumns2 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Columns.json ${TESTS_OUTPUT_DIRECTORY}/SDIF/Columns.sdif ${TESTS_DIRECTORY}/ColumnsArgs.xml)
 set_tests_properties(ConvCompareColumns2 PROPERTIES DEPENDS "ConvFromSdifColumns")
+
+endif() # MANUAL_ONLY
