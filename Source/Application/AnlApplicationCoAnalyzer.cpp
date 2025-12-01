@@ -242,7 +242,7 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
         if(std::get<2>(result).isNotEmpty())
         {
             auto& documentAccessor = Instance::get().getDocumentAccessor();
-            auto const xml = juce::parseXML(std::get<2>(result));
+            auto xml = juce::parseXML(std::get<2>(result));
             if(xml != nullptr)
             {
                 MiscDebug("Application::CoAnalyzer::Chat", xml->toString());
@@ -256,9 +256,7 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
                         if(Document::Tools::hasTrackAcsr(documentAccessor, identifier))
                         {
                             auto& srcAcsr = Document::Tools::getTrackAcsr(documentAccessor, identifier);
-                            auto const layout = srcAcsr.getAttr<Track::AttrType::channelsLayout>();
                             srcAcsr.fromXml(*trackElement, "tracks", NotificationType::synchronous);
-                            srcAcsr.setAttr<Track::AttrType::channelsLayout>(layout, NotificationType::synchronous);
                         }
                     }
                 }
@@ -271,68 +269,6 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
     mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
     mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
     mSendButton.setTooltip(juce::translate("Send Query"));
-}
-
-Application::CoAnalyzer::Chat::Results Application::CoAnalyzer::Chat::performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit)
-{
-    MiscDebug("Application::CoAnalyzer::Chat", "Initializing Neuralyzer chat system...");
-    Chrono chrono{"CoAnalyzer"};
-
-    chrono.start();
-    auto const initialized = chat.initialize(model);
-    chrono.stop("Initialization ended");
-
-    if(shouldQuit.load())
-    {
-        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-    }
-
-    MiscWeakAssert(initialized.wasOk());
-    if(initialized.failed())
-    {
-        return std::make_tuple(initialized, juce::String{}, juce::String{});
-    }
-
-    // Load the saved state of the model
-    auto const state = model.withFileExtension("bin");
-    if(state.existsAsFile())
-    {
-        chrono.start();
-        auto const result = chat.loadState(state);
-        chrono.stop("State load ended");
-        if(result.failed())
-        {
-            MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject state: " + result.getErrorMessage());
-            return std::make_tuple(result, juce::String{}, juce::String{});
-        }
-        if(shouldQuit.load())
-        {
-            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-        }
-    }
-    else
-    {
-        chrono.start();
-        JUCE_COMPILER_WARNING("Replace with data embedded in BinaryData or application resources")
-        auto const instructionText = juce::File("/Users/guillot/Git/Partiels/BinaryData/CoAnalyzer/Instructions_0.md").loadFileAsString();
-        auto const result = chat.addSystemMessage(instructionText);
-        chrono.stop("State generation ended");
-        if(result.failed())
-        {
-            MiscDebug("Application::CoAnalyzer::Chat", "Failed to initialize state: " + result.getErrorMessage());
-            return std::make_tuple(result, juce::String{}, juce::String{});
-        }
-        if(shouldQuit.load())
-        {
-            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
-        }
-        chat.saveState(state);
-    }
-
-    chrono.start();
-    auto result = chat.sendUserQuery("Introduce yourself in one sentence.");
-    chrono.stop("Introduction generation ended");
-    return std::make_tuple(juce::Result::ok(), std::get<1>(result), std::get<2>(result));
 }
 
 void Application::CoAnalyzer::Chat::initializeSystem()
@@ -351,7 +287,59 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>()]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
-                                    auto result = performSystemInitialization(mChat, model, mShouldQuit);
+                                    MiscDebug("Application::CoAnalyzer::Chat", "Initializing Neuralyzer chat system...");
+                                    Chrono chrono{"CoAnalyzer"};
+
+                                    chrono.start();
+                                    auto const initialized = mChat.initialize(model);
+                                    chrono.stop("Initialization ended");
+
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+
+                                    MiscWeakAssert(initialized.wasOk());
+                                    if(initialized.failed())
+                                    {
+                                        return std::make_tuple(initialized, juce::String{}, juce::String{});
+                                    }
+                                    // Load the saved state of the model
+                                    auto const state = model.withFileExtension("bin");
+                                    if(state.existsAsFile())
+                                    {
+                                        chrono.start();
+                                        auto const result = mChat.loadState(state);
+                                        chrono.stop("State load ended");
+                                        if(result.failed())
+                                        {
+                                            MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject state: " + result.getErrorMessage());
+                                            return std::make_tuple(result, juce::String{}, juce::String{});
+                                        }
+                                    }
+                                    else
+                                    {
+                                        chrono.start();
+                                        JUCE_COMPILER_WARNING("Replace with data embedded in BinaryData or application resources")
+                                        auto const instructionText = juce::File("/Users/guillot/Git/Partiels/BinaryData/CoAnalyzer/Instructions_0.md").loadFileAsString();
+                                        auto const result = mChat.addSystemMessage(instructionText);
+                                        chrono.stop("State generation ended");
+                                        if(result.failed())
+                                        {
+                                            MiscDebug("Application::CoAnalyzer::Chat", "Failed to initialize state: " + result.getErrorMessage());
+                                            return std::make_tuple(result, juce::String{}, juce::String{});
+                                        }
+                                        mChat.saveState(state);
+                                    }
+
+                                    if(mShouldQuit.load())
+                                    {
+                                        return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                    }
+
+                                    chrono.start();
+                                    auto result = mChat.sendUserQuery("Introduce yourself in one sentence.");
+                                    chrono.stop("Introduction generation ended");
                                     mIsInitialized.store(std::get<0_z>(result).wasOk());
                                     triggerAsyncUpdate();
                                     return result;
@@ -437,14 +425,19 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     mRequestFuture = std::async(std::launch::async, [this, query, xmld = std::move(xml)]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
+                                    Chrono chrono{"CoAnalyzer"};
                                     auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString() + "```";
+                                    chrono.start();
                                     auto contextResult = mChat.injectContext(data);
+                                    chrono.stop("Context injection ended");
                                     if(contextResult.failed())
                                     {
                                         triggerAsyncUpdate();
                                         return std::make_tuple(std::move(contextResult), juce::String{}, juce::String{});
                                     }
+                                    chrono.start();
                                     auto result = mChat.sendUserQuery(query);
+                                    chrono.stop("User query processing ended");
                                     triggerAsyncUpdate();
                                     return result;
                                 });

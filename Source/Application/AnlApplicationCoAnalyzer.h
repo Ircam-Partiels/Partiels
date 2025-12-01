@@ -93,13 +93,12 @@ namespace Application
             // juce::Timer
             void timerCallback() override;
 
-            using Results = std::tuple<juce::Result, juce::String, juce::String>;
-            static Results performSystemInitialization(Llama::Chat& chat, juce::File const& model, std::atomic<bool> const& shouldQuit);
-
             void initializeSystem();
             void sendUserQuery();
             void stopUserQuery();
             void updateHistory();
+
+            using Results = std::tuple<juce::Result, juce::String, juce::String>;
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
