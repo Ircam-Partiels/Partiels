@@ -590,3 +590,72 @@ The tempo has been set to 110 BPM.
 </tracks>
 ```
 
+### EXAMPLE 20: WRONG - Color map applied to non-spectrogram track
+
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="1"` (line/curve track, not a spectrogram).
+
+User query:`Change the color map to Viridis`
+
+❌ WRONG Assistant answer:
+```
+<response>
+The colour map has been changed to Viridis.
+</response>
+
+<document>
+    <tracks identifier="2b7e9f4a8c1d3e5f6a9b8c7d4e2f1a3b">
+      <graphicsSettings>
+        <colours map="9"></colours>
+      </graphicsSettings>
+    </tracks>
+</document>
+```
+
+**Error**: The `map` attribute (colour map) only applies to spectrogram tracks (binCount > 1). This track has `binCount="1"`, indicating it displays a line/curve, not a spectrogram. For line tracks, use the `foreground` attribute to change the line colour instead.
+
+### EXAMPLE 21: WRONG - Window size parameter applied to non-FFT track
+
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a beat detection track that doesn't use FFT analysis.
+
+User query:`Set the window size to 50 ms`
+
+❌ WRONG Assistant answer:
+```
+<response>
+The window size has been set to 50.0 ms.
+</response>
+
+<document>
+    <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
+      <state>
+        <parameters key="windowsize" value="50.0"/>
+      </state>
+    </tracks>
+</document>
+```
+
+**Error**: The selected track is a beat detection track that does not have FFT-related parameters like `windowsize`. FFT parameters (windowsize, windowoverlapping, fftoversampling, windowtype) only apply to spectral analysis tracks. Check the track's `<description>/<parameters>` to see which parameters are actually available.
+
+### EXAMPLE 22: WRONG - Spectrogram parameter applied to marker track
+
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="0"` (marker/event track).
+
+User query:`Make the spectrogram smoother`
+
+❌ WRONG Assistant answer:
+```
+<response>
+The window overlapping has been increased to 8x for smoother temporal variations.
+</response>
+
+<document>
+    <tracks identifier="5d8a3f1e9c2b4a7e6d3f8b1c4a9e2f5d">
+      <state>
+        <parameters key="windowoverlapping" value="2.0"/>
+      </state>
+    </tracks>
+</document>
+```
+
+**Error**: This track has `binCount="0"`, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours, or the specific analysis parameters listed in its `<description>/<parameters>`.
+
