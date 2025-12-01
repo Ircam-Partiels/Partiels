@@ -5,85 +5,103 @@ ANALYSE_FILE_BEGIN
 std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(copy != nullptr)
+    if(version <= 0x8)
     {
-        if(version <= 0x8)
+        auto* child = copy->getChildByName("results");
+        if(child != nullptr)
         {
-            auto* child = copy->getChildByName("results");
-            if(child != nullptr)
-            {
-                auto const file = XmlParser::fromXml(*child, "file", juce::File{});
-                XmlParser::toXml(*copy.get(), "file", file);
-            }
+            auto const file = XmlParser::fromXml(*child, "file", juce::File{});
+            XmlParser::toXml(*copy.get(), "file", file);
         }
-        if(version <= 0x9)
+    }
+    if(version <= 0x9)
+    {
+        FileInfo const fileInfo{XmlParser::fromXml(*copy.get(), "file", juce::File{})};
+        if(auto* child = copy->getChildByName("file"))
         {
-            FileInfo const fileInfo{XmlParser::fromXml(*copy.get(), "file", juce::File{})};
-            if(auto* child = copy->getChildByName("file"))
+            copy->removeChildElement(child, true);
+        }
+        XmlParser::toXml(*copy.get(), "file", fileInfo);
+    }
+    if(version <= 0x10300)
+    {
+        Plugin::Key key{XmlParser::fromXml(*copy.get(), "key", Plugin::Key{})};
+        if(key.identifier == "supervp:superwaveform")
+        {
+            if(auto* child = copy->getChildByName("key"))
             {
                 copy->removeChildElement(child, true);
             }
-            XmlParser::toXml(*copy.get(), "file", fileInfo);
-        }
-        if(version <= 0x10300)
-        {
-            Plugin::Key key{XmlParser::fromXml(*copy.get(), "key", Plugin::Key{})};
-            if(key.identifier == "supervp:superwaveform")
+            if(auto* child = copy->getChildByName("description"))
             {
-                if(auto* child = copy->getChildByName("key"))
+                copy->removeChildElement(child, true);
+            }
+            key.identifier = "partiels-vamp-plugins:partielswaveform";
+            key.feature = "peaks";
+            XmlParser::toXml(*copy.get(), "key", key);
+        }
+    }
+    if(version <= 0x20002)
+    {
+        if(auto* child = copy->getChildByName("colours"))
+        {
+            auto const foreground = XmlParser::fromXml(*child, "foreground", juce::Colour());
+            XmlParser::toXml(*child, "duration", foreground.withAlpha(0.4f));
+        }
+    }
+    if(version <= 0x20201)
+    {
+        GraphicsSettings settings;
+        // Migrate old individual graphic attributes to graphicsSettings (for backward compatibility)
+        // and remove old individual graphic attributes
+        if(auto* child = copy->getChildByName("colours"))
+        {
+            settings.colours = XmlParser::fromXml(*copy.get(), "colours", settings.colours);
+            copy->removeChildElement(child, true);
+        }
+        if(auto* child = copy->getChildByName("font"))
+        {
+            settings.font = XmlParser::fromXml(*copy.get(), "font", settings.font);
+            copy->removeChildElement(child, true);
+        }
+        if(auto* child = copy->getChildByName("lineWidth"))
+        {
+            settings.lineWidth = XmlParser::fromXml(*copy.get(), "lineWidth", settings.lineWidth);
+            copy->removeChildElement(child, true);
+        }
+        if(auto* child = copy->getChildByName("unit"))
+        {
+            settings.unit = XmlParser::fromXml(*copy.get(), "unit", settings.unit);
+            copy->removeChildElement(child, true);
+        }
+        if(auto* child = copy->getChildByName("labelLayout"))
+        {
+            settings.labelLayout = XmlParser::fromXml(*copy.get(), "labelLayout", settings.labelLayout);
+            copy->removeChildElement(child, true);
+        }
+        // Add new graphicsSettings attribute
+        XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
+    }
+    if(version < 0x20300)
+    {
+        // Migrate old container format (multiple sibling elements) to new format (parent with children)
+        auto migrateContainerFormat = [](juce::XmlElement& parent, juce::Identifier const& name)
+        {
+            auto const* firstChild = parent.getChildByName(name);
+            if(firstChild != nullptr && firstChild->hasAttribute("value"))
+            {
+                auto newElement = std::make_unique<juce::XmlElement>(name);
+                while(auto* child = parent.getChildByName(name))
                 {
-                    copy->removeChildElement(child, true);
+                    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+                    parent.removeChildElement(child, true);
+                    newElement->addChildElement(childCopy.release());
                 }
-                if(auto* child = copy->getChildByName("description"))
-                {
-                    copy->removeChildElement(child, true);
-                }
-                key.identifier = "partiels-vamp-plugins:partielswaveform";
-                key.feature = "peaks";
-                XmlParser::toXml(*copy.get(), "key", key);
+                parent.addChildElement(newElement.release());
             }
-        }
-        if(version <= 0x20002)
-        {
-            if(auto* child = copy->getChildByName("colours"))
-            {
-                auto const foreground = XmlParser::fromXml(*child, "foreground", juce::Colour());
-                XmlParser::toXml(*child, "duration", foreground.withAlpha(0.4f));
-            }
-        }
-        if(version <= 0x20201)
-        {
-            GraphicsSettings settings;
-            // Migrate old individual graphic attributes to graphicsSettings (for backward compatibility)
-            // and remove old individual graphic attributes
-            if(auto* child = copy->getChildByName("colours"))
-            {
-                settings.colours = XmlParser::fromXml(*copy.get(), "colours", settings.colours);
-                copy->removeChildElement(child, true);
-            }
-            if(auto* child = copy->getChildByName("font"))
-            {
-                settings.font = XmlParser::fromXml(*copy.get(), "font", settings.font);
-                copy->removeChildElement(child, true);
-            }
-            if(auto* child = copy->getChildByName("lineWidth"))
-            {
-                settings.lineWidth = XmlParser::fromXml(*copy.get(), "lineWidth", settings.lineWidth);
-                copy->removeChildElement(child, true);
-            }
-            if(auto* child = copy->getChildByName("unit"))
-            {
-                settings.unit = XmlParser::fromXml(*copy.get(), "unit", settings.unit);
-                copy->removeChildElement(child, true);
-            }
-            if(auto* child = copy->getChildByName("labelLayout"))
-            {
-                settings.labelLayout = XmlParser::fromXml(*copy.get(), "labelLayout", settings.labelLayout);
-                copy->removeChildElement(child, true);
-            }
-            // Add new graphicsSettings attribute
-            XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
-        }
+        };
+        migrateContainerFormat(*copy.get(), "channelsLayout");
+        migrateContainerFormat(*copy.get(), "extraThresholds");
     }
     return copy;
 }
@@ -243,6 +261,34 @@ void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
     {
         Track::from_json(j["labelLayout"], settings.labelLayout);
     }
+}
+
+std::unique_ptr<juce::XmlElement> Track::PresetList::Accessor::parseXml(juce::XmlElement const& xml, int version)
+{
+    auto copy = std::make_unique<juce::XmlElement>(xml);
+    if(version < 0x20300)
+    {
+        // Migrate old container format (multiple sibling elements) to new format (parent with children)
+        // For maps, check if the first child has a "key" child element (indicating old format with pair entries)
+        auto migrateMapContainerFormat = [](juce::XmlElement& parent, juce::Identifier const& name)
+        {
+            auto const* firstChild = parent.getChildByName(name);
+            if(firstChild != nullptr && firstChild->getChildByName("key") != nullptr)
+            {
+                auto newElement = std::make_unique<juce::XmlElement>(name);
+                while(auto* child = parent.getChildByName(name))
+                {
+                    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+                    parent.removeChildElement(child, true);
+                    newElement->addChildElement(childCopy.release());
+                }
+                parent.addChildElement(newElement.release());
+            }
+        };
+        migrateMapContainerFormat(*copy.get(), "processor");
+        migrateMapContainerFormat(*copy.get(), "graphic");
+    }
+    return copy;
 }
 
 ANALYSE_FILE_END
