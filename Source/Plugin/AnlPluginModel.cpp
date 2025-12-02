@@ -3,6 +3,71 @@
 
 ANALYSE_FILE_BEGIN
 
+namespace
+{
+    // Helper function to migrate old container XML format to new format
+    // Old format: <container key="k" value="v"/> (for maps) or <container value="v"/> (for vectors)
+    // New format: <container><container><key>k</key><value>v</value></container></container> (for maps)
+    //             <container><container value="v"/></container> (for vectors)
+    void migrateContainerXml(juce::XmlElement& parent, juce::Identifier const& name)
+    {
+        auto const* firstChild = parent.getChildByName(name);
+        if(firstChild == nullptr)
+        {
+            return; // No child exists, nothing to migrate
+        }
+        
+        // Check if we have old format:
+        // For maps: first child has both "key" and "value" attributes
+        // For vectors: first child has "value" attribute directly
+        bool isOldMapFormat = firstChild->hasAttribute("key") && firstChild->hasAttribute("value");
+        bool isOldVectorFormat = firstChild->hasAttribute("value") && !firstChild->hasAttribute("key");
+        
+        if(!isOldMapFormat && !isOldVectorFormat)
+        {
+            return; // Already in new format or different structure
+        }
+        
+        // Collect all sibling elements with the same name
+        std::vector<std::unique_ptr<juce::XmlElement>> oldElements;
+        while(auto* child = parent.getChildByName(name))
+        {
+            oldElements.push_back(std::make_unique<juce::XmlElement>(*child));
+            parent.removeChildElement(child, true);
+        }
+        
+        // Create new parent element
+        auto newParent = std::make_unique<juce::XmlElement>(name);
+        
+        if(isOldMapFormat)
+        {
+            // Migrate map format: create <name><key>...</key><value>...</value></name> for each entry
+            for(auto& oldElem : oldElements)
+            {
+                auto newChild = std::make_unique<juce::XmlElement>(name);
+                auto keyValue = oldElem->getStringAttribute("key");
+                auto valueValue = oldElem->getStringAttribute("value");
+                newChild->setAttribute("key", keyValue);
+                newChild->setAttribute("value", valueValue);
+                newParent->addChildElement(newChild.release());
+            }
+        }
+        else // isOldVectorFormat
+        {
+            // Migrate vector format: create <name value="..."/> for each entry
+            for(auto& oldElem : oldElements)
+            {
+                auto newChild = std::make_unique<juce::XmlElement>(name);
+                auto valueValue = oldElem->getStringAttribute("value");
+                newChild->setAttribute("value", valueValue);
+                newParent->addChildElement(newChild.release());
+            }
+        }
+        
+        parent.addChildElement(newParent.release());
+    }
+} // anonymous namespace
+
 bool Plugin::Output::operator==(Output const& rhd) const noexcept
 {
     return identifier == rhd.identifier &&
@@ -270,17 +335,23 @@ auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Id
     {
         return defaultValue;
     }
+    // Create a mutable copy for migration
+    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+    
+    // Migrate container formats if needed
+    migrateContainerXml(*childCopy, "valueNames");
+    
     Plugin::Parameter value;
-    value.identifier = fromXml(*child, "identifier", defaultValue.identifier);
-    value.name = fromXml(*child, "name", defaultValue.name);
-    value.description = fromXml(*child, "description", defaultValue.description);
-    value.unit = fromXml(*child, "unit", defaultValue.unit);
-    value.minValue = fromXml(*child, "minValue", defaultValue.minValue);
-    value.maxValue = fromXml(*child, "maxValue", defaultValue.maxValue);
-    value.defaultValue = fromXml(*child, "defaultValue", defaultValue.defaultValue);
-    value.isQuantized = fromXml(*child, "isQuantized", defaultValue.isQuantized);
-    value.quantizeStep = fromXml(*child, "quantizeStep", defaultValue.quantizeStep);
-    value.valueNames = fromXml(*child, "valueNames", defaultValue.valueNames);
+    value.identifier = fromXml(*childCopy, "identifier", defaultValue.identifier);
+    value.name = fromXml(*childCopy, "name", defaultValue.name);
+    value.description = fromXml(*childCopy, "description", defaultValue.description);
+    value.unit = fromXml(*childCopy, "unit", defaultValue.unit);
+    value.minValue = fromXml(*childCopy, "minValue", defaultValue.minValue);
+    value.maxValue = fromXml(*childCopy, "maxValue", defaultValue.maxValue);
+    value.defaultValue = fromXml(*childCopy, "defaultValue", defaultValue.defaultValue);
+    value.isQuantized = fromXml(*childCopy, "isQuantized", defaultValue.isQuantized);
+    value.quantizeStep = fromXml(*childCopy, "quantizeStep", defaultValue.quantizeStep);
+    value.valueNames = fromXml(*childCopy, "valueNames", defaultValue.valueNames);
     return value;
 }
 
@@ -327,22 +398,28 @@ auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Ident
     {
         return defaultValue;
     }
+    // Create a mutable copy for migration
+    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+    
+    // Migrate container formats if needed
+    migrateContainerXml(*childCopy, "binNames");
+    
     Plugin::Output value;
-    value.identifier = fromXml(*child, "identifier", defaultValue.identifier);
-    value.name = fromXml(*child, "name", defaultValue.name);
-    value.description = fromXml(*child, "description", defaultValue.description);
-    value.unit = fromXml(*child, "unit", defaultValue.unit);
-    value.hasFixedBinCount = fromXml(*child, "hasFixedBinCount", defaultValue.hasFixedBinCount);
-    value.binCount = fromXml(*child, "binCount", defaultValue.binCount);
-    value.binNames = fromXml(*child, "binNames", defaultValue.binNames);
-    value.hasKnownExtents = fromXml(*child, "hasKnownExtents", defaultValue.hasKnownExtents);
-    value.minValue = fromXml(*child, "minValue", defaultValue.minValue);
-    value.maxValue = fromXml(*child, "maxValue", defaultValue.maxValue);
-    value.isQuantized = fromXml(*child, "isQuantized", defaultValue.isQuantized);
-    value.quantizeStep = fromXml(*child, "quantizeStep", defaultValue.quantizeStep);
-    value.sampleType = fromXml(*child, "sampleType", defaultValue.sampleType);
-    value.sampleRate = fromXml(*child, "sampleRate", defaultValue.sampleRate);
-    value.hasDuration = fromXml(*child, "hasDuration", defaultValue.hasDuration);
+    value.identifier = fromXml(*childCopy, "identifier", defaultValue.identifier);
+    value.name = fromXml(*childCopy, "name", defaultValue.name);
+    value.description = fromXml(*childCopy, "description", defaultValue.description);
+    value.unit = fromXml(*childCopy, "unit", defaultValue.unit);
+    value.hasFixedBinCount = fromXml(*childCopy, "hasFixedBinCount", defaultValue.hasFixedBinCount);
+    value.binCount = fromXml(*childCopy, "binCount", defaultValue.binCount);
+    value.binNames = fromXml(*childCopy, "binNames", defaultValue.binNames);
+    value.hasKnownExtents = fromXml(*childCopy, "hasKnownExtents", defaultValue.hasKnownExtents);
+    value.minValue = fromXml(*childCopy, "minValue", defaultValue.minValue);
+    value.maxValue = fromXml(*childCopy, "maxValue", defaultValue.maxValue);
+    value.isQuantized = fromXml(*childCopy, "isQuantized", defaultValue.isQuantized);
+    value.quantizeStep = fromXml(*childCopy, "quantizeStep", defaultValue.quantizeStep);
+    value.sampleType = fromXml(*childCopy, "sampleType", defaultValue.sampleType);
+    value.sampleRate = fromXml(*childCopy, "sampleRate", defaultValue.sampleRate);
+    value.hasDuration = fromXml(*childCopy, "hasDuration", defaultValue.hasDuration);
     return value;
 }
 
@@ -422,19 +499,27 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     {
         return defaultValue;
     }
+    // Create a mutable copy for migration
+    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+    
+    // Migrate container formats if needed
+    migrateContainerXml(*childCopy, "parameters");
+    migrateContainerXml(*childCopy, "extraOutputs");
+    migrateContainerXml(*childCopy, "programs");
+    
     Plugin::Description value;
-    value.name = fromXml(*child, "name", defaultValue.name);
-    value.inputDomain = fromXml(*child, "inputDomain", defaultValue.inputDomain);
-    value.maker = fromXml(*child, "maker", defaultValue.maker);
-    value.version = fromXml(*child, "version", defaultValue.version);
-    value.category = fromXml(*child, "category", defaultValue.category);
-    value.details = fromXml(*child, "details", defaultValue.details);
-    value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
-    value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
-    value.output = fromXml(*child, "output", defaultValue.output);
-    value.extraOutputs = fromXml(*child, "extraOutputs", defaultValue.extraOutputs);
-    value.input = fromXml(*child, "input", defaultValue.input);
-    value.programs = fromXml(*child, "programs", defaultValue.programs);
+    value.name = fromXml(*childCopy, "name", defaultValue.name);
+    value.inputDomain = fromXml(*childCopy, "inputDomain", defaultValue.inputDomain);
+    value.maker = fromXml(*childCopy, "maker", defaultValue.maker);
+    value.version = fromXml(*childCopy, "version", defaultValue.version);
+    value.category = fromXml(*childCopy, "category", defaultValue.category);
+    value.details = fromXml(*childCopy, "details", defaultValue.details);
+    value.defaultState = fromXml(*childCopy, "defaultState", defaultValue.defaultState);
+    value.parameters = fromXml(*childCopy, "parameters", defaultValue.parameters);
+    value.output = fromXml(*childCopy, "output", defaultValue.output);
+    value.extraOutputs = fromXml(*childCopy, "extraOutputs", defaultValue.extraOutputs);
+    value.input = fromXml(*childCopy, "input", defaultValue.input);
+    value.programs = fromXml(*childCopy, "programs", defaultValue.programs);
     return value;
 }
 
@@ -463,11 +548,17 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     {
         return defaultValue;
     }
+    // Create a mutable copy for migration
+    auto childCopy = std::make_unique<juce::XmlElement>(*child);
+    
+    // Migrate container formats if needed
+    migrateContainerXml(*childCopy, "parameters");
+    
     Plugin::State value;
-    value.blockSize = fromXml(*child, "blockSize", defaultValue.blockSize);
-    value.stepSize = fromXml(*child, "stepSize", defaultValue.stepSize);
-    value.windowType = fromXml(*child, "windowType", defaultValue.windowType);
-    value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
+    value.blockSize = fromXml(*childCopy, "blockSize", defaultValue.blockSize);
+    value.stepSize = fromXml(*childCopy, "stepSize", defaultValue.stepSize);
+    value.windowType = fromXml(*childCopy, "windowType", defaultValue.windowType);
+    value.parameters = fromXml(*childCopy, "parameters", defaultValue.parameters);
     return value;
 }
 
