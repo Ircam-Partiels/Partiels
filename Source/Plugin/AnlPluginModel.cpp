@@ -41,7 +41,7 @@ namespace
         
         if(isOldMapFormat)
         {
-            // Migrate map format: create <name><key>...</key><value>...</value></name> for each entry
+            // Migrate map format: create <name key="..." value="..."/> for each entry
             for(auto& oldElem : oldElements)
             {
                 auto newChild = std::make_unique<juce::XmlElement>(name);
