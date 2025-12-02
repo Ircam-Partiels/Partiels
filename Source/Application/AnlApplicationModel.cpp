@@ -15,10 +15,6 @@ juce::File Application::Accessor::getFactoryTemplateFile()
 std::unique_ptr<juce::XmlElement> Application::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(copy == nullptr)
-    {
-        return nullptr;
-    }
     if(version < 0x10300)
     {
         if(auto* child = copy->getChildByName("defaultTemplateFile"))
@@ -26,6 +22,12 @@ std::unique_ptr<juce::XmlElement> Application::Accessor::parseXml(juce::XmlEleme
             copy->removeChildElement(child, true);
         }
         XmlParser::toXml(*copy.get(), "defaultTemplateFile", juce::File{});
+    }
+    if(version < 0x20301)
+    {
+        // Migrate old container format (multiple sibling elements) to new format (parent with children)
+        XmlParser::migrateContainerFormat(*copy.get(), "recentlyOpenedFilesList");
+        XmlParser::migrateContainerFormat(*copy.get(), "routingMatrix");
     }
     return copy;
 }
