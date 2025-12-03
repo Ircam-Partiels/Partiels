@@ -201,6 +201,9 @@ juce_add_binary_data(AnlIconsData HEADER_NAME "AnlIconsData.h" NAMESPACE AnlIcon
 file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
 juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
+file(GLOB PartielsCoAnalyzerDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/CoAnalyzer/*.md)
+juce_add_binary_data(AnlCoAnalyzerData HEADER_NAME "AnlCoAnalyzerData.h" NAMESPACE AnlCoAnalyzerData SOURCES ${PartielsCoAnalyzerDataSources})
+
 file(GLOB TestResultsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.lab
@@ -219,6 +222,7 @@ target_link_libraries(Partiels PRIVATE
     AnlResourceData
     AnlIconsData
     AnlCursorsData
+    AnlCoAnalyzerData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
