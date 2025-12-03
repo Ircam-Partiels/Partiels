@@ -479,11 +479,11 @@ void Document::Director::startAction()
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
-void Document::Director::endAction(ActionState state, juce::String const& name)
+bool Document::Director::endAction(ActionState state, juce::String const& name)
 {
     if(mAccessor.isEquivalentTo(mSavedState))
     {
-        return;
+        return false;
     }
 
     class Action
@@ -540,6 +540,7 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
             break;
         }
     }
+    return true;
 }
 
 std::optional<juce::String> Document::Director::addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification)
