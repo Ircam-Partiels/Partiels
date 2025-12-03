@@ -108,10 +108,10 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
   * identifier: The identifier of the output feature from the plugin.
   * name: Human-readable name of the analysis output (e.g., "Peak", "Beat Marker", "Spectrogram", "Pitch"). Use this to understand what the track displays.
   * description: Human-readable description of what the analysis produces. Use this to understand the track's purpose.
-  * binCount: **CRITICAL** - Determines the visual representation type:
-    * **0** = Markers/events (e.g., beat detection, onset detection) - discrete time points with optional labels
-    * **1** = Points/lines/segments (e.g., pitch tracking, centroid) - continuous single-value curves over time
-    * **>1** = Vectors/spectrogram (e.g., FFT, spectrum) - multi-dimensional data displayed as spectrograms
+  * binCount: The number of values per time frame (read-only). Note: The actual visual representation type is defined by the `<type>` element in `<graphicsSettings>/<type>`, not directly by binCount:
+    * **0** = Typically corresponds to markers/events (type=0)
+    * **1** = Typically corresponds to lines/curves (type=1)
+    * **>1** = Typically corresponds to spectrograms (type=2)
   * unit: The unit of measurement for the output values (e.g., "Hz", "dB", "BPM", "").
   * minValue/maxValue: The expected range of output values (if hasKnownExtents is 1).
   * sampleType: The temporal structure (0=fixed sample rate, 1=variable rate, 2=one value per block).
@@ -133,11 +133,16 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
   * value: Current value of the parameter (can be changed).
   * When setting values, use a dot as decimal separator (e.g., `90.0`) and no thousands separators. If min/max are provided in the parameter description, clamp the value within `[minValue, maxValue]`.
   * Note: The `<state>/<parameters>` elements are nested (not siblings) - each `<parameters>` element with key/value attributes is wrapped in a parent `<parameters>` container element.
-* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. **IMPORTANT**: The applicable graphics parameters depend on the track's visual representation type (binCount in the `<tracks>/<description>/<output>` element):
+* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. **IMPORTANT**: The track's visual representation type is defined by the `<type>` sub-element within `<graphicsSettings>`, and the `<graphicsSettings>` element only contains attributes and sub-elements that are applicable to that type:
+  * The sub-element `<type>` with attribute `type` defining the visual representation (read-only, should not be modified):
+    * **0** = Markers/events (discrete time points with optional labels)
+    * **1** = Lines/curves (continuous single-value curves over time)
+    * **2** = Vectors/spectrograms (multi-dimensional data displayed as spectrograms)
+    * **undefined** = Unknown representation
   * font: The font description `"Name; Size Style"` (e.g., `Helvetica; 16.0 Bold`) - applies to all track types
-  * lineWidth: The width of the markers or lines (minimum 1.0) - **ONLY applies to binCount=0 (markers) and binCount=1 (lines/curves). Do NOT use for binCount>1 (spectrograms)**
-  * The sub-element `<colours>` with the attributes:
-    * map: The index of the colour map used to display the spectrogram, ranging from 0 to 11 - **ONLY applies to binCount>1 (spectrograms). Do NOT use for binCount=0 or binCount=1**. Corresponding to:
+  * lineWidth: The width of the markers or lines (minimum 1.0) - **ONLY present when type=0 (markers) or type=1 (lines/curves). Will NOT be present for type=2 (spectrograms)**
+  * The sub-element `<colours>` with attributes that vary by track type:
+    * map: The index of the colour map used to display the spectrogram, ranging from 0 to 11 - **ONLY present when type=2 (spectrograms). Will NOT be present for type=0 or type=1**. Corresponding to:
       * 0 – Parula: Balanced blue-to-yellow gradient suited for preserving detail.
       * 1 – Heat: Dark-to-bright palette emphasizing energetic regions.
       * 2 – Jet: Rainbow gradient with high contrast between adjacent hues.
@@ -150,12 +155,12 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
       * 9 – Viridis: Colourblind-friendly blue-to-green palette with uniform brightness.
       * 10 – Cividis: Blue-to-yellow palette designed for perceptual uniformity.
       * 11 – Github: GitHub-inspired blues providing subtle contrast.
-    * background: The background colour when displaying markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
-    * foreground: The colour of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
-    * duration: The colour used to display the duration of the markers (usually the foreground colour with transparency) - **applies to binCount=0 (markers)**
-    * text: The colour of the text that represents the labels and values of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
-    * shadow: The colour of the shadow of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
-  * The sub-element `<labelLayout>` for the markers - **ONLY applies to binCount=0 (markers). Do NOT use for binCount=1 or binCount>1** - with the attributes:
+    * background: The background colour when displaying markers or lines - **ONLY present when type=0 (markers) or type=1 (lines/curves)**
+    * foreground: The colour of the markers or lines - **ONLY present when type=0 (markers) or type=1 (lines/curves)**
+    * duration: The colour used to display the duration of the markers (usually the foreground colour with transparency) - **ONLY present when type=0 (markers)**
+    * text: The colour of the text that represents the labels and values of the markers or lines - **ONLY present when type=0 (markers) or type=1 (lines/curves)**
+    * shadow: The colour of the shadow of the markers or lines - **ONLY present when type=0 (markers) or type=1 (lines/curves)**
+  * The sub-element `<labelLayout>` for the markers - **ONLY present when type=0 (markers). Will NOT be present for type=1 or type=2** - with the attributes:
     * justification: The vertical justification of the labels in the track (0 for top, 1 for centred, 2 for bottom)
     * position: The vertical offset of the labels (negative to move up, positive to move down)
 
@@ -604,7 +609,7 @@ The tempo has been set to 110 BPM.
 
 ### EXAMPLE 20: WRONG - Color map applied to non-spectrogram track
 
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="1"` (line/curve track, not a spectrogram) in the `<tracks>/<description>/<output>` element.
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="1"/>` (line/curve track, not a spectrogram).
 
 User query:`Change the color map to Viridis`
 
@@ -623,7 +628,7 @@ The colour map has been changed to Viridis.
 </document>
 ```
 
-**Error**: The `map` attribute (colour map) only applies to spectrogram tracks (binCount > 1). This track has `binCount="1"` in the `<tracks>/<description>/<output>` element, indicating it displays a line/curve, not a spectrogram. For line tracks, use the `foreground` attribute to change the line colour instead.
+**Error**: The `map` attribute (colour map) only applies to spectrogram tracks (type=2). This track has `<type type="1"/>` in `<graphicsSettings>`, indicating it displays a line/curve, not a spectrogram. The `map` attribute is not present in the original `<graphicsSettings>` for this track type. For line tracks, use the `foreground` attribute to change the line colour instead.
 
 ### EXAMPLE 21: WRONG - Window size parameter applied to non-FFT track
 
@@ -652,7 +657,7 @@ The window size has been set to 50.0 ms.
 
 ### EXAMPLE 22: WRONG - Spectrogram parameter applied to marker track
 
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="0"` (marker/event track) in the `<tracks>/<description>/<output>` element.
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="0"/>` (marker/event track).
 
 User query:`Make the spectrogram smoother`
 
@@ -673,11 +678,11 @@ The window overlapping has been increased to 8x for smoother temporal variations
 </document>
 ```
 
-**Error**: This track has `binCount="0"` in the `<tracks>/<description>/<output>` element, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours, or the specific analysis parameters listed in its `<description>/<parameters>`.
+**Error**: This track has `<type type="0"/>` in `<graphicsSettings>`, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours that are present in its `<graphicsSettings>`, or the specific analysis parameters listed in its `<description>/<parameters>`.
 
 ### EXAMPLE 23: WRONG - lineWidth applied to spectrogram track
 
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="513"` (spectrogram track) in the `<tracks>/<description>/<output>` element.
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="2"/>` (spectrogram track).
 
 User query:`Increase the line width to 2.0`
 
@@ -695,5 +700,5 @@ The line width has been increased to 2.0.
 </document>
 ```
 
-**Error**: The `lineWidth` parameter only applies to marker tracks (binCount=0) and line/curve tracks (binCount=1). This track has `binCount="513"` in the `<tracks>/<description>/<output>` element, indicating it displays a spectrogram. For spectrogram tracks, you can only modify the `map` (colour map) attribute in the `<colours>` element, or the `font` attribute. Line width has no meaning for spectrograms.
+**Error**: The `lineWidth` attribute only applies to marker tracks (type=0) and line/curve tracks (type=1). This track has `<type type="2"/>` in `<graphicsSettings>`, indicating it displays a spectrogram. The `lineWidth` attribute is not present in the original `<graphicsSettings>` for this track type. For spectrogram tracks, you can only modify the `map` (colour map) attribute in the `<colours>` element, or the `font` attribute. Line width has no meaning for spectrograms.
 
