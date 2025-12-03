@@ -40,13 +40,9 @@ namespace XmlParser
         else if constexpr(is_specialization<T, std::pair>::value)
         {
             auto child = std::make_unique<juce::XmlElement>(attributeName);
-            MiscWeakAssert(child != nullptr);
-            if(child != nullptr)
-            {
-                toXml(*child.get(), "key", value.first);
-                toXml(*child.get(), "value", value.second);
-                xml.addChildElement(child.release());
-            }
+            toXml(*child.get(), "key", value.first);
+            toXml(*child.get(), "value", value.second);
+            xml.addChildElement(child.release());
         }
         else if constexpr(is_specialization<T, std::vector>::value || is_specialization<T, std::set>::value)
         {
@@ -54,32 +50,26 @@ namespace XmlParser
             {
                 xml.removeChildElement(child, true);
             }
+            auto child = std::make_unique<juce::XmlElement>(attributeName);
             if constexpr(std::is_lvalue_reference<decltype(*value.cbegin())>::value)
             {
                 for(auto const& element : value)
                 {
-                    auto child = std::make_unique<juce::XmlElement>(attributeName);
-                    MiscWeakAssert(child != nullptr);
-                    if(child != nullptr)
-                    {
-                        toXml(*child.get(), "value", element);
-                        xml.addChildElement(child.release());
-                    }
+                    auto subChild = std::make_unique<juce::XmlElement>(attributeName);
+                    toXml(*subChild.get(), "value", element);
+                    child->addChildElement(subChild.release());
                 }
             }
             else
             {
                 for(auto const element : value)
                 {
-                    auto child = std::make_unique<juce::XmlElement>(attributeName);
-                    MiscWeakAssert(child != nullptr);
-                    if(child != nullptr)
-                    {
-                        toXml(*child.get(), "value", element);
-                        xml.addChildElement(child.release());
-                    }
+                    auto subChild = std::make_unique<juce::XmlElement>(attributeName);
+                    toXml(*subChild.get(), "value", element);
+                    child->addChildElement(subChild.release());
                 }
             }
+            xml.addChildElement(child.release());
         }
         else if constexpr(is_specialization<T, std::map>::value)
         {
@@ -87,10 +77,12 @@ namespace XmlParser
             {
                 xml.removeChildElement(child, true);
             }
+            auto child = std::make_unique<juce::XmlElement>(attributeName);
             for(auto const& element : value)
             {
-                toXml(xml, attributeName, element);
+                toXml(*child.get(), attributeName, element);
             }
+            xml.addChildElement(child.release());
         }
         else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
@@ -101,12 +93,8 @@ namespace XmlParser
             if(value != nullptr)
             {
                 auto child = std::make_unique<juce::XmlElement>(attributeName);
-                MiscWeakAssert(child != nullptr);
-                if(child != nullptr)
-                {
-                    toXml(*child, attributeName, *value.get());
-                    xml.addChildElement(child.release());
-                }
+                toXml(*child, attributeName, *value.get());
+                xml.addChildElement(child.release());
             }
         }
         else if constexpr(is_specialization<T, std::optional>::value)
@@ -118,12 +106,8 @@ namespace XmlParser
             if(value.has_value())
             {
                 auto child = std::make_unique<juce::XmlElement>(attributeName);
-                MiscWeakAssert(child != nullptr);
-                if(child != nullptr)
-                {
-                    toXml(*child, attributeName, *value);
-                    xml.addChildElement(child.release());
-                }
+                toXml(*child, attributeName, *value);
+                xml.addChildElement(child.release());
             }
         }
         else
@@ -183,37 +167,55 @@ namespace XmlParser
             }
             return std::make_pair(first_type{}, second_type{});
         }
-        else if constexpr(is_specialization<T, std::vector>::value)
+        else if constexpr(is_specialization<T, std::vector>::value || is_specialization<T, std::set>::value || is_specialization<T, std::map>::value)
         {
-            T result;
-            using value_type = typename T::value_type;
-            for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
+            auto const addElement = [](auto& result, juce::XmlElement const& c)
             {
-                result.push_back(fromXml(*child, "value", value_type{}));
-            }
-            return result;
-        }
-        else if constexpr(is_specialization<T, std::set>::value)
-        {
-            T result;
-            using value_type = typename T::value_type;
-            for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
+                if constexpr(is_specialization<T, std::vector>::value)
+                {
+                    using value_type = typename T::value_type;
+                    result.push_back(fromXml(c, "value", value_type{}));
+                }
+                else if(is_specialization<T, std::set>::value)
+                {
+                    using value_type = typename T::value_type;
+                    result.insert(fromXml(c, "value", value_type{}));
+                }
+                else if(is_specialization<T, std::map>::value)
+                {
+                    using key_type = typename T::key_type;
+                    using mapped_type = typename T::mapped_type;
+                    auto const entry = fromXml(c, "key", key_type{});
+                    result[entry] = fromXml(c, "value", mapped_type{});
+                }
+            };
+
+            if(auto* child = xml.getChildByName(attributeName))
             {
-                result.insert(fromXml(*child, "value", value_type{}));
+                T result;
+                auto* subChild = child->getChildByName(attributeName);
+                if(subChild != nullptr) // New container format >= 2.3.1
+                {
+                    while(subChild != nullptr)
+                    {
+                        addElement(result, *subChild);
+                        subChild = subChild->getNextElementWithTagName(attributeName);
+                    }
+                }
+                else if(child->hasAttribute("value") || child->getChildByName("value") != nullptr) // Old container format < 2.3.1
+                {
+                    while(child != nullptr)
+                    {
+                        addElement(result, *child);
+                        child = child->getNextElementWithTagName(attributeName);
+                    }
+                }
+                return result;
             }
-            return result;
-        }
-        else if constexpr(is_specialization<T, std::map>::value)
-        {
-            T result;
-            using key_type = typename T::key_type;
-            using mapped_type = typename T::mapped_type;
-            for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
+            else
             {
-                auto const entry = fromXml(*child, "key", key_type{});
-                result[entry] = fromXml(*child, "value", mapped_type{});
+                return defaultValue;
             }
-            return result;
         }
         else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
