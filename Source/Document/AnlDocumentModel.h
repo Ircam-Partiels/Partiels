@@ -131,7 +131,7 @@ namespace Document
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override
         {
             auto copy = std::make_unique<juce::XmlElement>(xml);
-            if(copy != nullptr && version <= 0x7)
+            if(version <= 0x7)
             {
                 if(copy->hasAttribute("file"))
                 {
