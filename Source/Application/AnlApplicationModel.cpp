@@ -15,10 +15,6 @@ juce::File Application::Accessor::getFactoryTemplateFile()
 std::unique_ptr<juce::XmlElement> Application::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(copy == nullptr)
-    {
-        return nullptr;
-    }
     if(version < 0x10300)
     {
         if(auto* child = copy->getChildByName("defaultTemplateFile"))
