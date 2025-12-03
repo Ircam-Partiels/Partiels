@@ -16,7 +16,7 @@ PluginList::Accessor::Accessor()
 std::unique_ptr<juce::XmlElement> PluginList::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
-    if(copy != nullptr && version <= 0x8)
+    if(version <= 0x8)
     {
         XmlParser::toXml(*copy.get(), "useEnvVariable", true);
         XmlParser::toXml(*copy.get(), "searchPath", getDefaultSearchPath());
