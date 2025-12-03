@@ -2,8 +2,8 @@
 #include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
 #include "AnlApplicationInstance.h"
+#include <AnlCoAnalyzerData.h>
 #include <AnlIconsData.h>
-#include <AnlResourceData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -107,6 +107,27 @@ Application::CoAnalyzer::SettingsPanel::~SettingsPanel()
     setContent("", nullptr);
 }
 
+static void askToLoadAModel()
+{
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::QuestionIcon)
+                             .withTitle(juce::translate("Neuralyzer Model Not Set"))
+                             .withMessage(juce::translate("The Neuralyzer model is not set. Do you want to open the Neuralyzer settings panel to set it now?"))
+                             .withButton(juce::translate("Open"))
+                             .withButton(juce::translate("Cancel"));
+    juce::AlertWindow::showAsync(options, [](int windowResult)
+                                 {
+                                     if(windowResult != 1)
+                                     {
+                                         return;
+                                     }
+                                     if(auto* window = Application::Instance::get().getWindow())
+                                     {
+                                         window->getInterface().showCoAnalyzerSettingsPanel();
+                                     }
+                                 });
+}
+
 Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
 : mAccessor(accessor)
 , mSendButton(juce::ImageCache::getFromMemory(AnlIconsData::stop_png, AnlIconsData::stop_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::send_png, AnlIconsData::send_pngSize))
@@ -135,6 +156,8 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     {
         mSendButton.setEnabled(mIsInitialized.load() && (mRequestFuture.valid() || mQueryEditor.getText().isNotEmpty()));
     };
+    mQueryEditor.addMouseListener(this, true);
+    mStatusLabel.setText(juce::translate("Model not intialized"), juce::dontSendNotification);
 
     mSendButton.onClick = [this]()
     {
@@ -165,7 +188,10 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
         {
             case AttrType::model:
             {
-                initializeSystem();
+                if(mAccessor.getAttr<AttrType::model>() != juce::File{} || mIsInitialized.load())
+                {
+                    initializeSystem();
+                }
                 break;
             }
         }
@@ -176,11 +202,23 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
 
 Application::CoAnalyzer::Chat::~Chat()
 {
+    mQueryEditor.removeMouseListener(this);
     mAccessor.removeListener(mListener);
     mShouldQuit.store(true);
     if(mRequestFuture.valid())
     {
         mRequestFuture.wait();
+    }
+}
+
+void Application::CoAnalyzer::Chat::mouseDown(juce::MouseEvent const& event)
+{
+    if(event.eventComponent == &mQueryEditor)
+    {
+        if(!mIsInitialized.load() && mAccessor.getAttr<AttrType::model>() == juce::File{})
+        {
+            askToLoadAModel();
+        }
     }
 }
 
@@ -202,6 +240,16 @@ void Application::CoAnalyzer::Chat::resized()
 
 void Application::CoAnalyzer::Chat::colourChanged()
 {
+    mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
+    mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
+    if(!mIsInitialized.load())
+    {
+        mQueryEditor.setTextToShowWhenEmpty(juce::translate("Select a model in the settings panel."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
+    }
+    else
+    {
+        mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
+    }
     updateHistory();
 }
 
@@ -265,11 +313,8 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
             }
         }
     }
-    updateHistory();
-    mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
-    mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
-    mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
     mSendButton.setTooltip(juce::translate("Send Query"));
+    colourChanged();
 }
 
 void Application::CoAnalyzer::Chat::initializeSystem()
@@ -281,11 +326,13 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     updateHistory();
     mSendButton.setEnabled(false);
     mStatusLabel.setText(juce::translate("Initializing..."), juce::dontSendNotification);
+    mQueryEditor.setTextToShowWhenEmpty({}, findColour(juce::TextButton::ColourIds::buttonOnColourId));
 
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
 
-    mRequestFuture = std::async(std::launch::async, [this, model = mAccessor.getAttr<AttrType::model>()]()
+    auto const model = mAccessor.getAttr<AttrType::model>();
+    mRequestFuture = std::async(std::launch::async, [this, model]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
                                     MiscDebug("Application::CoAnalyzer::Chat", "Initializing Neuralyzer chat system...");
@@ -323,9 +370,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         else
                                         {
                                             chrono.start();
-                                            JUCE_COMPILER_WARNING("Replace with data embedded in BinaryData or application resources")
-                                            auto const instructionText = juce::File("/Users/guillot/Git/Partiels/BinaryData/CoAnalyzer/Instructions_0.md").loadFileAsString();
-                                            auto systemMessageResult = mChat.addSystemMessage(instructionText);
+                                            auto systemMessageResult = mChat.addSystemMessage(AnlCoAnalyzerData::Instructions_0_md);
                                             chrono.stop("State generation ended");
                                             if(systemMessageResult.failed())
                                             {
@@ -364,23 +409,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
 
     if(!mIsInitialized)
     {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::QuestionIcon)
-                                 .withTitle(juce::translate("Neuralyzer Model Not Set"))
-                                 .withMessage(juce::translate("The Neuralyzer model is not set. Do you want to open the Neuralyzer settings panel to set it now?"))
-                                 .withButton(juce::translate("Open"))
-                                 .withButton(juce::translate("Cancel"));
-        juce::AlertWindow::showAsync(options, [](int windowResult)
-                                     {
-                                         if(windowResult != 1)
-                                         {
-                                             return;
-                                         }
-                                         if(auto* window = Instance::get().getWindow())
-                                         {
-                                             window->getInterface().showCoAnalyzerSettingsPanel();
-                                         }
-                                     });
+        askToLoadAModel();
         return;
     };
 

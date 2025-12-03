@@ -76,6 +76,7 @@ namespace Application
             void resized() override;
             void colourChanged() override;
             void parentHierarchyChanged() override;
+            void mouseDown(juce::MouseEvent const& event) override;
 
         private:
             // clang-format off
