@@ -147,8 +147,8 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
     // Initialize the context
     auto ctx_params = llama_context_default_params();
     auto const modelMaxCtx = llama_model_n_ctx_train(mModel.get());
-    ctx_params.n_ctx = std::min(static_cast<uint32_t>(65536), static_cast<uint32_t>(modelMaxCtx)); // Increased to 64K for better instruction retention
-    ctx_params.n_batch = batchSize;
+    ctx_params.n_ctx = std::min(static_cast<uint32_t>(32768), static_cast<uint32_t>(modelMaxCtx)); // Increased to 64K for better instruction retention
+    ctx_params.n_batch = ctx_params.n_ctx;
     ctx_params.abort_callback = [](void* data)
     {
         return reinterpret_cast<Chat*>(data)->mShouldQuit.load();
@@ -401,6 +401,11 @@ juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& inst
 
 std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::sendUserQuery(juce::String const& userMessage)
 {
+    {
+        std::unique_lock<std::mutex> lock(mTempResponseMutex);
+        mTempResponse.clear();
+    }
+
     if(mContext == nullptr || mSampler == nullptr)
     {
         MiscDebug("Application::Llama::Chat", "Not initialized");
@@ -507,6 +512,11 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             }
         }
 
+        {
+            std::unique_lock<std::mutex> lock(mTempResponseMutex);
+            mTempResponse = response;
+        }
+
         // Prepare the next batch with the sampled token
         batch = llama_batch_get_one(&new_token_id, 1);
     }
@@ -565,6 +575,26 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     }
     MiscDebug("Application::Llama::Chat", result.getErrorMessage() + ", message: " + message + ", document: " + document);
     return std::make_tuple(result, message, document);
+}
+
+juce::String Application::Llama::Chat::getTemporaryResponse() const
+{
+    auto response = [this]
+    {
+        std::unique_lock<std::mutex> lock(mTempResponseMutex, std::try_to_lock);
+        if(lock.owns_lock())
+        {
+            return mTempResponse;
+        }
+        return std::string{};
+    }();
+    return response;
+}
+
+void Application::Llama::Chat::clearTemporaryResponse()
+{
+    std::unique_lock<std::mutex> lock(mTempResponseMutex);
+    mTempResponse.clear();
 }
 
 ANALYSE_FILE_END

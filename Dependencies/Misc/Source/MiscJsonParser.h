@@ -111,7 +111,7 @@ namespace nlohmann
                 j.clear();
             }
         }
-        
+
         static void from_json(json const& j, std::optional<T>& value)
         {
             if(j.empty())
@@ -124,6 +124,6 @@ namespace nlohmann
             }
         }
     };
-    
+
     json sax_parse_json_object(std::istream& stream, std::string const& key, std::size_t level);
 } // namespace nlohmann

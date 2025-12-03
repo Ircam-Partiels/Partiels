@@ -45,11 +45,13 @@ namespace Application
             void resized() override;
             void parentHierarchyChanged() override;
             void visibilityChanged() override;
+
         private:
             Accessor::Listener mListener{typeid(*this).name()};
             PropertyList mModel;
             PropertyTextButton mResetState;
             std::vector<juce::File> mInstalledModels;
+            TimerClock mTimerClock;
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsContent)
         };
 
@@ -102,19 +104,44 @@ namespace Application
             void updateHistory();
 
             using Results = std::tuple<juce::Result, juce::String, juce::String>;
+            using History = std::vector<std::tuple<MessageType, juce::String>>;
+
+            class QueryEditor
+            : public juce::TextEditor
+            , private juce::TextEditor::Listener
+            {
+            public:
+                QueryEditor(History const& history);
+                virtual ~QueryEditor() override = default;
+
+                // juce::TextEditor
+                bool keyPressed(juce::KeyPress const& key) override;
+
+                void resetHistoryIndex();
+
+            private:
+                // juce::TextEditor::Listener
+                void textEditorTextChanged(juce::TextEditor&) override;
+
+                History const& mHistory;
+                juce::String mSavedText;
+                int mHistoryIndex = -1;
+                bool mShouldChange = true;
+            };
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             std::atomic<bool> mIsInitialized{false};
             std::atomic<bool> mShouldQuit{false};
             Llama::Chat mChat{mShouldQuit};
+            History mHistory;
             juce::TextEditor mHistoryEditor;
+            juce::TextEditor mTempResponse;
             ColouredPanel mSeparator1;
-            juce::TextEditor mQueryEditor;
+            QueryEditor mQueryEditor{mHistory};
             Icon mSendButton;
             ColouredPanel mSeparator2;
             juce::Label mStatusLabel;
-            std::vector<std::tuple<MessageType, juce::String>> mHistory;
             std::future<Results> mRequestFuture;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)

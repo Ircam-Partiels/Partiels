@@ -16,23 +16,25 @@ Application::CoAnalyzer::SettingsContent::SettingsContent()
              }
              auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
              accessor.setAttr<AttrType::model>(mInstalledModels.at(index), NotificationType::synchronous);
+             mTimerClock.callback();
          })
-, mResetState(juce::translate("Reset State"), juce::translate("Reset the state of the model"), []()
-{
-    auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
-    auto const model = accessor.getAttr<AttrType::model>();
-    if(model.withFileExtension("bin").deleteFile())
-    {
-        accessor.setAttr<AttrType::model>(juce::File{}, NotificationType::synchronous);
-        accessor.setAttr<AttrType::model>(model, NotificationType::synchronous);
-    }
-})
+, mResetState(juce::translate("Reset State"), juce::translate("Reset the state of the model"), [this]()
+              {
+                  auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+                  auto const model = accessor.getAttr<AttrType::model>();
+                  if(model.withFileExtension("bin").deleteFile())
+                  {
+                      accessor.setAttr<AttrType::model>(juce::File{}, NotificationType::synchronous);
+                      accessor.setAttr<AttrType::model>(model, NotificationType::synchronous);
+                      mTimerClock.callback();
+                  }
+              })
 {
     addAndMakeVisible(mModel);
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
     addAndMakeVisible(mResetState);
-    
+
     mListener.onAttrChanged = [this](Accessor const& accessor, AttrType attr)
     {
         switch(attr)
@@ -53,6 +55,52 @@ Application::CoAnalyzer::SettingsContent::SettingsContent()
             }
         }
     };
+
+    mTimerClock.callback = [this]()
+    {
+        auto installedModels = []()
+        {
+            std::vector<juce::File> models;
+            auto const addFilesFromDirectory = [&](juce::File const& root)
+            {
+#if JUCE_MAC
+                auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
+#else
+                auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
+#endif
+                auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
+                for(auto const& model : listedModels)
+                {
+                    if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
+                                    {
+                                        return existingModel.getFullPathName() == model.getFullPathName();
+                                    }))
+                    {
+                        models.push_back(model);
+                    }
+                }
+            };
+            addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
+            addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
+            std::sort(models.begin(), models.end());
+            return models;
+        }();
+        if(installedModels != mInstalledModels)
+        {
+            mInstalledModels = std::move(installedModels);
+            mModel.entry.clear(juce::NotificationType::dontSendNotification);
+            for(auto const& model : mInstalledModels)
+            {
+                mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
+            }
+            auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+            mListener.onAttrChanged(accessor, AttrType::model);
+        }
+        auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+        mResetState.setEnabled(accessor.getAttr<AttrType::model>().withFileExtension("bin").existsAsFile());
+    };
+
+    mTimerClock.startTimer(500);
     setSize(300, 200);
     auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
     accessor.addListener(mListener, NotificationType::synchronous);
@@ -81,45 +129,12 @@ void Application::CoAnalyzer::SettingsContent::resized()
 
 void Application::CoAnalyzer::SettingsContent::parentHierarchyChanged()
 {
-    mInstalledModels = []()
-    {
-        std::vector<juce::File> models;
-        auto const addFilesFromDirectory = [&](juce::File const& root)
-        {
-#if JUCE_MAC
-            auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
-#else
-            auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
-#endif
-            auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
-            for(auto const& model : listedModels)
-            {
-                if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
-                                {
-                    return existingModel.getFullPathName() == model.getFullPathName();
-                }))
-                {
-                    models.push_back(model);
-                }
-            }
-        };
-        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
-        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
-        return models;
-    }();
-    mModel.entry.clear(juce::NotificationType::dontSendNotification);
-    for(auto const& model : mInstalledModels)
-    {
-        mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
-    }
-    auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
-    mListener.onAttrChanged(accessor, AttrType::model);
-    mResetState.setEnabled(accessor.getAttr<AttrType::model>().withFileExtension("bin").existsAsFile());
+    mTimerClock.callback();
 }
 
 void Application::CoAnalyzer::SettingsContent::visibilityChanged()
 {
-    parentHierarchyChanged();
+    mTimerClock.callback();
 }
 
 Application::CoAnalyzer::SettingsPanel::SettingsPanel()
@@ -200,7 +215,14 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     mStatusLabel.setFont(juce::Font(juce::FontOptions(12.0f)));
     mStatusLabel.setColour(juce::Label::textColourId, juce::Colours::grey);
 
+    mTempResponse.setReadOnly(true);
+    mTempResponse.setMultiLine(true);
+    mTempResponse.setScrollbarsShown(false);
+    mTempResponse.setCaretVisible(false);
+    mTempResponse.setPopupMenuEnabled(false);
+
     addAndMakeVisible(mHistoryEditor);
+    addChildComponent(mTempResponse);
     addAndMakeVisible(mSeparator2);
     addAndMakeVisible(mQueryEditor);
     addAndMakeVisible(mSendButton);
@@ -260,6 +282,10 @@ void Application::CoAnalyzer::Chat::resized()
     mQueryEditor.setBounds(bounds.removeFromBottom(PropertyComponentBase::defaultHeight * 7).reduced(4, 0));
     mSendButton.setBounds(mQueryEditor.getBounds().removeFromRight(18).removeFromBottom(18));
     mSeparator1.setBounds(bounds.removeFromBottom(1));
+    if(mTempResponse.isVisible())
+    {
+        mTempResponse.setBounds(bounds.removeFromBottom(PropertyComponentBase::defaultHeight * 3));
+    }
     mHistoryEditor.setBounds(bounds.reduced(4, 0));
 }
 
@@ -277,6 +303,7 @@ void Application::CoAnalyzer::Chat::colourChanged()
     {
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     }
+    mTempResponse.setColour(juce::TextEditor::ColourIds::outlineColourId, findColour(juce::TextEditor::ColourIds::highlightColourId));
     updateHistory();
 }
 
@@ -287,8 +314,6 @@ void Application::CoAnalyzer::Chat::parentHierarchyChanged()
 
 void Application::CoAnalyzer::Chat::handleAsyncUpdate()
 {
-    stopTimer();
-
     MiscWeakAssert(mRequestFuture.valid());
     if(!mRequestFuture.valid())
     {
@@ -321,6 +346,7 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
             if(xml != nullptr)
             {
                 Instance::get().getDocumentDirector().startAction();
+                bool hasModification = false;
                 for(auto* trackElement : xml->getChildWithTagNameIterator("tracks"))
                 {
                     if(trackElement != nullptr && trackElement->hasAttribute("identifier"))
@@ -330,18 +356,22 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
                         {
                             auto& srcAcsr = Document::Tools::getTrackAcsr(documentAccessor, identifier);
                             srcAcsr.fromXml(*trackElement, "tracks", NotificationType::synchronous);
+                            hasModification = true;
                         }
                     }
                 }
-                if(!Instance::get().getDocumentDirector().endAction(ActionState::newTransaction, juce::translate("Neuralyzer update document")))
+                if(hasModification && !Instance::get().getDocumentDirector().endAction(ActionState::newTransaction, juce::translate("Neuralyzer update document")))
                 {
                     mStatusLabel.setText(juce::translate("Document modification failed"), juce::dontSendNotification);
                 }
             }
         }
     }
+    mTempResponse.setVisible(false);
+    stopTimer();
     mSendButton.setTooltip(juce::translate("Send Query"));
     colourChanged();
+    resized();
 }
 
 void Application::CoAnalyzer::Chat::initializeSystem()
@@ -456,7 +486,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
             auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
             auto element = trackAcsr.toXml("tracks");
             element->getChildByName("description")->getChildByName("output")->deleteAllChildElementsWithTagName("binNames");
-            auto extraInfo  = [&]()
+            auto extraInfo = [&]()
             {
                 auto const frameType = Track::Tools::getFrameType(trackAcsr);
                 if(frameType.has_value())
@@ -475,7 +505,8 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                                 Valid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow/></graphicsSettings>.\n\
                                                 Invalid graphicsSettings: <graphicsSettings><colours map shadow></graphicsSettings>.");
                         }
-                        case Track::FrameType::vector: {
+                        case Track::FrameType::vector:
+                        {
                             return juce::String("This is a spectrogram track (type=2).\n\
                                                 Valid graphicsSettings: <graphicsSettings><colours map></graphicsSettings>.\n\
                                                 Invalid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow duration/></graphicsSettings>.");
@@ -504,10 +535,12 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     }
 
     mQueryEditor.setText({}, juce::sendNotificationSync);
+    mQueryEditor.resetHistoryIndex();
     mStatusLabel.setText(juce::translate("Processing query"), juce::dontSendNotification);
     mSendButton.setToggleState(false, juce::NotificationType::dontSendNotification);
     mSendButton.setTooltip(juce::translate("Stop Query"));
 
+    mChat.clearTemporaryResponse();
     mHistory.push_back(std::make_tuple(MessageType::user, query));
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
@@ -533,8 +566,11 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     triggerAsyncUpdate();
                                     return result;
                                 });
+    mTempResponse.setText(juce::translate("Processing query"), false);
+    mTempResponse.setVisible(true);
     startTimer(250);
     updateHistory();
+    resized();
 }
 
 void Application::CoAnalyzer::Chat::stopUserQuery()
@@ -585,6 +621,90 @@ void Application::CoAnalyzer::Chat::timerCallback()
         newText += ".";
     }
     mStatusLabel.setText(newText, juce::dontSendNotification);
+    auto const reponseText = mChat.getTemporaryResponse();
+    if(reponseText.isEmpty())
+    {
+        mTempResponse.setText(newText, false);
+    }
+    else
+    {
+        mTempResponse.setText(reponseText, false);
+        mTempResponse.moveCaretToEnd();
+    }
+}
+
+Application::CoAnalyzer::Chat::QueryEditor::QueryEditor(History const& history)
+: mHistory(history)
+{
+    addListener(this);
+}
+
+bool Application::CoAnalyzer::Chat::QueryEditor::keyPressed(juce::KeyPress const& key)
+{
+    auto const numUserMessages = std::count_if(mHistory.cbegin(), mHistory.cend(), [](auto const& message)
+                                               {
+                                                   return std::get<0_z>(message) == MessageType::user;
+                                               });
+    if(key.isKeyCode(juce::KeyPress::upKey) && getCaretPosition() == 0 && mHistoryIndex < numUserMessages)
+    {
+        int index = 0;
+        for(auto historyIt = mHistory.crbegin(); historyIt != mHistory.crend(); ++historyIt)
+        {
+            if(std::get<0_z>(*historyIt) == MessageType::user)
+            {
+                if(index == mHistoryIndex + 1)
+                {
+                    ++mHistoryIndex;
+                    mShouldChange = false;
+                    setText(std::get<1_z>(*historyIt), true);
+                    return true;
+                }
+                ++index;
+            }
+        }
+    }
+    else if(key.isKeyCode(juce::KeyPress::downKey) && getCaretPosition() == getTotalNumChars() && mHistoryIndex > -1)
+    {
+        if(mHistoryIndex > 0)
+        {
+            int index = 0;
+            for(auto historyIt = mHistory.crbegin(); historyIt != mHistory.crend(); ++historyIt)
+            {
+                if(std::get<0_z>(*historyIt) == MessageType::user)
+                {
+                    if(index == mHistoryIndex - 1)
+                    {
+                        --mHistoryIndex;
+                        mShouldChange = false;
+                        setText(std::get<1_z>(*historyIt), true);
+                        return true;
+                    }
+                    ++index;
+                }
+            }
+        }
+        else
+        {
+            mHistoryIndex = -1;
+            mShouldChange = false;
+            setText(mSavedText, true);
+            return true;
+        }
+    }
+    return juce::TextEditor::keyPressed(key);
+}
+
+void Application::CoAnalyzer::Chat::QueryEditor::resetHistoryIndex()
+{
+    mHistoryIndex = -1;
+}
+
+void Application::CoAnalyzer::Chat::QueryEditor::textEditorTextChanged(juce::TextEditor&)
+{
+    if(std::exchange(mShouldChange, true))
+    {
+        mSavedText = getText();
+    }
 }
 
 ANALYSE_FILE_END

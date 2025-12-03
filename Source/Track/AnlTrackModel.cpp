@@ -305,7 +305,6 @@ void Track::to_json(nlohmann::json& j, GraphicsSettings const& settings)
                 break;
             }
         }
-        
     }
 }
 

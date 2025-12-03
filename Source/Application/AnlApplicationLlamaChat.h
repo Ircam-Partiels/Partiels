@@ -30,6 +30,8 @@ namespace Application
             juce::Result injectContext(juce::String const& content);
             juce::Result addSystemMessage(juce::String const& instruction);
             std::tuple<juce::Result, juce::String, juce::String> sendUserQuery(juce::String const& prompt);
+            juce::String getTemporaryResponse() const;
+            void clearTemporaryResponse();
 
         private:
             long addMessage(Role const role, std::string const& content);
@@ -46,6 +48,8 @@ namespace Application
             std::vector<llama_chat_message> mMessages;
             std::vector<char> mFormattedMessage;
             long mPrevMessageLength = 0;
+            mutable std::mutex mTempResponseMutex;
+            std::string mTempResponse;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chat)
         };

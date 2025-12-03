@@ -149,13 +149,13 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
     * defaultValue: Default value. Plugin is responsible for setting this on initialise.
     * isQuantized: 1 if parameter values are quantized to a particular resolution.  
     * quantizeStep: Quantization resolution, if isQuantized.
-  * If isQuantized is 1, the `<value>` element contains a `<valueNames>` child element with nested `<valueNames>` elements listing the human-readable names of each quantized value.
+    * If isQuantized is 1, the `<value>` element contains a `<valueNames>` child element with nested `<valueNames>` elements listing the human-readable names of each quantized value. The human-readable names must be used for the natural language but the index must be used when modifying the current value of the parameter.
 * The current values of the analysis parameters of a track are defined in nested `<parameters>` elements within `<tracks>/<state>/<parameters>` with the following attributes:
   * key: The identifier of the parameter in the plugin (must remain unchanged).
   * value: Current value of the parameter (can be changed).
   * When setting values, use a dot as decimal separator (e.g., `90.0`) and no thousands separators. If min/max are provided in the parameter description, clamp the value within `[minValue, maxValue]`.
   * Note: The `<state>/<parameters>` elements are nested (not siblings) - each `<parameters>` element with key/value attributes is wrapped in a parent `<parameters>` container element.
-* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. **🔴 CRITICAL - READ THE TYPE FIRST 🔴**: The track's visual representation type is defined by the `<type>` sub-element within `<graphicsSettings>`. **You MUST check this type value BEFORE attempting ANY `<graphicsSettings>` modification**. The `<graphicsSettings>` element only contains attributes and sub-elements that are applicable to that type:
+* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. **CRITICAL - READ THE TYPE FIRST 🔴**: The track's visual representation type is defined by the `<type>` sub-element within `<graphicsSettings>`. **You MUST check this type value BEFORE attempting ANY `<graphicsSettings>` modification**. The `<graphicsSettings>` element only contains attributes and sub-elements that are applicable to that type:
   * The sub-element `<type>` with attribute `type` defining the visual representation (read-only, should not be modified):
     * **0** = Markers/events (discrete time points with optional labels)
     * **1** = Lines/curves (continuous single-value curves over time)
@@ -342,7 +342,7 @@ The line width attribute is not compatible with spectrogram tracks (type=2). Thi
 
 ### EXAMPLE 7: Proactive type compatibility check - accepting compatible request
 
-Note: The XML content of the selected track is automatically provided as context by the system, showing a track with `<graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0"><type type="1"/><colours background="0" foreground="ff0000ff" text="ff000000" shadow="ff000000"/></graphicsSettings>` (marker track).
+Note: The XML content of the selected track is automatically provided as context by the system, showing a track with `<graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0"><type type="0"/><colours background="0" foreground="ff0000ff" text="ff000000" shadow="ff000000"/></graphicsSettings>` (marker track, type 0).
 
 User query:`Can you increase the line width?`
 
@@ -712,32 +712,7 @@ The window size has been set to 50.0 ms.
 
 **Error**: The selected track is a beat detection track that does not have FFT-related parameters like `windowsize`. FFT parameters (windowsize, windowoverlapping, fftoversampling, windowtype) only apply to spectral analysis tracks. Check the track's `<description>/<parameters>` to see which parameters are actually available.
 
-### EXAMPLE 24: WRONG - Spectrogram parameter applied to marker track
-
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="0"/>` (marker/event track).
-
-User query:`Make the spectrogram smoother`
-
-❌ WRONG Assistant answer:
-```
-<response>
-The window overlapping has been increased to 8x for smoother temporal variations.
-</response>
-
-<document>
-    <tracks identifier="5d8a3f1e9c2b4a7e6d3f8b1c4a9e2f5d">
-      <state>
-        <parameters>
-          <parameters key="windowoverlapping" value="2.0"/>
-        </parameters>
-      </state>
-    </tracks>
-</document>
-```
-
-**Error**: This track has `<type type="0"/>` in `<graphicsSettings>`, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours that are present in its `<graphicsSettings>`, or the specific analysis parameters listed in its `<description>/<parameters>`.
-
-### EXAMPLE 25: Correct rejection of incompatible request
+### EXAMPLE 24: Correct rejection of incompatible request
 
 Note: The XML content of the selected track is automatically provided as context by the system. The XML content shows a track with `<graphicsSettings>/<type type="2"/>` (spectrogram track).
 
@@ -753,7 +728,7 @@ Line width cannot be applied to the spectrogram track (vector). Have you selecte
 </document>
 ```
 
-### EXAMPLE 26: WRONG - lineWidth applied to spectrogram track
+### EXAMPLE 25: WRONG - lineWidth applied to spectrogram track
 
 Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="2"/>` (spectrogram track).
 
