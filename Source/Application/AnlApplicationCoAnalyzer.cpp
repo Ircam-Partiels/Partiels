@@ -240,9 +240,11 @@ void Application::CoAnalyzer::Chat::resized()
 
 void Application::CoAnalyzer::Chat::colourChanged()
 {
-    mSendButton.setToggleState(mIsInitialized.load(), juce::NotificationType::dontSendNotification);
-    mSendButton.setEnabled(mIsInitialized.load() && mQueryEditor.getText().isNotEmpty());
-    if(!mIsInitialized.load())
+    auto const isInitialized = mIsInitialized.load();
+    auto const isRunningQuery = mRequestFuture.valid();
+    mSendButton.setToggleState(isInitialized && !isRunningQuery, juce::NotificationType::dontSendNotification);
+    mSendButton.setEnabled(isInitialized && !isRunningQuery && mQueryEditor.getText().isNotEmpty());
+    if(!isInitialized && !isRunningQuery)
     {
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Select a model in the settings panel."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     }
@@ -370,7 +372,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         else
                                         {
                                             chrono.start();
-                                            auto systemMessageResult = mChat.addSystemMessage(AnlCoAnalyzerData::Instructions_0_md);
+                                            auto systemMessageResult = mChat.addSystemMessage(juce::CharPointer_UTF8(AnlCoAnalyzerData::Instructions_0_md));
                                             chrono.stop("State generation ended");
                                             if(systemMessageResult.failed())
                                             {
@@ -462,7 +464,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     auto result = [&]()
                                     {
                                         Chrono chrono{"CoAnalyzer"};
-                                        auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString() + "```";
+                                        auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString().removeCharacters("\n") + "```";
                                         chrono.start();
                                         auto contextResult = mChat.injectContext(data);
                                         chrono.stop("Context injection ended");

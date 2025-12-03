@@ -161,6 +161,7 @@ namespace Track
 
     struct GraphicsSettings
     {
+        std::optional<FrameType> type;
         ColourSet colours{};
         juce::FontOptions font{juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)};
         float lineWidth = 1.0f;
@@ -169,7 +170,7 @@ namespace Track
 
         const auto tie() const
         {
-            return std::tie(colours, font, lineWidth, unit, labelLayout);
+            return std::tie(type, colours, font, lineWidth, unit, labelLayout);
         }
 
         bool operator==(GraphicsSettings const& rhs) const

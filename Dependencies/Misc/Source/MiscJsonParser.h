@@ -97,10 +97,10 @@ namespace nlohmann
         }
     };
 
-    template <>
-    struct adl_serializer<std::optional<double>>
+    template <typename T>
+    struct adl_serializer<std::optional<T>>
     {
-        static void to_json(json& j, std::optional<double> const& value)
+        static void to_json(json& j, std::optional<T> const& value)
         {
             if(value.has_value())
             {
@@ -111,8 +111,8 @@ namespace nlohmann
                 j.clear();
             }
         }
-
-        static void from_json(json const& j, std::optional<double>& value)
+        
+        static void from_json(json const& j, std::optional<T>& value)
         {
             if(j.empty())
             {
@@ -120,66 +120,10 @@ namespace nlohmann
             }
             else
             {
-                value = j.get<double>();
+                value = j.get<T>();
             }
         }
     };
-
-    template <>
-    struct adl_serializer<std::optional<float>>
-    {
-        static void to_json(json& j, std::optional<float> const& value)
-        {
-            if(value.has_value())
-            {
-                j = value.value();
-            }
-            else
-            {
-                j.clear();
-            }
-        }
-
-        static void from_json(json const& j, std::optional<float>& value)
-        {
-            if(j.empty())
-            {
-                value.reset();
-            }
-            else
-            {
-                value = j.get<float>();
-            }
-        }
-    };
-
-    template <>
-    struct adl_serializer<std::optional<juce::String>>
-    {
-        static void to_json(json& j, std::optional<juce::String> const& value)
-        {
-            if(value.has_value())
-            {
-                j = value.value();
-            }
-            else
-            {
-                j.clear();
-            }
-        }
-
-        static void from_json(json const& j, std::optional<juce::String>& value)
-        {
-            if(j.empty())
-            {
-                value.reset();
-            }
-            else
-            {
-                value = j.get<juce::String>();
-            }
-        }
-    };
-
+    
     json sax_parse_json_object(std::istream& stream, std::string const& key, std::size_t level);
 } // namespace nlohmann
