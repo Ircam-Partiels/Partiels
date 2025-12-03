@@ -43,10 +43,12 @@ namespace Application
 
             // juce::Component
             void resized() override;
-
+            void parentHierarchyChanged() override;
+            void visibilityChanged() override;
         private:
             Accessor::Listener mListener{typeid(*this).name()};
             PropertyList mModel;
+            PropertyTextButton mResetState;
             std::vector<juce::File> mInstalledModels;
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsContent)
         };

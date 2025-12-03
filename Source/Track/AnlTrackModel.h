@@ -175,11 +175,13 @@ namespace Track
 
         bool operator==(GraphicsSettings const& rhs) const
         {
+            JUCE_COMPILER_WARNING("this should depend on type");
             return tie() == rhs.tie();
         }
 
         bool operator!=(GraphicsSettings const& rhs) const
         {
+            JUCE_COMPILER_WARNING("this should depend on type");
             return tie() != rhs.tie();
         }
     };

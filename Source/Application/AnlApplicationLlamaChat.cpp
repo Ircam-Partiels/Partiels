@@ -147,7 +147,7 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
     // Initialize the context
     auto ctx_params = llama_context_default_params();
     auto const modelMaxCtx = llama_model_n_ctx_train(mModel.get());
-    ctx_params.n_ctx = std::min(static_cast<uint32_t>(32768), static_cast<uint32_t>(modelMaxCtx));
+    ctx_params.n_ctx = std::min(static_cast<uint32_t>(65536), static_cast<uint32_t>(modelMaxCtx)); // Increased to 64K for better instruction retention
     ctx_params.n_batch = batchSize;
     ctx_params.abort_callback = [](void* data)
     {

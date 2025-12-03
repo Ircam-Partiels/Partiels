@@ -17,41 +17,22 @@ Application::CoAnalyzer::SettingsContent::SettingsContent()
              auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
              accessor.setAttr<AttrType::model>(mInstalledModels.at(index), NotificationType::synchronous);
          })
+, mResetState(juce::translate("Reset State"), juce::translate("Reset the state of the model"), []()
 {
-    mInstalledModels = []()
+    auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+    auto const model = accessor.getAttr<AttrType::model>();
+    if(model.withFileExtension("bin").deleteFile())
     {
-        std::vector<juce::File> models;
-        auto const addFilesFromDirectory = [&](juce::File const& root)
-        {
-#if JUCE_MAC
-            auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
-#else
-            auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
-#endif
-            auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
-            for(auto const& model : listedModels)
-            {
-                if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
-                                {
-                                    return existingModel.getFullPathName() == model.getFullPathName();
-                                }))
-                {
-                    models.push_back(model);
-                }
-            }
-        };
-        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
-        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
-        return models;
-    }();
-
+        accessor.setAttr<AttrType::model>(juce::File{}, NotificationType::synchronous);
+        accessor.setAttr<AttrType::model>(model, NotificationType::synchronous);
+    }
+})
+{
     addAndMakeVisible(mModel);
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
-    for(auto const& model : mInstalledModels)
-    {
-        mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
-    }
+    addAndMakeVisible(mResetState);
+    
     mListener.onAttrChanged = [this](Accessor const& accessor, AttrType attr)
     {
         switch(attr)
@@ -94,7 +75,51 @@ void Application::CoAnalyzer::SettingsContent::resized()
         }
     };
     setBounds(mModel);
+    setBounds(mResetState);
     setSize(bounds.getWidth(), bounds.getY() + 2);
+}
+
+void Application::CoAnalyzer::SettingsContent::parentHierarchyChanged()
+{
+    mInstalledModels = []()
+    {
+        std::vector<juce::File> models;
+        auto const addFilesFromDirectory = [&](juce::File const& root)
+        {
+#if JUCE_MAC
+            auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
+#else
+            auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
+#endif
+            auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
+            for(auto const& model : listedModels)
+            {
+                if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
+                                {
+                    return existingModel.getFullPathName() == model.getFullPathName();
+                }))
+                {
+                    models.push_back(model);
+                }
+            }
+        };
+        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
+        addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
+        return models;
+    }();
+    mModel.entry.clear(juce::NotificationType::dontSendNotification);
+    for(auto const& model : mInstalledModels)
+    {
+        mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
+    }
+    auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+    mListener.onAttrChanged(accessor, AttrType::model);
+    mResetState.setEnabled(accessor.getAttr<AttrType::model>().withFileExtension("bin").existsAsFile());
+}
+
+void Application::CoAnalyzer::SettingsContent::visibilityChanged()
+{
+    parentHierarchyChanged();
 }
 
 Application::CoAnalyzer::SettingsPanel::SettingsPanel()
@@ -424,14 +449,42 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
         {
             auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *std::get<0_z>(items).cbegin());
             auto element = groupAcsr.toXml("groups");
-            return std::make_tuple("group", std::move(element));
+            return std::make_tuple("group", std::move(element), juce::String());
         }
         if(!std::get<1_z>(items).empty())
         {
             auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
             auto element = trackAcsr.toXml("tracks");
             element->getChildByName("description")->getChildByName("output")->deleteAllChildElementsWithTagName("binNames");
-            return std::make_tuple("track", std::move(element));
+            auto extraInfo  = [&]()
+            {
+                auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                if(frameType.has_value())
+                {
+                    switch(frameType.value())
+                    {
+                        case Track::FrameType::label:
+                        {
+                            return juce::String("This is a marker track (type=0).\n\
+                                                Valid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow duration/></graphicsSettings>.\n\
+                                                Invalid graphicsSettings: <graphicsSettings><colours map></graphicsSettings>.");
+                        };
+                        case Track::FrameType::value:
+                        {
+                            return juce::String("This is a line track (type=1).\n\
+                                                Valid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow/></graphicsSettings>.\n\
+                                                Invalid graphicsSettings: <graphicsSettings><colours map shadow></graphicsSettings>.");
+                        }
+                        case Track::FrameType::vector: {
+                            return juce::String("This is a spectrogram track (type=2).\n\
+                                                Valid graphicsSettings: <graphicsSettings><colours map></graphicsSettings>.\n\
+                                                Invalid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow duration/></graphicsSettings>.");
+                        }
+                    }
+                }
+                return juce::String{};
+            }();
+            return std::make_tuple("track", std::move(element), extraInfo);
         }
         auto element = documentAcsr.toXml("Document");
         for(auto* child = element->getChildByName("groups"); child != nullptr; child = child->getNextElementWithTagName("groups"))
@@ -442,7 +495,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
         {
             child->deleteAllChildElements();
         }
-        return std::make_tuple("document", std::move(element));
+        return std::make_tuple("document", std::move(element), juce::String());
     }();
     if(std::get<1>(xml) == nullptr)
     {
@@ -464,7 +517,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     auto result = [&]()
                                     {
                                         Chrono chrono{"CoAnalyzer"};
-                                        auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString().removeCharacters("\n") + "```";
+                                        auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString().removeCharacters("\n") + "```\n" + std::get<2>(xmld);
                                         chrono.start();
                                         auto contextResult = mChat.injectContext(data);
                                         chrono.stop("Context injection ended");
