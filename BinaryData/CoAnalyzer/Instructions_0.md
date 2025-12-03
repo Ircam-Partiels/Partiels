@@ -116,26 +116,28 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
   * minValue/maxValue: The expected range of output values (if hasKnownExtents is 1).
   * sampleType: The temporal structure (0=fixed sample rate, 1=variable rate, 2=one value per block).
   * This information helps you understand what kind of analysis the track performs and what modifications make sense for its parameters.
-* The analysis parameters of a track are described as XML attributes in the `<parameters>` element of the `<tracks>` element with the following properties (all these properties must remain unchanged):
-  * identifier: The identifier of the parameter in the plugin.
-  * name: Human-readable name of the parameter (can be used to understand what is the parameter).
-  * description: Human-readable short text about the parameter (can be used to understand what is the parameter).
-  * unit: Human-readable unit of the parameter.
-  * minValue: Minimum value.
-  * maxValue: Maximum value.
-  * defaultValue: Default value. Plugin is responsible for setting this on initialise.
-  * isQuantized: 1 if parameter values are quantized to a particular resolution.  
-  * quantizeStep: Quantization resolution, if isQuantized.
-  * valueNames: Human-readable names of the values, if isQuantized.
-* The current values of the analysis parameters of a track are defined as XML attributes in the `<parameters>` subelement of the `<state>` of the `<tracks>` element with the following properties:
+* The analysis parameters of a track are described in nested `<parameters>` elements within `<tracks>/<description>/<parameters>` with the following structure (all these properties are read-only and must remain unchanged):
+  * Each parameter is defined in a nested `<parameters>` element containing a `<value>` element with these attributes:
+    * identifier: The identifier of the parameter in the plugin.
+    * name: Human-readable name of the parameter (can be used to understand what is the parameter).
+    * description: Human-readable short text about the parameter (can be used to understand what is the parameter).
+    * unit: Human-readable unit of the parameter.
+    * minValue: Minimum value.
+    * maxValue: Maximum value.
+    * defaultValue: Default value. Plugin is responsible for setting this on initialise.
+    * isQuantized: 1 if parameter values are quantized to a particular resolution.  
+    * quantizeStep: Quantization resolution, if isQuantized.
+  * If isQuantized is 1, the `<value>` element contains a `<valueNames>` child element with nested `<valueNames>` elements listing the human-readable names of each quantized value.
+* The current values of the analysis parameters of a track are defined in nested `<parameters>` elements within `<tracks>/<state>/<parameters>` with the following attributes:
   * key: The identifier of the parameter in the plugin (must remain unchanged).
   * value: Current value of the parameter (can be changed).
-  * When setting values, use a dot as decimal separator (e.g., `90.0`) and no thousands separators. If min/max are provided, clamp the value within `[minValue, maxValue]`.
-* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. All the graphics parameters can be modified with the following attributes:
-  * font: The font description `"Name; Size Style"` (e.g., `Helvetica; 16.0 Bold`)
-  * lineWidth: The width of the markers or lines (minimum 1.0)
+  * When setting values, use a dot as decimal separator (e.g., `90.0`) and no thousands separators. If min/max are provided in the parameter description, clamp the value within `[minValue, maxValue]`.
+  * Note: The `<state>/<parameters>` elements are nested (not siblings) - each `<parameters>` element with key/value attributes is wrapped in a parent `<parameters>` container element.
+* The graphics parameters of a track are defined in the `<graphicsSettings>` element of the `<tracks>` element. **IMPORTANT**: The applicable graphics parameters depend on the track's visual representation type (binCount in the `<tracks>/<description>/<output>` element):
+  * font: The font description `"Name; Size Style"` (e.g., `Helvetica; 16.0 Bold`) - applies to all track types
+  * lineWidth: The width of the markers or lines (minimum 1.0) - **ONLY applies to binCount=0 (markers) and binCount=1 (lines/curves). Do NOT use for binCount>1 (spectrograms)**
   * The sub-element `<colours>` with the attributes:
-    * map: The index of the colour map used to display the spectrogram, ranging from 0 to 11, corresponding to:
+    * map: The index of the colour map used to display the spectrogram, ranging from 0 to 11 - **ONLY applies to binCount>1 (spectrograms). Do NOT use for binCount=0 or binCount=1**. Corresponding to:
       * 0 – Parula: Balanced blue-to-yellow gradient suited for preserving detail.
       * 1 – Heat: Dark-to-bright palette emphasizing energetic regions.
       * 2 – Jet: Rainbow gradient with high contrast between adjacent hues.
@@ -148,12 +150,12 @@ Before you emit your final answer, verify ALL of the following. If ANY check fai
       * 9 – Viridis: Colourblind-friendly blue-to-green palette with uniform brightness.
       * 10 – Cividis: Blue-to-yellow palette designed for perceptual uniformity.
       * 11 – Github: GitHub-inspired blues providing subtle contrast.
-    * background: The background colour when displaying markers or lines
-    * foreground: The colour of the markers or lines
-    * duration: The colour used to display the duration of the markers (usually the foreground colour with transparency)
-    * text: The colour of the text that represents the labels and values of the markers or lines
-    * shadow: The colour of the shadow of the markers or lines
-  * The sub-element `<labelLayout>` for the markers with the attributes:
+    * background: The background colour when displaying markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
+    * foreground: The colour of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
+    * duration: The colour used to display the duration of the markers (usually the foreground colour with transparency) - **applies to binCount=0 (markers)**
+    * text: The colour of the text that represents the labels and values of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
+    * shadow: The colour of the shadow of the markers or lines - **applies to binCount=0 (markers) and binCount=1 (lines/curves)**
+  * The sub-element `<labelLayout>` for the markers - **ONLY applies to binCount=0 (markers). Do NOT use for binCount=1 or binCount>1** - with the attributes:
     * justification: The vertical justification of the labels in the track (0 for top, 1 for centred, 2 for bottom)
     * position: The vertical offset of the labels (negative to move up, positive to move down)
 
@@ -248,7 +250,9 @@ The tempo estimation parameter of the beat detection track has been modified to 
 <document>
     <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
       <state>
-        <parameters key="tempoestimation" value="90.0"/>
+        <parameters>
+          <parameters key="tempoestimation" value="90.0"/>
+        </parameters>
       </state>
     </tracks>
 </document>
@@ -309,8 +313,10 @@ The tempo has been set to 120 BPM and constant tempo mode has been disabled.
 <document>
     <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
       <state>
-        <parameters key="constanttempo" value="0.0"/>
-        <parameters key="tempoestimation" value="120.0"/>
+        <parameters>
+          <parameters key="constanttempo" value="0.0"/>
+          <parameters key="tempoestimation" value="120.0"/>
+        </parameters>
       </state>
     </tracks>
 </document>
@@ -481,11 +487,13 @@ The tempo has been set to 120 BPM.
 </document>
 ```
 
-**Error**: The parent hierarchy is missing. The `<parameters>` element must be nested inside `<state>` which must be inside `<tracks>` with the correct identifier. The correct format preserves the full hierarchy:
+**Error**: The parent hierarchy is missing. The `<parameters>` element must be nested inside a parent `<parameters>` container, which is inside `<state>`, which is inside `<tracks>` with the correct identifier. The correct format preserves the full hierarchy:
 ```
 <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
   <state>
-    <parameters key="tempoestimation" value="120.0"/>
+    <parameters>
+      <parameters key="tempoestimation" value="120.0"/>
+    </parameters>
   </state>
 </tracks>
 ```
@@ -528,7 +536,9 @@ The window size has been set to 50.0 ms.
 <document>
     <tracks identifier="f2fbf6d9eb5d43e69dcdae3829cd7688">
       <state>
-        <parameters key="windowsize" value="50.0"/>
+        <parameters>
+          <parameters key="windowsize" value="50.0"/>
+        </parameters>
       </state>
     </tracks>
 </document>
@@ -585,14 +595,16 @@ The tempo has been set to 110 BPM.
 ```
 <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
   <state>
-    <parameters key="tempoestimation" value="110.0"/>
+    <parameters>
+      <parameters key="tempoestimation" value="110.0"/>
+    </parameters>
   </state>
 </tracks>
 ```
 
 ### EXAMPLE 20: WRONG - Color map applied to non-spectrogram track
 
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="1"` (line/curve track, not a spectrogram).
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="1"` (line/curve track, not a spectrogram) in the `<tracks>/<description>/<output>` element.
 
 User query:`Change the color map to Viridis`
 
@@ -611,7 +623,7 @@ The colour map has been changed to Viridis.
 </document>
 ```
 
-**Error**: The `map` attribute (colour map) only applies to spectrogram tracks (binCount > 1). This track has `binCount="1"`, indicating it displays a line/curve, not a spectrogram. For line tracks, use the `foreground` attribute to change the line colour instead.
+**Error**: The `map` attribute (colour map) only applies to spectrogram tracks (binCount > 1). This track has `binCount="1"` in the `<tracks>/<description>/<output>` element, indicating it displays a line/curve, not a spectrogram. For line tracks, use the `foreground` attribute to change the line colour instead.
 
 ### EXAMPLE 21: WRONG - Window size parameter applied to non-FFT track
 
@@ -628,7 +640,9 @@ The window size has been set to 50.0 ms.
 <document>
     <tracks identifier="f12fa6613baa4546b7ea2232eecb04af">
       <state>
-        <parameters key="windowsize" value="50.0"/>
+        <parameters>
+          <parameters key="windowsize" value="50.0"/>
+        </parameters>
       </state>
     </tracks>
 </document>
@@ -638,7 +652,7 @@ The window size has been set to 50.0 ms.
 
 ### EXAMPLE 22: WRONG - Spectrogram parameter applied to marker track
 
-Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="0"` (marker/event track).
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="0"` (marker/event track) in the `<tracks>/<description>/<output>` element.
 
 User query:`Make the spectrogram smoother`
 
@@ -651,11 +665,35 @@ The window overlapping has been increased to 8x for smoother temporal variations
 <document>
     <tracks identifier="5d8a3f1e9c2b4a7e6d3f8b1c4a9e2f5d">
       <state>
-        <parameters key="windowoverlapping" value="2.0"/>
+        <parameters>
+          <parameters key="windowoverlapping" value="2.0"/>
+        </parameters>
       </state>
     </tracks>
 </document>
 ```
 
-**Error**: This track has `binCount="0"`, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours, or the specific analysis parameters listed in its `<description>/<parameters>`.
+**Error**: This track has `binCount="0"` in the `<tracks>/<description>/<output>` element, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours, or the specific analysis parameters listed in its `<description>/<parameters>`.
+
+### EXAMPLE 23: WRONG - lineWidth applied to spectrogram track
+
+Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `binCount="513"` (spectrogram track) in the `<tracks>/<description>/<output>` element.
+
+User query:`Increase the line width to 2.0`
+
+❌ WRONG Assistant answer:
+```
+<response>
+The line width has been increased to 2.0.
+</response>
+
+<document>
+    <tracks identifier="f2fbf6d9eb5d43e69dcdae3829cd7688">
+      <graphicsSettings lineWidth="2.0">
+      </graphicsSettings>
+    </tracks>
+</document>
+```
+
+**Error**: The `lineWidth` parameter only applies to marker tracks (binCount=0) and line/curve tracks (binCount=1). This track has `binCount="513"` in the `<tracks>/<description>/<output>` element, indicating it displays a spectrogram. For spectrogram tracks, you can only modify the `map` (colour map) attribute in the `<colours>` element, or the `font` attribute. Line width has no meaning for spectrograms.
 
