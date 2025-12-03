@@ -680,7 +680,23 @@ The window overlapping has been increased to 8x for smoother temporal variations
 
 **Error**: This track has `<type type="0"/>` in `<graphicsSettings>`, meaning it displays markers/events (discrete time points), not a spectrogram. It doesn't have FFT parameters like `windowoverlapping`. For marker tracks, you can only modify graphical properties like `lineWidth`, `font`, or colours that are present in its `<graphicsSettings>`, or the specific analysis parameters listed in its `<description>/<parameters>`.
 
-### EXAMPLE 23: WRONG - lineWidth applied to spectrogram track
+### EXAMPLE 23: lineWidth applied to spectrogram track
+
+Note: Note: The XML content of the selected track is automatically provided as context by the system. The XML content shows a track with `<graphicsSettings>/<type type="2"/>` (spectrogram track).
+
+User query:`Increase the line width to 2.0`
+
+Assistant answer:
+```
+<response>
+Line width cannot be applied to the spectrogram track (vector). Have you selected the correct track?
+</response>
+
+<document>
+</document>
+```
+
+### EXAMPLE 24: WRONG - lineWidth applied to spectrogram track
 
 Note: This is an example of INCORRECT output. Do NOT reproduce this pattern. The XML content shows a track with `<graphicsSettings>/<type type="2"/>` (spectrogram track).
 
