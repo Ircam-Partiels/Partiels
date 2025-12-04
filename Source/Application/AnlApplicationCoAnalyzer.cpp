@@ -222,8 +222,9 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     mTempResponse.setPopupMenuEnabled(false);
 
     addAndMakeVisible(mHistoryEditor);
+    addAndMakeVisible(mSeparator3);
     addChildComponent(mTempResponse);
-    addAndMakeVisible(mSeparator2);
+    addChildComponent(mSeparator2);
     addAndMakeVisible(mQueryEditor);
     addAndMakeVisible(mSendButton);
     addAndMakeVisible(mSeparator1);
@@ -278,14 +279,15 @@ void Application::CoAnalyzer::Chat::resized()
 {
     auto bounds = getLocalBounds();
     mStatusLabel.setBounds(bounds.removeFromBottom(20));
-    mSeparator2.setBounds(bounds.removeFromBottom(1));
+    mSeparator3.setBounds(bounds.removeFromBottom(1));
     mQueryEditor.setBounds(bounds.removeFromBottom(PropertyComponentBase::defaultHeight * 7).reduced(4, 0));
     mSendButton.setBounds(mQueryEditor.getBounds().removeFromRight(18).removeFromBottom(18));
-    mSeparator1.setBounds(bounds.removeFromBottom(1));
     if(mTempResponse.isVisible())
     {
-        mTempResponse.setBounds(bounds.removeFromBottom(PropertyComponentBase::defaultHeight * 3));
+        mSeparator2.setBounds(bounds.removeFromBottom(1));
+        mTempResponse.setBounds(bounds.removeFromBottom(PropertyComponentBase::defaultHeight * 3).reduced(4, 0));
     }
+    mSeparator1.setBounds(bounds.removeFromBottom(1));
     mHistoryEditor.setBounds(bounds.reduced(4, 0));
 }
 
@@ -303,7 +305,6 @@ void Application::CoAnalyzer::Chat::colourChanged()
     {
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     }
-    mTempResponse.setColour(juce::TextEditor::ColourIds::outlineColourId, findColour(juce::TextEditor::ColourIds::highlightColourId));
     updateHistory();
 }
 
@@ -368,6 +369,7 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
         }
     }
     mTempResponse.setVisible(false);
+    mSeparator2.setVisible(false);
     stopTimer();
     mSendButton.setTooltip(juce::translate("Send Query"));
     colourChanged();
@@ -568,6 +570,7 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                 });
     mTempResponse.setText(juce::translate("Processing query"), false);
     mTempResponse.setVisible(true);
+    mSeparator2.setVisible(true);
     startTimer(250);
     updateHistory();
     resized();

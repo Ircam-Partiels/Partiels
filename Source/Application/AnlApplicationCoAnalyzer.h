@@ -136,11 +136,12 @@ namespace Application
             Llama::Chat mChat{mShouldQuit};
             History mHistory;
             juce::TextEditor mHistoryEditor;
-            juce::TextEditor mTempResponse;
             ColouredPanel mSeparator1;
+            juce::TextEditor mTempResponse;
+            ColouredPanel mSeparator2;
             QueryEditor mQueryEditor{mHistory};
             Icon mSendButton;
-            ColouredPanel mSeparator2;
+            ColouredPanel mSeparator3;
             juce::Label mStatusLabel;
             std::future<Results> mRequestFuture;
 
