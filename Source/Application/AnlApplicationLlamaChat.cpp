@@ -116,7 +116,6 @@ Application::Llama::Chat::~Chat()
 juce::Result Application::Llama::Chat::initialize(juce::File model)
 {
     static int32_t constexpr numGpuLayers = 99;
-    static uint32_t constexpr batchSize = 65536;
     static auto constexpr temperature = 0.2f;
     static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
