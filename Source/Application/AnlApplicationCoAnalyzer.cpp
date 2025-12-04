@@ -429,7 +429,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         else
                                         {
                                             chrono.start();
-                                            auto systemMessageResult = mChat.addSystemMessage(juce::CharPointer_UTF8(AnlCoAnalyzerData::Instructions_0_md));
+                                            auto systemMessageResult = mChat.addSystemMessage(juce::CharPointer_UTF8(AnlCoAnalyzerData::Instructions_md));
                                             chrono.stop("State generation ended");
                                             if(systemMessageResult.failed())
                                             {
