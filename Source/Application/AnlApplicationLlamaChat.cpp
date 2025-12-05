@@ -401,7 +401,7 @@ juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& inst
     return juce::Result::ok();
 }
 
-std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::sendUserQuery(juce::String const& userMessage)
+std::tuple<juce::Result, std::string> Application::Llama::Chat::sendUserQuery(juce::String const& userMessage, std::function<bool(std::string const&)> progressCallback)
 {
     {
         std::unique_lock<std::mutex> lock(mTempResponseMutex);
@@ -411,7 +411,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     if(mContext == nullptr || mSampler == nullptr)
     {
         MiscDebug("Application::Llama::Chat", "Not initialized");
-        return std::make_tuple(juce::Result::fail(juce::translate("The model is not initialized.")), juce::String{}, juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("The model is not initialized.")), std::string{});
     }
 
     // Set log callback to suppress unnecessary output
@@ -421,7 +421,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     MiscWeakAssert(newLength >= 0);
     if(newLength < 0)
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), juce::String{}, juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), std::string{});
     }
     MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
 
@@ -432,7 +432,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     auto tokenResult = tokenize(mContext.get(), prompt.c_str(), prompt.size(), true);
     if(std::get<0_z>(tokenResult).failed())
     {
-        return std::make_tuple(std::get<0_z>(tokenResult), juce::String{}, juce::String{});
+        return std::make_tuple(std::get<0_z>(tokenResult), std::string{});
     }
 
     if(mShouldQuit.load())
@@ -440,12 +440,13 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
         // CRITICAL: Rollback the message addition since we won't generate a response
         mMessages.pop_back();
         mMessageData.pop_back();
-        return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), std::string{});
     }
 
     std::string response;
     // Prepare a batch for the prompt
     auto result = juce::Result::ok();
+    auto validationResult = juce::Result::ok();
     auto batch = llama_batch_get_one(std::get<1_z>(tokenResult).data(), static_cast<int32_t>(std::get<1_z>(tokenResult).size()));
     while(true)
     {
@@ -454,7 +455,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             // CRITICAL: Save the partial response to maintain history consistency
             mPrevMessageLength = addMessage(Role::assistant, response);
             MiscDebug("Application::Llama::Chat", juce::String("Generation aborted, saved partial response with ") + juce::String(response.size()) + juce::String(" characters"));
-            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
+            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), std::string{});
         }
         result = decode(mContext.get(), batch);
         if(result.failed())
@@ -467,7 +468,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             // CRITICAL: Save the partial response to maintain history consistency
             mPrevMessageLength = addMessage(Role::assistant, response);
             MiscDebug("Application::Llama::Chat", juce::String("Generation aborted, saved partial response with ") + juce::String(response.size()) + juce::String(" characters"));
-            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
+            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), std::string{});
         }
 
         // Sample the next token
@@ -493,45 +494,10 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             return std::string(buf, static_cast<size_t>(n));
         }();
         response += piece;
-
-        // Check if response is complete (contains </track> closing tag)
-        auto endPos = response.rfind("</track");
-        if(endPos != std::string::npos)
+        if(progressCallback != nullptr && !progressCallback(response))
         {
-            response.erase(endPos);
-            response += "</track>\n</xml>";
-            MiscDebug("Application::Llama::Chat", "Response complete, stopping generation");
+            MiscDebug("Application::Llama::Chat", "Aborted generation");
             break;
-        }
-
-        // Count how many times the last responseWindowSize are present in the response
-        static constexpr size_t responseWindowSize = 200; // only check for repetition if piece is at least this long
-        static constexpr size_t maxRepetition = 10;       // number of times a string can repeat before aborting
-        if(response.size() > responseWindowSize)
-        {
-            auto const startPos = response.size() - responseWindowSize;
-            auto occurencePos = response.rfind(response.substr(startPos, responseWindowSize), startPos - 1);
-            if(occurencePos != std::string::npos && occurencePos > 0)
-            {
-                auto const textSequence = response.substr(occurencePos, response.size() - occurencePos);
-                occurencePos = response.rfind(textSequence, occurencePos - 1);
-                auto textSequenceCount = 1_z;
-                while(occurencePos != std::string::npos && occurencePos > 0)
-                {
-                    ++textSequenceCount;
-                    if(textSequenceCount > maxRepetition)
-                    {
-                        MiscDebug("Application::Llama::Chat", "Aborting generation due to excessive repetition");
-                        result = juce::Result::fail(juce::translate("Aborted generation due to repetition."));
-                        break;
-                    }
-                    occurencePos = response.rfind(textSequence, occurencePos - 1);
-                }
-                if(result.failed())
-                {
-                    break;
-                }
-            }
         }
 
         {
@@ -544,61 +510,14 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     }
 
     MiscDebug("Application::Llama::Chat", response);
-
     mPrevMessageLength = addMessage(Role::assistant, response);
     MiscWeakAssert(mPrevMessageLength >= 0);
     if(mPrevMessageLength < 0)
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), juce::String{}, juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to apply the chat template.")), std::string{});
     }
 
-    MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
-    // Split the text of the response in the form <response>text</response><xml>text</xml> into two strings
-    auto const split = [&](const char* start, const char* end, bool include) -> std::string
-    {
-        auto startIt = response.find(start);
-        if(startIt != std::string::npos)
-        {
-            auto const startLength = std::strlen(start);
-            auto endIt = response.find(end, startIt + startLength);
-            if(endIt != std::string::npos)
-            {
-                auto const endLength = std::strlen(end);
-                auto const extractStart = include ? startIt : startIt + startLength;
-                auto const extractEnd = include ? endIt + endLength : endIt;
-                auto strResult = response.substr(extractStart, extractEnd - extractStart);
-                auto const eraseStart = startIt;
-                auto const eraseEnd = endIt + endLength;
-                response.erase(eraseStart, eraseEnd - eraseStart);
-                return strResult;
-            }
-        }
-        return {};
-    };
-
-    auto const xml = split("<xml>", "</xml>", true);
-    auto message = split("<response>", "</response>", false);
-    if(message.empty())
-    {
-        if(!response.empty())
-        {
-            message = response;
-        }
-        else if(!xml.empty())
-        {
-            message = "The model modified the document.";
-        }
-        else
-        {
-            message = "The model did not generate a response.";
-            if(result.wasOk())
-            {
-                result = juce::Result::fail(juce::translate("No response generated."));
-            }
-        }
-    }
-    MiscDebug("Application::Llama::Chat", result.getErrorMessage() + ", message: " + message + ", xml: " + xml);
-    return std::make_tuple(result, message, xml);
+    return std::make_tuple(result, response);
 }
 
 juce::String Application::Llama::Chat::getTemporaryResponse() const

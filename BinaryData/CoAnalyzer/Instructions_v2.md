@@ -120,13 +120,6 @@ If the user requests a forbidden attribute:
 
 ## 7. XML Information
 
-* The colours are encoded in hexadecimal AARRGGBB format where:
-  * AA = alpha/opacity (00=transparent, ff=opaque)
-  * RR = red (00-ff)
-  * GG = green (00-ff) 
-  * BB = blue (00-ff)
-  * Examples: `ff00ff00` (opaque green), `ffff0000` (opaque red), `80ffffff` (50% transparent white)
-  * If the user provides only RGB, ask for clarification. If alpha is unspecified, keep the current alpha value.
 * The track is defined in the <tracks> elements with several sub-elements and properties. Here are some of the properties:
   * identifier: A unique identifier used to reference the track in the document. This must never change.
   * name: Human-readable name
@@ -194,9 +187,24 @@ If the user requests a forbidden attribute:
 
 ---
 
-## 8. FFT Parameters
+## 8. Graphical Parameters
 
-### 8.1 Summary
+* The colours are encoded in hexadecimal AARRGGBB format where:
+  * AA = alpha/opacity (00=transparent, ff=opaque)
+  * RR = red (00-ff)
+  * GG = green (00-ff) 
+  * BB = blue (00-ff)
+  * Examples: `ffff0000` (opaque red), `ff00ff00` (opaque green), `ff0000ff` (opaque blue), `80ffffff` (50% transparent white)
+
+* **shadow** colour: opaque = better highlighting of lines or markers
+* **lineWidth**: larger = better highlighting of lines or markers
+* **text** colour: usually the same as the **foreground** color
+
+---
+
+## 9. FFT Parameters
+
+### 9.1 Summary
 
 * **windowsize**: larger = better frequency detail, worse time detail.
 * **windowoverlapping**: higher = smoother temporal evolution.
@@ -206,7 +214,7 @@ If the user requests a forbidden attribute:
   * 1 Hanning (balanced)
   * 2 Hamming (better frequency discrimination)
 
-### 8.2 Common Request Interpretations
+### 9.2 Common Request Interpretations
 
 * “More frequency detail” → increase windowsize (usually by an integer factor).
 * “More temporal smoothness” → increase overlapping.
@@ -215,9 +223,9 @@ If the user requests a forbidden attribute:
 
 ---
 
-## 9. Minimal Valid Modification Examples
+## 10. Minimal Valid Modification Examples
 
-### 9.1. Modify a parameter
+### 10.1. Modify a parameter
 
 ```
 <tracks identifier="X">
@@ -229,7 +237,7 @@ If the user requests a forbidden attribute:
 </tracks>
 ```
 
-### 9.2. Modify a graphics attribute
+### 10.2. Modify a graphics attribute
 
 ```
 <tracks identifier="X">
@@ -237,7 +245,7 @@ If the user requests a forbidden attribute:
 </tracks>
 ```
 
-### 9.3. Modify a colour map (spectrogram)
+### 10.3. Modify a colour map (spectrogram)
 
 ```
 <tracks identifier="X">
@@ -247,7 +255,7 @@ If the user requests a forbidden attribute:
 </tracks>
 ```
 
-### 9.4. WRONG (model should not do this)
+### 10.4. WRONG (model should not do this)
 
 ```
 [full content of the track copied here]

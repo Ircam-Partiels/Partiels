@@ -237,14 +237,16 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     mQueryEditor.setFont(juce::Font(juce::FontOptions(14.0f)));
     mQueryEditor.onReturnKey = [this]()
     {
-        if(mQueryEditor.getText().isNotEmpty())
+        auto const query = mQueryEditor.getText().trim();
+        if(query.isNotEmpty())
         {
             sendUserQuery();
         }
     };
     mQueryEditor.onTextChange = [this]()
     {
-        mSendButton.setEnabled(mIsInitialized.load() && (mRequestFuture.valid() || mQueryEditor.getText().isNotEmpty()));
+        auto const query = mQueryEditor.getText().trim();
+        mSendButton.setEnabled(mIsInitialized.load() && (mRequestFuture.valid() || query.isNotEmpty()));
     };
     mQueryEditor.addMouseListener(this, true);
     mStatusLabel.setText(juce::translate("Model not intialized"), juce::dontSendNotification);
@@ -402,17 +404,25 @@ void Application::CoAnalyzer::Chat::handleAsyncUpdate()
     else
     {
         mStatusLabel.setText(juce::translate("Please enter a query"), juce::dontSendNotification);
-        MiscWeakAssert(!std::get<1>(result).isNotEmpty());
-        mHistory.push_back(std::make_tuple(MessageType::assistant, std::get<1>(result)));
-        if(std::get<2>(result).isNotEmpty())
+        auto response = std::get<1>(result);
+        auto const reponseValidation = validateResponse(response, std::get<2>(result));
+        if(reponseValidation.failed())
         {
-            auto& documentAccessor = Instance::get().getDocumentAccessor();
-            auto xml = juce::parseXML(std::get<2>(result));
-            if(xml != nullptr)
+            auto const errorMessage = reponseValidation.getErrorMessage();
+            mHistory.push_back(std::make_tuple(MessageType::error, errorMessage));
+            mStatusLabel.setText(juce::translate("Error: ERROR").replace("ERROR", errorMessage), juce::dontSendNotification);
+        }
+        else
+        {
+            auto const parts = parseResponse(response);
+            MiscWeakAssert(!parts.first.isNotEmpty());
+            mHistory.push_back(std::make_tuple(MessageType::assistant, parts.first));
+            if(parts.second != nullptr)
             {
+                auto& documentAccessor = Instance::get().getDocumentAccessor();
                 Instance::get().getDocumentDirector().startAction();
                 bool hasModification = false;
-                for(auto* trackElement : xml->getChildWithTagNameIterator("tracks"))
+                for(auto* trackElement : parts.second->getChildWithTagNameIterator("tracks"))
                 {
                     if(trackElement != nullptr && trackElement->hasAttribute("identifier"))
                     {
@@ -470,13 +480,13 @@ void Application::CoAnalyzer::Chat::initializeSystem()
 
                                         if(mShouldQuit.load())
                                         {
-                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                            return std::make_tuple(juce::Result::ok(), std::string{});
                                         }
 
                                         MiscWeakAssert(initializeResult.wasOk());
                                         if(initializeResult.failed())
                                         {
-                                            return std::make_tuple(std::move(initializeResult), juce::String{}, juce::String{});
+                                            return std::make_tuple(std::move(initializeResult), std::string{});
                                         }
                                         // Load the saved state of the model
                                         if(state.existsAsFile())
@@ -487,7 +497,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                             if(stateResult.failed())
                                             {
                                                 MiscDebug("Application::CoAnalyzer::Chat", "Failed to inject state: " + stateResult.getErrorMessage());
-                                                return std::make_tuple(std::move(stateResult), juce::String{}, juce::String{});
+                                                return std::make_tuple(std::move(stateResult), std::string{});
                                             }
                                         }
                                         else
@@ -498,24 +508,24 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                             if(systemMessageResult.failed())
                                             {
                                                 MiscDebug("Application::CoAnalyzer::Chat", "Failed to initialize state: " + systemMessageResult.getErrorMessage());
-                                                return std::make_tuple(std::move(systemMessageResult), juce::String{}, juce::String{});
+                                                return std::make_tuple(std::move(systemMessageResult), std::string{});
                                             }
                                             mChat.saveState(state);
                                         }
 
                                         if(mShouldQuit.load())
                                         {
-                                            return std::make_tuple(juce::Result::ok(), juce::String{}, juce::String{});
+                                            return std::make_tuple(juce::Result::ok(), std::string{});
                                         }
 
                                         chrono.start();
-                                        auto userQueryResult = mChat.sendUserQuery("Introduce yourself in one sentence.");
+                                        auto userQueryResult = mChat.sendUserQuery("Introduce yourself in one sentence.", nullptr);
                                         chrono.stop("Introduction generation ended");
                                         mIsInitialized.store(std::get<0_z>(userQueryResult).wasOk());
                                         return userQueryResult;
                                     }();
                                     triggerAsyncUpdate();
-                                    return result;
+                                    return std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), juce::String{});
                                 });
     startTimer(250);
 }
@@ -549,7 +559,8 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
         juce::AlertWindow::showAsync(options, nullptr);
         return;
     }
-    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
+    auto const identifier = *std::get<1_z>(items).cbegin();
+    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
     auto xml = trackAcsr.toXml("tracks");
     xml->getChildByName("description")->getChildByName("output")->deleteAllChildElementsWithTagName("binNames");
 
@@ -563,27 +574,45 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     mHistory.push_back(std::make_tuple(MessageType::user, query));
     mShouldQuit.store(false);
     MiscWeakAssert(!mRequestFuture.valid());
-    mRequestFuture = std::async(std::launch::async, [this, query, xmld = std::move(xml)]()
+    mRequestFuture = std::async(std::launch::async, [this, query, identifier, xmld = std::move(xml)]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Request");
-                                    auto result = [&]()
+                                    static juce::String const dataTemplate = juce::CharPointer_UTF8(AnlCoAnalyzerData::ContextTemplate_md);
+                                    auto const contextData = dataTemplate.replace("FULL_XML_CONTEXT", xmld->toString());
+                                    auto perform = [this, &contextData, &identifier](auto const& text)
                                     {
                                         Chrono chrono{"CoAnalyzer"};
-                                        static juce::String const dataTpl = juce::CharPointer_UTF8(AnlCoAnalyzerData::ContextTemplate_md);
                                         chrono.start();
-                                        auto contextResult = mChat.injectContext(dataTpl.replace("FULL_XML_CONTEXT", xmld->toString()));
+                                        auto contextResult = mChat.injectContext(contextData);
                                         chrono.stop("Context injection ended");
                                         if(contextResult.failed())
                                         {
-                                            return std::make_tuple(std::move(contextResult), juce::String{}, juce::String{});
+                                            return std::make_tuple(std::move(contextResult), std::string{});
                                         }
                                         chrono.start();
-                                        auto userQueryResult = mChat.sendUserQuery(query);
-                                        chrono.stop("User query processing ended");
-                                        return userQueryResult;
-                                    }();
+                                        auto queryResult = mChat.sendUserQuery(text, [identifier](std::string const& reponse)
+                                                                               {
+                                                                                   return validateResponse(reponse, identifier).wasOk();
+                                                                               });
+                                        chrono.stop("Query processing ended");
+                                        return queryResult;
+                                    };
+                                    auto result = perform(query);
+                                    if(std::get<0>(result).failed() || mShouldQuit.load())
+                                    {
+                                        triggerAsyncUpdate();
+                                        return std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), identifier);
+                                    }
+                                    auto const reponseValidation = validateResponse(std::get<1>(result), identifier);
+                                    if(!reponseValidation.failed())
+                                    {
+                                        triggerAsyncUpdate();
+                                        return std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), identifier);
+                                    }
+                                    mChat.clearTemporaryResponse();
+                                    result = perform(reponseValidation.getErrorMessage() + " Please correct the previous response.");
                                     triggerAsyncUpdate();
-                                    return result;
+                                    return std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), identifier);
                                 });
     mTempResponse.setText(juce::translate("Processing query"), false);
     mTempResponse.setVisible(true);
@@ -635,6 +664,7 @@ void Application::CoAnalyzer::Chat::updateHistory()
                 break;
         }
         mHistoryEditor.insertTextAtCaret(roleStr + ": " + request.trim() + "\n\n");
+        mHistoryEditor.moveCaretToEnd();
     }
 }
 
@@ -660,6 +690,127 @@ void Application::CoAnalyzer::Chat::timerCallback()
         mTempResponse.setText(reponseText, false);
         mTempResponse.moveCaretToEnd();
     }
+}
+
+std::pair<juce::String, std::unique_ptr<juce::XmlElement>> Application::CoAnalyzer::Chat::parseResponse(std::string const& response)
+{
+    auto copy = response;
+    // Split the text of the response in the form <response>text</response><xml>text</xml> into two strings
+    auto const split = [&](const char* start, const char* end, bool include) -> std::string
+    {
+        auto startIt = copy.find(start);
+        if(startIt != std::string::npos)
+        {
+            auto const startLength = std::strlen(start);
+            auto endIt = copy.find(end, startIt + startLength);
+            if(endIt != std::string::npos)
+            {
+                auto const endLength = std::strlen(end);
+                auto const extractStart = include ? startIt : startIt + startLength;
+                auto const extractEnd = include ? endIt + endLength : endIt;
+                auto strResult = copy.substr(extractStart, extractEnd - extractStart);
+                auto const eraseStart = startIt;
+                auto const eraseEnd = endIt + endLength;
+                copy.erase(eraseStart, eraseEnd - eraseStart);
+                return strResult;
+            }
+        }
+        return {};
+    };
+    auto const xml = split("<xml>", "</xml>", true);
+    auto const message = split("<response>", "</response>", false);
+    return std::make_pair(juce::String(message), juce::parseXML(juce::String(xml)));
+}
+
+juce::Result Application::CoAnalyzer::Chat::validateResponse(std::string const& response, juce::String const& identifier)
+{
+    // Check if response contains the previous context (## CONTEXT), which indicates an error in generation
+    {
+        auto const contextPos = response.rfind("CONTEXT");
+        if(contextPos != std::string::npos)
+        {
+            return juce::Result::fail("The response must not contain the context.");
+        }
+    }
+    // Count how many times the last responseWindowSize are present in the response
+    {
+        static constexpr size_t responseWindowSize = 200; // only check for repetition if piece is at least this long
+        static constexpr size_t maxRepetition = 10;       // number of times a string can repeat before aborting
+        if(response.size() > responseWindowSize)
+        {
+            auto const startPos = response.size() - responseWindowSize;
+            auto occurencePos = response.rfind(response.substr(startPos, responseWindowSize), startPos - 1);
+            if(occurencePos != std::string::npos && occurencePos > 0)
+            {
+                auto const textSequence = response.substr(occurencePos, response.size() - occurencePos);
+                occurencePos = response.rfind(textSequence, occurencePos - 1);
+                auto textSequenceCount = 1_z;
+                while(occurencePos != std::string::npos && occurencePos > 0)
+                {
+                    ++textSequenceCount;
+                    if(textSequenceCount > maxRepetition)
+                    {
+                        return juce::Result::fail("The response contains too many repetitions.");
+                    }
+                    occurencePos = response.rfind(textSequence, occurencePos - 1);
+                }
+            }
+        }
+    }
+    // Check if the format is valid
+    {
+        auto const responseStartPos = response.find("<response>");
+        auto const responseEndPos = response.find("</response>");
+        if(responseEndPos != std::string::npos && (responseStartPos == std::string::npos || responseEndPos < responseStartPos))
+        {
+            return juce::Result::fail("The response format is corrupted: missing <response> tags.");
+        }
+        auto const xmlStartPos = response.find("<xml>");
+        auto const xmlEndPos = response.find("</xml>");
+        if(xmlEndPos != std::string::npos && (xmlStartPos == std::string::npos || xmlEndPos < xmlStartPos))
+        {
+            return juce::Result::fail("The xml format is corrupted: missing <xml> tags.");
+        }
+        if(xmlEndPos == std::string::npos)
+        {
+            return juce::Result::ok();
+        }
+        auto const xmlLength = xmlEndPos - xmlStartPos + std::strlen("</xml>");
+        auto const xmlContent = juce::String(response.substr(xmlStartPos, xmlLength)).trim();
+        if(xmlContent.isEmpty())
+        {
+            return juce::Result::ok();
+        }
+        juce::XmlDocument document{xmlContent};
+        auto const element = document.getDocumentElement();
+        auto const lasError = document.getLastParseError();
+        if(lasError.isNotEmpty())
+        {
+            return juce::Result::fail("The xml format is corrupted: " + lasError + ".");
+        }
+        if(element == nullptr)
+        {
+            return juce::Result::fail("The xml format is corrupted: failed to parse.");
+        }
+        if(element->getNumChildElements() == 0 && element->getNumAttributes() == 0)
+        {
+            return juce::Result::ok();
+        }
+        auto* track = element->getChildByName("tracks");
+        if(track == nullptr)
+        {
+            return juce::Result::fail("The xml format is corrupted: missing <tracks> element.");
+        }
+        if(!track->hasAttribute("identifier"))
+        {
+            return juce::Result::fail("The xml format is corrupted: missing identifier attribute in <tracks> element.");
+        }
+        if(track->getStringAttribute("identifier") != identifier)
+        {
+            return juce::Result::fail("The xml format is corrupted: identifier attribute doesn't match the selected track.");
+        }
+    }
+    return juce::Result::ok();
 }
 
 Application::CoAnalyzer::Chat::QueryEditor::QueryEditor(History const& history)

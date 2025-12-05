@@ -29,7 +29,7 @@ namespace Application
             juce::Result saveState(juce::File state);
             juce::Result injectContext(juce::String const& content);
             juce::Result addSystemMessage(juce::String const& instruction);
-            std::tuple<juce::Result, juce::String, juce::String> sendUserQuery(juce::String const& prompt);
+            std::tuple<juce::Result, std::string> sendUserQuery(juce::String const& prompt, std::function<bool(std::string const&)> progressCallback);
             juce::String getTemporaryResponse() const;
             void clearTemporaryResponse();
 

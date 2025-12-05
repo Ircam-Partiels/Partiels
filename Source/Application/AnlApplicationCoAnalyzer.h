@@ -111,6 +111,9 @@ namespace Application
             };
             // clang-format on
 
+            using Results = std::tuple<juce::Result, std::string, juce::String>;
+            using History = std::vector<std::tuple<MessageType, juce::String>>;
+
             // juce::AsyncUpdater
             void handleAsyncUpdate() override;
 
@@ -122,8 +125,8 @@ namespace Application
             void stopUserQuery();
             void updateHistory();
 
-            using Results = std::tuple<juce::Result, juce::String, juce::String>;
-            using History = std::vector<std::tuple<MessageType, juce::String>>;
+            static std::pair<juce::String, std::unique_ptr<juce::XmlElement>> parseResponse(std::string const& response);
+            static juce::Result validateResponse(std::string const& response, juce::String const& identifier);
 
             class QueryEditor
             : public juce::TextEditor
