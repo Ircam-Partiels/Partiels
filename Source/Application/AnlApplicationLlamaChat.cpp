@@ -147,7 +147,7 @@ juce::Result Application::Llama::Chat::initialize(juce::File model)
     auto ctx_params = llama_context_default_params();
     auto const modelMaxCtx = llama_model_n_ctx_train(mModel.get());
     ctx_params.n_ctx = std::min(static_cast<uint32_t>(32768), static_cast<uint32_t>(modelMaxCtx)); // Increased to 64K for better instruction retention
-    ctx_params.n_batch = ctx_params.n_ctx;
+    ctx_params.n_batch = 4096;
     ctx_params.abort_callback = [](void* data)
     {
         return reinterpret_cast<Chat*>(data)->mShouldQuit.load();
@@ -493,6 +493,17 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             return std::string(buf, static_cast<size_t>(n));
         }();
         response += piece;
+
+        // Check if response is complete (contains </track> closing tag)
+        auto endPos = response.rfind("</track");
+        if(endPos != std::string::npos)
+        {
+            response.erase(endPos);
+            response += "</track>\n</xml>";
+            MiscDebug("Application::Llama::Chat", "Response complete, stopping generation");
+            break;
+        }
+
         // Count how many times the last responseWindowSize are present in the response
         static constexpr size_t responseWindowSize = 200; // only check for repetition if piece is at least this long
         static constexpr size_t maxRepetition = 10;       // number of times a string can repeat before aborting
@@ -542,7 +553,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     }
 
     MiscDebug("Application::Llama::Chat", juce::String("Message ") + mMessages.back().role + ": " + mMessages.back().content);
-    // Split the text of the response in the form <response>text</response><document>text</document> into two strings
+    // Split the text of the response in the form <response>text</response><xml>text</xml> into two strings
     auto const split = [&](const char* start, const char* end, bool include) -> std::string
     {
         auto startIt = response.find(start);
@@ -565,7 +576,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
         return {};
     };
 
-    auto const document = split("<document>", "</document>", true);
+    auto const xml = split("<xml>", "</xml>", true);
     auto message = split("<response>", "</response>", false);
     if(message.empty())
     {
@@ -573,7 +584,7 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
         {
             message = response;
         }
-        else if(!document.empty())
+        else if(!xml.empty())
         {
             message = "The model modified the document.";
         }
@@ -586,8 +597,8 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
             }
         }
     }
-    MiscDebug("Application::Llama::Chat", result.getErrorMessage() + ", message: " + message + ", document: " + document);
-    return std::make_tuple(result, message, document);
+    MiscDebug("Application::Llama::Chat", result.getErrorMessage() + ", message: " + message + ", xml: " + xml);
+    return std::make_tuple(result, message, xml);
 }
 
 juce::String Application::Llama::Chat::getTemporaryResponse() const

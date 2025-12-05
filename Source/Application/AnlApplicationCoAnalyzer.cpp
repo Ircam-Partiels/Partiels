@@ -320,11 +320,7 @@ Application::CoAnalyzer::Chat::~Chat()
     mQueryEditor.removeMouseListener(this);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
-    mShouldQuit.store(true);
-    if(mRequestFuture.valid())
-    {
-        mRequestFuture.wait();
-    }
+    stopUserQuery();
 }
 
 void Application::CoAnalyzer::Chat::mouseDown(juce::MouseEvent const& event)
@@ -541,68 +537,21 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
     };
 
     // Get current document XML
-    auto xml = []()
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto const items = Document::Selection::getItems(documentAcsr);
+    if(std::get<1_z>(items).empty())
     {
-        auto& documentAcsr = Instance::get().getDocumentAccessor();
-        auto const items = Document::Selection::getItems(documentAcsr);
-        if(!std::get<0_z>(items).empty())
-        {
-            auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *std::get<0_z>(items).cbegin());
-            auto element = groupAcsr.toXml("groups");
-            return std::make_tuple("group", std::move(element), juce::String());
-        }
-        if(!std::get<1_z>(items).empty())
-        {
-            auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
-            auto element = trackAcsr.toXml("tracks");
-            element->getChildByName("description")->getChildByName("output")->deleteAllChildElementsWithTagName("binNames");
-            auto extraInfo = [&]()
-            {
-                auto const frameType = Track::Tools::getFrameType(trackAcsr);
-                if(frameType.has_value())
-                {
-                    switch(frameType.value())
-                    {
-                        case Track::FrameType::label:
-                        {
-                            return juce::String("This is a marker track (type=0).\n\
-                                                Valid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow duration/></graphicsSettings>.\n\
-                                                Invalid graphicsSettings: <graphicsSettings><colours map></graphicsSettings>.");
-                        };
-                        case Track::FrameType::value:
-                        {
-                            return juce::String("This is a line track (type=1).\n\
-                                                Valid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow/></graphicsSettings>.\n\
-                                                Invalid graphicsSettings: <graphicsSettings><colours map shadow></graphicsSettings>.");
-                        }
-                        case Track::FrameType::vector:
-                        {
-                            return juce::String("This is a spectrogram track (type=2).\n\
-                                                Valid graphicsSettings: <graphicsSettings><colours map></graphicsSettings>.\n\
-                                                Invalid graphicsSettings: <graphicsSettings font lineWidth><colours background foreground text shadow duration/></graphicsSettings>.");
-                        }
-                    }
-                }
-                return juce::String{};
-            }();
-            return std::make_tuple("track", std::move(element), extraInfo);
-        }
-        auto element = documentAcsr.toXml("Document");
-        for(auto* child = element->getChildByName("groups"); child != nullptr; child = child->getNextElementWithTagName("groups"))
-        {
-            child->deleteAllChildElements();
-        }
-        for(auto* child = element->getChildByName("tracks"); child != nullptr; child = child->getNextElementWithTagName("tracks"))
-        {
-            child->deleteAllChildElements();
-        }
-        return std::make_tuple("document", std::move(element), juce::String());
-    }();
-    if(std::get<1>(xml) == nullptr)
-    {
-        mStatusLabel.setText(juce::translate("Error: Could not export selection as XML"), juce::dontSendNotification);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Neuralyzer Document Selection Not Supported"))
+                                 .withMessage(juce::translate("The Neuralyzer doesn't support group or document selection yet."))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
         return;
     }
+    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *std::get<1_z>(items).cbegin());
+    auto xml = trackAcsr.toXml("tracks");
+    xml->getChildByName("description")->getChildByName("output")->deleteAllChildElementsWithTagName("binNames");
 
     mQueryEditor.setText({}, juce::sendNotificationSync);
     mQueryEditor.resetHistoryIndex();
@@ -620,9 +569,9 @@ void Application::CoAnalyzer::Chat::sendUserQuery()
                                     auto result = [&]()
                                     {
                                         Chrono chrono{"CoAnalyzer"};
-                                        auto const data = juce::String("Here is the content of the current ") + std::get<0>(xmld) + ": ```xml" + std::get<1>(xmld)->toString().removeCharacters("\n") + "```\n" + std::get<2>(xmld);
+                                        static juce::String const dataTpl = juce::CharPointer_UTF8(AnlCoAnalyzerData::ContextTemplate_md);
                                         chrono.start();
-                                        auto contextResult = mChat.injectContext(data);
+                                        auto contextResult = mChat.injectContext(dataTpl.replace("FULL_XML_CONTEXT", xmld->toString()));
                                         chrono.stop("Context injection ended");
                                         if(contextResult.failed())
                                         {
@@ -652,6 +601,8 @@ void Application::CoAnalyzer::Chat::stopUserQuery()
         cancelPendingUpdate();
         mRequestFuture.wait();
         mRequestFuture.get();
+        mStatusLabel.setText(juce::translate("Query aborted"), juce::dontSendNotification);
+        mHistory.push_back(std::make_tuple(MessageType::error, juce::translate("Query aborted by user.")));
     }
     mTempResponse.setVisible(false);
     mSeparator2.setVisible(false);
