@@ -520,6 +520,8 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
         batch = llama_batch_get_one(&new_token_id, 1);
     }
 
+    MiscDebug("Application::Llama::Chat", response);
+
     mPrevMessageLength = addMessage(Role::assistant, response);
     MiscWeakAssert(mPrevMessageLength >= 0);
     if(mPrevMessageLength < 0)
