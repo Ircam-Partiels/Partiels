@@ -12,15 +12,29 @@ namespace Application
         enum class AttrType : size_t
         {
               model
+            , instruction
+        };
+        
+        enum class Instruction
+        {
+              v1
+            , v2
         };
         
         using AttrContainer = Model::Container
         < Model::Attr<AttrType::model, juce::File, Model::Flag::basic>
+        , Model::Attr<AttrType::instruction, Instruction, Model::Flag::basic>
         >;
+        
+        enum class SignalType
+        {
+              fileUpdated
+        };
         // clang-format on
 
         class Accessor
         : public Model::Accessor<Accessor, AttrContainer>
+        , public Broadcaster<Accessor, SignalType>
         {
         public:
             using Model::Accessor<Accessor, AttrContainer>::Accessor;
@@ -28,11 +42,14 @@ namespace Application
             Accessor()
             : Accessor(AttrContainer({
                                           {}
+                                        , {Instruction::v2}
                                     }))
             {
             }
             // clang-format on
         };
+
+        juce::File getStateFile(Accessor const& accessor);
 
         class SettingsContent
         : public juce::Component
@@ -48,7 +65,9 @@ namespace Application
 
         private:
             Accessor::Listener mListener{typeid(*this).name()};
+            Accessor::Receiver mReceiver;
             PropertyList mModel;
+            PropertyList mInstruction;
             PropertyTextButton mResetState;
             std::vector<juce::File> mInstalledModels;
             TimerClock mTimerClock;
@@ -131,6 +150,7 @@ namespace Application
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
+            Accessor::Receiver mReceiver;
             std::atomic<bool> mIsInitialized{false};
             std::atomic<bool> mShouldQuit{false};
             Llama::Chat mChat{mShouldQuit};

@@ -7,6 +7,42 @@
 
 ANALYSE_FILE_BEGIN
 
+static std::vector<juce::File> getInstalledModels()
+{
+    std::vector<juce::File> models;
+    auto const addFilesFromDirectory = [&](juce::File const& root)
+    {
+#if JUCE_MAC
+        auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
+#else
+        auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
+#endif
+        auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
+        for(auto const& model : listedModels)
+        {
+            if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
+                            {
+                                return existingModel.getFullPathName() == model.getFullPathName();
+                            }))
+            {
+                models.push_back(model);
+            }
+        }
+    };
+    addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
+    addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
+    std::sort(models.begin(), models.end());
+    return models;
+}
+
+juce::File Application::CoAnalyzer::getStateFile(Accessor const& accessor)
+{
+    auto const model = accessor.getAttr<AttrType::model>();
+    auto const modelName = model.getFileNameWithoutExtension();
+    auto const stateName = modelName + "_" + magic_enum::enum_name(accessor.getAttr<AttrType::instruction>()).data();
+    return model.getSiblingFile(stateName).withFileExtension("bin");
+}
+
 Application::CoAnalyzer::SettingsContent::SettingsContent()
 : mModel(juce::translate("Model"), juce::translate("The model used by the Neuralyzer"), "", {}, [this](size_t index)
          {
@@ -16,99 +52,112 @@ Application::CoAnalyzer::SettingsContent::SettingsContent()
              }
              auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
              accessor.setAttr<AttrType::model>(mInstalledModels.at(index), NotificationType::synchronous);
-             mTimerClock.callback();
          })
-, mResetState(juce::translate("Reset State"), juce::translate("Reset the state of the model"), [this]()
+, mInstruction(juce::translate("Instruction"), juce::translate("The instruction used by the Neuralyzer"), "", {}, [](size_t index)
+               {
+                   auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+                   accessor.setAttr<AttrType::instruction>(magic_enum::enum_cast<Instruction>(static_cast<int>(index)).value_or(Instruction::v2), NotificationType::synchronous);
+               })
+, mResetState(juce::translate("Reset State"), juce::translate("Reset the state of the model"), []()
               {
                   auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
-                  auto const model = accessor.getAttr<AttrType::model>();
-                  if(model.withFileExtension("bin").deleteFile())
+                  if(getStateFile(accessor).deleteFile())
                   {
-                      accessor.setAttr<AttrType::model>(juce::File{}, NotificationType::synchronous);
-                      accessor.setAttr<AttrType::model>(model, NotificationType::synchronous);
-                      mTimerClock.callback();
+                      accessor.sendSignal(SignalType::fileUpdated, {}, NotificationType::synchronous);
                   }
               })
 {
     addAndMakeVisible(mModel);
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
+    addAndMakeVisible(mInstruction);
+    mInstruction.entry.addItem(juce::translate("v1 (long)"), 1);
+    mInstruction.entry.addItem(juce::translate("v2 (short)"), 2);
+    mInstruction.entry.setTextWhenNothingSelected(juce::translate("Select an instruction"));
     addAndMakeVisible(mResetState);
 
-    mListener.onAttrChanged = [this](Accessor const& accessor, AttrType attr)
+    auto const fileUpdated = [this](Accessor const& accessor, bool updateList)
+    {
+        if(updateList)
+        {
+            auto installedModels = getInstalledModels();
+            if(installedModels != mInstalledModels)
+            {
+                mInstalledModels = std::move(installedModels);
+                mModel.entry.clear(juce::NotificationType::dontSendNotification);
+                for(auto const& model : mInstalledModels)
+                {
+                    mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
+                }
+                mListener.onAttrChanged(accessor, AttrType::model);
+            }
+        }
+        auto const model = accessor.getAttr<AttrType::model>();
+        auto const it = std::find(mInstalledModels.cbegin(), mInstalledModels.cend(), model);
+        if(it != mInstalledModels.cend() && it->existsAsFile())
+        {
+            mModel.entry.setSelectedId(static_cast<int>(std::distance(mInstalledModels.cbegin(), it)) + 1, juce::NotificationType::dontSendNotification);
+        }
+        else if(!model.existsAsFile())
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        auto const instruction = accessor.getAttr<AttrType::instruction>();
+        auto const index = magic_enum::enum_index(instruction).value_or(1);
+        mInstruction.entry.setSelectedId(static_cast<int>(index) + 1, juce::NotificationType::dontSendNotification);
+        mResetState.setEnabled(getStateFile(accessor).existsAsFile());
+    };
+
+    mListener.onAttrChanged = [=](Accessor const& accessor, AttrType attr)
     {
         switch(attr)
         {
             case AttrType::model:
+            case AttrType::instruction:
             {
-                auto const model = accessor.getAttr<AttrType::model>();
-                auto const it = std::find(mInstalledModels.cbegin(), mInstalledModels.cend(), model);
-                if(it != mInstalledModels.cend() && it->existsAsFile())
-                {
-                    mModel.entry.setSelectedId(static_cast<int>(std::distance(mInstalledModels.cbegin(), it)) + 1, juce::NotificationType::dontSendNotification);
-                }
-                else
-                {
-                    mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-                }
+                fileUpdated(accessor, false);
                 break;
             }
         }
     };
 
-    mTimerClock.callback = [this]()
+    mReceiver.onSignal = [=](Accessor const& accessor, SignalType signal, juce::var)
     {
-        auto installedModels = []()
+        switch(signal)
         {
-            std::vector<juce::File> models;
-            auto const addFilesFromDirectory = [&](juce::File const& root)
+            case SignalType::fileUpdated:
             {
-#if JUCE_MAC
-                auto const directory = root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
-#else
-                auto const directory = root.getChildFile("Ircam").getChildFile("partielsmodels");
-#endif
-                auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
-                for(auto const& model : listedModels)
-                {
-                    if(std::none_of(models.cbegin(), models.cend(), [&](juce::File const& existingModel)
-                                    {
-                                        return existingModel.getFullPathName() == model.getFullPathName();
-                                    }))
-                    {
-                        models.push_back(model);
-                    }
-                }
-            };
-            addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
-            addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
-            std::sort(models.begin(), models.end());
-            return models;
-        }();
-        if(installedModels != mInstalledModels)
-        {
-            mInstalledModels = std::move(installedModels);
-            mModel.entry.clear(juce::NotificationType::dontSendNotification);
-            for(auto const& model : mInstalledModels)
-            {
-                mModel.entry.addItem(model.getFileName(), static_cast<int>(mModel.entry.getNumItems()) + 1);
+                fileUpdated(accessor, true);
+                break;
             }
-            auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
-            mListener.onAttrChanged(accessor, AttrType::model);
         }
-        auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
-        mResetState.setEnabled(accessor.getAttr<AttrType::model>().withFileExtension("bin").existsAsFile());
     };
 
-    mTimerClock.startTimer(500);
+    mTimerClock.callback = [=]()
+    {
+        auto const& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+        fileUpdated(accessor, true);
+    };
+
     setSize(300, 200);
     auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+    fileUpdated(accessor, true);
     accessor.addListener(mListener, NotificationType::synchronous);
+    accessor.addReceiver(mReceiver);
+    mTimerClock.startTimer(500);
 }
 
 Application::CoAnalyzer::SettingsContent::~SettingsContent()
 {
+    mTimerClock.stopTimer();
     auto& accessor = Instance::get().getApplicationAccessor().getAcsr<Application::AcsrType::coAnalyzer>();
+    accessor.removeReceiver(mReceiver);
     accessor.removeListener(mListener);
 }
 
@@ -123,6 +172,7 @@ void Application::CoAnalyzer::SettingsContent::resized()
         }
     };
     setBounds(mModel);
+    setBounds(mInstruction);
     setBounds(mResetState);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
@@ -235,6 +285,22 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
         switch(attr)
         {
             case AttrType::model:
+            case AttrType::instruction:
+            {
+                if(mAccessor.getAttr<AttrType::model>() != juce::File{} || mIsInitialized.load())
+                {
+                    initializeSystem();
+                }
+                break;
+            }
+        }
+    };
+
+    mReceiver.onSignal = [this](Accessor const&, SignalType type, juce::var)
+    {
+        switch(type)
+        {
+            case SignalType::fileUpdated:
             {
                 if(mAccessor.getAttr<AttrType::model>() != juce::File{} || mIsInitialized.load())
                 {
@@ -246,11 +312,13 @@ Application::CoAnalyzer::Chat::Chat(Accessor& accessor)
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.addReceiver(mReceiver);
 }
 
 Application::CoAnalyzer::Chat::~Chat()
 {
     mQueryEditor.removeMouseListener(this);
+    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
     mShouldQuit.store(true);
     if(mRequestFuture.valid())
@@ -391,7 +459,8 @@ void Application::CoAnalyzer::Chat::initializeSystem()
     MiscWeakAssert(!mRequestFuture.valid());
 
     auto const model = mAccessor.getAttr<AttrType::model>();
-    mRequestFuture = std::async(std::launch::async, [this, model]()
+    auto const state = getStateFile(mAccessor);
+    mRequestFuture = std::async(std::launch::async, [this, model, state]()
                                 {
                                     juce::Thread::setCurrentThreadName("CoAnalyzer::Chat::Initialize");
                                     MiscDebug("Application::CoAnalyzer::Chat", "Initializing Neuralyzer chat system...");
@@ -414,7 +483,6 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                             return std::make_tuple(std::move(initializeResult), juce::String{}, juce::String{});
                                         }
                                         // Load the saved state of the model
-                                        auto const state = model.withFileExtension("bin");
                                         if(state.existsAsFile())
                                         {
                                             chrono.start();
@@ -429,7 +497,7 @@ void Application::CoAnalyzer::Chat::initializeSystem()
                                         else
                                         {
                                             chrono.start();
-                                            auto systemMessageResult = mChat.addSystemMessage(juce::CharPointer_UTF8(AnlCoAnalyzerData::Instructions_md));
+                                            auto systemMessageResult = mChat.addSystemMessage(juce::CharPointer_UTF8(AnlCoAnalyzerData::Instructions_v2_md));
                                             chrono.stop("State generation ended");
                                             if(systemMessageResult.failed())
                                             {
@@ -582,8 +650,15 @@ void Application::CoAnalyzer::Chat::stopUserQuery()
     {
         mShouldQuit.store(true);
         cancelPendingUpdate();
-        handleAsyncUpdate();
+        mRequestFuture.wait();
+        mRequestFuture.get();
     }
+    mTempResponse.setVisible(false);
+    mSeparator2.setVisible(false);
+    stopTimer();
+    mSendButton.setTooltip(juce::translate("Send Query"));
+    colourChanged();
+    resized();
 }
 
 void Application::CoAnalyzer::Chat::updateHistory()
