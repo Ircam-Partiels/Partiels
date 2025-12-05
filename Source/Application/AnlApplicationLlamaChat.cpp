@@ -364,6 +364,9 @@ juce::Result Application::Llama::Chat::addSystemMessage(juce::String const& inst
     }
     if(mShouldQuit.load())
     {
+        // CRITICAL: Rollback the message addition since we won't decode it
+        mMessages.pop_back();
+        mMessageData.pop_back();
         return juce::Result::fail(juce::translate("Operation aborted."));
     }
 
@@ -434,6 +437,9 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
 
     if(mShouldQuit.load())
     {
+        // CRITICAL: Rollback the message addition since we won't generate a response
+        mMessages.pop_back();
+        mMessageData.pop_back();
         return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
     }
 
@@ -445,6 +451,9 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
     {
         if(mShouldQuit.load())
         {
+            // CRITICAL: Save the partial response to maintain history consistency
+            mPrevMessageLength = addMessage(Role::assistant, response);
+            MiscDebug("Application::Llama::Chat", juce::String("Generation aborted, saved partial response with ") + juce::String(response.size()) + juce::String(" characters"));
             return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
         }
         result = decode(mContext.get(), batch);
@@ -455,6 +464,9 @@ std::tuple<juce::Result, juce::String, juce::String> Application::Llama::Chat::s
 
         if(mShouldQuit.load())
         {
+            // CRITICAL: Save the partial response to maintain history consistency
+            mPrevMessageLength = addMessage(Role::assistant, response);
+            MiscDebug("Application::Llama::Chat", juce::String("Generation aborted, saved partial response with ") + juce::String(response.size()) + juce::String(" characters"));
             return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), juce::String{}, juce::String{});
         }
 
