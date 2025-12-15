@@ -68,7 +68,7 @@ jobs:
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Artifact
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v6.0.0
       with:
         name: Partiels-Linux
         path: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
@@ -99,7 +99,7 @@ jobs:
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Artifact
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v6.0.0
       with:
         name: Partiels-Windows
         path: ${{ github.workspace }}/build/Partiels-Windows.exe
@@ -184,7 +184,7 @@ jobs:
         xcrun stapler staple "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Artifact
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v6.0.0
       with:
         name: Partiels-MacOS
         path: ${{ github.workspace }}/build/Partiels-MacOS.dmg
@@ -219,12 +219,12 @@ jobs:
         cmake --build ${{ github.workspace }}/build --target PartielsManual
         cmake --build ${{ github.workspace }}/build --target PartielsPatchs
     - name: Artifact
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v6.0.0
       with:
         name: Partiels-Manual
         path: ${{ github.workspace }}/build/Partiels-Manual.pdf
     - name: Artifact
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v6.0.0
       with:
         name: Partiels-Patchs
         path: ${{ github.workspace }}/build/Partiels-Patchs.zip
