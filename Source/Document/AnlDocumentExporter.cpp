@@ -1525,6 +1525,8 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "ignoreGridResults", value.ignoreGridResults);
         toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
         toXml(*child, "columnSeparator", value.columnSeparator);
+        toXml(*child, "labSeparator", value.labSeparator);
+        toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
         toXml(*child, "includeDescription", value.includeDescription);
         toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
         toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
@@ -1555,6 +1557,8 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.ignoreGridResults = fromXml(*child, "ignoreGridResults", defaultValue.ignoreGridResults);
     value.applyExtraThresholds = fromXml(*child, "applyExtraThresholds", defaultValue.applyExtraThresholds);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
+    value.labSeparator = fromXml(*child, "labSeparator", defaultValue.labSeparator);
+    value.disableLabelEscaping = fromXml(*child, "disableLabelEscaping", defaultValue.disableLabelEscaping);
     value.includeDescription = fromXml(*child, "includeDescription", defaultValue.includeDescription);
     value.sdifFrameSignature = fromXml(*child, "sdifFrameSignature", defaultValue.sdifFrameSignature);
     value.sdifMatrixSignature = fromXml(*child, "sdifMatrixSignature", defaultValue.sdifMatrixSignature);
