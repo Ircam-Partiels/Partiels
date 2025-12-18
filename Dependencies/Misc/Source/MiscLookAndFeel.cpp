@@ -205,7 +205,7 @@ void LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(juce::PopupMenu::ColourIds::backgroundColourId, colourChart.get(Type::background));
     setColour(juce::PopupMenu::ColourIds::textColourId, colourChart.get(Type::text));
     setColour(juce::PopupMenu::ColourIds::headerTextColourId, colourChart.get(Type::text));
-    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, colourChart.get(Type::background));
+    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, colourChart.get(Type::text).withAlpha(0.2f));
     setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, colourChart.get(Type::text));
 
     // juce::TooltipWindow
