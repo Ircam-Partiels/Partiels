@@ -536,6 +536,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
     auto const showLabel = !colours.text.isTransparent();
     auto const showDuration = !colours.duration.isTransparent();
     auto const font = g.getCurrentFont();
+    auto const minTextWidth = juce::GlyphArrangement::getStringWidthInt(font, "...") + 2;
 
     auto const y = fbounds.getY();
     auto const height = fbounds.getHeight();
@@ -596,13 +597,28 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 
             if(showLabel && !std::get<2>(*it).empty())
             {
-                auto const previousLabelLimit = labels.empty() ? x : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
-                if(previousLabelLimit <= x)
+                auto const text = juce::String(std::get<2>(*it)) + unit;
+                auto const textX = static_cast<int>(std::round(x)) + 2;
+                auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, text);
+                if(labels.empty())
                 {
-                    auto const text = juce::String(std::get<2>(*it)) + unit;
-                    auto const textWidth = juce::GlyphArrangement::getStringWidth(font, text) + 2;
-                    auto const textX = static_cast<int>(std::round(x)) + 2;
                     labels.push_back(std::make_tuple(text, textX, textWidth));
+                }
+                else
+                {
+                    auto const previousTextX = std::get<1>(labels.back());
+                    auto const previousTextWidth = std::get<2>(labels.back());
+                    if((previousTextX + std::min(previousTextWidth, minTextWidth)) < textX)
+                    {
+                        auto const maxPreviousTextWidth = textX - previousTextX - 2;
+                        std::get<2>(labels.back()) = std::min(previousTextWidth, maxPreviousTextWidth);
+                        labels.push_back(std::make_tuple(text, textX, textWidth));
+                    }
+                    else
+                    {
+                        // Marker is too close so we remove the previous one
+                        labels.back() = std::make_tuple(text, textX, textWidth);
+                    }
                 }
             }
         }
@@ -642,24 +658,25 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 
     if(showLabel)
     {
+        auto const fontHeight = static_cast<int>(std::ceil(font.getHeight()));
         auto const getPositionY = [&]()
         {
             switch(labelLayout.justification)
             {
                 case LabelLayout::Justification::top:
-                    return bounds.getY() + static_cast<int>(std::ceil(g.getCurrentFont().getAscent() + labelLayout.position));
+                    return bounds.getY() + static_cast<int>(std::ceil(labelLayout.position));
                 case LabelLayout::Justification::centred:
-                    return bounds.getCentreY() + static_cast<int>(std::ceil(labelLayout.position));
+                    return bounds.getCentreY() + static_cast<int>(std::ceil(labelLayout.position - font.getAscent()));
                 case LabelLayout::Justification::bottom:
-                    return bounds.getBottom() - static_cast<int>(std::ceil(g.getCurrentFont().getDescent() + labelLayout.position));
+                    return bounds.getBottom() - static_cast<int>(std::ceil(font.getHeight() + labelLayout.position));
             }
-            return bounds.getY() + static_cast<int>(std::ceil(g.getCurrentFont().getAscent() + labelLayout.position));
+            return bounds.getY() + static_cast<int>(std::ceil(labelLayout.position));
         };
         auto const position = getPositionY();
         g.setColour(colours.text);
         for(auto const& label : labels)
         {
-            g.drawSingleLineText(std::get<0>(label), std::get<1>(label), position, juce::Justification::left);
+            g.drawText(std::get<0>(label), std::get<1>(label), position, std::get<2>(label), fontHeight, juce::Justification::left, true);
         }
     }
 }
