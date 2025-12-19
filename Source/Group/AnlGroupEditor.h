@@ -45,7 +45,8 @@ namespace Group
         Accessor::Listener mListener{typeid(*this).name()};
 
         std::unique_ptr<Track::Editor> mTrackEditor;
-        juce::String mTrackIdentifier;
+        juce::String mReferenceIdentifier;
+        juce::String mVerticalZoomIdentifier;
         LayoutNotifier mLayoutNotifier;
         PopupSubmenuId mPopupMenuAction = PopupSubmenuId::none;
     };

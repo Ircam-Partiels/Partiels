@@ -15,7 +15,7 @@ Group::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::showInGroup})
+                  {Track::AttrType::identifier, Track::AttrType::description, Track::AttrType::results, Track::AttrType::showInGroup})
 {
     mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
@@ -66,24 +66,38 @@ void Group::Editor::paint(juce::Graphics& g)
 
 void Group::Editor::updateContent()
 {
-    auto const trackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-    if(!trackAcsr.has_value())
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    if(layout.empty())
     {
         mTrackEditor.reset();
-        mTrackIdentifier.clear();
+        mReferenceIdentifier.clear();
     }
-    else if(mTrackIdentifier != trackAcsr.value().get().getAttr<Track::AttrType::identifier>())
+    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
+    if(!referenceTrackAcsr.has_value())
     {
-        auto const trackIdentifier = trackAcsr.value().get().getAttr<Track::AttrType::identifier>();
-        mTrackEditor = std::make_unique<Track::Editor>(
-            mDirector.getTrackDirector(trackIdentifier), mTimeZoomAccessor, mTransportAccessor, mCommandManager, mContent, [this](juce::Point<int> const& pt)
-            {
-                return getBubbleTooltip(pt);
-            },
-            false);
-        if(mTrackEditor != nullptr)
+        mTrackEditor.reset();
+        mReferenceIdentifier.clear();
+        mVerticalZoomIdentifier.clear();
+    }
+    else
+    {
+        auto const referenceIdentifier = referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+        auto const verticalZoomTrackAcsr = Tools::getVerticalZoomTrackAcsr(mAccessor);
+        auto const verticalZoomTrackIdentifier = verticalZoomTrackAcsr.has_value() ? verticalZoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>() : juce::String();
+        if(mReferenceIdentifier != referenceIdentifier || mVerticalZoomIdentifier != verticalZoomTrackIdentifier)
         {
-            mTrackIdentifier = trackIdentifier;
+            mTrackEditor.reset();
+
+            auto trackNavigator = verticalZoomTrackAcsr.has_value() ? std::make_unique<Track::Navigator>(verticalZoomTrackAcsr.value().get(), mTimeZoomAccessor) : std::unique_ptr<Track::Navigator>{};
+            mTrackEditor = std::make_unique<Track::Editor>(
+                mDirector.getTrackDirector(referenceIdentifier), mTimeZoomAccessor, mTransportAccessor, mCommandManager, mContent, [this](juce::Point<int> const& pt)
+                {
+                    return getBubbleTooltip(pt);
+                },
+                false, std::move(trackNavigator));
+
+            mReferenceIdentifier = referenceIdentifier;
+            mVerticalZoomIdentifier = verticalZoomTrackIdentifier;
             mTrackEditor->onMouseDown = [this](juce::MouseEvent const& event)
             {
                 if(!event.mods.isPopupMenu())
@@ -92,8 +106,8 @@ void Group::Editor::updateContent()
                 }
                 showPopupMenu();
             };
+            addAndMakeVisible(mTrackEditor.get());
         }
-        addAndMakeVisible(mTrackEditor.get());
     }
     updateTrackEditor();
     resized();
@@ -257,10 +271,10 @@ juce::String Group::Editor::getBubbleTooltip(juce::Point<int> const& pt)
     juce::StringArray lines;
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
-    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-    if(referenceTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+    auto const verticalZoomTrackAcsr = Tools::getVerticalZoomTrackAcsr(mAccessor);
+    if(verticalZoomTrackAcsr.has_value())
     {
-        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
+        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(verticalZoomTrackAcsr.value().get(), *this, pt.y)));
     }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
