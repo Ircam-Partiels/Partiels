@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor, juce::ApplicationCommandManager& commandManager, juce::Component& content, std::function<juce::String(juce::Point<int> const&)> getTooltip, bool paintBackground)
+Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor, juce::ApplicationCommandManager& commandManager, juce::Component& content, std::function<juce::String(juce::Point<int> const&)> getTooltip, bool paintBackground, std::unique_ptr<Navigator> customNavigator)
 : mContent(content)
 , mAccessor(director.getAccessor())
 , mTimeZoomAccessor(timeZoomAccessor)
@@ -14,18 +14,18 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
 , mSnapshotColour(mAccessor.getAttr<AttrType::graphicsSettings>().colours.background)
 , mGetTooltip(std::move(getTooltip))
 , mWriter(director, mTimeZoomAccessor, transportAccessor)
-, mNavigator(mAccessor, mTimeZoomAccessor)
+, mNavigator(customNavigator != nullptr ? std::move(customNavigator) : std::make_unique<Navigator>(mAccessor, mTimeZoomAccessor))
 , mScroller(mAccessor, mTimeZoomAccessor, transportAccessor, mApplicationCommandManager)
 , mSelector(mAccessor, mTimeZoomAccessor, transportAccessor, mApplicationCommandManager)
 {
     addAndMakeVisible(mContent);
     addAndMakeVisible(mScroller);
     addAndMakeVisible(mWriter);
-    addAndMakeVisible(mNavigator);
+    addAndMakeVisible(mNavigator.get());
     addAndMakeVisible(mSelector);
-    mSelector.addMouseListener(std::addressof(mWriter), true);
-    mSelector.addMouseListener(std::addressof(mNavigator), true);
-    mSelector.addMouseListener(std::addressof(mScroller), true);
+    mSelector.addMouseListener(&mWriter, true);
+    mSelector.addMouseListener(mNavigator.get(), true);
+    mSelector.addMouseListener(&mScroller, true);
     mSelector.addMouseListener(this, true);
 
     if(mGetTooltip == nullptr)
@@ -45,7 +45,7 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
         };
     }
 
-    mNavigator.onModeUpdated = mWriter.onModeUpdated = [this]()
+    mNavigator->onModeUpdated = mWriter.onModeUpdated = [this]()
     {
         editionUpdated();
     };
@@ -140,7 +140,7 @@ void Track::Editor::resized()
     auto const bounds = getLocalBounds();
     mContent.setBounds(bounds);
     mWriter.setBounds(bounds);
-    mNavigator.setBounds(bounds);
+    mNavigator->setBounds(bounds);
     mSelector.setBounds(bounds);
     mScroller.setBounds(bounds);
 }
@@ -189,12 +189,12 @@ void Track::Editor::applicationCommandInvoked(juce::ApplicationCommandTarget::In
         case ApplicationCommandIDs::frameToggleDrawing:
         {
             auto const canEdit = info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked;
-            auto& activeComponent = canEdit ? static_cast<juce::Component&>(mWriter) : static_cast<juce::Component&>(mNavigator);
-            auto& inactiveComponent = canEdit ? static_cast<juce::Component&>(mNavigator) : static_cast<juce::Component&>(mWriter);
+            auto& activeComponent = canEdit ? static_cast<juce::Component&>(mWriter) : static_cast<juce::Component&>(*mNavigator.get());
+            auto& inactiveComponent = canEdit ? static_cast<juce::Component&>(*mNavigator.get()) : static_cast<juce::Component&>(mWriter);
             activeComponent.setVisible(true);
             inactiveComponent.setVisible(false);
-            mSelector.addMouseListener(std::addressof(activeComponent), true);
-            mSelector.removeMouseListener(std::addressof(inactiveComponent));
+            mSelector.addMouseListener(&activeComponent, true);
+            mSelector.removeMouseListener(&inactiveComponent);
             editionUpdated();
             break;
         }
@@ -211,21 +211,21 @@ void Track::Editor::applicationCommandListChanged()
 void Track::Editor::editionUpdated()
 {
     auto const canEdit = Utils::isCommandTicked(mApplicationCommandManager, ApplicationCommandIDs::frameToggleDrawing);
-    auto const performinAction = (canEdit && mWriter.isPerformingAction()) || (!canEdit && mNavigator.isPerformingAction());
+    auto const performinAction = (canEdit && mWriter.isPerformingAction()) || (!canEdit && mNavigator->isPerformingAction());
     mSelector.setInterceptsMouseClicks(!performinAction, !performinAction);
     if(performinAction)
     {
-        mWriter.addMouseListener(std::addressof(mScroller), true);
-        mNavigator.addMouseListener(std::addressof(mScroller), true);
+        mWriter.addMouseListener(&mScroller, true);
+        mNavigator->addMouseListener(&mScroller, true);
         mWriter.addMouseListener(this, true);
-        mNavigator.addMouseListener(this, true);
+        mNavigator->addMouseListener(this, true);
     }
     else
     {
-        mWriter.removeMouseListener(std::addressof(mScroller));
-        mNavigator.removeMouseListener(std::addressof(mScroller));
+        mWriter.removeMouseListener(&mScroller);
+        mNavigator->removeMouseListener(&mScroller);
         mWriter.removeMouseListener(this);
-        mNavigator.removeMouseListener(this);
+        mNavigator->removeMouseListener(this);
     }
 }
 
