@@ -14,7 +14,7 @@ Group::Section::Section(Director& director, juce::ApplicationCommandManager& com
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::showInGroup})
+                  {Track::AttrType::identifier, Track::AttrType::description, Track::AttrType::results, Track::AttrType::showInGroup})
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
@@ -211,43 +211,34 @@ void Group::Section::updateContent()
         mScrollBar.reset();
         mDecoratorRuler.reset();
         mRuler.reset();
-        mGridIdentifier.clear();
+        mVerticalZoomIdentifier.clear();
     }
     else
     {
-        auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-        if(!referenceTrackAcsr.has_value() || !Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+        auto const verticalZoomTrackAcsr = Tools::getVerticalZoomTrackAcsr(mAccessor);
+        if(!verticalZoomTrackAcsr.has_value())
         {
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
-            mGridIdentifier.clear();
+            mVerticalZoomIdentifier.clear();
         }
-        else if(mGridIdentifier != referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
+        else if(mVerticalZoomIdentifier != verticalZoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
         {
-            mRuler = std::make_unique<Track::Ruler>(referenceTrackAcsr.value());
-            if(mRuler != nullptr)
-            {
-                mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
-                addAndMakeVisible(mDecoratorRuler.get());
-            }
-            mScrollBar = std::make_unique<Track::ScrollBar>(referenceTrackAcsr.value());
-            if(mScrollBar != nullptr)
-            {
-                addAndMakeVisible(mScrollBar.get());
-            }
-            mGridIdentifier = referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+            mRuler = std::make_unique<Track::Ruler>(verticalZoomTrackAcsr.value());
+            mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
+            addAndMakeVisible(mDecoratorRuler.get());
+            mScrollBar = std::make_unique<Track::ScrollBar>(verticalZoomTrackAcsr.value());
+            addAndMakeVisible(mScrollBar.get());
+            mVerticalZoomIdentifier = verticalZoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         }
     }
 
     if(mRuler == nullptr)
     {
         mRuler = std::make_unique<juce::Component>();
-        if(mRuler != nullptr)
-        {
-            mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
-            addAndMakeVisible(mDecoratorRuler.get());
-        }
+        mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
+        addAndMakeVisible(mDecoratorRuler.get());
     }
     resized();
 }
