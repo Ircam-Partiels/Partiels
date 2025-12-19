@@ -215,28 +215,39 @@ void Group::Section::updateContent()
     }
     else
     {
-        auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-        if(!referenceTrackAcsr.has_value() || !Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+        // Find the frontmost (first) track with vertical zoom for the group's vertical ruler/scrollbar
+        std::optional<std::reference_wrapper<Track::Accessor>> verticalZoomTrackAcsr;
+        for(auto const& trackIdentifier : layout)
+        {
+            auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackIdentifier);
+            if(trackAcsr.has_value() && Track::Tools::hasVerticalZoom(trackAcsr.value()))
+            {
+                verticalZoomTrackAcsr = trackAcsr;
+                break;
+            }
+        }
+
+        if(!verticalZoomTrackAcsr.has_value())
         {
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
             mGridIdentifier.clear();
         }
-        else if(mGridIdentifier != referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
+        else if(mGridIdentifier != verticalZoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
         {
-            mRuler = std::make_unique<Track::Ruler>(referenceTrackAcsr.value());
+            mRuler = std::make_unique<Track::Ruler>(verticalZoomTrackAcsr.value());
             if(mRuler != nullptr)
             {
                 mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
                 addAndMakeVisible(mDecoratorRuler.get());
             }
-            mScrollBar = std::make_unique<Track::ScrollBar>(referenceTrackAcsr.value());
+            mScrollBar = std::make_unique<Track::ScrollBar>(verticalZoomTrackAcsr.value());
             if(mScrollBar != nullptr)
             {
                 addAndMakeVisible(mScrollBar.get());
             }
-            mGridIdentifier = referenceTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
+            mGridIdentifier = verticalZoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         }
     }
 
