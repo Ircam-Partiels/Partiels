@@ -68,7 +68,7 @@ namespace Group
         std::unique_ptr<juce::Component> mRuler;
         std::unique_ptr<Decorator> mDecoratorRuler;
         std::unique_ptr<juce::Component> mScrollBar;
-        juce::String mGridIdentifier;
+        juce::String mVerticalZoomIdentifier;
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
         bool mIsItemDragged{false};
