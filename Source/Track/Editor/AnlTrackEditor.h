@@ -16,7 +16,7 @@ namespace Track
     , private juce::ApplicationCommandManagerListener
     {
     public:
-        Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor, juce::ApplicationCommandManager& commandManager, juce::Component& content, std::function<juce::String(juce::Point<int> const&)> getTooltip, bool paintBackground);
+        Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor, juce::ApplicationCommandManager& commandManager, juce::Component& content, std::function<juce::String(juce::Point<int> const&)> getTooltip, bool paintBackground, std::unique_ptr<Navigator> customNavigator = nullptr);
         ~Editor() override;
 
         void setFocusInfo(FocusInfo const& info);
@@ -51,7 +51,7 @@ namespace Track
         std::function<juce::String(juce::Point<int> const&)> mGetTooltip;
 
         Writer mWriter;
-        Navigator mNavigator;
+        std::unique_ptr<Navigator> mNavigator;
         Scroller mScroller;
         Selector mSelector;
     };
