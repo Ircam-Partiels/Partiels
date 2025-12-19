@@ -564,6 +564,11 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            });
     };
 
+    mPropertyItem.entry.onShowPopup = [this]()
+    {
+        updateItemPopup();
+    };
+
     mListener.onAccessorInserted = [this]([[maybe_unused]] Accessor const& acsr, AcsrType type, size_t index)
     {
         switch(type)
@@ -716,101 +721,72 @@ void Document::Exporter::Panel::resized()
 
 juce::String Document::Exporter::Panel::getSelectedIdentifier() const
 {
-    auto const itemId = mPropertyItem.entry.getSelectedId();
-    if(itemId % documentItemFactor == 0)
-    {
-        return {};
-    }
+    auto const identifiers = getSelectedIdentifiers();
+    return identifiers.empty() ? juce::String{} : *identifiers.begin();
+}
 
-    auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const& groupId)
-                                                    {
-                                                        return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
-                                                    });
-    auto const groupIndex = static_cast<size_t>((itemId % documentItemFactor) / groupItemFactor - 1);
-    anlWeakAssert(groupIndex < documentLayout.size());
-    if(groupIndex >= documentLayout.size())
-    {
-        return {};
-    }
-    auto const groupId = documentLayout[groupIndex];
-    if(itemId % groupItemFactor == 0)
-    {
-        return groupId;
-    }
-    anlWeakAssert(Document::Tools::hasGroupAcsr(mAccessor, groupId));
-    if(!Document::Tools::hasGroupAcsr(mAccessor, groupId))
-    {
-        return {};
-    }
-
-    auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
-    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
-                                                 {
-                                                     return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
-                                                 });
-    auto const trackIndex = static_cast<size_t>((itemId % groupItemFactor) - 1);
-    anlWeakAssert(trackIndex < groupLayout.size());
-    if(trackIndex >= groupLayout.size())
-    {
-        return {};
-    }
-    return groupLayout[trackIndex];
+std::set<juce::String> Document::Exporter::Panel::getSelectedIdentifiers() const
+{
+    return mSelectedIdentifiers;
 }
 
 void Document::Exporter::Panel::updateItems()
 {
-    auto const selectedId = getSelectedIdentifier();
-
-    auto& entryBox = mPropertyItem.entry;
-    entryBox.clear(juce::NotificationType::dontSendNotification);
-    entryBox.addItem(juce::translate("All (Document)"), documentItemFactor);
-    auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
-                                                    {
-                                                        return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
-                                                    });
-
-    for(size_t documentLayoutIndex = 0; documentLayoutIndex < documentLayout.size(); ++documentLayoutIndex)
+    if(mSelectedIdentifiers.empty())
     {
-        auto const& groupId = documentLayout[documentLayoutIndex];
-        auto const groupItemId = groupItemFactor * static_cast<int>(documentLayoutIndex + 1_z) + documentItemFactor;
-        anlWeakAssert(Document::Tools::hasGroupAcsr(mAccessor, groupId));
-        if(Document::Tools::hasGroupAcsr(mAccessor, groupId))
+        auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
+                                                        {
+                                                            return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
+                                                        });
+        for(auto const& groupId : documentLayout)
         {
-            auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
-            auto const& groupName = groupAcsr.getAttr<Group::AttrType::name>();
-            entryBox.addItem(juce::translate("GROUPNAME (Group)").replace("GROUPNAME", groupName), groupItemId);
-            if(groupId == selectedId)
+            if(mOptions.useImageFormat() && mOptions.useGroupOverview)
             {
-                entryBox.setSelectedId(groupItemId, juce::NotificationType::dontSendNotification);
+                mSelectedIdentifiers.insert(groupId);
             }
-
-            auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
-                                                         {
-                                                             return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
-                                                         });
-
-            for(size_t groupLayoutIndex = 0; groupLayoutIndex < groupLayout.size(); ++groupLayoutIndex)
+            else
             {
-                auto const& trackId = groupLayout[groupLayoutIndex];
-                auto const trackItemId = groupItemId + static_cast<int>(groupLayoutIndex + 1_z);
-                anlWeakAssert(Document::Tools::hasTrackAcsr(mAccessor, trackId));
-                if(Document::Tools::hasTrackAcsr(mAccessor, trackId))
+                auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+                auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                             {
+                                                                 return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                             });
+                for(auto const& trackId : groupLayout)
                 {
-                    auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
-                    auto const& trackName = trackAcsr.getAttr<Track::AttrType::name>();
-                    entryBox.addItem(juce::translate("GROUPNAME: TRACKNAME (Track)").replace("GROUPNAME", groupName).replace("TRACKNAME", trackName), trackItemId);
-                    if(trackId == selectedId)
-                    {
-                        entryBox.setSelectedId(trackItemId, juce::NotificationType::dontSendNotification);
-                    }
+                    mSelectedIdentifiers.insert(trackId);
                 }
             }
         }
     }
 
-    if(entryBox.getSelectedId() == 0)
+    auto const numSelected = mSelectedIdentifiers.size();
+    if(numSelected == 0)
     {
-        entryBox.setSelectedId(documentItemFactor, juce::NotificationType::dontSendNotification);
+        mPropertyItem.entry.setText(juce::translate("None"), juce::NotificationType::dontSendNotification);
+    }
+    else if(numSelected == 1)
+    {
+        auto const& identifier = *mSelectedIdentifiers.begin();
+        if(Document::Tools::hasTrackAcsr(mAccessor, identifier))
+        {
+            auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, identifier);
+            auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(mAccessor, identifier);
+            mPropertyItem.entry.setText(juce::translate("GROUPNAME: TRACKNAME (Track)")
+                                            .replace("GROUPNAME", groupAcsr.getAttr<Group::AttrType::name>())
+                                            .replace("TRACKNAME", trackAcsr.getAttr<Track::AttrType::name>()),
+                                        juce::NotificationType::dontSendNotification);
+        }
+        else if(Document::Tools::hasGroupAcsr(mAccessor, identifier))
+        {
+            auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, identifier);
+            mPropertyItem.entry.setText(juce::translate("GROUPNAME (Group)")
+                                            .replace("GROUPNAME", groupAcsr.getAttr<Group::AttrType::name>()),
+                                        juce::NotificationType::dontSendNotification);
+        }
+    }
+    else
+    {
+        mPropertyItem.entry.setText(juce::translate("Multiple Items"), juce::NotificationType::dontSendNotification);
     }
 
     auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -823,15 +799,208 @@ void Document::Exporter::Panel::updateItems()
     sanitizeProperties(false);
 }
 
+void Document::Exporter::Panel::updateItemPopup()
+{
+    juce::PopupMenu menu;
+    auto& lf = getLookAndFeel();
+
+    auto const toggleSelection = [this](juce::String const& identifier)
+    {
+        if(mSelectedIdentifiers.count(identifier))
+        {
+            mSelectedIdentifiers.erase(identifier);
+        }
+        else
+        {
+            mSelectedIdentifiers.insert(identifier);
+        }
+        updateItems();
+        sanitizeProperties(true);
+    };
+
+    auto const toggleAllGroups = [this]()
+    {
+        auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
+                                                        {
+                                                            return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
+                                                        });
+        bool allSelected = true;
+        for(auto const& groupId : documentLayout)
+        {
+            if(mOptions.useImageFormat() && mOptions.useGroupOverview)
+            {
+                if(!mSelectedIdentifiers.count(groupId))
+                {
+                    allSelected = false;
+                    break;
+                }
+            }
+            else
+            {
+                auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+                auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                             {
+                                                                 return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                             });
+                for(auto const& trackId : groupLayout)
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+                    auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                    if(mOptions.isCompatible(frameType) && !mSelectedIdentifiers.count(trackId))
+                    {
+                        allSelected = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        mSelectedIdentifiers.clear();
+        if(!allSelected)
+        {
+            for(auto const& groupId : documentLayout)
+            {
+                if(mOptions.useImageFormat() && mOptions.useGroupOverview)
+                {
+                    mSelectedIdentifiers.insert(groupId);
+                }
+                else
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+                    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                                 {
+                                                                     return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                                 });
+                    for(auto const& trackId : groupLayout)
+                    {
+                        auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+                        auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                        if(mOptions.isCompatible(frameType))
+                        {
+                            mSelectedIdentifiers.insert(trackId);
+                        }
+                    }
+                }
+            }
+        }
+        updateItems();
+        sanitizeProperties(true);
+    };
+
+    auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
+                                                    {
+                                                        return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
+                                                    });
+
+    bool docAllSelected = !documentLayout.empty();
+    for(auto const& groupId : documentLayout)
+    {
+        if(mOptions.useImageFormat() && mOptions.useGroupOverview)
+        {
+            if(!mSelectedIdentifiers.count(groupId))
+            {
+                docAllSelected = false;
+                break;
+            }
+        }
+        else
+        {
+            auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+            auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                         {
+                                                             return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                         });
+            for(auto const& trackId : groupLayout)
+            {
+                auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+                auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                if(mOptions.isCompatible(frameType) && !mSelectedIdentifiers.count(trackId))
+                {
+                    docAllSelected = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    menu.addItem(juce::translate("All (Document)"), true, docAllSelected, [this, toggleAllGroups]()
+                 {
+                     toggleAllGroups();
+                     mPropertyItem.entry.hidePopup();
+                 });
+
+    for(auto const& groupId : documentLayout)
+    {
+        auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+        auto const& groupName = groupAcsr.getAttr<Group::AttrType::name>();
+        auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                     {
+                                                         return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                     });
+
+        if(mOptions.useImageFormat())
+        {
+            bool const groupSelected = mSelectedIdentifiers.count(groupId) > 0;
+            menu.addItem(juce::translate("GROUPNAME (Group)").replace("GROUPNAME", groupName), true, groupSelected, [this, groupId, toggleSelection]()
+                         {
+                             toggleSelection(groupId);
+                             mPropertyItem.entry.hidePopup();
+                             mPropertyItem.entry.showPopup();
+                         });
+        }
+
+        for(auto const& trackId : groupLayout)
+        {
+            auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+            auto const& trackName = trackAcsr.getAttr<Track::AttrType::name>();
+            auto const frameType = Track::Tools::getFrameType(trackAcsr);
+            bool const isCompatible = mOptions.isCompatible(frameType);
+            bool const trackSelected = mSelectedIdentifiers.count(trackId) > 0;
+
+            menu.addItem(juce::translate("GROUPNAME: TRACKNAME (Track)")
+                             .replace("GROUPNAME", groupName)
+                             .replace("TRACKNAME", trackName),
+                         isCompatible, trackSelected, [this, trackId, toggleSelection, isCompatible]()
+                         {
+                             if(isCompatible)
+                             {
+                                 toggleSelection(trackId);
+                                 mPropertyItem.entry.hidePopup();
+                                 mPropertyItem.entry.showPopup();
+                             }
+                         });
+        }
+    }
+
+    menu.setLookAndFeel(&lf);
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyItem.entry).withMinimumWidth(mPropertyItem.entry.getWidth()).withMaximumNumColumns(1).withDeletionCheck(*this), [this](int)
+                       {
+                           mPropertyItem.entry.hidePopup();
+                       });
+}
+
 void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 {
-    auto const identifier = getSelectedIdentifier();
-    auto const itemIsDocument = identifier.isEmpty();
-    auto const itemIsGroup = Document::Tools::hasGroupAcsr(mAccessor, identifier);
-    auto const itemIsTrack = Document::Tools::hasTrackAcsr(mAccessor, identifier);
-    mPropertyGroupMode.setEnabled(itemIsGroup || itemIsDocument);
+    auto const numSelected = mSelectedIdentifiers.size();
+    auto const multipleSelected = numSelected > 1;
+    bool hasGroup = false;
+    bool hasTrack = false;
 
-    if(itemIsDocument)
+    for(auto const& identifier : mSelectedIdentifiers)
+    {
+        if(Document::Tools::hasGroupAcsr(mAccessor, identifier))
+        {
+            hasGroup = true;
+        }
+        else if(Document::Tools::hasTrackAcsr(mAccessor, identifier))
+        {
+            hasTrack = true;
+        }
+    }
+
+    mPropertyGroupMode.setEnabled(!hasTrack || multipleSelected);
+
+    if(multipleSelected || numSelected == 0)
     {
         mPropertyWidth.setEnabled(true);
         mPropertyHeight.setEnabled(true);
@@ -840,32 +1009,36 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
 
     auto options = mOptions;
 
-    if(itemIsTrack)
+    if(hasTrack && !hasGroup && !multipleSelected)
     {
         mPropertyGroupMode.setEnabled(false);
         options.useGroupOverview = false;
     }
 
-    if(mShowAutoSize && mOptions.useAutoSize && !itemIsDocument)
+    if(mShowAutoSize && mOptions.useAutoSize)
     {
-        auto const dimension = getPlotDimension(identifier);
-        auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
-        options.useAutoSize = hasDimension;
-        if(hasDimension)
+        if(multipleSelected || numSelected == 0)
         {
-            options.imageWidth = std::get<0_z>(dimension);
-            options.imageHeight = std::get<1_z>(dimension);
-            options.imagePpi = std::get<2_z>(dimension);
+            mPropertyWidth.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
+            mPropertyHeight.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
+            mPropertyPpi.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
         }
-        mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), juce::NotificationType::dontSendNotification);
-        mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), juce::NotificationType::dontSendNotification);
-        mPropertyPpi.entry.setValue(static_cast<double>(options.imagePpi), juce::NotificationType::dontSendNotification);
-    }
-    else if(mShowAutoSize && mOptions.useAutoSize && itemIsDocument)
-    {
-        mPropertyWidth.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
-        mPropertyHeight.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
-        mPropertyPpi.entry.setText(juce::translate("Multiple"), juce::NotificationType::dontSendNotification);
+        else
+        {
+            auto const& identifier = *mSelectedIdentifiers.begin();
+            auto const dimension = getPlotDimension(identifier);
+            auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+            options.useAutoSize = hasDimension;
+            if(hasDimension)
+            {
+                options.imageWidth = std::get<0_z>(dimension);
+                options.imageHeight = std::get<1_z>(dimension);
+                options.imagePpi = std::get<2_z>(dimension);
+            }
+            mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), juce::NotificationType::dontSendNotification);
+            mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), juce::NotificationType::dontSendNotification);
+            mPropertyPpi.entry.setValue(static_cast<double>(options.imagePpi), juce::NotificationType::dontSendNotification);
+        }
     }
 
     auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -882,8 +1055,6 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
         setOptions(options, juce::NotificationType::sendNotificationSync);
     }
 
-    auto const itemId = mPropertyItem.entry.getSelectedId();
-    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue && mOptions.format != Options::Format::reaper);
     mPropertyApplyExtraThresholds.setEnabled(mOptions.useTextFormat() && mOptions.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setEnabled(mOptions.useImageFormat());
 }
@@ -960,7 +1131,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
-    mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    mPropertyIgnoreGrids.setVisible(false);
     mPropertyApplyExtraThresholds.setVisible(options.useTextFormat() && options.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setVisible(options.useImageFormat());
     juce::StringArray justificationNames;

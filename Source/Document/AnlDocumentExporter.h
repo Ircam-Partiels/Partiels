@@ -109,11 +109,13 @@ namespace Document
             Options const& getOptions() const;
             juce::Range<double> getTimeRange() const;
             juce::String getSelectedIdentifier() const;
+            std::set<juce::String> getSelectedIdentifiers() const;
 
             std::function<void(void)> onOptionsChanged = nullptr;
 
         private:
             void updateItems();
+            void updateItemPopup();
             void sanitizeProperties(bool updateModel);
             void updateTimePreset(bool updateModel, juce::NotificationType notification);
             void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
@@ -155,6 +157,8 @@ namespace Document
             std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
             std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
             LayoutNotifier mDocumentLayoutNotifier;
+
+            std::set<juce::String> mSelectedIdentifiers;
 
             auto static constexpr documentItemFactor = 1000000;
             auto static constexpr groupItemFactor = documentItemFactor / 1000;
