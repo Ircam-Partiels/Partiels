@@ -901,3 +901,4 @@ countries: fr be
 "Export the selected frame(s) using the current export options to a selected destination" = "Exporter la/les trame(s) sélectionnée(s) en utilisant les options d'exportation actuelles vers une destination sélectionnée"
 "Select export directory" = "Sélectionner le répertoire d'exportation"
 "Export track to file" = "Exporter la piste vers un fichier"
+"Multiple Items" = "Éléments multiples"
