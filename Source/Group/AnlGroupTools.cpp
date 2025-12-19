@@ -149,6 +149,19 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getReferenc
     return {};
 }
 
+std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getVerticalZoomTrackAcsr(Accessor const& accessor)
+{
+    for(auto const& trackIdentifier : accessor.getAttr<AttrType::layout>())
+    {
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>() && Track::Tools::hasVerticalZoom(trackAcsr.value()))
+        {
+            return trackAcsr;
+        }
+    }
+    return {};
+}
+
 bool Group::Tools::canZoomIn(Accessor const& accessor)
 {
     auto const trackAcsr = getReferenceTrackAcsr(accessor);
