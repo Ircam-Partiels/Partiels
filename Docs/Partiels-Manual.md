@@ -506,7 +506,7 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 
 #### 8.2.2 Vertical
 
-The interface of each point or matrix track contains a vertical ruler for each channel and a vertical bar for all channels ([Overview](#2-overview) **Z3** and **Z4**) to control value (or frequency) zooms. Marker tracks do not have vertical zoom. The corresponding rulers and bars also appear on groups if the group's zoom reference is a point or matrix track. You can also use mouse and trackpad interactions or keyboard shortcuts to navigate and zoom.
+The interface of each point or matrix track contains a vertical ruler for each channel and a vertical bar for all channels ([Overview](#2-overview) **Z3** and **Z4**) to control value (or frequency) zooms. Marker tracks do not have vertical zoom. The corresponding rulers and bars also appear on groups using the frontmost track of the groups with vertical zoom capability. You can also use mouse and trackpad interactions or keyboard shortcuts to navigate and zoom.
 
 - Click and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom in and out and to move the value or frequency range up and down.
 - Click with `⇧ Shift` and drag up and down on the vertical ruler ([Overview](#2-overview) **Z3**) to move the value or frequency range up and down.
@@ -826,7 +826,7 @@ The group properties panel allows you to access information about a group and mo
 The first entries correspond to exclusive properties of the group:
 - Name: The property defines the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
 - Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent. This option is only available when there isn't any matrix track in the group.
-- Track Reference: This property defines which track is used as a reference for the navigation, the edition and the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay. By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
+- Track Reference: This property defines which track is used as a reference for the edition of the group. By default, the group uses the frontmost track as the reference, but you can select another track if it does not meet your needs.
 
 The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
