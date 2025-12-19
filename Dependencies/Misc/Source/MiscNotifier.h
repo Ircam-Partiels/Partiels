@@ -38,12 +38,21 @@ public:
         }
         else
         {
+            auto const hasListener = [&](auto* listener)
+            {
+                std::unique_lock<std::mutex> listenerLock(mListenerMutex);
+                return mListeners.count(listener) > 0_z;
+            };
+
             std::unique_lock<std::mutex> listenerLock(mListenerMutex);
             auto const listeners = mListeners;
             listenerLock.unlock();
             for(auto* listener : listeners)
             {
-                method(*listener);
+                if(hasListener(listener))
+                {
+                    method(*listener);
+                }
             }
         }
     }
