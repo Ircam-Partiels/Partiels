@@ -913,10 +913,10 @@ void Document::Exporter::Panel::updateItemPopup()
     static auto const indentStr = juce::String("\t\t\t\t");
     juce::PopupMenu menu;
     menu.addItem(juce::translate("All (Document)"), true, docAllSelected, [this, toggleAllGroups]()
-                  {
-                      toggleAllGroups();
-                      mPropertyItem.entry.hidePopup();
-                  });
+                 {
+                     toggleAllGroups();
+                     mPropertyItem.entry.hidePopup();
+                 });
 
     for(auto const& groupId : documentLayout)
     {
@@ -932,11 +932,11 @@ void Document::Exporter::Panel::updateItemPopup()
         {
             bool const groupSelected = mSelectedIdentifiers.count(groupId) > 0;
             menu.addItem(indentStr + juce::translate("GROUPNAME (Group)").replace("GROUPNAME", groupName), true, groupSelected, [this, groupId, toggleSelection]()
-                          {
-                              toggleSelection(groupId);
-                              mPropertyItem.entry.hidePopup();
-                              mPropertyItem.entry.showPopup();
-                          });
+                         {
+                             toggleSelection(groupId);
+                             mPropertyItem.entry.hidePopup();
+                             mPropertyItem.entry.showPopup();
+                         });
         }
 
         for(auto const& trackId : groupLayout)
@@ -947,18 +947,16 @@ void Document::Exporter::Panel::updateItemPopup()
             bool const isCompatible = frameType.has_value() && mOptions.isCompatible(frameType.value());
             bool const trackSelected = mSelectedIdentifiers.count(trackId) > 0;
 
-            menu.addItem(indentStr + indentStr + juce::translate("GROUPNAME: TRACKNAME (Track)")
-                              .replace("GROUPNAME", groupName)
-                              .replace("TRACKNAME", trackName),
-                          isCompatible, trackSelected, [this, trackId, toggleSelection, isCompatible]()
-                          {
-                              if(isCompatible)
-                              {
-                                  toggleSelection(trackId);
-                                  mPropertyItem.entry.hidePopup();
-                                  mPropertyItem.entry.showPopup();
-                              }
-                          });
+            menu.addItem(indentStr + indentStr + juce::translate("GROUPNAME: TRACKNAME (Track)").replace("GROUPNAME", groupName).replace("TRACKNAME", trackName),
+                         isCompatible, trackSelected, [this, trackId, toggleSelection, isCompatible]()
+                         {
+                             if(isCompatible)
+                             {
+                                 toggleSelection(trackId);
+                                 mPropertyItem.entry.hidePopup();
+                                 mPropertyItem.entry.showPopup();
+                             }
+                         });
         }
     }
 
