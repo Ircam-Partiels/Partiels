@@ -224,115 +224,24 @@ endif()
 
 add_dependencies(Partiels partiels-vamp-plugins)
 
+### Packaging with CPack ###
+# Include early to make set_target_resources() available
+include(CPack.cmake)
+
+# Add translation script
 if(WIN32)
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
+    set_target_resources(Partiels FILE ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION Scripts)
 else()
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
+    set_target_resources(Partiels FILE ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.sh DESTINATION Scripts)
 endif()
 
-if(APPLE)
-    set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Preset/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
-    file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
-    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
-    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
-    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
-    juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
-else()
-    add_custom_command(TARGET Partiels POST_BUILD 
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Preset"
-        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings "$<TARGET_FILE_DIR:Partiels>/Preset"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Templates"
-        COMMAND ${CMAKE_COMMAND} -E copy ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc "$<TARGET_FILE_DIR:Partiels>/Templates"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ "$<TARGET_FILE_DIR:Partiels>/Translations/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/Scripts/ "$<TARGET_FILE_DIR:Partiels>/Scripts/"
-    )
-endif()
+# Add resource files
+set_target_resources(Partiels FILE "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" DESTINATION Templates)
+set_target_resources(Partiels DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/" DESTINATION Preset)
+set_target_resources(Partiels DIRECTORY "${PARTIELS_BINARYDATA_DIRECTORY}/Translations/" DESTINATION Translations)
 
-### Packaging ###
-if(WIN32)
-    set(PARTIELS_PACKAGE_OUTDIR "${CMAKE_CURRENT_BINARY_DIR}")
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_OUTDIR})
-    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_OUTDIR PARTIELS_PACKAGE_DIR_NAT)
-    set(PARTIELS_PACKAGE_OUTEXE "${PARTIELS_PACKAGE_OUTDIR}/Partiels-Windows.exe")
-    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_OUTEXE PARTIELS_PACKAGE_OUTEXE_NAT)
-    set(PARTIELS_PACKAGE_TEMPDIR "${CMAKE_CURRENT_BINARY_DIR}/Package")
-    cmake_path(NATIVE_PATH PARTIELS_PACKAGE_TEMPDIR PARTIELS_PACKAGE_TEMPDIR_NAT)
-    set(PARTIELS_ISS_FILE  "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/windows-package.iss")
-    cmake_path(NATIVE_PATH PARTIELS_ISS_FILE PARTIELS_ISS_FILE_NAT)  
-    set(PARTIELS_PACKAGE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/PartielsPackage.bat")
-
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR})
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/PlugIns)
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Preset)
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Templates)
-    file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_TEMPDIR}/Translations)
-    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/Install.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Translations/ DESTINATION ${PARTIELS_PACKAGE_TEMPDIR}/Translations/)
-
-    find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6" REQUIRED)
-    cmake_path(NATIVE_PATH ISCC_EXE ISCC_EXE_NAT)
-    
-    add_custom_command(TARGET Partiels POST_BUILD 
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:Partiels>" "${PARTIELS_PACKAGE_TEMPDIR}"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "${PARTIELS_PACKAGE_TEMPDIR}/PlugIns"
-        COMMAND ${CMAKE_COMMAND} -E copy "${PARTIELS_BINARYDATA_DIRECTORY}/Preset/Partiels.trackpresets.settings" "${PARTIELS_PACKAGE_TEMPDIR}/Preset"
-        COMMAND ${CMAKE_COMMAND} -E copy "${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc" "${PARTIELS_PACKAGE_TEMPDIR}/Templates"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/Scripts/" "${PARTIELS_PACKAGE_TEMPDIR}/Scripts/"
-    )
-    file(WRITE ${PARTIELS_PACKAGE_SCRIPT} "\"${ISCC_EXE_NAT}\" /DMyAppVerName=\"${PARTIELS_BUILD_TAG}\" /DMyBinaryDir=\"${PARTIELS_PACKAGE_TEMPDIR_NAT}\" /O\"${PARTIELS_PACKAGE_DIR_NAT}\" \"${PARTIELS_ISS_FILE_NAT}\"\n")
-
-    if(PARTIELS_NOTARIZE)
-        file(GLOB_RECURSE SIGNTOOL_CANDIDATES
-        "$ENV{ProgramFiles}/Windows Kits/10/bin/*/x64/signtool.exe"
-        "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/bin/*/x64/signtool.exe"
-        )
-        foreach(SIGNTOOL_CANDIDATE IN LISTS SIGNTOOL_CANDIDATES)
-            get_filename_component(SIGNTOOL_CANDIDATE_DIR ${SIGNTOOL_CANDIDATE} DIRECTORY)
-            list(APPEND SIGNTOOL_CANDIDATE_DIRS ${SIGNTOOL_CANDIDATE_DIR})
-        endforeach()
-        find_program(SIGNTOOL_EXE "signtool" HINTS ${SIGNTOOL_CANDIDATE_DIRS} REQUIRED)
-        cmake_path(NATIVE_PATH SIGNTOOL_EXE SIGNTOOL_EXE_NAT)
-        cmake_path(NATIVE_PATH PARTIELS_CODESIGN_WINDOWS_KEYFILE PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT)
-        file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "\"${SIGNTOOL_EXE_NAT}\" sign /f \"${PARTIELS_CODESIGN_WINDOWS_KEYFILE_NAT}\" /p \"${PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD}\" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com \"${PARTIELS_PACKAGE_OUTEXE_NAT}\"\n")
-        file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "\"${SIGNTOOL_EXE_NAT}\" verify /pa \"${PARTIELS_PACKAGE_OUTEXE_NAT}\"\n")
-    endif()
-
-    add_custom_target(PartielsPackage ALL COMMAND ${PARTIELS_PACKAGE_SCRIPT})
-    add_dependencies(PartielsPackage Partiels)
-elseif(UNIX AND NOT APPLE)
-    set(PARTIELS_PACKAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/Partiels)
-    set(PARTIELS_PACKAGE_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/PartielsPackage.sh)
-    file(WRITE ${PARTIELS_PACKAGE_SCRIPT} "#!/bin/sh\n\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "PARTIELS_BINARY_PATH=$1\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "rm -rf ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "mkdir -p ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp $PARTIELS_BINARY_PATH/Partiels ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/PlugIns ${PARTIELS_PACKAGE_DIR}/PlugIns\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Preset ${PARTIELS_PACKAGE_DIR}/Preset\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Templates ${PARTIELS_PACKAGE_DIR}/Templates\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Translations ${PARTIELS_PACKAGE_DIR}/Translations\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp -r $PARTIELS_BINARY_PATH/Scripts ${PARTIELS_PACKAGE_DIR}/Scripts\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt ${PARTIELS_PACKAGE_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/linux-install.sh ${PARTIELS_PACKAGE_DIR}/Partiels-install.sh\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cd ${CMAKE_CURRENT_BINARY_DIR}\n")
-    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "tar zcvf Partiels-Linux.tar.gz Partiels\n")
-    file(CHMOD ${PARTIELS_PACKAGE_SCRIPT} PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
-    add_custom_target(PartielsPackage ALL COMMAND ${PARTIELS_PACKAGE_SCRIPT} $<TARGET_FILE_DIR:Partiels>)
-    add_dependencies(PartielsPackage Partiels)
-endif()
+# Add plugin
+set_target_resources(Partiels PLUGIN partiels-vamp-plugins)
 
 ### Manual ###
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
