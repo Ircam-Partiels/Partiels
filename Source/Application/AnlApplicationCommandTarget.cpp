@@ -413,7 +413,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
             auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
             auto const directoryName = exportDirectory == desktop ? juce::translate("Desktop") : exportDirectory.getFileName();
-            result.setInfo(juce::translate("Export Frame(s) to DIRNAME").replace("DIRNAME", directoryName), juce::translate("Export the selected frame(s) using the current export options to DIRNAME").replace("DIRNAME", directoryName), "Edit", 0);
+            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const message = allFrames ? juce::translate("Export All Frames to DIRNAME") : juce::translate("Export Selected Frames to DIRNAME");
+            auto const description = allFrames ? juce::translate("Export all frames using the current export options to DIRNAME") : juce::translate("Export selected frames using the current export options to DIRNAME");
+            result.setInfo(message.replace("DIRNAME", directoryName), description.replace("DIRNAME", directoryName), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::altModifier, 0));
             auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
             auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
@@ -425,7 +428,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameExportTo:
         {
-            result.setInfo(juce::translate("Export Frame(s) To..."), juce::translate("Export the selected frame(s) using the current export options to a selected destination"), "Edit", 0);
+            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const message = allFrames ? juce::translate("Export All Frames to...") : juce::translate("Export Selected Frames to...");
+            auto const description = allFrames ? juce::translate("Export all frames using the current export options to a selected destination") : juce::translate("Export selected frames using the current export options to a selected destination");
+            result.setInfo(message, description, "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::altModifier, 0));
             auto const frameTypes = Document::Tools::getSelectedChannelsFrameTypes(documentAcsr);
             auto const exportOptions = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
@@ -437,7 +443,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameSystemCopy:
         {
-            result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy frame(s) to system clipboard"), "Edit", 0);
+            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const message = allFrames ? juce::translate("Copy All Frames to System Clipboard") : juce::translate("Copy Selected Frames to System Clipboard");
+            auto const description = allFrames ? juce::translate("Copy all frames to system clipboard") : juce::translate("Copy selected frames to system clipboard");
+            result.setInfo(message, description, "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
             result.setActive(isFrameMode && Document::Tools::containsFrames(documentAcsr, selection));
             break;
@@ -1244,11 +1253,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             allItem.insert(std::get<1_z>(selectedItems).begin(), std::get<1_z>(selectedItems).end());
             auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
             auto const numFiles = Document::Exporter::getNumFilesToExport(documentAcsr, allItem, options);
-
+            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             if(numFiles > 1_z)
             {
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
-                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select export directory"), currentDirectory);
+                auto const message = allFrames ? juce::translate("Export all frames to directory") : juce::translate("Export selected frames to directory");
+                mFileChooser = std::make_unique<juce::FileChooser>(message, currentDirectory);
                 if(mFileChooser == nullptr)
                 {
                     return true;
@@ -1276,8 +1286,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
                 auto const defaultFile = currentDirectory.getChildFile(trackName).withFileExtension(options.getFormatExtension());
-
-                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export track to file"), defaultFile, options.getFormatWilcard());
+                auto const message = allFrames ? juce::translate("Export all frames to file") : juce::translate("Export selected frames to file");
+                mFileChooser = std::make_unique<juce::FileChooser>(message, defaultFile, options.getFormatWilcard());
                 if(mFileChooser == nullptr)
                 {
                     return true;
