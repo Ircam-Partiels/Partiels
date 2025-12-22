@@ -894,8 +894,6 @@ countries: fr be
 "Define the matrix signature to encode the results in the SDIF file" = "Définir la signature de matrice pour encoder les résultats dans le fichier SDIF"
 "Column Name" = "Nom de colonne"
 "Define the name of the column to encode the results in the SDIF file" = "Définir le nom de la colonne pour encoder les résultats dans le fichier SDIF"
-"Ignore Matrix Tracks" = "Ignorer les pistes matricielles"
-"Ignore tracks with matrix results (such as a spectrogram)" = "Ignorer les pistes avec des résultats matriciels (comme un spectrogramme)"
 "Apply Extra Thresholds" = "Appliquer les seuils supplémentaires"
 "Apply extra threshold filters to exclude values below thresholds when exporting" = "Appliquer des filtres de seuil supplémentaires pour exclure les valeurs en dessous des seuils lors de l'exportation"
 "Outside Grid" = "Grille extérieure"
@@ -910,4 +908,5 @@ countries: fr be
 "Export selected frames to file" = "Exporter les trames sélectionnées vers le fichier"
 "Export all frames using the current export options to a selected destination" = "Exporter toutes les trames en utilisant les options d'exportation actuelles vers une destination sélectionnée"
 "Export selected frames using the current export options to a selected destination" = "Exporter les trames sélectionnées en utilisant les options d'exportation actuelles vers une destination sélectionnée"
+"Multiple Items" = "Éléments multiples"
 
