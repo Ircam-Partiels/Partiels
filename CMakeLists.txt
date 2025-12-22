@@ -23,6 +23,10 @@ set(VAMP_SDK_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/vamp-plugin-
 
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
+option(PARTIELS_DOC_ONLY "Only generate documentation targets (PartielsManual, PartielsPatchs, Publishing)" OFF)
+option(PARTIELS_FORMAT_ONLY "Only generate format checking targets (PartielsCheckFormat, PartielsApplyFormat)" OFF)
+option(PARTIELS_TRANSLATION_ONLY "Only generate translation extraction target (PartielsExtractTranslationKeys)" OFF)
+
 project(Partiels VERSION 2.3.0 LANGUAGES C CXX)
 
 set(PARTIELS_CODESIGN_WINDOWS_KEYFILE "" CACHE PATH "The Windows (.pfx) certificate file")
@@ -60,6 +64,9 @@ file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
+# Skip all heavy dependencies if only doc, format, or translation targets are needed
+if(NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
+
 if(NOT EXISTS ${VAMP_SDK_PATH})
     include(FetchContent)
     find_package(Git REQUIRED)
@@ -82,6 +89,11 @@ add_subdirectory(Dependencies/ircam-vamp-extension)
 add_subdirectory(Dependencies/sdif)
 include(Dependencies/Misc/Misc.cmake)
 add_subdirectory(VampPlugins)
+
+endif() # NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
+
+# Only build the main application if not in doc-only, format-only, or translation-only mode
+if(NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -334,7 +346,10 @@ elseif(UNIX AND NOT APPLE)
     add_dependencies(PartielsPackage Partiels)
 endif()
 
+endif() # NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
+
 ### Manual ###
+if(NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
 string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
 file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
@@ -350,7 +365,10 @@ else()
 endif()
 add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
 
+endif() # NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
+
 ### Format ###
+if(NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
 find_program(CLANG_FORMAT_EXE "clang-format" HINTS "C:/Program Files/LLVM/bin")
 if(CLANG_FORMAT_EXE)
     file(GLOB_RECURSE ClangFormatSources
@@ -371,11 +389,20 @@ else()
     message(WARNING "Clang Format targets cannot be generated because clang-format is not found")
 endif()
 
+endif() # NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
+
 ### Translation Key Extraction ###
+if(NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY)
+set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 add_custom_target(PartielsExtractTranslationKeys COMMAND ${CMAKE_COMMAND} -DTRANSLATION_KEY_FILE="${CMAKE_CURRENT_BINARY_DIR}/Scripts/TranslationKeys.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysExtractor.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_dependencies(Partiels PartielsExtractTranslationKeys)
+if(TARGET Partiels)
+    add_dependencies(Partiels PartielsExtractTranslationKeys)
+endif()
+
+endif() # NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY
 
 ### Publishing ###
+if(NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels: [Linux](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz) / [MacOS](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.dmg) / [Windows](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe) / [Manual](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf) / [Patchs](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Patchs.zip)\n") 
@@ -397,7 +424,10 @@ set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
 set(WHISPER_TAG "3.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin: [Linux](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz) / [MacOS](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.pkg) / [Windows](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Windows.exe) / [Manual](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Manual.zip)\n") 
 
+endif() # NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
+
 ### Testing ###
+if(NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY)
 enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
@@ -641,3 +671,5 @@ add_test(NAME ConvCompareColumns1 COMMAND Partiels --compare-files ${TESTS_DIREC
 set_tests_properties(ConvCompareColumns1 PROPERTIES DEPENDS "ConvFromSdifColumns")
 add_test(NAME ConvCompareColumns2 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Columns.json ${TESTS_OUTPUT_DIRECTORY}/SDIF/Columns.sdif ${TESTS_DIRECTORY}/ColumnsArgs.xml)
 set_tests_properties(ConvCompareColumns2 PROPERTIES DEPENDS "ConvFromSdifColumns")
+
+endif() # NOT PARTIELS_DOC_ONLY AND NOT PARTIELS_FORMAT_ONLY AND NOT PARTIELS_TRANSLATION_ONLY
