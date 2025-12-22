@@ -108,12 +108,13 @@ namespace Document
             void setOptions(Options const& options, juce::NotificationType notification);
             Options const& getOptions() const;
             juce::Range<double> getTimeRange() const;
-            juce::String getSelectedIdentifier() const;
+            std::set<juce::String> getSelectedIdentifiers() const;
 
             std::function<void(void)> onOptionsChanged = nullptr;
 
         private:
             void updateItems();
+            void updateItemPopup();
             void sanitizeProperties(bool updateModel);
             void updateTimePreset(bool updateModel, juce::NotificationType notification);
             void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
@@ -124,6 +125,7 @@ namespace Document
             Accessor& mAccessor;
             bool mShowAutoSize;
             Options mOptions;
+            std::set<juce::String> mSelectedIdentifiers;
 
             PropertyList mPropertyItem;
             PropertyList mPropertyTimePreset;
@@ -145,7 +147,6 @@ namespace Document
             PropertyText mPropertySdifFrame;
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
-            PropertyToggle mPropertyIgnoreGrids;
             PropertyToggle mPropertyApplyExtraThresholds;
             PropertyList mPropertyOutsideGridJustification;
 
