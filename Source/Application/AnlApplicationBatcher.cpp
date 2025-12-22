@@ -175,7 +175,7 @@ void Application::BatcherContent::process()
 
     auto options = mExporterPanel.getOptions();
     options.useAutoSize = false;
-    auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const identifiers = mExporterPanel.getSelectedIdentifiers();
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Process files to..."));
     if(mFileChooser == nullptr)

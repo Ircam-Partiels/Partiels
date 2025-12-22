@@ -102,21 +102,11 @@ void Application::ExporterContent::exportToFile()
     auto const& acsr = Instance::get().getApplicationAccessor();
     auto const& options = acsr.getAttr<AttrType::exportOptions>();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const identifiers = mExporterPanel.getSelectedIdentifiers();
     auto const timeRange = mExporterPanel.getTimeRange();
     auto const useDirectory = [&]()
     {
-        if(identifier.isEmpty())
-        {
-            auto const groupsAcsr = documentAcsr.getAcsrs<Document::AcsrType::groups>();
-            std::set<juce::String> groupIdentifiers;
-            for(auto const& groupAcsr : groupsAcsr)
-            {
-                groupIdentifiers.insert(groupAcsr.get().getAttr<Group::AttrType::identifier>());
-            }
-            return Document::Exporter::getNumFilesToExport(documentAcsr, groupIdentifiers, options) > 1_z;
-        }
-        return Document::Exporter::getNumFilesToExport(documentAcsr, {identifier}, options) > 1_z;
+        return Document::Exporter::getNumFilesToExport(documentAcsr, identifiers, options) > 1_z;
     }();
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
@@ -147,10 +137,10 @@ void Application::ExporterContent::exportToFile()
                                   mPropertyExport.entry.setTooltip(juce::translate("Abort the export"));
 
                                   mShoulAbort.store(false);
-                                  mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
+                                  mProcess = std::async([=, this, file = results.getFirst(), identifiers]() -> ProcessResult
                                                         {
                                                             juce::Thread::setCurrentThreadName("ExporterContent");
-                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifier, options, mShoulAbort);
+                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifiers, options, mShoulAbort);
                                                             triggerAsyncUpdate();
                                                             if(result.failed())
                                                             {

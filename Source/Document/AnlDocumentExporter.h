@@ -108,7 +108,6 @@ namespace Document
             void setOptions(Options const& options, juce::NotificationType notification);
             Options const& getOptions() const;
             juce::Range<double> getTimeRange() const;
-            juce::String getSelectedIdentifier() const;
             std::set<juce::String> getSelectedIdentifiers() const;
 
             std::function<void(void)> onOptionsChanged = nullptr;
@@ -147,7 +146,6 @@ namespace Document
             PropertyText mPropertySdifFrame;
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
-            PropertyToggle mPropertyIgnoreGrids;
             PropertyToggle mPropertyApplyExtraThresholds;
             PropertyList mPropertyOutsideGridJustification;
 
@@ -164,7 +162,7 @@ namespace Document
             auto static constexpr groupItemFactor = documentItemFactor / 1000;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort);
 
         juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
         juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);

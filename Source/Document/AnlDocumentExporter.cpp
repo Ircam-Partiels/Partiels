@@ -307,9 +307,10 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                           options.useAutoSize = mShowAutoSize && index == 0_z;
                           if(options.useAutoSize)
                           {
-                              auto const identifier = getSelectedIdentifier();
-                              if(identifier.isNotEmpty())
+                              auto const identifiers = getSelectedIdentifiers();
+                              if(identifiers.size() == 1)
                               {
+                                  auto const identifier = *identifiers.begin();
                                   auto const dimension = getPlotDimension(identifier);
                                   auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
                                   if(hasDimension)
@@ -335,9 +336,10 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyWidth(juce::translate("Image Width"), juce::translate("Set the width of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                  {
                      auto options = mOptions;
-                     auto const identifier = getSelectedIdentifier();
-                     if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                     auto const identifiers = getSelectedIdentifiers();
+                     if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
                      {
+                         auto const identifier = *identifiers.begin();
                          auto const dimension = getPlotDimension(identifier);
                          auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
                          if(hasDimension)
@@ -353,9 +355,10 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyHeight(juce::translate("Image Height"), juce::translate("Set the height of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                   {
                       auto options = mOptions;
-                      auto const identifier = getSelectedIdentifier();
-                      if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                      auto const identifiers = getSelectedIdentifiers();
+                      if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
                       {
+                          auto const identifier = *identifiers.begin();
                           auto const dimension = getPlotDimension(identifier);
                           auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
                           if(hasDimension)
@@ -371,9 +374,10 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyPpi(juce::translate("Image PPI"), juce::translate("Set the pixel density of the image"), juce::translate("pixels/inch"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                {
                    auto options = mOptions;
-                   auto const identifier = getSelectedIdentifier();
-                   if(std::exchange(options.useAutoSize, false) && identifier.isNotEmpty())
+                   auto const identifiers = getSelectedIdentifiers();
+                   if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
                    {
+                       auto const identifier = *identifiers.begin();
                        auto const dimension = getPlotDimension(identifier);
                        auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
                        if(hasDimension)
@@ -450,12 +454,6 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                            options.sdifColumnName = text;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
-, mPropertyIgnoreGrids(juce::translate("Ignore Matrix Tracks"), juce::translate("Ignore tracks with matrix results (such as a spectrogram)"), [this](bool state)
-                       {
-                           auto options = mOptions;
-                           options.ignoreGridResults = state;
-                           setOptions(options, juce::NotificationType::sendNotificationSync);
-                       })
 , mPropertyApplyExtraThresholds(juce::translate("Apply Extra Thresholds"), juce::translate("Apply extra threshold filters to exclude values below thresholds when exporting"), [this](bool state)
                                 {
                                     auto options = mOptions;
@@ -492,7 +490,6 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
     addChildComponent(mPropertySdifFrame);
     addChildComponent(mPropertySdifMatrix);
     addChildComponent(mPropertySdifColName);
-    addChildComponent(mPropertyIgnoreGrids);
     addChildComponent(mPropertyApplyExtraThresholds);
     addChildComponent(mPropertyOutsideGridJustification);
     setSize(300, 200);
@@ -713,16 +710,9 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySdifFrame);
     setBounds(mPropertySdifMatrix);
     setBounds(mPropertySdifColName);
-    setBounds(mPropertyIgnoreGrids);
     setBounds(mPropertyApplyExtraThresholds);
     setBounds(mPropertyOutsideGridJustification);
     setSize(bounds.getWidth(), bounds.getY() + 2);
-}
-
-juce::String Document::Exporter::Panel::getSelectedIdentifier() const
-{
-    auto const identifiers = getSelectedIdentifiers();
-    return identifiers.empty() ? juce::String{} : *identifiers.begin();
 }
 
 std::set<juce::String> Document::Exporter::Panel::getSelectedIdentifiers() const
@@ -1080,7 +1070,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     if(options.useAutoSize)
     {
         mPropertySizePreset.entry.setSelectedItemIndex(0, silent);
-        if(getSelectedIdentifier().isEmpty())
+        auto const identifiers = getSelectedIdentifiers();
+        if(identifiers.size() != 1)
         {
             mPropertyWidth.entry.setText(juce::translate("Multiple"), silent);
             mPropertyHeight.entry.setText(juce::translate("Multiple"), silent);
@@ -1110,7 +1101,6 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyLabSeparator.entry.setSelectedItemIndex(static_cast<int>(options.labSeparator), silent);
     mPropertyDisableLabelEscaping.entry.setToggleState(options.disableLabelEscaping, silent);
     mPropertyReaperType.entry.setSelectedItemIndex(static_cast<int>(options.reaperType), silent);
-    mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
     mPropertyApplyExtraThresholds.entry.setToggleState(options.applyExtraThresholds, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
@@ -1131,7 +1121,6 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
-    mPropertyIgnoreGrids.setVisible(false);
     mPropertyApplyExtraThresholds.setVisible(options.useTextFormat() && options.format != Options::Format::sdif);
     mPropertyOutsideGridJustification.setVisible(options.useImageFormat());
     juce::StringArray justificationNames;
@@ -1262,7 +1251,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort)
 {
     if(file == juce::File())
     {
@@ -1279,19 +1268,20 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
 
     auto const getAllTrackAcsrs = [&]() -> std::vector<std::reference_wrapper<Track::Accessor>>
     {
-        if(identifier.isEmpty())
+        std::vector<std::reference_wrapper<Track::Accessor>> result;
+        for(auto const& identifier : identifiers)
         {
-            return accessor.getAcsrs<AcsrType::tracks>();
+            if(Tools::hasGroupAcsr(accessor, identifier))
+            {
+                auto groupTracks = Group::Tools::getTrackAcsrs(Tools::getGroupAcsr(accessor, identifier));
+                result.insert(result.end(), groupTracks.begin(), groupTracks.end());
+            }
+            else if(Tools::hasTrackAcsr(accessor, identifier))
+            {
+                result.push_back(Tools::getTrackAcsr(accessor, identifier));
+            }
         }
-        else if(Tools::hasGroupAcsr(accessor, identifier))
-        {
-            return Group::Tools::getTrackAcsrs(Tools::getGroupAcsr(accessor, identifier));
-        }
-        else if(Tools::hasTrackAcsr(accessor, identifier))
-        {
-            return {Tools::getTrackAcsr(accessor, identifier)};
-        }
-        return {};
+        return result;
     };
 
     if(options.format == Options::Format::reaper || options.format == Options::Format::cue)
@@ -1492,43 +1482,38 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             return juce::Result::fail("Invalid threaded access");
         }
 
-        if(identifier.isEmpty())
+        // Export all items in the identifiers set
+        for(auto const& identifier : identifiers)
         {
-            if(options.useGroupOverview)
+            if(Tools::hasGroupAcsr(accessor, identifier))
             {
-                lock.exit();
-                return exportDocumentGroups(file);
-            }
-            else
-            {
-                auto const documentLayout = copy_with_erased_if(accessor.getAttr<AttrType::layout>(), [&](auto const& groupId)
-                                                                {
-                                                                    return !Tools::hasGroupAcsr(accessor, groupId);
-                                                                });
-                lock.exit();
-
-                for(auto const& groupIdentifier : documentLayout)
+                if(options.useGroupOverview)
                 {
-                    auto const result = exportGroupTracks(groupIdentifier, file);
+                    auto const result = exportGroup(identifier, file);
                     if(result.failed())
                     {
                         return result;
                     }
                 }
-                return juce::Result::ok();
+                else
+                {
+                    auto const result = exportGroupTracks(identifier, file);
+                    if(result.failed())
+                    {
+                        return result;
+                    }
+                }
+            }
+            else if(Tools::hasTrackAcsr(accessor, identifier))
+            {
+                auto const result = exportTrack(identifier, file);
+                if(result.failed())
+                {
+                    return result;
+                }
             }
         }
-        else if(Tools::hasGroupAcsr(accessor, identifier))
-        {
-            lock.exit();
-            return options.useGroupOverview ? exportGroup(identifier, file) : exportGroupTracks(identifier, file);
-        }
-        else if(Tools::hasTrackAcsr(accessor, identifier))
-        {
-            lock.exit();
-            return exportTrack(identifier, file);
-        }
-        return juce::Result::fail("Invalid identifier");
+        return juce::Result::ok();
     }
 
     anlStrongAssert(options.useTextFormat());
@@ -1550,13 +1535,14 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             return juce::Result::fail("Track is invalid");
         }
-        auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-        if(identifier != trackIdentifier && options.ignoreGridResults && Track::Tools::getFrameType(trackAcsr) == Track::FrameType::vector)
+        auto const& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+        auto const isInIdentifiers = identifiers.count(trackIdentifier) > 0;
+        if(!isInIdentifiers && options.ignoreGridResults && Track::Tools::getFrameType(trackAcsr) == Track::FrameType::vector)
         {
             return juce::Result::ok();
         }
         auto const isLabelOnly = options.format == Options::Format::cue || options.format == Options::Format::reaper;
-        if(identifier != trackIdentifier && isLabelOnly && Track::Tools::getFrameType(trackAcsr) != Track::FrameType::label)
+        if(!isInIdentifiers && isLabelOnly && Track::Tools::getFrameType(trackAcsr) != Track::FrameType::label)
         {
             return juce::Result::ok();
         }
@@ -1647,36 +1633,27 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         return juce::Result::fail("Invalid threaded access");
     }
 
-    if(identifier.isEmpty())
+    // Export all items in the identifiers set
+    for(auto const& identifier : identifiers)
     {
-        auto const documentLayout = copy_with_erased_if(accessor.getAttr<AttrType::layout>(), [&](auto const& groupId)
-                                                        {
-                                                            return !Tools::hasGroupAcsr(accessor, groupId);
-                                                        });
-
-        lock.exit();
-
-        for(auto const& groupIdentifier : documentLayout)
+        if(Tools::hasGroupAcsr(accessor, identifier))
         {
-            auto const result = exportGroupTracks(groupIdentifier, file);
+            auto const result = exportGroupTracks(identifier, file);
             if(result.failed())
             {
                 return result;
             }
         }
-        return juce::Result::ok();
+        else if(Tools::hasTrackAcsr(accessor, identifier))
+        {
+            auto const result = exportTrack(identifier, file);
+            if(result.failed())
+            {
+                return result;
+            }
+        }
     }
-    else if(Tools::hasGroupAcsr(accessor, identifier))
-    {
-        lock.exit();
-        return exportGroupTracks(identifier, file);
-    }
-    else if(Tools::hasTrackAcsr(accessor, identifier))
-    {
-        lock.exit();
-        return exportTrack(identifier, file);
-    }
-    return juce::Result::fail("Invalid identifier");
+    return juce::Result::ok();
 }
 
 template <>
