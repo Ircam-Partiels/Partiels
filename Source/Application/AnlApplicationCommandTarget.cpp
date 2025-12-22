@@ -705,7 +705,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
     };
 
-    auto const exportTo = [this, weakRef = juce::WeakReference<CommandTarget>(this)](juce::File const& fileOrDirectory, juce::String const& prefix)
+    auto const exportTo = [this, weakRef = juce::WeakReference<CommandTarget>(this)](juce::File const& fileOrDirectory, juce::String const& prefix, std::tuple<std::set<juce::String>, std::set<juce::String>> const& selectedItems, juce::Range<double> const& selection)
     {
         if(weakRef.get() == nullptr)
         {
@@ -713,15 +713,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         auto& documentAcsr = Instance::get().getDocumentAccessor();
         auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
-        auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
-        auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
         auto const exportItem = [&](juce::String const& identifier)
         {
             [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, fileOrDirectory, selection, {}, prefix, identifier, options, mShouldAbort);
             MiscWeakAssert(results.wasOk() && "Exporting track failed!");
         };
-
-        auto const selectedItems = Document::Selection::getItems(documentAcsr);
         for(auto const& groupIdentifier : std::get<0_z>(selectedItems))
         {
             MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
@@ -1237,7 +1233,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
             auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
-            exportTo(exportDirectory, date);
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            exportTo(exportDirectory, date, selectedItems, selection);
             return true;
         }
         case CommandIDs::frameExportTo:
@@ -1264,7 +1261,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              exportTo(results.getFirst(), {});
+                                              exportTo(results.getFirst(), {}, selectedItems, selection);
                                           });
             }
             else if(numFiles == 1_z)
@@ -1293,7 +1290,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              exportTo(results.getFirst(), {});
+                                              exportTo(results.getFirst(), {}, selectedItems, selection);
                                           });
             }
             return true;
