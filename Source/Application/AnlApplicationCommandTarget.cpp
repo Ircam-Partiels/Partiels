@@ -722,17 +722,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         auto& documentAcsr = Instance::get().getDocumentAccessor();
         auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
-        auto const exportItem = [&](juce::String const& identifier)
-        {
-            [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, fileOrDirectory, selection, {}, prefix, identifier, options, mShouldAbort);
-            MiscWeakAssert(results.wasOk() && "Exporting track failed!");
-        };
         for(auto const& groupIdentifier : std::get<0_z>(selectedItems))
         {
             MiscWeakAssert(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier));
             if(Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
             {
-                exportItem(groupIdentifier);
+                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, fileOrDirectory, selection, {}, prefix, groupIdentifier, options, mShouldAbort);
+                MiscWeakAssert(results.wasOk() && "Exporting group failed!");
             }
         }
         for(auto const& trackIdentifier : std::get<1_z>(selectedItems))
@@ -740,7 +736,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             MiscWeakAssert(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier));
             if(Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier))
             {
-                exportItem(trackIdentifier);
+                [[maybe_unused]] auto const results = Document::Exporter::toFile(documentAcsr, fileOrDirectory, selection, {}, prefix, trackIdentifier, options, mShouldAbort);
+                MiscWeakAssert(results.wasOk() && "Exporting track failed!");
             }
         }
     };
