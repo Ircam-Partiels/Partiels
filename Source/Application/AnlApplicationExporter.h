@@ -19,6 +19,7 @@ namespace Application
         void resized() override;
 
         bool canCloseWindow() const;
+        void updateItems();
 
     private:
         // juce::AsyncUpdater
@@ -48,6 +49,7 @@ namespace Application
 
         // HideablePanel
         bool escapeKeyPressed() override;
+        void setVisible(bool shouldBeVisible) override;
     };
 } // namespace Application
 

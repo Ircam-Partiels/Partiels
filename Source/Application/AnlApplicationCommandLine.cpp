@@ -112,6 +112,8 @@ Application::CommandLine::CommandLine()
              }
 
              Options options;
+             bool useGroupOverview = false;
+             bool ignoreGridResults = false;
              auto const format = args.getValueForOption("-f|--format");
              if(args.containsOption("--options"))
              {
@@ -144,7 +146,7 @@ Application::CommandLine::CommandLine()
                  options.imageWidth = args.getValueForOption("--width").getIntValue();
                  options.imageHeight = args.getValueForOption("--height").getIntValue();
                  options.imagePpi = args.containsOption("--ppi") ? args.getValueForOption("--ppi").getIntValue() : 72;
-                 options.useGroupOverview = args.containsOption("--groups");
+                 useGroupOverview = args.containsOption("--groups");
              }
              else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "reaper" || format == "sdif" || format == "puredata" || format == "max")
              {
@@ -188,7 +190,7 @@ Application::CommandLine::CommandLine()
                          fail("Matrix signature not specified! Specifiy the matrix signature of the SDIf file.");
                      }
                  }
-                 options.ignoreGridResults = args.containsOption("--nogrids");
+                 ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
                  options.applyExtraThresholds = args.containsOption("--thresholds");
@@ -220,7 +222,7 @@ Application::CommandLine::CommandLine()
              {
                  LookAndFeel lookAndFeel;
                  juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
-                 auto const result = mExecutor->exportTo(outputDir, "", options, "");
+                 auto const result = mExecutor->exportTo(outputDir, "", options, useGroupOverview, ignoreGridResults);
                  mShouldWait = false;
                  if(result.failed())
                  {
