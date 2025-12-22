@@ -27,7 +27,7 @@ namespace Document
         juce::Result saveTo(juce::File const& outputFile);
 
         //! @brief Exports the results to a file.
-        juce::Result exportTo(juce::File const& outputDir, juce::String const& filePrefix, Exporter::Options const& options, juce::String const& identifier);
+        juce::Result exportTo(juce::File const& outputDir, juce::String const& filePrefix, Exporter::Options const& options, bool useGroupOverview, bool ignoreGridResults);
 
         //! @brief Checks if the executor is currently running.
         bool isRunning() const;

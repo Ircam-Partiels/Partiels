@@ -102,22 +102,9 @@ void Application::ExporterContent::exportToFile()
     auto const& acsr = Instance::get().getApplicationAccessor();
     auto const& options = acsr.getAttr<AttrType::exportOptions>();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const identifiers = mExporterPanel.getSelectedIdentifiers();
     auto const timeRange = mExporterPanel.getTimeRange();
-    auto const useDirectory = [&]()
-    {
-        if(identifier.isEmpty())
-        {
-            auto const groupsAcsr = documentAcsr.getAcsrs<Document::AcsrType::groups>();
-            std::set<juce::String> groupIdentifiers;
-            for(auto const& groupAcsr : groupsAcsr)
-            {
-                groupIdentifiers.insert(groupAcsr.get().getAttr<Group::AttrType::identifier>());
-            }
-            return Document::Exporter::getNumFilesToExport(documentAcsr, groupIdentifiers, options) > 1_z;
-        }
-        return Document::Exporter::getNumFilesToExport(documentAcsr, {identifier}, options) > 1_z;
-    }();
+    auto const useDirectory = Document::Exporter::getNumFilesToExport(documentAcsr, identifiers) > 1_z;
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
     if(mFileChooser == nullptr)
@@ -150,7 +137,7 @@ void Application::ExporterContent::exportToFile()
                                   mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
                                                         {
                                                             juce::Thread::setCurrentThreadName("ExporterContent");
-                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifier, options, mShoulAbort);
+                                                            auto const result = Document::Exporter::exportTo(Instance::get().getDocumentAccessor(), file, timeRange, {}, "", identifiers, options, mShoulAbort);
                                                             triggerAsyncUpdate();
                                                             if(result.failed())
                                                             {
@@ -191,6 +178,14 @@ bool Application::ExporterContent::canCloseWindow() const
     return !mLoadingIcon.isActive();
 }
 
+void Application::ExporterContent::updateItems()
+{
+    if(mExporterPanel.getSelectedIdentifiers().empty())
+    {
+        mExporterPanel.setSelectedIdentifiers(mExporterPanel.getDefaultSelectedIdentifiers(), juce::NotificationType::dontSendNotification);
+    }
+}
+
 Application::ExporterPanel::ExporterPanel()
 : HideablePanelTyped<ExporterContent>(juce::translate("Export..."))
 {
@@ -204,6 +199,15 @@ bool Application::ExporterPanel::escapeKeyPressed()
     }
     hide();
     return true;
+}
+
+void Application::ExporterPanel::setVisible(bool shouldBeVisible)
+{
+    if(shouldBeVisible)
+    {
+        mContent.updateItems();
+    }
+    HideablePanelTyped<ExporterContent>::setVisible(shouldBeVisible);
 }
 
 ANALYSE_FILE_END
