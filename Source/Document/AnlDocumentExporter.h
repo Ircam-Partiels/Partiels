@@ -90,6 +90,8 @@ namespace Document
 
             bool isValid() const;
             bool isCompatible(Track::FrameType frameType) const;
+            
+            void setPlotDimentsion(juce::String const& identifier);
         };
 
         size_t getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifier, Options const& options);

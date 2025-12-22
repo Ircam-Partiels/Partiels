@@ -217,6 +217,18 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
     }
 }
 
+void Document::Exporter::Options::setPlotDimentsion(juce::String const& identifier)
+{
+    auto const dimension = getPlotDimension(identifier);
+    auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
+    if(hasDimension)
+    {
+        imageWidth = std::get<0_z>(dimension);
+        imageHeight = std::get<1_z>(dimension);
+        imagePpi = std::get<2_z>(dimension);
+    }
+}
+
 static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets()
 {
     // clang-format off
@@ -308,17 +320,9 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                           if(options.useAutoSize)
                           {
                               auto const identifiers = getSelectedIdentifiers();
-                              if(identifiers.size() == 1)
+                              if(identifiers.size() >= 1)
                               {
-                                  auto const identifier = *identifiers.begin();
-                                  auto const dimension = getPlotDimension(identifier);
-                                  auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
-                                  if(hasDimension)
-                                  {
-                                      options.imageWidth = std::get<0_z>(dimension);
-                                      options.imageHeight = std::get<1_z>(dimension);
-                                      options.imagePpi = std::get<2_z>(dimension);
-                                  }
+                                  options.setPlotDimentsion(*identifiers.begin());
                               }
                           }
                           if(mShowAutoSize)
@@ -337,17 +341,9 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                  {
                      auto options = mOptions;
                      auto const identifiers = getSelectedIdentifiers();
-                     if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
+                     if(std::exchange(options.useAutoSize, false) && identifiers.size() >= 1)
                      {
-                         auto const identifier = *identifiers.begin();
-                         auto const dimension = getPlotDimension(identifier);
-                         auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
-                         if(hasDimension)
-                         {
-                             options.imageWidth = std::get<0_z>(dimension);
-                             options.imageHeight = std::get<1_z>(dimension);
-                             options.imagePpi = std::get<2_z>(dimension);
-                         }
+                         options.setPlotDimentsion(*identifiers.begin());
                      }
                      options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
                      setOptions(options, juce::NotificationType::sendNotificationSync);
@@ -356,17 +352,9 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                   {
                       auto options = mOptions;
                       auto const identifiers = getSelectedIdentifiers();
-                      if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
+                      if(std::exchange(options.useAutoSize, false) && identifiers.size() >= 1)
                       {
-                          auto const identifier = *identifiers.begin();
-                          auto const dimension = getPlotDimension(identifier);
-                          auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
-                          if(hasDimension)
-                          {
-                              options.imageWidth = std::get<0_z>(dimension);
-                              options.imageHeight = std::get<1_z>(dimension);
-                              options.imagePpi = std::get<2_z>(dimension);
-                          }
+                          options.setPlotDimentsion(*identifiers.begin());
                       }
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
@@ -377,15 +365,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                    auto const identifiers = getSelectedIdentifiers();
                    if(std::exchange(options.useAutoSize, false) && identifiers.size() == 1)
                    {
-                       auto const identifier = *identifiers.begin();
-                       auto const dimension = getPlotDimension(identifier);
-                       auto const hasDimension = std::get<0_z>(dimension) > 0 && std::get<1_z>(dimension) > 0;
-                       if(hasDimension)
-                       {
-                           options.imageWidth = std::get<0_z>(dimension);
-                           options.imageHeight = std::get<1_z>(dimension);
-                           options.imagePpi = std::get<2_z>(dimension);
-                       }
+                       options.setPlotDimentsion(*identifiers.begin());
                    }
                    options.imagePpi = std::max(static_cast<int>(std::round(value)), 1);
                    setOptions(options, juce::NotificationType::sendNotificationSync);
@@ -1069,7 +1049,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     {
         mPropertySizePreset.entry.setSelectedItemIndex(0, silent);
         auto const identifiers = getSelectedIdentifiers();
-        if(identifiers.size() != 1)
+        if(identifiers.size() > 1)
         {
             mPropertyWidth.entry.setText(juce::translate("Multiple"), silent);
             mPropertyHeight.entry.setText(juce::translate("Multiple"), silent);
