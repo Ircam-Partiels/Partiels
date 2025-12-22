@@ -45,7 +45,7 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& 
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
     {
-        return juce::Result::fail("Invalid threaded access to model");
+        return juce::Result::fail(juce::translate("Invalid threaded access"));
     }
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();

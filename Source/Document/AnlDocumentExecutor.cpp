@@ -1,4 +1,5 @@
 #include "AnlDocumentExecutor.h"
+#include "../Track/AnlTrackTools.h"
 #include "AnlDocumentFileBased.h"
 
 ANALYSE_FILE_BEGIN
@@ -122,16 +123,53 @@ juce::Result Document::Executor::saveTo(juce::File const& outputFile)
     return FileBased::saveTo(mAccessor, outputFile);
 }
 
-juce::Result Document::Executor::exportTo(juce::File const& outputDir, juce::String const& filePrefix, Document::Exporter::Options const& options, juce::String const& identifier)
+juce::Result Document::Executor::exportTo(juce::File const& outputDir, juce::String const& filePrefix, Document::Exporter::Options const& options, bool useGroupOverview, bool ignoreGridResults)
 {
-    anlDebug("Executor", "Exporting results...");
+    MiscDebug("Executor", "Exporting results...");
     MiscWeakAssert(!isRunning());
     if(isRunning())
     {
-        return juce::Result::fail(juce::translate("Error: Cannot export while running analysis or file parsing."));
+        MiscDebug("Executor", "Cannot export while running analysis or file parsing");
+        return juce::Result::fail(juce::translate("Cannot export while running analysis or file parsing"));
     }
     std::atomic<bool> shouldAbort{false};
-    return Exporter::toFile(mAccessor, outputDir, {}, {}, filePrefix, identifier, options, shouldAbort);
+    std::set<juce::String> identifiers;
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        MiscDebug("Executor", "Invalid threaded access");
+        return juce::Result::fail(juce::translate("Invalid threaded access"));
+    }
+    if(options.useImageFormat() && useGroupOverview)
+    {
+        for(auto const& identifier : Tools::getEffectiveGroupIdentifiers(mAccessor))
+        {
+            identifiers.insert(identifier);
+        }
+    }
+    else
+    {
+        for(auto const& identifier : Tools::getEffectiveTrackIdentifiers(mAccessor))
+        {
+            auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+            auto const frameType = Track::Tools::getFrameType(trackAcsr);
+            if(frameType.has_value())
+            {
+                auto const trackIgnored = frameType.value() == Track::FrameType::vector && ignoreGridResults;
+                if(options.isCompatible(frameType.value()) && !trackIgnored)
+                {
+                    identifiers.insert(identifier);
+                }
+            }
+        }
+    }
+    lock.exit();
+    if(identifiers.empty())
+    {
+        MiscDebug("Executor", "No results to export");
+        return juce::Result::fail(juce::translate("No results to export"));
+    }
+    return Exporter::exportTo(mAccessor, outputDir, {}, {}, filePrefix, identifiers, options, shouldAbort);
 }
 
 void Document::Executor::timerCallback()
