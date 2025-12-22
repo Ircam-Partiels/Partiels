@@ -175,7 +175,7 @@ void Application::BatcherContent::process()
 
     auto options = mExporterPanel.getOptions();
     options.useAutoSize = false;
-    auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const identifiers = mExporterPanel.getSelectedIdentifiers();
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Process files to..."));
     if(mFileChooser == nullptr)
@@ -286,7 +286,7 @@ void Application::BatcherContent::process()
                                                                     std::this_thread::sleep_for(20ms);
                                                                 }
 
-                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, {}, {}, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort);
+                                                                auto const result = Document::Exporter::exportTo(mDocumentAccessor, file, {}, {}, layout.file.getFileNameWithoutExtension() + " ", identifiers, options, mShoulAbort);
                                                                 if(result.failed())
                                                                 {
                                                                     triggerAsyncUpdate();

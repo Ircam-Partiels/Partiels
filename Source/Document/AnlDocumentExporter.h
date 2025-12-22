@@ -56,13 +56,11 @@ namespace Document
             // clang-format on
 
             Format format{Format::jpeg};
-            bool useGroupOverview{false};
             bool useAutoSize{false};
             int imageWidth{1920};
             int imageHeight{1200};
             int imagePpi{144};
             bool includeHeaderRaw{true};
-            bool ignoreGridResults{true};
             bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
@@ -90,13 +88,14 @@ namespace Document
 
             bool isValid() const;
             bool isCompatible(Track::FrameType frameType) const;
+
+            void setPlotDimension(juce::String const& identifier);
         };
 
-        size_t getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifier, Options const& options);
+        size_t getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifiers);
 
         class Panel
         : public juce::Component
-        , private juce::AsyncUpdater
         {
         public:
             Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize);
@@ -105,25 +104,36 @@ namespace Document
             // juce::Component
             void resized() override;
 
+            juce::Range<double> getTimeRange() const;
+
             void setOptions(Options const& options, juce::NotificationType notification);
             Options const& getOptions() const;
-            juce::Range<double> getTimeRange() const;
-            juce::String getSelectedIdentifier() const;
+
+            void setSelectedIdentifiers(std::set<juce::String> const& identifiers, juce::NotificationType notification);
+            std::set<juce::String> getSelectedIdentifiers() const;
+
+            bool isAllDocumentSelected() const;
+            bool isAllGroupSelected(juce::String const& groupId) const;
+            std::set<juce::String> getDefaultSelectedIdentifiers() const;
 
             std::function<void(void)> onOptionsChanged = nullptr;
+            std::function<void(void)> onSelectionChanged = nullptr;
 
         private:
-            void updateItems();
+            void showItemPopup(int groupToShow = 0);
             void sanitizeProperties(bool updateModel);
             void updateTimePreset(bool updateModel, juce::NotificationType notification);
             void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
 
-            // juce::AsyncUpdater
-            void handleAsyncUpdate() override;
+            static auto constexpr OptionsChangedId = 1;
+            static auto constexpr SelectionChangedId = 2;
+            // juce::Component
+            void handleCommandMessage(int commandId) override;
 
             Accessor& mAccessor;
             bool mShowAutoSize;
             Options mOptions;
+            std::set<juce::String> mSelectedIdentifiers;
 
             PropertyList mPropertyItem;
             PropertyList mPropertyTimePreset;
@@ -131,7 +141,6 @@ namespace Document
             Misc::PropertyHMSmsField mPropertyTimeEnd;
             Misc::PropertyHMSmsField mPropertyTimeLength;
             PropertyList mPropertyFormat;
-            PropertyToggle mPropertyGroupMode;
             PropertyList mPropertySizePreset;
             PropertyNumber mPropertyWidth;
             PropertyNumber mPropertyHeight;
@@ -145,7 +154,6 @@ namespace Document
             PropertyText mPropertySdifFrame;
             PropertyText mPropertySdifMatrix;
             PropertyText mPropertySdifColName;
-            PropertyToggle mPropertyIgnoreGrids;
             PropertyToggle mPropertyApplyExtraThresholds;
             PropertyList mPropertyOutsideGridJustification;
 
@@ -155,12 +163,11 @@ namespace Document
             std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
             std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
             LayoutNotifier mDocumentLayoutNotifier;
-
-            auto static constexpr documentItemFactor = 1000000;
-            auto static constexpr groupItemFactor = documentItemFactor / 1000;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
+        juce::Result exportTo(Accessor& accessor, juce::File const directory, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
+
+        juce::Result exportTo(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort);
 
         juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
         juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);
