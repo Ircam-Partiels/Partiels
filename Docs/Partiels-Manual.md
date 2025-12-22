@@ -357,7 +357,18 @@ Once you have selected the desired configuration, click on the `Export` button (
 
 ### 7.1. General options
 
-The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Text and binary options](#73-text-and-binary-options)). 
+The `Item` menu (**E1**) allows you to select which items to export. When you click on the menu, a popup displays all available items with checkboxes:
+
+- **All (Document)**: Selects or deselects all compatible groups and tracks in the document
+- **Group entries**: Selectable (with checkboxes) only when using image formats (JPEG/PNG). For other formats, groups act as shortcuts to select all compatible tracks within the group
+- **Track entries**: Selectable only if they are compatible with the chosen export format
+
+The menu adapts dynamically based on the selected format:
+- Image formats (JPEG, PNG): Both groups and tracks are selectable
+- Text formats (CSV, JSON, LAB, etc.): Only tracks compatible with the format are selectable
+- Special formats (CUE, Reaper): Only tracks containing label data are selectable
+
+When multiple items are selected, the menu displays **"Multiple Items"**. When a single item is selected, it displays the item name (e.g., "Group1: Track1 (Track)"). This allows you to export specific subsets of tracks within groups, providing more flexibility than the previous single-selection approach. 
 
 <p align="center">
 <img src="Images/section-export-analyses.2-v1.0.6.png" width="210"/>
@@ -397,9 +408,9 @@ The `Outside Grid` dropdown menu allows you to select the image borders that sho
 
 ### 7.3. Text and binary options
 
-The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
-
 The `Apply Extra Thresholds` button offers an option to filter exported results based on extra threshold values configured in the track properties. When enabled, only analysis results that meet all configured threshold criteria will be included in the exported file. This option is available for CSV, JSON, LAB, CUE, Reaper, and Pure Data formats but not for SDIF format. This feature is particularly useful for exporting only high-confidence analysis results by filtering out data points that fall below specified threshold values.
+
+> 💡 **Note**: The "Ignore Matrix Tracks" option is no longer available in the graphical interface. With the new multi-selection system, you can now selectively choose which tracks to export, including or excluding matrix tracks (such as spectrograms) as needed. The option remains available via the command line interface for batch processing scenarios.
 
 Export to CSV format offers two options:
 - `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
