@@ -37,6 +37,37 @@ bool Document::Tools::isTrackInGroup(Accessor const& accessor, juce::String cons
                        });
 }
 
+std::vector<juce::String> Document::Tools::getEffectiveGroupIdentifiers(Accessor const& accessor)
+{
+    return copy_with_erased_if(accessor.getAttr<AttrType::layout>(), [&](auto const& identifier)
+                               {
+                                   return !Tools::hasGroupAcsr(accessor, identifier);
+                               });
+}
+
+std::vector<juce::String> Document::Tools::getEffectiveTrackIdentifiers(Accessor const& accessor)
+{
+    std::vector<juce::String> identifiers;
+    for(auto const& groupId : getEffectiveGroupIdentifiers(accessor))
+    {
+        auto const trackIds = getEffectiveTrackIdentifiers(accessor, groupId);
+        identifiers.insert(identifiers.end(), trackIds.cbegin(), trackIds.cend());
+    }
+    return identifiers;
+}
+
+std::vector<juce::String> Document::Tools::getEffectiveTrackIdentifiers(Accessor const& accessor, juce::String const& groupIdentifier)
+{
+    if(!hasGroupAcsr(accessor, groupIdentifier))
+    {
+        return {};
+    }
+    return copy_with_erased_if(getGroupAcsr(accessor, groupIdentifier).getAttr<Group::AttrType::layout>(), [&](auto const& identifier)
+                               {
+                                   return !Tools::hasTrackAcsr(accessor, identifier);
+                               });
+}
+
 Track::Accessor const& Document::Tools::getTrackAcsr(Accessor const& accessor, juce::String const& identifier)
 {
     auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();

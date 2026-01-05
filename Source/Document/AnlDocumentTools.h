@@ -22,6 +22,10 @@ namespace Document
         bool hasGroupAcsr(Accessor const& accessor, juce::String const& identifier);
         bool isTrackInGroup(Accessor const& accessor, juce::String const& identifier);
 
+        std::vector<juce::String> getEffectiveGroupIdentifiers(Accessor const& accessor);
+        std::vector<juce::String> getEffectiveTrackIdentifiers(Accessor const& accessor);
+        std::vector<juce::String> getEffectiveTrackIdentifiers(Accessor const& accessor, juce::String const& groupIdentifier);
+
         Track::Accessor const& getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         Group::Accessor const& getGroupAcsr(Accessor const& accessor, juce::String const& identifier);
         Group::Accessor const& getGroupAcsrForTrack(Accessor const& accessor, juce::String const& identifier);
