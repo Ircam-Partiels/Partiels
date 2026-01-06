@@ -73,8 +73,8 @@ namespace Document
             TimePreset timePreset{TimePreset::global};
             Zoom::Grid::Justification outsideGridJustification{0};
 
-            bool operator==(Options const& rhd) const noexcept;
-            bool operator!=(Options const& rhd) const noexcept;
+            bool operator==(Options const& rhs) const noexcept;
+            bool operator!=(Options const& rhs) const noexcept;
 
             bool useImageFormat() const noexcept;
             bool useTextFormat() const noexcept;
