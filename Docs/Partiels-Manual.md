@@ -364,7 +364,7 @@ The `Item` menu (**E1**) allows you to select which items to export. When you cl
 - **Track entries**: Selectable only if they are compatible with the chosen export format
 
 The menu adapts dynamically based on the selected format:
-- Image formats (JPEG, PNG): Both groups overlay and tracks are selectable
+- Image formats (JPEG, PNG): Both group overlays and tracks are selectable
 - Text formats (CSV, JSON, LAB, etc.): Only tracks compatible with the format are selectable
 - Special formats (CUE, Reaper): Only tracks containing label data are selectable
 
