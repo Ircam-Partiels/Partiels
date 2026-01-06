@@ -39,30 +39,30 @@ size_t Document::Exporter::getNumFilesToExport(Accessor const& accessor, std::se
                            });
 }
 
-bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
+bool Document::Exporter::Options::operator==(Options const& rhs) const noexcept
 {
-    return format == rhd.format &&
-           useAutoSize == rhd.useAutoSize &&
-           imageWidth == rhd.imageWidth &&
-           imageHeight == rhd.imageHeight &&
-           imagePpi == rhd.imagePpi &&
-           includeHeaderRaw == rhd.includeHeaderRaw &&
-           applyExtraThresholds == rhd.applyExtraThresholds &&
-           columnSeparator == rhd.columnSeparator &&
-           labSeparator == rhd.labSeparator &&
-           disableLabelEscaping == rhd.disableLabelEscaping &&
-           reaperType == rhd.reaperType &&
-           includeDescription == rhd.includeDescription &&
-           sdifFrameSignature == rhd.sdifFrameSignature &&
-           sdifMatrixSignature == rhd.sdifMatrixSignature &&
-           sdifColumnName == rhd.sdifColumnName &&
-           timePreset == rhd.timePreset &&
-           outsideGridJustification == rhd.outsideGridJustification;
+    return format == rhs.format &&
+           useAutoSize == rhs.useAutoSize &&
+           imageWidth == rhs.imageWidth &&
+           imageHeight == rhs.imageHeight &&
+           imagePpi == rhs.imagePpi &&
+           includeHeaderRaw == rhs.includeHeaderRaw &&
+           applyExtraThresholds == rhs.applyExtraThresholds &&
+           columnSeparator == rhs.columnSeparator &&
+           labSeparator == rhs.labSeparator &&
+           disableLabelEscaping == rhs.disableLabelEscaping &&
+           reaperType == rhs.reaperType &&
+           includeDescription == rhs.includeDescription &&
+           sdifFrameSignature == rhs.sdifFrameSignature &&
+           sdifMatrixSignature == rhs.sdifMatrixSignature &&
+           sdifColumnName == rhs.sdifColumnName &&
+           timePreset == rhs.timePreset &&
+           outsideGridJustification == rhs.outsideGridJustification;
 }
 
-bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
+bool Document::Exporter::Options::operator!=(Options const& rhs) const noexcept
 {
-    return !(*this == rhd);
+    return !(*this == rhs);
 }
 
 bool Document::Exporter::Options::useImageFormat() const noexcept
