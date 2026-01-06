@@ -22,19 +22,19 @@ namespace Plugin
         std::string identifier; //!< The identifier of the plugin
         std::string feature;    //!< The index of the feature
 
-        inline bool operator<(Key const& rhd) const noexcept
+        inline bool operator<(Key const& rhs) const noexcept
         {
-            return (identifier + feature) < (rhd.identifier + rhd.feature);
+            return (identifier + feature) < (rhs.identifier + rhs.feature);
         }
 
-        inline bool operator==(Key const& rhd) const noexcept
+        inline bool operator==(Key const& rhs) const noexcept
         {
-            return identifier == rhd.identifier && feature == rhd.feature;
+            return identifier == rhs.identifier && feature == rhs.feature;
         }
 
-        inline bool operator!=(Key const& rhd) const noexcept
+        inline bool operator!=(Key const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
@@ -118,17 +118,17 @@ namespace Plugin
         WindowType windowType{WindowType::HanningWindow}; //!< The window type for frequency domain plugins
         std::map<std::string, float> parameters{};        //!< The values of the parameters of the plugin
 
-        inline bool operator==(State const& rhd) const noexcept
+        inline bool operator==(State const& rhs) const noexcept
         {
-            return blockSize == rhd.blockSize &&
-                   (stepSize == 0_z || rhd.stepSize == 0_z || stepSize == rhd.stepSize) &&
-                   windowType == rhd.windowType &&
-                   parameters == rhd.parameters;
+            return blockSize == rhs.blockSize &&
+                   (stepSize == 0_z || rhs.stepSize == 0_z || stepSize == rhs.stepSize) &&
+                   windowType == rhs.windowType &&
+                   parameters == rhs.parameters;
         }
 
-        inline bool operator!=(State const& rhd) const noexcept
+        inline bool operator!=(State const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
@@ -154,25 +154,25 @@ namespace Plugin
         Input input{};                           //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
 
-        inline bool operator==(Description const& rhd) const noexcept
+        inline bool operator==(Description const& rhs) const noexcept
         {
-            return name == rhd.name &&
-                   inputDomain == rhd.inputDomain &&
-                   maker == rhd.maker &&
-                   version == rhd.version &&
-                   category == rhd.category &&
-                   details == rhd.details &&
-                   defaultState == rhd.defaultState &&
-                   parameters == rhd.parameters &&
-                   output == rhd.output &&
-                   extraOutputs == rhd.extraOutputs &&
-                   input == rhd.input &&
-                   programs == rhd.programs;
+            return name == rhs.name &&
+                   inputDomain == rhs.inputDomain &&
+                   maker == rhs.maker &&
+                   version == rhs.version &&
+                   category == rhs.category &&
+                   details == rhs.details &&
+                   defaultState == rhs.defaultState &&
+                   parameters == rhs.parameters &&
+                   output == rhs.output &&
+                   extraOutputs == rhs.extraOutputs &&
+                   input == rhs.input &&
+                   programs == rhs.programs;
         }
 
-        inline bool operator!=(Description const& rhd) const noexcept
+        inline bool operator!=(Description const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
@@ -185,20 +185,20 @@ namespace Plugin
     //! @details The type of data returned by a plugin.
     using Result = Vamp::Plugin::Feature;
 
-    inline bool operator==(Result const& lhd, Result const& rhd) noexcept
+    inline bool operator==(Result const& lhs, Result const& rhs) noexcept
     {
-        return lhd.hasTimestamp == rhd.hasTimestamp &&
-               lhd.timestamp == rhd.timestamp &&
-               lhd.hasDuration == rhd.hasDuration &&
-               lhd.duration == rhd.duration &&
-               lhd.values.size() == rhd.values.size() &&
-               std::equal(lhd.values.cbegin(), lhd.values.cend(), rhd.values.cbegin()) &&
-               lhd.label == rhd.label;
+        return lhs.hasTimestamp == rhs.hasTimestamp &&
+               lhs.timestamp == rhs.timestamp &&
+               lhs.hasDuration == rhs.hasDuration &&
+               lhs.duration == rhs.duration &&
+               lhs.values.size() == rhs.values.size() &&
+               std::equal(lhs.values.cbegin(), lhs.values.cend(), rhs.values.cbegin()) &&
+               lhs.label == rhs.label;
     }
 
-    inline bool operator!=(Result const& lhd, Result const& rhd) noexcept
+    inline bool operator!=(Result const& lhs, Result const& rhs) noexcept
     {
-        return !(lhd == rhd);
+        return !(lhs == rhs);
     }
 
     //! @brief Information about an internet-available plugin
@@ -212,20 +212,20 @@ namespace Plugin
         juce::String downloadUrl;        //!< The download link
         bool isCompatible{true};         //!< Whether the plugin is compatible with this system
 
-        inline bool operator==(WebReference const& rhd) const noexcept
+        inline bool operator==(WebReference const& rhs) const noexcept
         {
-            return identifier == rhd.identifier &&
-                   name == rhd.name &&
-                   libraryDescription == rhd.libraryDescription &&
-                   pluginDescription == rhd.pluginDescription &&
-                   maker == rhd.maker &&
-                   downloadUrl == rhd.downloadUrl &&
-                   isCompatible == rhd.isCompatible;
+            return identifier == rhs.identifier &&
+                   name == rhs.name &&
+                   libraryDescription == rhs.libraryDescription &&
+                   pluginDescription == rhs.pluginDescription &&
+                   maker == rhs.maker &&
+                   downloadUrl == rhs.downloadUrl &&
+                   isCompatible == rhs.isCompatible;
         }
 
-        inline bool operator!=(WebReference const& rhd) const noexcept
+        inline bool operator!=(WebReference const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
