@@ -291,7 +291,7 @@ void PluginList::WebDownloader::download(std::function<void(juce::Result, std::v
 {
     if(mProcess.valid())
     {
-        callback(juce::Result::fail("A download is already in progress."), {});
+        callback(juce::Result::fail(juce::translate("A download is already in progress.")), {});
         return;
     }
     mCallback = callback;
@@ -310,7 +310,7 @@ void PluginList::WebDownloader::download(std::function<void(juce::Result, std::v
                               }
                               catch(...)
                               {
-                                  result = juce::Result::fail("An unexpected error occurred during plugin list download.");
+                                  result = juce::Result::fail(juce::translate("An unexpected error occurred during plugin list download."));
                               }
                               triggerAsyncUpdate();
                               return std::make_tuple(result, plugins);
