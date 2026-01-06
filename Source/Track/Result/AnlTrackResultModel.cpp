@@ -389,14 +389,14 @@ public:
         return mInfo->extraRanges.at(index);
     }
 
-    inline bool operator==(Impl const& rhd) const noexcept
+    inline bool operator==(Impl const& rhs) const noexcept
     {
-        return mInfo == rhd.mInfo;
+        return mInfo == rhs.mInfo;
     }
 
-    inline bool operator!=(Impl const& rhd) const noexcept
+    inline bool operator!=(Impl const& rhs) const noexcept
     {
-        return !(*this == rhd);
+        return !(*this == rhs);
     }
 
     bool getAccess(bool readOnly) noexcept
@@ -755,14 +755,14 @@ std::optional<Zoom::Range> Track::Result::Data::getExtraRange(size_t index) cons
     return mImpl->getExtraRange(index);
 }
 
-bool Track::Result::Data::operator==(Data const& rhd) const noexcept
+bool Track::Result::Data::operator==(Data const& rhs) const noexcept
 {
-    return mImpl == rhd.mImpl;
+    return mImpl == rhs.mImpl;
 }
 
-bool Track::Result::Data::operator!=(Data const& rhd) const noexcept
+bool Track::Result::Data::operator!=(Data const& rhs) const noexcept
 {
-    return !(*this == rhd);
+    return !(*this == rhs);
 }
 
 bool Track::Result::Data::matchWithEpsilon(Data const& other, double timeEpsilon, float valueEpsilon) const
@@ -908,9 +908,9 @@ Track::Result::File::File(juce::File const& f, juce::StringPairArray const& a, n
 {
 }
 
-bool Track::Result::File::operator==(File const& rhd) const noexcept
+bool Track::Result::File::operator==(File const& rhs) const noexcept
 {
-    return file == rhd.file && args == rhd.args && commit == rhd.commit;
+    return file == rhs.file && args == rhs.args && commit == rhs.commit;
 }
 
 bool Track::Result::File::operator!=(File const& rhd) const noexcept
