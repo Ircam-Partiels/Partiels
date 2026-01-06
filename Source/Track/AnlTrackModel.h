@@ -75,16 +75,16 @@ namespace Track
         Result::ChannelData data;
         juce::Range<double> range;
 
-        inline bool operator==(Edition const& rhd) const noexcept
+        inline bool operator==(Edition const& rhs) const noexcept
         {
-            return channel == rhd.channel &&
-                   data == rhd.data &&
-                   range == rhd.range;
+            return channel == rhs.channel &&
+                   data == rhs.data &&
+                   range == rhs.range;
         }
 
-        inline bool operator!=(Edition const& rhd) const noexcept
+        inline bool operator!=(Edition const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
@@ -97,19 +97,19 @@ namespace Track
         juce::Colour text = juce::Colours::black;
         juce::Colour shadow = juce::Colours::transparentBlack;
 
-        inline bool operator==(ColourSet const& rhd) const noexcept
+        inline bool operator==(ColourSet const& rhs) const noexcept
         {
-            return map == rhd.map &&
-                   background == rhd.background &&
-                   foreground == rhd.foreground &&
-                   duration == rhd.duration &&
-                   text == rhd.text &&
-                   shadow == rhd.shadow;
+            return map == rhs.map &&
+                   background == rhs.background &&
+                   foreground == rhs.foreground &&
+                   duration == rhs.duration &&
+                   text == rhs.text &&
+                   shadow == rhs.shadow;
         }
 
-        inline bool operator!=(ColourSet const& rhd) const noexcept
+        inline bool operator!=(ColourSet const& rhs) const noexcept
         {
-            return !(*this == rhd);
+            return !(*this == rhs);
         }
     };
 
