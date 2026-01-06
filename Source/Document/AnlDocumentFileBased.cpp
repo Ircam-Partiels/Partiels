@@ -181,7 +181,7 @@ juce::Result Document::FileBased::consolidate()
     auto file = getFile();
     if(!file.existsAsFile())
     {
-        return juce::Result::fail("The document file doesn't exist!");
+        return juce::Result::fail(juce::translate("The document file doesn't exist!"));
     }
 
     auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -191,7 +191,7 @@ juce::Result Document::FileBased::consolidate()
                        return std::get<0>(processing) || std::get<2>(processing);
                    }))
     {
-        return juce::Result::fail("The analysis is running!");
+        return juce::Result::fail(juce::translate("The analysis is running!"));
     }
 
     mDirector.startAction();
@@ -392,7 +392,7 @@ std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> Document::FileBase
     }
     if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
     {
-        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
+        return juce::Result::fail(juce::translate("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file."));
     }
     return xml;
 }
