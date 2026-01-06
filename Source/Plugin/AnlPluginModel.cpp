@@ -3,37 +3,37 @@
 
 ANALYSE_FILE_BEGIN
 
-bool Plugin::Output::operator==(Output const& rhd) const noexcept
+bool Plugin::Output::operator==(Output const& rhs) const noexcept
 {
-    return identifier == rhd.identifier &&
-           name == rhd.name &&
-           description == rhd.description &&
-           unit == rhd.unit &&
-           hasFixedBinCount == rhd.hasFixedBinCount &&
-           (!hasFixedBinCount || binCount == rhd.binCount) &&
-           binNames == rhd.binNames &&
-           hasKnownExtents == rhd.hasKnownExtents &&
-           (!hasKnownExtents || std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon()) &&
-           (!hasKnownExtents || std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon()) &&
-           isQuantized == rhd.isQuantized &&
-           (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
-           sampleType == rhd.sampleType &&
-           (sampleType == SampleType::OneSamplePerStep || std::abs(sampleRate - rhd.sampleRate) < std::numeric_limits<float>::epsilon()) &&
-           hasDuration == rhd.hasDuration;
+    return identifier == rhs.identifier &&
+           name == rhs.name &&
+           description == rhs.description &&
+           unit == rhs.unit &&
+           hasFixedBinCount == rhs.hasFixedBinCount &&
+           (!hasFixedBinCount || binCount == rhs.binCount) &&
+           binNames == rhs.binNames &&
+           hasKnownExtents == rhs.hasKnownExtents &&
+           (!hasKnownExtents || std::abs(minValue - rhs.minValue) < std::numeric_limits<float>::epsilon()) &&
+           (!hasKnownExtents || std::abs(maxValue - rhs.maxValue) < std::numeric_limits<float>::epsilon()) &&
+           isQuantized == rhs.isQuantized &&
+           (!isQuantized || std::abs(quantizeStep - rhs.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
+           sampleType == rhs.sampleType &&
+           (sampleType == SampleType::OneSamplePerStep || std::abs(sampleRate - rhs.sampleRate) < std::numeric_limits<float>::epsilon()) &&
+           hasDuration == rhs.hasDuration;
 }
 
-bool Plugin::Parameter::operator==(Parameter const& rhd) const noexcept
+bool Plugin::Parameter::operator==(Parameter const& rhs) const noexcept
 {
-    return identifier == rhd.identifier &&
-           name == rhd.name &&
-           description == rhd.description &&
-           unit == rhd.unit &&
-           std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon() &&
-           std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon() &&
-           std::abs(defaultValue - rhd.defaultValue) < std::numeric_limits<float>::epsilon() &&
-           isQuantized == rhd.isQuantized &&
-           (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
-           valueNames == rhd.valueNames;
+    return identifier == rhs.identifier &&
+           name == rhs.name &&
+           description == rhs.description &&
+           unit == rhs.unit &&
+           std::abs(minValue - rhs.minValue) < std::numeric_limits<float>::epsilon() &&
+           std::abs(maxValue - rhs.maxValue) < std::numeric_limits<float>::epsilon() &&
+           std::abs(defaultValue - rhs.defaultValue) < std::numeric_limits<float>::epsilon() &&
+           isQuantized == rhs.isQuantized &&
+           (!isQuantized || std::abs(quantizeStep - rhs.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
+           valueNames == rhs.valueNames;
 }
 
 void Plugin::to_json(nlohmann::json& j, Key const& key)

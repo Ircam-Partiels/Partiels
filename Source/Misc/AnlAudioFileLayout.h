@@ -24,14 +24,14 @@ struct AudioFileLayout
     juce::File file = {};
     int channel = 0;
 
-    inline bool operator==(AudioFileLayout const& rhd) const noexcept
+    inline bool operator==(AudioFileLayout const& rhs) const noexcept
     {
-        return file == rhd.file && channel == rhd.channel;
+        return file == rhs.file && channel == rhs.channel;
     }
 
-    inline bool operator!=(AudioFileLayout const& rhd) const noexcept
+    inline bool operator!=(AudioFileLayout const& rhs) const noexcept
     {
-        return !(*this == rhd);
+        return !(*this == rhs);
     }
 };
 
