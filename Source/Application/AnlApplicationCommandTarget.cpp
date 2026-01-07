@@ -158,6 +158,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::frameResetDurationToFull
         , CommandIDs::frameExport
         , CommandIDs::frameExportTo
+        , CommandIDs::frameOverwriteOriginal
         , CommandIDs::frameSystemCopy
         , CommandIDs::frameToggleDrawing
         
@@ -439,6 +440,27 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
                                                         {
                                                             return exportOptions.isCompatible(type);
                                                         }));
+            break;
+        }
+        case CommandIDs::frameOverwriteOriginal:
+        {
+            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const message = allFrames ? juce::translate("Overwrite Original File(s) with All Frames") : juce::translate("Overwrite Original File(s) with Selected Frames");
+            auto const description = allFrames ? juce::translate("Overwrite the original result file with all frames") : juce::translate("Overwrite the original result file with selected frames");
+
+            result.setInfo(message, description, "Edit", 0);
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            auto const hasSupportedResultFiles = std::any_of(std::get<1_z>(selectedItems).cbegin(), std::get<1_z>(selectedItems).cend(), [&](auto const& trackId)
+                                                             {
+                                                                 if(!Document::Tools::hasTrackAcsr(documentAcsr, trackId))
+                                                                 {
+                                                                     return false;
+                                                                 }
+                                                                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                                                                 auto const& fd = trackAcsr.template getAttr<Track::AttrType::fileDescription>();
+                                                                 return !fd.isEmpty() && fd.format != Track::FileDescription::Format::binary;
+                                                             });
+            result.setActive(isFrameMode && hasSupportedResultFiles);
             break;
         }
         case CommandIDs::frameSystemCopy:
@@ -1294,6 +1316,68 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               exportTo(results.getFirst(), {}, selectedItems, selection);
                                           });
             }
+            return true;
+        }
+        case CommandIDs::frameOverwriteOriginal:
+        {
+            std::set<juce::String> trackIds;
+            juce::StringArray trackNames;
+            juce::StringArray trackFiles;
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            for(auto const& trackId : std::get<1_z>(selectedItems))
+            {
+                if(Document::Tools::hasTrackAcsr(documentAcsr, trackId))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                    auto const& fd = trackAcsr.getAttr<Track::AttrType::fileDescription>();
+                    if(!fd.isEmpty() && fd.format != Track::FileDescription::Format::binary)
+                    {
+                        trackIds.insert(trackId);
+                        trackNames.add(trackAcsr.getAttr<Track::AttrType::name>());
+                        trackFiles.add(trackAcsr.getAttr<Track::AttrType::file>().file.getFullPathName());
+                    }
+                }
+            }
+
+            auto const message = trackNames.size() == 1
+                                     ? juce::translate("Are you sure you want to overwrite the original file for track \"TRACKNAME\"?\n\nFile: FILEPATH\n\nThis action cannot be undone.")
+                                           .replace("TRACKNAME", trackNames[0])
+                                           .replace("FILEPATH", trackFiles[0])
+                                     : juce::translate("Are you sure you want to overwrite the original files for NUMTRACKS track(s)?\n\nTracks: TRACKNAMES\n\nThis action cannot be undone.")
+                                           .replace("NUMTRACKS", juce::String(trackNames.size()))
+                                           .replace("TRACKNAMES", trackNames.joinIntoString(", "));
+
+            auto const options = juce::MessageBoxOptions()
+                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                     .withTitle(juce::translate("Overwrite Original File(s)?"))
+                                     .withMessage(message)
+                                     .withButton(juce::translate("Overwrite"))
+                                     .withButton(juce::translate("Cancel"));
+
+            juce::AlertWindow::showAsync(options, [=, this, &documentAcsr](int windowResult)
+                                         {
+                                             if(windowResult != 1)
+                                             {
+                                                 return;
+                                             }
+                                             for(auto const& trackId : trackIds)
+                                             {
+                                                 if(Document::Tools::hasTrackAcsr(documentAcsr, trackId))
+                                                 {
+                                                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                                                     auto const& fd = trackAcsr.getAttr<Track::AttrType::fileDescription>();
+                                                     if(!fd.isEmpty() && fd.format != Track::FileDescription::Format::binary)
+                                                     {
+                                                         auto const trackResult = Document::Exporter::exportTo(documentAcsr, fd.file, selection, std::set<size_t>{}, "", trackId, Document::Exporter::Options(fd), mShouldAbort);
+                                                         MiscWeakAssert(trackResult.wasOk());
+                                                         if(trackResult.failed())
+                                                         {
+                                                             MiscDebug("Application::CommandTarget", trackResult.getErrorMessage());
+                                                         }
+                                                     }
+                                                 }
+                                             }
+                                         });
             return true;
         }
         case CommandIDs::frameSystemCopy:
