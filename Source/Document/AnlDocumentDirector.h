@@ -45,7 +45,6 @@ namespace Document
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setFileMapper(juce::File const& saved, juce::File const& current);
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
-        void setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
         void setBackupDirectory(juce::File const& directory);
         void setSilentResultsFileManagement(bool state);
 
@@ -73,8 +72,6 @@ namespace Document
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginList::Table* mPluginTable{nullptr};
         std::function<void(bool)> mPluginTableShowHideFn{nullptr};
-        Track::Loader::ArgumentSelector* mLoaderSelector;
-        std::function<void(bool)> mLoaderSelectorShowHideFn{nullptr};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         juce::File mBackupDirectory;
         bool mSilentResultsFileManagement{false};

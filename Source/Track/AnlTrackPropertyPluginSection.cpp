@@ -19,6 +19,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::key:
             case AttrType::input:
             case AttrType::file:
+            case AttrType::fileDescription:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:

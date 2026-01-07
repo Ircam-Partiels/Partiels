@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Plugin/AnlPluginModel.h"
+#include "Result/AnlTrackResultFile.h"
 #include "Result/AnlTrackResultModel.h"
 #include <bitset>
 #include <tinycolormap/tinycolormap.hpp>
@@ -29,7 +30,8 @@ namespace Track
     // clang-format on
 
     using Results = Result::Data;
-    using FileInfo = Result::File;
+    using FileInfo = Result::FileInfo;
+    using FileDescription = Result::FileDescription;
     using ColourMap = tinycolormap::ColormapType;
     using FocusInfo = std::bitset<static_cast<size_t>(512)>;
 
@@ -208,6 +210,7 @@ namespace Track
           identifier
         , name
         , file
+        , fileDescription
         , results
         , edit
         , description
@@ -252,6 +255,7 @@ namespace Track
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::file, FileInfo, Model::Flag::basic>
+    , Model::Attr<AttrType::fileDescription, FileDescription, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::edit, Edition, Model::Flag::notifying>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
@@ -297,6 +301,7 @@ namespace Track
         Accessor()
         : Accessor(AttrContainer(  {""}
                                  , {""}
+                                 , {}
                                  , {}
                                  , {}
                                  , {}

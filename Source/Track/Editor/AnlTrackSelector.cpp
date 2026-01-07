@@ -16,6 +16,7 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::identifier:
             case AttrType::name:
             case AttrType::file:
+            case AttrType::fileDescription:
             case AttrType::key:
             case AttrType::input:
             case AttrType::state:

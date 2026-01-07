@@ -43,6 +43,7 @@ Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& pr
             case AttrType::input:
             case AttrType::description:
             case AttrType::file:
+            case AttrType::fileDescription:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:

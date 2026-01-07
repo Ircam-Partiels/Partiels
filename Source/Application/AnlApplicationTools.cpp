@@ -180,22 +180,10 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
     }
 }
 
-void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, Track::FileInfo const& fileInfo)
+void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file)
 {
-    auto const& file = fileInfo.file;
-    juce::WildcardFileFilter wildcardFilter(Instance::getWildCardForImportFormats(), file.getParentDirectory().getFullPathName(), "");
-    if(!wildcardFilter.isFileSuitable(file))
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("File format not supported!"))
-                                 .withMessage(juce::translate("The application only supports JSON, CSV, CUE, SDIF formats."))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
-        return;
-    }
-
     auto& documentAcsr = Instance::get().getDocumentAccessor();
+
     auto& documentDir = Instance::get().getDocumentDirector();
     documentDir.startAction();
     auto const references = documentDir.sanitize(NotificationType::synchronous);
@@ -243,7 +231,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
         trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
 
-        trackAcsr.setAttr<Track::AttrType::file>(fileInfo, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::file>(Track::FileInfo{file}, NotificationType::synchronous);
 
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);

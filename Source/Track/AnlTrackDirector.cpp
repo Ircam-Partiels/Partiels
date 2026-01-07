@@ -257,6 +257,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::zoomValueMode:
             case AttrType::extraThresholds:
             case AttrType::hasPluginColourMap:
+            case AttrType::fileDescription:
                 break;
         }
     };
@@ -374,10 +375,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
 
     mLoader.onLoadingSucceeded = [&](Results const& results)
     {
-        auto const fileInfo = mAccessor.getAttr<AttrType::file>();
-        if(!fileInfo.extra.is_null())
+        auto const fd = mAccessor.getAttr<AttrType::fileDescription>();
+        if(!fd.extra.is_null())
         {
-            mAccessor.fromJson(fileInfo.extra, NotificationType::synchronous);
+            mAccessor.fromJson(fd.extra, NotificationType::synchronous);
         }
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
@@ -442,7 +443,6 @@ Track::Director::~Director()
 {
     mHierarchyManager.removeHierarchyListener(mHierarchyListener);
     setPluginTable(nullptr, nullptr);
-    setLoaderSelector(nullptr, nullptr);
     if(mSharedZoomAccessor.has_value())
     {
         mSharedZoomAccessor.value().get().removeListener(mSharedZoomListener);
@@ -664,12 +664,6 @@ void Track::Director::setPluginTable(PluginList::Table* table, std::function<voi
     mPluginTableShowHideFn = showHideFn;
 }
 
-void Track::Director::setLoaderSelector(Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn)
-{
-    mLoaderSelector = selector;
-    mLoaderSelectorShowHideFn = showHideFn;
-}
-
 void Track::Director::runAnalysis(NotificationType const notification)
 {
     if(!mAccessor.getAttr<AttrType::file>().isEmpty())
@@ -733,14 +727,23 @@ void Track::Director::runAnalysis(NotificationType const notification)
 void Track::Director::runLoading()
 {
     mGraphics.stopRendering();
-    auto file = mAccessor.getAttr<AttrType::file>();
-    file.file = getEffectiveFile();
-    if(file.file != juce::File{})
+    auto const file = getEffectiveFile();
+    if(file != juce::File{})
     {
-        mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-        mLoader.loadAnalysis(file);
-        startTimer(50);
-        timerCallback();
+        auto const fdResult = Loader::getFileDescription(file, mAccessor.getAttr<AttrType::sampleRate>());
+        mAccessor.setAttr<AttrType::fileDescription>(std::get<1_z>(fdResult), NotificationType::synchronous);
+        if(std::get<0_z>(fdResult).failed())
+        {
+            mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
+            askToReloadFile(std::get<0_z>(fdResult).getErrorMessage());
+        }
+        else
+        {
+            mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+            mLoader.loadAnalysis(std::get<1_z>(fdResult));
+            startTimer(50);
+            timerCallback();
+        }
     }
 }
 
@@ -1236,10 +1239,6 @@ void Track::Director::askToReloadFile(juce::String const& reason)
 
 void Track::Director::askForFile()
 {
-    if(mLoaderSelector == nullptr)
-    {
-        return;
-    }
     auto const file = mAccessor.getAttr<AttrType::file>().file;
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load track's results file..."), file, Loader::getWildCardForAllFormats());
     if(mFileChooser == nullptr)
@@ -1250,7 +1249,7 @@ void Track::Director::askForFile()
     juce::WeakReference<Director> safePointer(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                               {
-                                  if(safePointer.get() == nullptr || mLoaderSelector == nullptr)
+                                  if(safePointer.get() == nullptr)
                                   {
                                       return;
                                   }
@@ -1259,35 +1258,17 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  auto const sampleRate = mAccessor.getAttr<AttrType::sampleRate>();
-                                  if(mLoaderSelector->setFile(results.getFirst(), sampleRate, [=, this](Track::FileInfo fileInfo)
-                                                              {
-                                                                  if(safePointer.get() == nullptr)
-                                                                  {
-                                                                      return;
-                                                                  }
-                                                                  if(mLoaderSelectorShowHideFn != nullptr)
-                                                                  {
-                                                                      mLoaderSelectorShowHideFn(false);
-                                                                  }
-                                                                  auto isPerformingAction = mIsPerformingAction;
-                                                                  if(!isPerformingAction)
-                                                                  {
-                                                                      startAction();
-                                                                  }
-                                                                  mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                                                  mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-                                                                  mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
-                                                                  if(!isPerformingAction)
-                                                                  {
-                                                                      endAction(ActionState::newTransaction, juce::translate("Change results file"));
-                                                                  }
-                                                              }))
+                                  auto isPerformingAction = mIsPerformingAction;
+                                  if(!isPerformingAction)
                                   {
-                                      if(mLoaderSelectorShowHideFn != nullptr)
-                                      {
-                                          mLoaderSelectorShowHideFn(true);
-                                      }
+                                      startAction();
+                                  }
+                                  mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                  mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                  mAccessor.setAttr<AttrType::file>(FileInfo{results.getFirst()}, NotificationType::synchronous);
+                                  if(!isPerformingAction)
+                                  {
+                                      endAction(ActionState::newTransaction, juce::translate("Change results file"));
                                   }
                               });
 }

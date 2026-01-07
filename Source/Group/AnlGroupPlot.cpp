@@ -19,6 +19,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::identifier:
             case Track::AttrType::name:
             case Track::AttrType::file:
+            case Track::AttrType::fileDescription:
             case Track::AttrType::key:
             case Track::AttrType::input:
             case Track::AttrType::description:

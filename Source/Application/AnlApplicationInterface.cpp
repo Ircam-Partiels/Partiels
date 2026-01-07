@@ -5,16 +5,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Interface::TrackLoaderPanel::TrackLoaderPanel()
-: HideablePanelTyped<Track::Loader::ArgumentSelector>(juce::translate("Load File..."))
-{
-}
-
-Track::Loader::ArgumentSelector& Application::Interface::TrackLoaderPanel::getArgumentSelector()
-{
-    return mContent;
-}
-
 Application::Interface::ReaderLayoutPanel::ReaderLayoutPanel()
 : mReaderLayoutContent(Instance::get().getDocumentDirector())
 {
@@ -266,7 +256,6 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
                              , std::ref<HideablePanel>(mDocumentFileInfoPanel)
                              , std::ref<HideablePanel>(mKeyMappingsPanel)
-                             , std::ref<HideablePanel>(mTrackLoaderPanel)
                              });
     // clang-format on
     mDocumentReceiver.onSignal = [this]([[maybe_unused]] Document::Accessor const& acsr, Document::SignalType signal, [[maybe_unused]] juce::var value)
@@ -300,23 +289,11 @@ Application::Interface::Interface()
                                                                  hidePluginListTablePanel();
                                                              }
                                                          });
-    Instance::get().getDocumentDirector().setLoaderSelector(std::addressof(getTrackLoaderArgumentSelector()), [this](bool show)
-                                                            {
-                                                                if(show)
-                                                                {
-                                                                    showTrackLoaderPanel();
-                                                                }
-                                                                else
-                                                                {
-                                                                    hideCurrentPanel();
-                                                                }
-                                                            });
 }
 
 Application::Interface::~Interface()
 {
     Instance::get().getDocumentDirector().setPluginTable(nullptr, nullptr);
-    Instance::get().getDocumentDirector().setLoaderSelector(nullptr, nullptr);
     Instance::get().getDocumentAccessor().removeReceiver(mDocumentReceiver);
 }
 
@@ -385,11 +362,6 @@ void Application::Interface::showKeyMappingsPanel()
     mPanelManager.show(mKeyMappingsPanel);
 }
 
-void Application::Interface::showTrackLoaderPanel()
-{
-    mPanelManager.show(mTrackLoaderPanel);
-}
-
 void Application::Interface::showPluginListTablePanel()
 {
     mDocumentContainer.showPluginListTablePanel();
@@ -418,11 +390,6 @@ juce::Component const* Application::Interface::getPlot(juce::String const& ident
 PluginList::Table& Application::Interface::getPluginListTable()
 {
     return mDocumentContainer.getPluginListTable();
-}
-
-Track::Loader::ArgumentSelector& Application::Interface::getTrackLoaderArgumentSelector()
-{
-    return mTrackLoaderPanel.getArgumentSelector();
 }
 
 ANALYSE_FILE_END

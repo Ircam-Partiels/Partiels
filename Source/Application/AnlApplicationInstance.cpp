@@ -569,26 +569,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
 
 void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
 {
-    auto const importFileWildcard = getWildCardForImportFormats();
-    auto const fileExtension = file.getFileExtension().toLowerCase();
-    anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
-    auto* window = getWindow();
-    if(window == nullptr || mDocumentAccessor == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
-    {
-        return;
-    }
-    auto const sampleRate = mDocumentAccessor->getAttr<Document::AttrType::samplerate>();
-    if(window->getInterface().getTrackLoaderArgumentSelector().setFile(file, sampleRate, [position](Track::FileInfo fileInfo)
-                                                                       {
-                                                                           Tools::addFileTrack(position, fileInfo);
-                                                                           if(auto* w = Instance::get().getWindow())
-                                                                           {
-                                                                               w->getInterface().hideCurrentPanel();
-                                                                           }
-                                                                       }))
-    {
-        window->getInterface().showTrackLoaderPanel();
-    }
+    Tools::addFileTrack(position, file);
 }
 
 Application::Accessor& Application::Instance::getApplicationAccessor()
