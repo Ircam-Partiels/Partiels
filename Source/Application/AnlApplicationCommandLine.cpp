@@ -191,7 +191,7 @@ Application::CommandLine::CommandLine()
                      }
                  }
                  ignoreGridResults = args.containsOption("--nogrids");
-                 options.includeHeaderRaw = args.containsOption("--header");
+                 options.includeHeaderRow = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
                  options.applyExtraThresholds = args.containsOption("--thresholds");
                  options.disableLabelEscaping = args.containsOption("--noescape");

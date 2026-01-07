@@ -60,7 +60,7 @@ namespace Document
             int imageWidth{1920};
             int imageHeight{1200};
             int imagePpi{144};
-            bool includeHeaderRaw{true};
+            bool includeHeaderRow{true};
             bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
