@@ -341,7 +341,11 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
-> 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). You can also choose a custom destination using `Frame → Export Frame(s) To...` or by using the `⌘ Command + ⎇ Option + E` (Mac) or `Ctrl + Alt + E` (Linux/Windows). The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
+> 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). You can also choose a custom destination using `Frame → Export Frame(s) To...` or by using the `⌘ Command + ⎇ Option + E` (Mac) or `Ctrl + Alt + E` (Linux/Windows). 
+>
+> If you have loaded tracks from result files and want to overwrite those original files with the current frame selection, you can use `Frame → Overwrite Original File(s)`. This command is only available when the selected tracks have result files. A confirmation dialog will be shown before overwriting to prevent accidental data loss.
+>
+> The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
 
 ### 7.1. General options
 
