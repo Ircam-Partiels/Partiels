@@ -138,34 +138,7 @@ namespace Track
             }
             return true;
         }
-
-        struct File
-        {
-            juce::File file;
-            juce::StringPairArray args; // saved values (mainly for parsing SDIF)
-            nlohmann::json extra;       // parsed values (mainly for restoring track attributes from JSON)
-            juce::String commit;        // unique identifier that is used for versioning
-
-            File(juce::File const& f = {}, juce::StringPairArray const& a = {}, nlohmann::json const& e = {}, juce::String const& c = {});
-
-            bool operator==(File const& rhd) const noexcept;
-            bool operator!=(File const& rhd) const noexcept;
-            bool isEmpty() const noexcept;
-        };
-
-        void to_json(nlohmann::json& j, File const& file);
-        void from_json(nlohmann::json const& j, File& file);
     } // namespace Result
 } // namespace Track
-
-namespace XmlParser
-{
-    template <>
-    void toXml<Track::Result::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Result::File const& value);
-
-    template <>
-    auto fromXml<Track::Result::File>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::Result::File const& defaultValue)
-        -> Track::Result::File;
-} // namespace XmlParser
 
 ANALYSE_FILE_END

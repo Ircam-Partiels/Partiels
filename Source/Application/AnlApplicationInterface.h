@@ -26,7 +26,6 @@ namespace Application
 
         juce::Component const* getPlot(juce::String const& identifier) const;
         PluginList::Table& getPluginListTable();
-        Track::Loader::ArgumentSelector& getTrackLoaderArgumentSelector();
 
         // juce::Component
         void resized() override;
@@ -51,16 +50,6 @@ namespace Application
         bool isPluginListTablePanelVisible() const;
 
     private:
-        class TrackLoaderPanel
-        : public HideablePanelTyped<Track::Loader::ArgumentSelector>
-        {
-        public:
-            TrackLoaderPanel();
-            ~TrackLoaderPanel() override = default;
-
-            Track::Loader::ArgumentSelector& getArgumentSelector();
-        };
-
         class ReaderLayoutPanel
         : public HideablePanel
         {
@@ -156,7 +145,6 @@ namespace Application
         ReaderLayoutPanel mReaderLayoutPanel;
         Document::FileInfoPanel mDocumentFileInfoPanel;
         KeyMappingsPanel mKeyMappingsPanel;
-        TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;
     };
 } // namespace Application

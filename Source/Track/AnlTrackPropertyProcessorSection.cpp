@@ -208,6 +208,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 updateState();
             }
             break;
+            case AttrType::fileDescription:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::name:

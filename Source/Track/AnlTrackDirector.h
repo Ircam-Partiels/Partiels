@@ -54,7 +54,6 @@ namespace Track
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
-        void setLoaderSelector(Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
 
         void warmAboutPlugin(juce::String const& reason);
         void askToReloadPlugin(juce::String const& reason);
@@ -100,8 +99,6 @@ namespace Track
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginList::Table* mPluginTable{nullptr};
         std::function<void(bool)> mPluginTableShowHideFn{nullptr};
-        Loader::ArgumentSelector* mLoaderSelector;
-        std::function<void(bool)> mLoaderSelectorShowHideFn{nullptr};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         SafeAccessorRetriever mSafeAccessorRetriever;
         juce::File mBackupDirectory;

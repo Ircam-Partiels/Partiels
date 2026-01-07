@@ -79,13 +79,212 @@ namespace
     };
 } // namespace
 
+std::tuple<juce::Result, Track::FileDescription> Track::Loader::getFileDescription(juce::File const& file, double sampleRate)
+{
+    auto const fullPath = file.getFullPathName();
+    if(!juce::WildcardFileFilter(getWildCardForAllFormats(), "*", "").isFileSuitable(file))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The format of the file 'FLNAME' is not supported.").replace("FLNAME", fullPath)), Track::FileDescription{});
+    }
+    auto const isBinary = file.hasFileExtension(".dat");
+    auto cstream = std::ifstream(fullPath.toStdString(), isBinary ? std::ios::in | std::ios::binary : std::ios::in);
+    if(!cstream)
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The input stream of the file 'FLNAME' cannot be opened.").replace("FLNAME", fullPath)), Track::FileDescription{});
+    }
+
+    // Helper to trim whitespaces
+    auto const trim = [](std::string& str)
+    {
+        str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](auto const c)
+                                            {
+                                                return !std::isspace(static_cast<int>(c));
+                                            }));
+        str.erase(std::find_if(str.rbegin(), str.rend(), [](auto const c)
+                               {
+                                   return !std::isspace(static_cast<int>(c));
+                               })
+                      .base(),
+                  str.end());
+    };
+
+    // Helper to parse lines with a callback
+    auto const splitString = [&](std::istream& stream, std::function<bool(std::string&)> lineCallback, char const delimiter = '\n')
+    {
+        std::string line;
+        while(std::getline(stream, line, delimiter))
+        {
+            trim(line);
+            if(!line.empty() && lineCallback(line))
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    FileDescription fd{file};
+    if(file.hasFileExtension(".dat"))
+    {
+        fd.format = FileDescription::Format::binary;
+        return std::make_tuple(juce::Result::ok(), fd);
+    }
+    else if(file.hasFileExtension(".cue"))
+    {
+        fd.format = FileDescription::Format::cue;
+        return std::make_tuple(juce::Result::ok(), fd);
+    }
+    else if(file.hasFileExtension(".json"))
+    {
+        fd.format = FileDescription::Format::json;
+        auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
+        auto json = nlohmann::sax_parse_json_object(stream, "track", 1_z);
+        if(json.count("track") > 0_z)
+        {
+            json["track"].erase("identifier");
+            json["track"].erase("file");
+            fd.extra = std::move(json["track"]);
+        }
+        return std::make_tuple(juce::Result::ok(), fd);
+    }
+    else if(file.hasFileExtension(".csv") || file.hasFileExtension(".lab") || file.hasFileExtension(".txt"))
+    {
+        // Reaper format detection (CSV specific format)
+        if(file.hasFileExtension(".csv"))
+        {
+            auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
+            if(splitString(stream, [&](std::string& line)
+                           {
+                               if(line.find("#,Name,Start,End,Length") != std::string::npos)
+                               {
+                                   // Reaper format detected, parse the reaper type
+                                   splitString(stream, [&](std::string const& subLine)
+                                               {
+                                                   if(!subLine.empty())
+                                                   {
+                                                       if(subLine.at(0_z) == 'R')
+                                                       {
+                                                           fd.reaperType = FileDescription::ReaperType::region;
+                                                       }
+                                                       else
+                                                       {
+                                                           fd.reaperType = FileDescription::ReaperType::marker;
+                                                       }
+                                                   }
+                                                   return !subLine.empty();
+                                               });
+                                   return true;
+                               }
+                               return false;
+                           }))
+            {
+                fd.format = FileDescription::Format::reaper;
+                return std::make_tuple(juce::Result::ok(), fd);
+            }
+        }
+        // Max format detection (TXT specific format)
+        if(file.hasFileExtension(".txt"))
+        {
+            auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
+            if(splitString(stream, [&](std::string const& line)
+                           {
+                               return line.length() > 1_z && std::isdigit(static_cast<int>(line.at(0_z))) && line.at(1_z) == ',';
+                           }))
+            {
+                fd.format = FileDescription::Format::max;
+                fd.columnSeparator = FileDescription::ColumnSeparator::space;
+                return std::make_tuple(juce::Result::ok(), fd);
+            }
+        }
+        // Pure Data format detection (TXT specific format)
+        if(file.hasFileExtension(".txt"))
+        {
+            auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
+            if(splitString(stream, [&](std::string const& line)
+                           {
+                               size_t count = 0;
+                               std::istringstream lineStream(line);
+                               while(splitString(lineStream, [&](std::string const&)
+                                                 {
+                                                     ++count;
+                                                     return count > 2_z;
+                                                 },
+                                                 ' '))
+                               {
+                                   return true;
+                               }
+                               return false;
+                           },
+                           ';'))
+            {
+                fd.format = FileDescription::Format::puredata;
+                fd.columnSeparator = FileDescription::ColumnSeparator::space;
+                return std::make_tuple(juce::Result::ok(), fd);
+            }
+        }
+        // Lab format detection (LAB specific format)
+        if(file.hasFileExtension(".csv") || file.hasFileExtension(".lab"))
+        {
+            auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
+            if(splitString(stream, [&](std::string const& line)
+                           {
+                               auto const position = line.find_first_of(", \t|/:");
+                               if(position == std::string::npos)
+                               {
+                                   return false;
+                               }
+                               auto const separator = line.at(position);
+                               fd.columnSeparator = FileDescription::toColumnSeparator(separator);
+                               fd.includeHeaderRow = (line.substr(0, position) == "TIME");
+                               fd.disableLabelEscaping = true;
+                               std::istringstream lineStream(line);
+                               splitString(lineStream, [&](std::string const& word)
+                                           {
+                                               auto const isEscaped = word.size() >= 2 && word.front() == '\"' && word.back() == '\"';
+                                               fd.disableLabelEscaping = !isEscaped;
+                                               return isEscaped;
+                                           },
+                                           separator);
+                               return true;
+                           }))
+            {
+                auto const isLab = file.hasFileExtension(".lab");
+                fd.format = isLab ? FileDescription::Format::lab : FileDescription::Format::csv;
+                return std::make_tuple(juce::Result::ok(), fd);
+            }
+        }
+    }
+    else if(file.hasFileExtension(".sdif"))
+    {
+        auto const sdifEntries = SdifConverter::getEntries(file);
+        if(!sdifEntries.empty() && !sdifEntries.cbegin()->second.empty())
+        {
+            auto const& frame = sdifEntries.cbegin();
+            auto const& matrix = frame->second.cbegin();
+            fd.sdifFrameSignature = SdifConverter::getString(frame->first);
+            fd.sdifMatrixSignature = SdifConverter::getString(matrix->first);
+            fd.format = FileDescription::Format::sdif;
+
+            if(matrix->first == SdifConverter::SignatureIds::i1FQ0)
+            {
+                auto const desc = juce::String("{\"description\":{\"category\":\"Pitch\",\"defaultState\":{},\"details\":\"The fundamental estimation.\",\"extraOutputs\":[{\"description\":\"The confidence of the estimated periodicity\",\"hasKnownExtents\":true,\"identifier\":\"confidence\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Confidence\",\"quantizeStep\":0.0,\"unit\":\"\"}, {\"description\":\"The score of the estimated periodicity\",\"hasKnownExtents\":true,\"identifier\":\"score\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Score\",\"quantizeStep\":0.0,\"unit\":\"\"}, {\"description\":\"The real amplitude\",\"hasKnownExtents\":true,\"identifier\":\"realamplitude\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Real Amplitude\",\"quantizeStep\":0.0,\"unit\":\"\"}],\"name\":\"Fundamental\",\"output\":{\"binCount\":1,\"binNames\":[\"\"],\"description\":\"Pitch estimated from the input signal\",\"hasDuration\":false,\"hasFixedBinCount\":true,\"hasKnownExtents\":true,\"identifier\":\"fundamental\",\"isQuantized\":false,\"maxValue\":MAXFREQ,\"minValue\":0.0,\"name\":\"Pitch\",\"quantizeStep\":0.0,\"sampleRate\":0.0,\"sampleType\":2,\"unit\":\"Hz\"}}}")
+                                      .replace("MAXFREQ", juce::String(sampleRate / 2.0));
+                std::istringstream stream(desc.toStdString());
+                fd.extra = nlohmann::json::parse(stream);
+            }
+            return std::make_tuple(juce::Result::ok(), fd);
+        }
+    }
+    return std::make_tuple(juce::Result::fail(juce::translate("The format of the file 'FLNAME' is not supported.").replace("FLNAME", fullPath)), Track::FileDescription{});
+}
+
 Track::Loader::~Loader()
 {
     std::unique_lock<std::mutex> lock(mLoadingMutex);
     abortLoading();
 }
 
-void Track::Loader::loadAnalysis(FileInfo const& fileInfo)
+void Track::Loader::loadAnalysis(FileDescription const& fd)
 {
     std::unique_lock<std::mutex> lock(mLoadingMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
@@ -103,14 +302,14 @@ void Track::Loader::loadAnalysis(FileInfo const& fileInfo)
 
     mShouldAbort = false;
     mAdvancement.store(0.0f);
-    mLoadingProcess = std::async([this, fi = fileInfo]() mutable -> std::variant<Results, juce::String>
+    mLoadingProcess = std::async([=, this]() mutable -> std::variant<Results, juce::String>
                                  {
                                      if(mShouldAbort)
                                      {
                                          return {};
                                      }
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
-                                     auto results = loadFromFile(fi, mShouldAbort, mAdvancement);
+                                     auto results = loadFromFile(fd, mShouldAbort, mAdvancement);
                                      triggerAsyncUpdate();
                                      return results;
                                  });
@@ -188,29 +387,29 @@ void Track::Loader::abortLoading()
     mShouldAbort.store(false);
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     try
     {
-        if(fileInfo.file.hasFileExtension("dat"))
+        switch(fd.format)
         {
-            return loadFromBinary(fileInfo, shouldAbort, advancement);
-        }
-        if(fileInfo.file.hasFileExtension("json"))
-        {
-            return loadFromJson(fileInfo, shouldAbort, advancement);
-        }
-        else if(fileInfo.file.hasFileExtension("csv") || fileInfo.file.hasFileExtension("lab"))
-        {
-            return loadFromCsv(fileInfo, shouldAbort, advancement);
-        }
-        else if(fileInfo.file.hasFileExtension("cue"))
-        {
-            return loadFromCue(fileInfo, shouldAbort, advancement);
-        }
-        else if(fileInfo.file.hasFileExtension("sdif"))
-        {
-            return loadFromSdif(fileInfo, shouldAbort, advancement);
+            case FileDescription::Format::binary:
+                return loadFromBinary(fd, shouldAbort, advancement);
+            case FileDescription::Format::json:
+                return loadFromJson(fd, shouldAbort, advancement);
+            case FileDescription::Format::reaper:
+                return loadFromReaper(fd, shouldAbort, advancement);
+            case FileDescription::Format::max:
+            case FileDescription::Format::puredata:
+            case FileDescription::Format::lab:
+            case FileDescription::Format::csv:
+                return loadFromCsv(fd, shouldAbort, advancement);
+            case FileDescription::Format::cue:
+                return loadFromCue(fd, shouldAbort, advancement);
+            case FileDescription::Format::sdif:
+                return loadFromSdif(fd, shouldAbort, advancement);
+            default:
+                break;
         }
     }
     catch(std::exception& e)
@@ -224,9 +423,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileInfo 
     return {juce::translate("The file format is not supported")};
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    auto stream = std::ifstream(fd.file.getFullPathName().toStdString());
     if(!stream || !stream.is_open() || !stream.good())
     {
         return {juce::translate("The input stream of cannot be opened")};
@@ -408,9 +607,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     return {juce::translate("Parsing error: couldn't determine the type of results")};
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString(), std::ios::in | std::ios::binary);
+    auto stream = std::ifstream(fd.file.getFullPathName().toStdString(), std::ios::in | std::ios::binary);
     if(!stream || !stream.is_open() || !stream.good())
     {
         return {juce::translate("The input stream of cannot be opened")};
@@ -623,9 +822,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
     return {std::move(res)};
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    auto stream = std::ifstream(fd.file.getFullPathName().toStdString());
     if(!stream || !stream.is_open() || !stream.good())
     {
         return {juce::translate("The input stream of cannot be opened")};
@@ -745,23 +944,21 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istre
     return Results(std::move(channelResults));
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    auto stream = std::ifstream(fd.file.getFullPathName().toStdString());
     if(!stream || !stream.is_open() || !stream.good())
     {
         return {juce::translate("The input stream of cannot be opened")};
     }
-    if(fileInfo.args.getValue("isreaper", "false") == "true")
-    {
-        return loadFromReaper(stream, shouldAbort, advancement);
-    }
-    auto const separator = fileInfo.args.getValue("separator", ",").toStdString();
-    auto const useEndTime = fileInfo.args.getValue("useendtime", "false") == "true";
-    return loadFromCsv(stream, separator.empty() ? ',' : separator.at(0_z), useEndTime, shouldAbort, advancement);
+    auto const separator = FileDescription::toChar(fd.columnSeparator);
+    auto const useEndTime = fd.format == FileDescription::Format::lab;
+    auto const lineBreakSeparator = fd.format == FileDescription::Format::puredata || fd.format == FileDescription::Format::max ? ';' : '\n';
+    auto const prependLineIndex = fd.format == FileDescription::Format::max;
+    return loadFromCsv(stream, separator, useEndTime, lineBreakSeparator, prependLineIndex, shouldAbort, advancement);
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, bool useEndTime, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, bool useEndTime, char const lineBreakSeparator, bool prependLineIndex, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     auto const trimString = [](std::string const& s)
     {
@@ -817,7 +1014,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
 
     auto addNewChannel = true;
     std::string line;
-    while(std::getline(stream, line, '\n'))
+    while(std::getline(stream, line, lineBreakSeparator))
     {
         if(shouldAbort)
         {
@@ -825,7 +1022,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         }
 
         line = trimString(line);
-        if(line.empty() || line == "\n")
+        if(prependLineIndex)
+        {
+            auto const position = line.find(",");
+            if(position != std::string::npos)
+            {
+                line.erase(0, position + 1_z);
+                line = trimString(line);
+            }
+        }
+        if(line.empty())
         {
             addNewChannel = true;
         }
@@ -902,6 +1108,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         return Track::Results(std::move(points));
     }
     return {juce::translate("Parsing error - unknown mode")};
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto stream = std::ifstream(fd.file.getFullPathName().toStdString());
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    return loadFromReaper(stream, shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -987,18 +1203,15 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromReaper(std::is
     return Track::Results(std::move(markers));
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileDescription const& fd, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    if(!fileInfo.file.existsAsFile())
+    if(!fd.file.existsAsFile())
     {
         return {juce::translate("The input stream of cannot be opened")};
     }
-    auto const& args = fileInfo.args;
-    auto const frame = SdifConverter::getSignature(args.getValue("frame", ""));
-    auto const matrix = SdifConverter::getSignature(args.getValue("matrix", ""));
-    auto const row = args.containsKey("row") ? std::optional<size_t>(static_cast<size_t>(args.getValue("row", "").getIntValue())) : std::optional<size_t>();
-    auto const column = args.containsKey("column") ? std::optional<size_t>(static_cast<size_t>(args.getValue("column", "").getIntValue())) : std::optional<size_t>();
-    return loadFromSdif(fileInfo.file, frame, matrix, row, column, shouldAbort, advancement);
+    auto const frame = SdifConverter::getSignature(fd.sdifFrameSignature);
+    auto const matrix = SdifConverter::getSignature(fd.sdifMatrixSignature);
+    return loadFromSdif(fd.file, frame, matrix, std::optional<size_t>(), std::optional<size_t>(), shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -1153,216 +1366,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
 
 juce::String Track::Loader::getWildCardForAllFormats()
 {
-    return "*.json;*.csv;*.lab;*.cue;*.sdif;*.dat";
-}
-
-Track::Loader::ArgumentSelector::ArgumentSelector()
-: mPropertyName("File", "The file to import", nullptr)
-, mPropertyColumnSeparator("Column Separator", "The separator character between columns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, nullptr)
-, mLoadButton("Load", "Load the file with the arguments", nullptr)
-{
-    mPropertyName.entry.setEnabled(false);
-    addAndMakeVisible(mPropertyName);
-    addAndMakeVisible(mPropertyColumnSeparator);
-    mPropertyColumnSeparator.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mSdifPanel.onUpdated = [this]()
-    {
-        auto const format = mSdifPanel.getFromSdifFormat();
-        mLoadButton.setEnabled(mSdifPanel.isVisible() && std::get<0_z>(format) != uint32_t(0) && std::get<1_z>(format) != uint32_t(0));
-    };
-    addAndMakeVisible(mSdifPanel);
-    mLoadButton.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
-    addAndMakeVisible(mLoadButton);
-    setSize(300, 100);
-}
-
-void Track::Loader::ArgumentSelector::resized()
-{
-    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto const setBounds = [&](juce::Component& component)
-    {
-        if(component.isVisible())
-        {
-            component.setBounds(bounds.removeFromTop(component.getHeight()));
-        }
-    };
-    setBounds(mPropertyName);
-    setBounds(mPropertyColumnSeparator);
-    setBounds(mSdifPanel);
-    setBounds(mLoadButton);
-    setSize(getWidth(), bounds.getY() + 2);
-}
-
-bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sampleRate, std::function<void(FileInfo)> callback)
-{
-    if(callback == nullptr)
-    {
-        return false;
-    }
-
-    juce::WildcardFileFilter wildcardFilter(getWildCardForAllFormats(), "*", "");
-    if(!wildcardFilter.isFileSuitable(file))
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Invalid file!"))
-                                 .withMessage(juce::translate("The format of the file 'FLNAME' is not supported.").replace("FLNAME", file.getFullPathName()))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
-        return false;
-    }
-
-    auto const streamFlag = file.hasFileExtension("dat") ? std::ios::in | std::ios::binary : std::ios::in;
-    auto stream = std::ifstream(file.getFullPathName().toStdString(), streamFlag);
-    if(!stream)
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Invalid file!"))
-                                 .withMessage(juce::translate("The input stream of the file 'FLNAME' cannot be opened.").replace("FLNAME", file.getFullPathName()))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
-        return false;
-    }
-
-    mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
-
-    if(file.hasFileExtension("sdif"))
-    {
-        mPropertyColumnSeparator.setVisible(false);
-        mSdifPanel.setVisible(true);
-        mSdifPanel.setFile(file);
-        juce::WeakReference<juce::Component> weakReference(this);
-        auto const doLoad = [=, this]()
-        {
-            if(weakReference.get() == nullptr)
-            {
-                return;
-            }
-            FileInfo fileInfo;
-            fileInfo.file = file;
-            auto const format = mSdifPanel.getFromSdifFormat();
-            fileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
-            fileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
-            if(std::get<2_z>(format).has_value())
-            {
-                fileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
-            }
-            if(std::get<3_z>(format).has_value())
-            {
-                fileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
-            }
-            fileInfo.extra = mSdifPanel.getExtraInfo(sampleRate);
-            callback(fileInfo);
-        };
-        if(!mSdifPanel.hasAnyChangeableOption())
-        {
-            doLoad();
-            return false;
-        }
-        mLoadButton.entry.onClick = doLoad;
-        resized();
-        return true;
-    }
-
-    if(file.hasFileExtension("csv") || file.hasFileExtension("lab"))
-    {
-        auto const isReaper = [&]()
-        {
-            std::string line;
-            while(std::getline(stream, line))
-            {
-                line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-                if(line.find("#,Name,Start,End,Length") != std::string::npos)
-                {
-                    return true;
-                }
-                else if(!line.empty())
-                {
-                    return false;
-                }
-            }
-            return false;
-        };
-
-        if(isReaper())
-        {
-            FileInfo fileInfo;
-            fileInfo.file = file;
-            fileInfo.args.set("isreaper", "true");
-            callback(fileInfo);
-            return false;
-        }
-
-        auto const getCsvSeparator = [&]() -> std::optional<std::string>
-        {
-            std::string line;
-            while(std::getline(stream, line))
-            {
-                auto const position = line.find_first_of(", \t|/:");
-                if(position != std::string::npos)
-                {
-                    return line.substr(position, 1);
-                }
-            }
-            return {};
-        };
-
-        auto const fileSeparator = getCsvSeparator();
-        if(fileSeparator.has_value())
-        {
-            FileInfo fileInfo;
-            fileInfo.file = file;
-            fileInfo.args.set("separator", fileSeparator.value());
-            fileInfo.args.set("useendtime", "true");
-            callback(fileInfo);
-            return false;
-        }
-        else
-        {
-            mPropertyColumnSeparator.setVisible(true);
-            mSdifPanel.setVisible(false);
-            mLoadButton.setEnabled(true);
-            juce::WeakReference<juce::Component> weakReference(this);
-            mLoadButton.entry.onClick = [=, this]()
-            {
-                if(weakReference.get() == nullptr)
-                {
-                    return;
-                }
-                FileInfo fileInfo;
-                fileInfo.file = file;
-                static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
-                auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
-                auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
-                fileInfo.args.set("separator", juce::String(separator));
-                fileInfo.args.set("useendtime", file.hasFileExtension("lab") ? "true" : "false");
-                callback(fileInfo);
-            };
-            resized();
-            return true;
-        }
-    }
-
-    if(file.hasFileExtension("json"))
-    {
-        FileInfo fileInfo;
-        fileInfo.file = file;
-        auto json = nlohmann::sax_parse_json_object(stream, "track", 1_z);
-        if(json.count("track") > 0_z)
-        {
-            json["track"].erase("identifier");
-            json["track"].erase("file");
-            fileInfo.extra = std::move(json["track"]);
-        }
-        callback(fileInfo);
-        return false;
-    }
-
-    FileInfo fileInfo;
-    fileInfo.file = file;
-    callback(fileInfo);
-    return false;
+    return "*.json;*.csv;*.lab;*.txt;*.cue;*.sdif;*.dat";
 }
 
 class Track::Loader::UnitTest
@@ -1506,7 +1510,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            expectEquals(loadFromCsv(stream, ',', false, shouldAbort, advancement).index(), 1_z);
+            expectEquals(loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement).index(), 1_z);
         }
 
         beginTest("load csv markers with comma separator");
@@ -1515,7 +1519,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ',', false, shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1524,7 +1528,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', false, shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, '\t', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1533,7 +1537,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ' ', false, shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, ' ', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with comma separator");
@@ -1542,7 +1546,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, ',', false, shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with tab separator");
@@ -1551,7 +1555,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, '\t', false, shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, '\t', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with space separator");
@@ -1560,7 +1564,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, ' ', false, shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, ' ', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load lab markers");
@@ -1569,7 +1573,7 @@ public:
             stream.write(TestResultsData::Markers_lab, TestResultsData::Markers_labSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', true, shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, '\t', true, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load reaper markers m");

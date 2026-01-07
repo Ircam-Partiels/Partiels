@@ -11,7 +11,7 @@ namespace Application
         size_t getNewGroupPosition();
         std::tuple<juce::String, size_t> getNewTrackPosition();
         void addPluginTracks(std::tuple<juce::String, size_t> position, std::set<Plugin::Key> const& keys);
-        void addFileTrack(std::tuple<juce::String, size_t> position, Track::FileInfo const& fileInfo);
+        void addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file);
 
         void notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback);
     } // namespace Tools

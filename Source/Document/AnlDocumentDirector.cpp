@@ -125,7 +125,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     director->setAlertCatcher(mAlertCatcher);
                     director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
-                    director->setLoaderSelector(mLoaderSelector, mLoaderSelectorShowHideFn);
                     director->setBackupDirectory(mBackupDirectory);
                     director->setSilentResultsFileManagement(mSilentResultsFileManagement);
                     director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
@@ -352,7 +351,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 Document::Director::~Director()
 {
     setPluginTable(nullptr, nullptr);
-    setLoaderSelector(nullptr, nullptr);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = nullptr;
     mAccessor.onAttrUpdated = nullptr;
@@ -471,19 +469,6 @@ void Document::Director::setPluginTable(PluginList::Table* table, std::function<
         if(track != nullptr)
         {
             track->setPluginTable(table, showHideFn);
-        }
-    }
-}
-
-void Document::Director::setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn)
-{
-    mLoaderSelector = selector;
-    mLoaderSelectorShowHideFn = showHideFn;
-    for(auto& track : mTracks)
-    {
-        if(track != nullptr)
-        {
-            track->setLoaderSelector(selector, showHideFn);
         }
     }
 }

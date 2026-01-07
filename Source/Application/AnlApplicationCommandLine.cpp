@@ -452,9 +452,9 @@ void Application::CommandLine::runUnitTests()
 
 void Application::CommandLine::compareFiles(juce::ArgumentList const& args)
 {
-    if(args.size() < 3 || args.size() > 4)
+    if(args.size() < 3)
     {
-        fail("Missing arguments! Expected two result files and one optional XML file!");
+        fail("Missing arguments! Expected two result files!");
     }
     auto const expectedFile = args[1].resolveAsFile();
     if(!expectedFile.existsAsFile())
@@ -466,32 +466,21 @@ void Application::CommandLine::compareFiles(juce::ArgumentList const& args)
     {
         fail("Could not find file:" + generatedFile.getFullPathName());
     }
-    auto const argumentsFile = args.size() == 4 ? args[3].resolveAsFile() : juce::File();
-    if(argumentsFile != juce::File() && !argumentsFile.existsAsFile())
-    {
-        fail("Could not find file:" + argumentsFile.getFullPathName());
-    }
 
     std::atomic<bool> const shouldAbort{false};
     std::atomic<float> advancement{0.0f};
-    Track::FileInfo expectedTrackInfo;
-    expectedTrackInfo.file = expectedFile;
-    Track::FileInfo generatedTrackInfo;
-    generatedTrackInfo.file = generatedFile;
-    if(argumentsFile != juce::File{})
+    auto const expectedDescription = Track::Loader::getFileDescription(expectedFile, 44100.0);
+    if(std::get<0_z>(expectedDescription).failed())
     {
-        auto xml = juce::XmlDocument::parse(argumentsFile);
-        if(xml == nullptr)
-        {
-            fail("Cannot parse arguments!");
-        }
-        auto const xmlArgs = XmlParser::fromXml(*xml.get(), "args", juce::StringPairArray{});
-        generatedTrackInfo.args = xmlArgs;
-        expectedTrackInfo.args = xmlArgs;
+        fail(std::get<0_z>(expectedDescription).getErrorMessage());
     }
-
-    auto const expectedResults = Track::Loader::loadFromFile(expectedTrackInfo, shouldAbort, advancement);
-    auto const generatedResults = Track::Loader::loadFromFile(generatedTrackInfo, shouldAbort, advancement);
+    auto const generatedDescription = Track::Loader::getFileDescription(generatedFile, 44100.0);
+    if(std::get<0_z>(generatedDescription).failed())
+    {
+        fail(std::get<0_z>(generatedDescription).getErrorMessage());
+    }
+    auto const expectedResults = Track::Loader::loadFromFile(std::get<1_z>(expectedDescription), shouldAbort, advancement);
+    auto const generatedResults = Track::Loader::loadFromFile(std::get<1_z>(generatedDescription), shouldAbort, advancement);
     if(expectedResults.index() == 1_z)
     {
         fail(*std::get_if<juce::String>(&expectedResults));

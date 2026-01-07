@@ -477,6 +477,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
             case AttrType::key:
             case AttrType::input:
             case AttrType::file:
+            case AttrType::fileDescription:
             case AttrType::state:
             case AttrType::graphics:
             case AttrType::processing:

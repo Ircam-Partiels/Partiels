@@ -103,7 +103,6 @@ namespace Application
         std::unique_ptr<LookAndFeel> mLookAndFeel;
         std::unique_ptr<Properties> mProperties;
         std::unique_ptr<Document::FileBased> mDocumentFileBased;
-        std::unique_ptr<Track::Loader::ArgumentSelector> mFileArgumentSelector;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
