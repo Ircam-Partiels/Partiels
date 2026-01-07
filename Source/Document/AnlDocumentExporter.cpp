@@ -46,7 +46,7 @@ bool Document::Exporter::Options::operator==(Options const& rhs) const noexcept
            imageWidth == rhs.imageWidth &&
            imageHeight == rhs.imageHeight &&
            imagePpi == rhs.imagePpi &&
-           includeHeaderRaw == rhs.includeHeaderRaw &&
+           includeHeaderRow == rhs.includeHeaderRow &&
            applyExtraThresholds == rhs.applyExtraThresholds &&
            columnSeparator == rhs.columnSeparator &&
            labSeparator == rhs.labSeparator &&
@@ -355,7 +355,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyRowHeader(juce::translate("Include Header Row"), juce::translate("Include header row before the data rows"), [this](bool state)
                      {
                          auto options = mOptions;
-                         options.includeHeaderRaw = state;
+                         options.includeHeaderRow = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
 , mPropertyColumnSeparator(juce::translate("Column Separator"), juce::translate("The separator character between columns"), "", getColumnSeparatorNames(), [this](size_t index)
@@ -1053,7 +1053,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
         }
     }
 
-    mPropertyRowHeader.entry.setToggleState(options.includeHeaderRaw, silent);
+    mPropertyRowHeader.entry.setToggleState(options.includeHeaderRow, silent);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyLabSeparator.entry.setSelectedItemIndex(static_cast<int>(options.labSeparator), silent);
     mPropertyDisableLabelEscaping.entry.setToggleState(options.disableLabelEscaping, silent);
@@ -1364,7 +1364,7 @@ juce::Result Document::Exporter::exportTo(Accessor& accessor, juce::File const f
                 MiscDebug("Exporter", "Unsupported format");
                 return juce::Result::fail(juce::translate("Unsupported format"));
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRow, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::lab:
                 return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, options.getLabSeparatorChar(), true, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::puredata:
@@ -1402,7 +1402,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "imageWidth", value.imageWidth);
         toXml(*child, "imageHeight", value.imageHeight);
         toXml(*child, "imagePpi", value.imagePpi);
-        toXml(*child, "includeHeaderRaw", value.includeHeaderRaw);
+        toXml(*child, "includeHeaderRow", value.includeHeaderRow);
         toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
         toXml(*child, "columnSeparator", value.columnSeparator);
         toXml(*child, "labSeparator", value.labSeparator);
@@ -1432,7 +1432,14 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.imageWidth = fromXml(*child, "imageWidth", defaultValue.imageWidth);
     value.imageHeight = fromXml(*child, "imageHeight", defaultValue.imageHeight);
     value.imagePpi = fromXml(*child, "imagePpi", defaultValue.imagePpi);
-    value.includeHeaderRaw = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRaw);
+    if(child->hasAttribute("includeHeaderRaw")) // For backward compatibility
+    {
+        value.includeHeaderRow = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRow);
+    }
+    else
+    {
+        value.includeHeaderRow = fromXml(*child, "includeHeaderRow", defaultValue.includeHeaderRow);
+    }
     value.applyExtraThresholds = fromXml(*child, "applyExtraThresholds", defaultValue.applyExtraThresholds);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
     value.labSeparator = fromXml(*child, "labSeparator", defaultValue.labSeparator);
