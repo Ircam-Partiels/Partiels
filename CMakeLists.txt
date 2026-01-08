@@ -185,6 +185,8 @@ if(NOT PARTIELS_MANUAL_ONLY)
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.json
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.dat
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.txt
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.sdif
         )
     juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
