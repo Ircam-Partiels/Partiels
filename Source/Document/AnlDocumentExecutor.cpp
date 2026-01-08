@@ -23,10 +23,8 @@ juce::Result Document::Executor::load(juce::File const& documentFile)
     // Adjust the path in the XML to match the new template file location
     XmlParser::replaceAllAttributeValues(*xml.get(), FileBased::getPathReplacement(*xml.get()), juce::File::addTrailingSeparator(documentFile.getParentDirectory().getFullPathName()));
 
-    AlertWindow::Catcher catcher;
-    mDirector.setAlertCatcher(&catcher);
+    mDirector.setAlertCatcher(&mAlertCatcher);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
-    mDirector.setAlertCatcher(nullptr);
 
     return juce::Result::ok();
 }
@@ -49,8 +47,7 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
     mAccessor.setAttr<AttrType::reader>(layout, NotificationType::synchronous);
 
     anlDebug("Executor", "Loading template file...");
-    AlertWindow::Catcher catcher;
-    mDirector.setAlertCatcher(&catcher);
+    mDirector.setAlertCatcher(&mAlertCatcher);
 
     auto fileResult = Document::FileBased::parse(templateFile);
     if(fileResult.index() == 1_z)
@@ -66,8 +63,6 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
 
     anlDebug("Executor", "Sanitize document...");
     [[maybe_unused]] auto const references = mDirector.sanitize(NotificationType::synchronous);
-
-    mDirector.setAlertCatcher(nullptr);
 
     anlDebug("Executor", "Reset time range...");
     mAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
