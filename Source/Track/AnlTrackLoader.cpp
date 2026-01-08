@@ -1382,7 +1382,7 @@ public:
 
     void runTest() override
     {
-        auto const checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9, bool ignoreLabel = false)
+        auto const checkMarkers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9, bool ignoreLabel = false)
         {
             if(vResult.index() != 0_z)
             {
@@ -1434,7 +1434,7 @@ public:
             expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {10.023582767, "A"s}});
         };
 
-        auto const checkPoints = [this](std::variant<Results, juce::String> vResult, bool ignoreNoValue = false)
+        auto const checkPoints = [this](std::variant<Results, juce::String> vResult, bool ignoreNoValue = false, double const epsilon = 1e-9)
         {
             if(vResult.index() != 0_z)
             {
@@ -1458,14 +1458,14 @@ public:
             }
 
             using namespace std::string_literals;
-            auto const expectPoint = [this, ignoreNoValue](Results::Point const& point, double time, float value)
+            auto const expectPoint = [this, ignoreNoValue, epsilon](Results::Point const& point, double time, float value)
             {
-                expectWithinAbsoluteError(std::get<0>(point), time, 1e-9, "Time");
-                expectWithinAbsoluteError(std::get<1>(point), 0.0, 1e-9, "Duration");
+                expectWithinAbsoluteError(std::get<0>(point), time, epsilon, "Time");
+                expectWithinAbsoluteError(std::get<1>(point), 0.0, epsilon, "Duration");
                 expect(ignoreNoValue || std::get<2>(point).has_value(), "Has Value");
                 if(std::get<2>(point).has_value())
                 {
-                    expectWithinAbsoluteError(*std::get<2>(point), value, 1e-9f, "Value");
+                    expectWithinAbsoluteError(*std::get<2>(point), value, static_cast<float>(epsilon), "Value");
                 }
             };
 
@@ -1501,7 +1501,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCue(stream, shouldAbort, advancement), 1.0 / 75.0);
+            checkMarkers(loadFromCue(stream, shouldAbort, advancement), 1.0 / 75.0);
         }
 
         beginTest("load csv error");
@@ -1519,7 +1519,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement));
+            checkMarkers(loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1528,7 +1528,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', false, '\n', false, shouldAbort, advancement));
+            checkMarkers(loadFromCsv(stream, '\t', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1537,7 +1537,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ' ', false, '\n', false, shouldAbort, advancement));
+            checkMarkers(loadFromCsv(stream, ' ', false, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with comma separator");
@@ -1573,7 +1573,7 @@ public:
             stream.write(TestResultsData::Markers_lab, TestResultsData::Markers_labSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', true, '\n', false, shouldAbort, advancement));
+            checkMarkers(loadFromCsv(stream, '\t', true, '\n', false, shouldAbort, advancement));
         }
 
         beginTest("load reaper markers m");
@@ -1582,7 +1582,7 @@ public:
             stream.write(TestResultsData::MarkersReaperM_csv, TestResultsData::MarkersReaperM_csvSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromReaper(stream, shouldAbort, advancement));
+            checkMarkers(loadFromReaper(stream, shouldAbort, advancement));
         }
 
         beginTest("load reaper markers r");
@@ -1591,7 +1591,7 @@ public:
             stream.write(TestResultsData::MarkersReaperR_csv, TestResultsData::MarkersReaperR_csvSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromReaper(stream, shouldAbort, advancement));
+            checkMarkers(loadFromReaper(stream, shouldAbort, advancement));
         }
 
         beginTest("load json error");
@@ -1627,7 +1627,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromJson(stream, shouldAbort, advancement));
+            checkMarkers(loadFromJson(stream, shouldAbort, advancement));
         }
 
         beginTest("load json markers - no type");
@@ -1636,7 +1636,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromJson(stream, shouldAbort, advancement), 1e-9, true);
+            checkMarkers(loadFromJson(stream, shouldAbort, advancement), 1e-9, true);
         }
 
         beginTest("load json points");
@@ -1672,7 +1672,7 @@ public:
             stream.write(TestResultsData::Markers_dat, TestResultsData::Markers_datSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromBinary(stream, shouldAbort, advancement));
+            checkMarkers(loadFromBinary(stream, shouldAbort, advancement));
         }
 
         beginTest("load binary markers backup");
@@ -1681,7 +1681,7 @@ public:
             stream.write(TestResultsData::Markersbackup_dat, TestResultsData::Markersbackup_datSize);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromBinary(stream, shouldAbort, advancement));
+            checkMarkers(loadFromBinary(stream, shouldAbort, advancement));
         }
 
         beginTest("load binary points");
@@ -1700,6 +1700,42 @@ public:
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
             checkPoints(loadFromBinary(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load pd markers");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::MarkersPureData_txt, TestResultsData::MarkersPureData_txtSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMarkers(loadFromCsv(stream, ' ', false, ';', false, shouldAbort, advancement));
+        }
+
+        beginTest("load pd points");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::PointsPureData_txt, TestResultsData::PointsPureData_txtSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromCsv(stream, ' ', false, ';', false, shouldAbort, advancement), false, 0.01);
+        }
+
+        beginTest("load max markers");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::MarkersMax_txt, TestResultsData::MarkersMax_txtSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMarkers(loadFromCsv(stream, ' ', false, ';', true, shouldAbort, advancement));
+        }
+
+        beginTest("load max points");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::PointsMax_txt, TestResultsData::PointsMax_txtSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromCsv(stream, ' ', false, ';', true, shouldAbort, advancement), false, 0.01);
         }
     }
 };
