@@ -108,72 +108,12 @@ juce::String Document::Exporter::Options::getFormatWilcard() const
 
 char Document::Exporter::Options::getSeparatorChar() const
 {
-    switch(columnSeparator)
-    {
-        case ColumnSeparator::comma:
-        {
-            return ',';
-        }
-        case ColumnSeparator::space:
-        {
-            return ' ';
-        }
-        case ColumnSeparator::tab:
-        {
-            return '\t';
-        }
-        case ColumnSeparator::pipe:
-        {
-            return '|';
-        }
-        case ColumnSeparator::slash:
-        {
-            return '/';
-        }
-        case ColumnSeparator::colon:
-        {
-            return ':';
-        }
-        default:
-        {
-            return ',';
-        }
-    }
+    return Track::Result::FileDescription::toChar(columnSeparator);
 }
 
 char Document::Exporter::Options::getLabSeparatorChar() const
 {
-    switch(labSeparator)
-    {
-        case ColumnSeparator::comma:
-        {
-            return ',';
-        }
-        case ColumnSeparator::space:
-        {
-            return ' ';
-        }
-        case ColumnSeparator::tab:
-        {
-            return '\t';
-        }
-        case ColumnSeparator::pipe:
-        {
-            return '|';
-        }
-        case ColumnSeparator::slash:
-        {
-            return '/';
-        }
-        case ColumnSeparator::colon:
-        {
-            return ':';
-        }
-        default:
-        {
-            return ' ';
-        }
-    }
+    return Track::Result::FileDescription::toChar(labSeparator);
 }
 
 bool Document::Exporter::Options::isValid() const

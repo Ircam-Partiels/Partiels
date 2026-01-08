@@ -15,6 +15,9 @@ namespace Document
 
         struct Options
         {
+            using ColumnSeparator = Track::Result::FileDescription::ColumnSeparator;
+            using ReaperType = Track::Result::FileDescription::ReaperType;
+
             // clang-format off
             enum class Format
             {
@@ -30,28 +33,12 @@ namespace Document
                 , sdif
             };
             
-            enum class ColumnSeparator
-            {
-                  comma
-                , space
-                , tab
-                , pipe
-                , slash
-                , colon
-            };
-            
             enum class TimePreset
             {
                   global
                 , visible
                 , selection
                 , manual
-            };
-            
-            enum class ReaperType
-            {
-                  marker
-                , region
             };
             // clang-format on
 
