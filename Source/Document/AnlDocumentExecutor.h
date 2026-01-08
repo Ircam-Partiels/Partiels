@@ -41,6 +41,7 @@ namespace Document
 
         juce::AudioFormatManager mAudioFormatManager;
         juce::UndoManager mUndoManager;
+        AlertWindow::Catcher mAlertCatcher;
         Accessor mAccessor;
         Director mDirector{mAccessor, mAudioFormatManager, mUndoManager};
     };
