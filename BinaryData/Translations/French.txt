@@ -689,7 +689,7 @@ countries: fr be
 "Parsing error - type" = "Erreur d'analyse - type"
 "Parsing error - eof" = "Erreur d'analyse - eof"
 "Parsing error - channels" = "Erreur d'analyse - canaux"
-"Parsing error - time and duration" = "Erreur d'analyse - heure et durée"
+"Parsing error - time and duration" = "Erreur d'analyse - temps et durée"
 "Parsing error - length" = "Erreur d'analyse - longueur"
 "Parsing error - marker" = "Erreur d'analyse - marqueur"
 "Parsing error - extra" = "Erreur d'analyse - supplémentaire"
