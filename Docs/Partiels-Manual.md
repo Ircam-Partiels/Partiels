@@ -76,8 +76,8 @@ Partiels allows **analysis** of one or several audio files using Vamp plugins 
 - Visualizing results as *spectrogram*, *lines*, and *markers*  
 - Drawing and editing results (copy/cut/paste/delete/duplicate/etc.)  
 - Organizing and ordering analyses in groups  
-- Exporting results to *PNG*, *JPEG*, *CSV*, *LAB*, *JSON*, *CUE* & *SDIF* file formats  
-- Loading results from *CSV*, *LAB*, *JSON*, *CUE* & *SDIF* file formats  
+- Exporting results to *PNG*, *JPEG*, *CSV*, *LAB*, *JSON*, *CUE*, *REAPER*, *PUREDATA*, *MAX* & *SDIF* file formats  
+- Loading results from *CSV*, *LAB*, *JSON*, *CUE*, *REAPER*, *PUREDATA*, *MAX* & *SDIF* file formats  
 - Converting results from *SDIF* to *JSON* file formats and inversely  
 - Batch processing (useful to apply the same set of analyses on several audio files)  
 - Command line interface to analyze, export and convert results  
@@ -225,29 +225,17 @@ If you want to modify the analysis and graphical properties of a track, please r
 
 ### 4.2. File tracks
 
-A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), LAB (*.lab*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + ⇧ Shift + I` (Linux/Windows). 
-
-If you're importing a file in CSV format, the application will automatically try to determine the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). The Reaper-specific CSV format is also automatically detected and supported. If the application fails to automatically determine the separator, the `Load File...` window appears, allowing you to select the separator character. 
-
-<p align="center">
-<img src="Images/selection-import-new-result tracks.1-v1.0.7.png" width="232"/>
-</p>
+A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are *CSV* (*.csv*), *LAB* (*.lab*), *JSON* (*.json*), *CUE* (*.cue*), *REAPER* (*.csv), *PUREDATA* (*.txt), *MAX* (*.txt) and *SDIF* (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + ⇧ Shift + I` (Linux/Windows). 
 
 When importing markers in CSV format, it is recommended to escape the tags (with single or double quotes for example) to ensure that the numeric values of the labels are considered as text.
 
 > 💡 **Tip**: If you wish to import labels from Audacity, simply change the .txt extension to .lab.
 
-If you are importing a file in SDIF format, the `Load File...` window appears allowing you to define the frame code, matrix code, row and column to import.
-
-<p align="center">
-<img src="Images/selection-import-new-result tracks.2-v1.0.7.png" width="232"/>
-</p>
-
-> 💡 **Tip**: Fundamental frequency analysis files with a 1FQ0 matrix signature are parsed automatically.
-
 If you are importing a file in JSON format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
 If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+
+> ⚠️ **Warning**: The SDIF support may soon become obsolete.
 
 <div style="page-break-after: always;"></div>
 
@@ -386,7 +374,7 @@ You can also define the time range with the text entries `Time Start`, `Time End
 <img src="Images/section-export-analyses.4-v2.1.2.png" width="202"/>
 </p>
 
-The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV*, *LAB*, *CUE*, *REAPER*, or a binary format *SDIF*. For each format, you can set specific options (**E4**).
+The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG*, a text format *JSON*, *CSV*, *LAB*, *CUE*, *REAPER*, *PUREDATA*, *MAX*, or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
 ### 7.2. Image options
 
