@@ -28,6 +28,7 @@ Application::AudioReader::AudioReader()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
+            case AttrType::forceDurationToFullWhenEditing:
                 break;
             case AttrType::routingMatrix:
             {
