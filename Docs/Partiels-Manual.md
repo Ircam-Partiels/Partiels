@@ -225,7 +225,7 @@ If you want to modify the analysis and graphical properties of a track, please r
 
 ### 4.2. File tracks
 
-A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are *CSV* (*.csv*), *LAB* (*.lab*), *JSON* (*.json*), *CUE* (*.cue*), *REAPER* (*.csv), *PUREDATA* (*.txt), *MAX* (*.txt) and *SDIF* (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + ⇧ Shift + I` (Linux/Windows). 
+A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are *CSV* (*.csv*), *LAB* (*.lab*), *JSON* (*.json*), *CUE* (*.cue*), *REAPER* (*.csv*), *PUREDATA* (*.txt*), *MAX* (*.txt*) and *SDIF* (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + ⇧ Shift + I` (Linux/Windows). 
 
 When importing markers in CSV format, it is recommended to escape the tags (with single or double quotes for example) to ensure that the numeric values of the labels are considered as text.
 

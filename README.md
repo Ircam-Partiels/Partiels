@@ -27,8 +27,8 @@ Partiels allows **analysis** of one or several audio files using Vamp plug-ins
 - Visualizing results as spectrogram, lines, and markers
 - Textual and graphical editing of results 
 - Organizing and ordering analyses in groups
-- Exporting results to PNG, JPEG, CSV, LAB, JSON, CUE, REAPER & SDIF formats
-- Loading results from CSV, LAB, JSON, CUE & SDIF formats
+- Exporting results to PNG, JPEG, CSV, LAB, JSON, CUE, REAPER, MAX, PUREDATA & SDIF formats
+- Loading results from CSV, LAB, JSON, CUE, REAPER, MAX, PUREDATA & SDIF formats
 - Batch processing
 - Command line interface to analyze, export, and convert results
 - Consolidating documents for sharing
