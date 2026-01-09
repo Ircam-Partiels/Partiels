@@ -152,9 +152,9 @@ namespace Document
             LayoutNotifier mDocumentLayoutNotifier;
         };
 
-        juce::Result exportTo(Accessor& accessor, juce::File const directory, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
+        juce::Result exportTo(Accessor const& accessor, juce::File const directory, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort);
 
-        juce::Result exportTo(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort);
+        juce::Result exportTo(Accessor const& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort);
 
         juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
         juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);
