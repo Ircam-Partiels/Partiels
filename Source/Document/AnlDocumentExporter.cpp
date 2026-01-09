@@ -1164,7 +1164,7 @@ void Document::Exporter::Panel::handleCommandMessage(int commandId)
     }
 }
 
-juce::Result Document::Exporter::exportTo(Accessor& accessor, juce::File const directory, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort)
+juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File const directory, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, std::set<juce::String> const& identifiers, Options const& options, std::atomic<bool> const& shouldAbort)
 {
     MiscWeakAssert(identifiers.size() > 0_z);
     if(identifiers.empty())
@@ -1183,7 +1183,7 @@ juce::Result Document::Exporter::exportTo(Accessor& accessor, juce::File const d
     return juce::Result::ok();
 }
 
-juce::Result Document::Exporter::exportTo(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort)
+juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File const file, juce::Range<double> const& timeRange, std::set<size_t> const& channels, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort)
 {
     if(file == juce::File())
     {
