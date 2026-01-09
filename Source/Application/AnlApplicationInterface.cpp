@@ -190,6 +190,13 @@ void Application::Interface::DocumentContainer::resized()
     mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(std::min(800, bounds.getWidth()), std::min(600, bounds.getHeight())));
 }
 
+void Application::Interface::DocumentContainer::paint(juce::Graphics& g)
+{
+    g.setColour(findColour(juce::Label::ColourIds::textColourId));
+    g.setFont(g.getCurrentFont().withHeight(12.0f).withStyle(juce::Font::FontStyleFlags::italic));
+    g.drawText(juce::translate("Partiels by DEV at COMPANY").replace("DEV", "Pierre Guillot").replace("COMPANY", "IRCAM - Centre Pompidou - IMR department"), getLocalBounds().removeFromBottom(22).withTrimmedRight(12), juce::Justification::centredRight);
+}
+
 Document::Section const& Application::Interface::DocumentContainer::getDocumentSection() const
 {
     return mDocumentSection;
