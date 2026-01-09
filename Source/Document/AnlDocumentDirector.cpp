@@ -127,6 +127,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
                     director->setBackupDirectory(mBackupDirectory);
                     director->setSilentResultsFileManagement(mSilentResultsFileManagement);
+                    director->setPreserveFullDurationWhenEditing(mIsPreserveFullDurationWhenEditingEnabled);
                     director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -1126,6 +1127,26 @@ void Document::Director::setSilentResultsFileManagement(bool state)
             }
         }
     }
+}
+
+void Document::Director::setPreserveFullDurationWhenEditing(bool state)
+{
+    if(mIsPreserveFullDurationWhenEditingEnabled != state)
+    {
+        mIsPreserveFullDurationWhenEditingEnabled = state;
+        for(auto& track : mTracks)
+        {
+            if(track != nullptr)
+            {
+                track->setPreserveFullDurationWhenEditing(mIsPreserveFullDurationWhenEditingEnabled);
+            }
+        }
+    }
+}
+
+bool Document::Director::isPreserveFullDurationWhenEditingEnabled() const
+{
+    return mIsPreserveFullDurationWhenEditingEnabled;
 }
 
 juce::String Document::Director::createNextUuid() const
