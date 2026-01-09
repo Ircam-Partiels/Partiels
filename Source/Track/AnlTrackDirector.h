@@ -44,6 +44,8 @@ namespace Track
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
         void setBackupDirectory(juce::File const& directory);
         void setSilentResultsFileManagement(bool state);
+        void setPreserveFullDurationWhenEditing(bool state);
+        bool isPreserveFullDurationWhenEditingEnabled() const;
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
         std::function<void(NotificationType notification)> onNameUpdated = nullptr;
@@ -103,6 +105,7 @@ namespace Track
         SafeAccessorRetriever mSafeAccessorRetriever;
         juce::File mBackupDirectory;
         bool mSilentResultsFileManagement{false};
+        bool mIsPreserveFullDurationWhenEditingEnabled{false};
         HierarchyManager::Listener mHierarchyListener;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
