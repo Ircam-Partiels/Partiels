@@ -287,6 +287,12 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
                         auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
                         undoManager.beginNewTransaction(juce::translate("Add Marker"));
                         undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
+                        if(mDirector.isForceDurationToFullWhenEditingEnabled())
+                        {
+                            auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+                            auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+                            undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), mCurrentEdition.channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                        }
                     }
                     break;
                     case Track::FrameType::value:
@@ -295,6 +301,12 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
                         auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
                         undoManager.beginNewTransaction(juce::translate("Add Point"));
                         undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
+                        if(mDirector.isForceDurationToFullWhenEditingEnabled())
+                        {
+                            auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+                            auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+                            undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), mCurrentEdition.channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                        }
                     }
                     break;
                     case Track::FrameType::vector:
@@ -325,6 +337,12 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
                             undoManager.beginNewTransaction(juce::translate("Move Marker"));
                             undoManager.perform(std::make_unique<Result::Modifier::ActionErase>(mDirector.getSafeAccessorFn(), edition.channel, edition.range).release());
                             undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), edition.channel, edition.data, time).release());
+                            if(mDirector.isForceDurationToFullWhenEditingEnabled())
+                            {
+                                auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+                                auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+                                undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), edition.channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                            }
                         }
                     }
                     break;
