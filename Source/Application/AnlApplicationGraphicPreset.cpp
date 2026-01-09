@@ -136,6 +136,7 @@ Application::GraphicPresetContent::GraphicPresetContent()
             case AttrType::autoUpdate:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
         }
     };

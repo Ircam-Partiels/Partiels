@@ -171,6 +171,7 @@ Application::AudioSettingsContent::AudioSettingsContent()
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
             case AttrType::routingMatrix:
             {
