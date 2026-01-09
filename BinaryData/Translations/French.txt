@@ -934,3 +934,4 @@ countries: fr be
 "Are you sure you want to overwrite the original file for track \"TRACKNAME\"?\n\nFile: FILEPATH\n\nThis action cannot be undone." = "Êtes-vous sûr de vouloir écraser le fichier d'origine pour la piste \"TRACKNAME\" ?\n\nFichier : FILEPATH\n\nCette action ne peut pas être annulée."
 "Are you sure you want to overwrite the original files for NUMTRACKS track(s)?\n\nTracks: TRACKNAMES\n\nThis action cannot be undone." = "Êtes-vous sûr de vouloir écraser les fichiers d'origine pour NUMTRACKS piste(s) ?\n\nPistes : TRACKNAMES\n\nCette action ne peut pas être annulée."
 "Overwrite Original File(s)?" = "Écraser le(s) fichier(s) d'origine ?"
+"Partiels by DEV at COMPANY" = "Partiels par DEV à COMPANY"

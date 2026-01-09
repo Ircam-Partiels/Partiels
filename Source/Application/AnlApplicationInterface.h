@@ -108,6 +108,7 @@ namespace Application
 
             // juce::Component
             void resized() override;
+            void paint(juce::Graphics& g) override;
 
             Document::Section const& getDocumentSection() const;
             PluginList::Table& getPluginListTable();
