@@ -126,6 +126,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
             case AttrType::currentTranslationFile:
             {

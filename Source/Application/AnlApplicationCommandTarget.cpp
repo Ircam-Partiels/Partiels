@@ -35,6 +35,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
         }
     };
