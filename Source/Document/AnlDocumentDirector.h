@@ -47,6 +47,8 @@ namespace Document
         void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
         void setBackupDirectory(juce::File const& directory);
         void setSilentResultsFileManagement(bool state);
+        void setPreserveFullDurationWhenEditing(bool state);
+        bool isPreserveFullDurationWhenEditingEnabled() const;
 
     private:
         // FileWatcher
@@ -75,6 +77,7 @@ namespace Document
         std::unique_ptr<juce::FileChooser> mFileChooser;
         juce::File mBackupDirectory;
         bool mSilentResultsFileManagement{false};
+        bool mIsPreserveFullDurationWhenEditingEnabled{false};
         std::pair<juce::File, juce::File> mFileMapper;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
