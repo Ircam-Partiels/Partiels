@@ -169,6 +169,15 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 mDocumentDirector->setSilentResultsFileManagement(acsr.getAttr<AttrType::silentFileManagement>());
                 break;
             }
+            case AttrType::preserveFullDurationWhenEditing:
+            {
+                mMainMenuModel->menuItemsChanged();
+#ifdef JUCE_MAC
+                mMainMenuModel->updateAppleMenuItems();
+#endif
+                mDocumentDirector->setPreserveFullDurationWhenEditing(acsr.getAttr<AttrType::preserveFullDurationWhenEditing>());
+                break;
+            }
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
