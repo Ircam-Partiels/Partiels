@@ -168,6 +168,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
+            case AttrType::preserveFullDurationWhenEditing:
                 break;
             case AttrType::autoLoadConvertedFile:
             {
