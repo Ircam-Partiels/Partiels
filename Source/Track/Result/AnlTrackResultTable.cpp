@@ -819,8 +819,10 @@ bool Track::Result::Table::deleteSelection()
     auto& undoManager = mDirector.getUndoManager();
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    auto const preserveFullDuration = mDirector.isPreserveFullDurationWhenEditingEnabled();
+    auto const endTime = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
     undoManager.beginNewTransaction(juce::translate("Erase Frame(s)"));
-    if(undoManager.perform(std::make_unique<Modifier::ActionErase>(mDirector.getSafeAccessorFn(), *channel, selection).release()))
+    if(undoManager.perform(std::make_unique<Modifier::ActionErase>(mDirector.getSafeAccessorFn(), *channel, selection, preserveFullDuration, endTime).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
@@ -882,8 +884,10 @@ bool Track::Result::Table::pasteSelection()
     auto& undoManager = mDirector.getUndoManager();
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    auto const preserveFullDuration = mDirector.isPreserveFullDurationWhenEditingEnabled();
+    auto const endTime = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
     undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mChannelData, playhead).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mChannelData, playhead, preserveFullDuration, endTime).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
@@ -923,9 +927,11 @@ bool Track::Result::Table::duplicateSelection()
         return false;
     }
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    auto const preserveFullDuration = mDirector.isPreserveFullDurationWhenEditingEnabled();
+    auto const endTime = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
     mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(selectionEnd.value(), NotificationType::synchronous);
     undoManager.beginNewTransaction(juce::translate("Duplicate Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), channel.value(), mChannelData, selectionEnd.value()).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), channel.value(), mChannelData, selectionEnd.value(), preserveFullDuration, endTime).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), selectionEnd.value(), selection.movedToStartAt(selectionEnd.value())).release());
