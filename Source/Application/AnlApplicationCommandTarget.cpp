@@ -1090,13 +1090,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::frameDelete:
         {
             undoManager.beginNewTransaction(juce::translate("Delete Frame(s)"));
+            auto const preserveFullDuration = Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>();
+            auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
             performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                                     auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
                                     for(auto const& index : selectedChannels)
                                     {
-                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionErase>(fn, index, selection).release());
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionErase>(fn, index, selection, preserveFullDuration, endTime).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
@@ -1127,6 +1129,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::framePaste:
         {
             undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
+            auto const preserveFullDuration = Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>();
+            auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
             performForAllTracks([&](Track::Accessor& trackAcsr, [[maybe_unused]] std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
@@ -1139,7 +1143,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                     auto const trackData = trackIt->second;
                                     for(auto const& data : trackData)
                                     {
-                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, data.first, data.second, playhead).release());
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, data.first, data.second, playhead, preserveFullDuration, endTime).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
@@ -1156,6 +1160,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::frameInsert:
         {
+            auto const preserveFullDuration = Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>();
+            auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
             auto const insertFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
             {
                 if(!Track::Result::Modifier::matchFrame(trackAcsr, channel, time))
@@ -1163,7 +1169,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                     auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
                     auto const data = Track::Result::Modifier::createFrame(trackAcsr, channel, time);
-                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time).release());
+                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time, preserveFullDuration, endTime).release());
                 }
             };
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
@@ -1193,6 +1199,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::frameBreak:
         {
+            auto const preserveFullDuration = Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>();
+            auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
             auto const breakFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
             {
                 if(Track::Result::Modifier::canBreak(trackAcsr, channel, time))
@@ -1200,7 +1208,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                     auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
                     Track::Result::ChannelData const data = std::vector<Track::Result::Data::Point>{{time, 0.0, std::optional<float>{}, std::vector<float>{}}};
-                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time).release());
+                    undoManager.perform(std::make_unique<Track::Result::Modifier::ActionPaste>(fn, channel, data, time, preserveFullDuration, endTime).release());
                 }
             };
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
@@ -1246,14 +1254,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::frameResetDurationToFull:
         {
             undoManager.beginNewTransaction(juce::translate("Reset Frame(s) duration to full"));
-            auto const timeEnd = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
             performForAllTracks([&](Track::Accessor& trackAcsr, std::set<size_t> selectedChannels)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                                     auto const fn = documentDir.getSafeTrackAccessorFn(trackId);
                                     for(auto const& channel : selectedChannels)
                                     {
-                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+                                        undoManager.perform(std::make_unique<Track::Result::Modifier::ActionResetDuration>(fn, channel, selection, Track::Result::Modifier::DurationResetMode::toFull, endTime).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
