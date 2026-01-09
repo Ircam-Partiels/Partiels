@@ -348,6 +348,8 @@ Once you have selected the desired configuration, click on the `Export` button (
 > If you have loaded tracks from result files and want to overwrite those original files with the current frame selection, you can use `Frame → Overwrite Original File(s)`. This command is only available when the selected tracks have result files. A confirmation dialog will be shown before overwriting to prevent accidental data loss.
 >
 > The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
+>
+> The `Preserve Full Duration When Editing` setting automatically preserves frame durations to their maximum value during editing operations. This is useful for lab format workflows where marker end times should correspond to the start of the next marker or file end. The setting can be toggled via `Partiels → Global Settings → Preserve Full Duration When Editing` (Mac) or `Help → Global Settings → Preserve Full Duration When Editing` (Linux/Windows).
 
 ### 7.1. General options
 
