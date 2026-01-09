@@ -40,7 +40,7 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     return image;
 }
 
-juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridOptions, std::atomic<bool> const& shouldAbort)
+juce::Result Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridOptions, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
