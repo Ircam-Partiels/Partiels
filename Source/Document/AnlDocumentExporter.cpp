@@ -39,6 +39,45 @@ size_t Document::Exporter::getNumFilesToExport(Accessor const& accessor, std::se
                            });
 }
 
+Document::Exporter::Options::Format Document::Exporter::Options::fromFileDescription(Track::FileDescription::Format const& format)
+{
+    switch(format)
+    {
+        case Track::FileDescription::Format::binary:
+            break;
+        case Track::FileDescription::Format::csv:
+            return Format::csv;
+        case Track::FileDescription::Format::lab:
+            return Format::csv; // LAB uses CSV format but this allows more options when exporting
+        case Track::FileDescription::Format::json:
+            return Format::json;
+        case Track::FileDescription::Format::cue:
+            return Format::cue;
+        case Track::FileDescription::Format::reaper:
+            return Format::reaper;
+        case Track::FileDescription::Format::puredata:
+            return Format::puredata;
+        case Track::FileDescription::Format::max:
+            return Format::max;
+        case Track::FileDescription::Format::sdif:
+            return Format::sdif;
+    }
+    return Format::csv;
+}
+
+Document::Exporter::Options::Options(Track::Result::FileDescription const& fd)
+: format(fromFileDescription(fd.format))
+, includeHeaderRow(fd.includeHeaderRow)
+, reaperType(fd.reaperType)
+, columnSeparator(fd.columnSeparator)
+, labSeparator(fd.columnSeparator)
+, disableLabelEscaping(fd.disableLabelEscaping)
+, includeDescription(fd.includeDescription)
+, sdifFrameSignature(fd.sdifFrameSignature)
+, sdifMatrixSignature(fd.sdifMatrixSignature)
+{
+}
+
 bool Document::Exporter::Options::operator==(Options const& rhs) const noexcept
 {
     return format == rhs.format &&
@@ -232,7 +271,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
 , mPropertyFormat(juce::translate("Format"), juce::translate("Select the export format"), "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX (coll)", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
-                      options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
+                      options.format = magic_enum::enum_value<Options::Format>(index);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
 , mPropertySizePreset(juce::translate("Image Size"), juce::translate("Select the size preset of the image"), "", std::vector<std::string>{}, [this](size_t index)

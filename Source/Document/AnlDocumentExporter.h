@@ -15,8 +15,9 @@ namespace Document
 
         struct Options
         {
-            using ColumnSeparator = Track::Result::FileDescription::ColumnSeparator;
-            using ReaperType = Track::Result::FileDescription::ReaperType;
+            using FileDescription = Track::Result::FileDescription;
+            using ColumnSeparator = FileDescription::ColumnSeparator;
+            using ReaperType = FileDescription::ReaperType;
 
             // clang-format off
             enum class Format
@@ -60,6 +61,9 @@ namespace Document
             TimePreset timePreset{TimePreset::global};
             Zoom::Grid::Justification outsideGridJustification{0};
 
+            Options() = default;
+            explicit Options(Track::Result::FileDescription const& fd);
+
             bool operator==(Options const& rhs) const noexcept;
             bool operator!=(Options const& rhs) const noexcept;
 
@@ -77,6 +81,8 @@ namespace Document
             bool isCompatible(Track::FrameType frameType) const;
 
             void setPlotDimension(juce::String const& identifier);
+
+            static Format fromFileDescription(Track::FileDescription::Format const& format);
         };
 
         size_t getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifiers);
