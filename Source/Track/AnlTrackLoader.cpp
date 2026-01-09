@@ -225,6 +225,16 @@ std::tuple<juce::Result, Track::FileDescription> Track::Loader::getFileDescripti
         // Lab format detection (LAB specific format)
         if(file.hasFileExtension(".csv") || file.hasFileExtension(".lab"))
         {
+            auto const isEscaped = [&](auto const& line, auto const& separator)
+            {
+                std::istringstream lineStream(line);
+                return splitString(lineStream, [&](std::string const& word)
+                                   {
+                                       return word.size() >= 2 && word.front() == '\"' && word.back() == '\"';
+                                   },
+                                   separator);
+            };
+
             auto stream = std::ifstream(fullPath.toStdString(), std::ios::in);
             if(splitString(stream, [&](std::string const& line)
                            {
@@ -236,15 +246,18 @@ std::tuple<juce::Result, Track::FileDescription> Track::Loader::getFileDescripti
                                auto const separator = line.at(position);
                                fd.columnSeparator = FileDescription::toColumnSeparator(separator);
                                fd.includeHeaderRow = (line.substr(0, position) == "TIME");
-                               fd.disableLabelEscaping = true;
-                               std::istringstream lineStream(line);
-                               splitString(lineStream, [&](std::string const& word)
-                                           {
-                                               auto const isEscaped = word.size() >= 2 && word.front() == '\"' && word.back() == '\"';
-                                               fd.disableLabelEscaping = !isEscaped;
-                                               return isEscaped;
-                                           },
-                                           separator);
+                               if(fd.includeHeaderRow)
+                               {
+                                   splitString(stream, [&](std::string const& nextline)
+                                               {
+                                                   fd.disableLabelEscaping = !isEscaped(nextline, separator);
+                                                   return true;
+                                               });
+                               }
+                               else
+                               {
+                                   fd.disableLabelEscaping = !isEscaped(line, separator);
+                               }
                                return true;
                            }))
             {
