@@ -39,6 +39,7 @@ namespace Application
         , timeZoomAnchorOnPlayhead
         , globalGraphicPreset
         , ignoreTimeSelectionDuringQuickExport
+        , forceDurationToFullWhenEditing
     };
     
     enum class AcsrType : size_t
@@ -66,6 +67,7 @@ namespace Application
     , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Model::Flag::basic>
     , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::ignoreTimeSelectionDuringQuickExport, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::forceDurationToFullWhenEditing, bool, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -100,6 +102,7 @@ namespace Application
             , {ProjectInfo::versionString}
             , {false}
             , {}
+            , {false}
             , {false}
         }))
         {

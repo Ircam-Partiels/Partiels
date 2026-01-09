@@ -36,6 +36,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
+            case AttrType::forceDurationToFullWhenEditing:
                 break;
         }
     };
@@ -1101,6 +1102,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
+            if(Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>())
+            {
+                perform({CommandIDs::frameResetDurationToFull});
+            }
             return true;
         }
         case CommandIDs::frameCopy:
@@ -1122,6 +1127,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             perform({CommandIDs::frameCopy});
             perform({CommandIDs::frameDelete});
             undoManager.setCurrentTransactionName(juce::translate("Cut Frame(s)"));
+            if(Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>())
+            {
+                perform({CommandIDs::frameResetDurationToFull});
+            }
             return true;
         }
         case CommandIDs::framePaste:
@@ -1144,6 +1153,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            if(Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>())
+            {
+                perform({CommandIDs::frameResetDurationToFull});
+            }
             return true;
         }
         case CommandIDs::frameDuplicate:
@@ -1152,6 +1165,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             transportAcsr.setAttr<Transport::AttrType::startPlayhead>(selection.getEnd(), NotificationType::synchronous);
             perform({CommandIDs::framePaste});
             undoManager.setCurrentTransactionName(juce::translate("Duplicate Frame(s)"));
+            if(Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>())
+            {
+                perform({CommandIDs::frameResetDurationToFull});
+            }
             return true;
         }
         case CommandIDs::frameInsert:
@@ -1189,6 +1206,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                 });
             undoManager.perform(std::make_unique<Document::FocusRestorer>(documentAcsr).release());
             undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            if(Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>())
+            {
+                perform({CommandIDs::frameResetDurationToFull});
+            }
             return true;
         }
         case CommandIDs::frameBreak:

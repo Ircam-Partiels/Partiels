@@ -193,6 +193,11 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                                {
                                    Instance::get().getApplicationAccessor().setAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(!Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(), NotificationType::synchronous);
                                });
+    auto const forceDurationToFull = accessor.getAttr<AttrType::forceDurationToFullWhenEditing>();
+    globalSettingsMenu.addItem(juce::translate("Force Duration To Full When Editing"), true, forceDurationToFull, []()
+                               {
+                                   Instance::get().getApplicationAccessor().setAttr<AttrType::forceDurationToFullWhenEditing>(!Instance::get().getApplicationAccessor().getAttr<AttrType::forceDurationToFullWhenEditing>(), NotificationType::synchronous);
+                               });
     juce::PopupMenu templateMenu;
     auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
     templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()

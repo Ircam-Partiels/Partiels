@@ -653,6 +653,16 @@ void Track::Director::setSilentResultsFileManagement(bool state)
     mSilentResultsFileManagement = state;
 }
 
+void Track::Director::setForceDurationToFullWhenEditing(bool state)
+{
+    mIsForceDurationToFullWhenEditingEnabled = state;
+}
+
+bool Track::Director::isForceDurationToFullWhenEditingEnabled() const
+{
+    return mIsForceDurationToFullWhenEditingEnabled;
+}
+
 void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
 {
     mAlertCatcher = catcher;

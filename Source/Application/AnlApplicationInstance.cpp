@@ -126,7 +126,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
-            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
             case AttrType::currentTranslationFile:
             {
@@ -144,6 +143,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::defaultTemplateFile:
             case AttrType::quickExportDirectory:
             case AttrType::showInfoBubble:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
             {
                 mMainMenuModel->menuItemsChanged();
 #ifdef JUCE_MAC
@@ -167,6 +167,15 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::silentFileManagement:
             {
                 mDocumentDirector->setSilentResultsFileManagement(acsr.getAttr<AttrType::silentFileManagement>());
+                break;
+            }
+            case AttrType::forceDurationToFullWhenEditing:
+            {
+                mMainMenuModel->menuItemsChanged();
+#ifdef JUCE_MAC
+                mMainMenuModel->updateAppleMenuItems();
+#endif
+                mDocumentDirector->setForceDurationToFullWhenEditing(acsr.getAttr<AttrType::forceDurationToFullWhenEditing>());
                 break;
             }
         }

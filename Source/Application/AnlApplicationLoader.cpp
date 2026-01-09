@@ -36,6 +36,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
+            case AttrType::forceDurationToFullWhenEditing:
                 break;
         }
     };
@@ -280,6 +281,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
+            case AttrType::forceDurationToFullWhenEditing:
                 break;
             case AttrType::adaptationToSampleRate:
             {
