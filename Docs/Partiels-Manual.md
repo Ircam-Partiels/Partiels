@@ -163,6 +163,8 @@ You can define a default template to be used when loading an audio file using th
 
 You can also configure the quick export directory used for exporting frames with the keyboard shortcut via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows). The default quick export directory is the Desktop, but you can select any directory on your system.
 
+Additionally, you can enable the option to ignore the current time selection during quick export operations via the main menu `Partiels → Global Settings → Ignore Time Selection During Quick Export` (Mac) or `Help → Global Settings → Ignore Time Selection During Quick Export` (Linux/Windows). When enabled, all quick export commands (including keyboard shortcuts `⎇ Option + E` / `Alt + E`, `⌘ Command + ⎇ Option + E` / `Ctrl + Alt + E`, overwrite original, and copy to system clipboard) will export all frames regardless of any active time selection. This prevents accidentally exporting only a subset of results when using keyboard shortcuts repeatedly.
+
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
 If you add a new track with an analysis plugin, you can refer to the [corresponding section](#41-analysis-tracks) of this manual.
