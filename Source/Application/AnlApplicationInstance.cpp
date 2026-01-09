@@ -126,7 +126,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
-            case AttrType::ignoreTimeSelectionDuringQuickExport:
                 break;
             case AttrType::currentTranslationFile:
             {
@@ -144,6 +143,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::defaultTemplateFile:
             case AttrType::quickExportDirectory:
             case AttrType::showInfoBubble:
+            case AttrType::ignoreTimeSelectionDuringQuickExport:
             {
                 mMainMenuModel->menuItemsChanged();
 #ifdef JUCE_MAC
