@@ -824,6 +824,11 @@ bool Track::Result::Table::deleteSelection()
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
+        if(mDirector.isForceDurationToFullWhenEditingEnabled())
+        {
+            auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), *channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+        }
         return true;
     }
     return false;
@@ -856,7 +861,19 @@ bool Track::Result::Table::cutSelection()
 {
     if(copySelection())
     {
-        return deleteSelection();
+        auto result = deleteSelection();
+        if(result && mDirector.isForceDurationToFullWhenEditingEnabled())
+        {
+            auto const channel = getSelectedChannel();
+            if(channel.has_value())
+            {
+                auto& undoManager = mDirector.getUndoManager();
+                auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+                auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+                undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), *channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+            }
+        }
+        return result;
     }
     return false;
 }
@@ -887,6 +904,11 @@ bool Track::Result::Table::pasteSelection()
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
+        if(mDirector.isForceDurationToFullWhenEditingEnabled())
+        {
+            auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), *channel, selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+        }
         return true;
     }
     return true;
@@ -929,6 +951,11 @@ bool Track::Result::Table::duplicateSelection()
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), selectionEnd.value(), selection.movedToStartAt(selectionEnd.value())).release());
+        if(mDirector.isForceDurationToFullWhenEditingEnabled())
+        {
+            auto const timeEnd = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
+            undoManager.perform(std::make_unique<Result::Modifier::ActionResetDuration>(mDirector.getSafeAccessorFn(), channel.value(), selection, Result::Modifier::DurationResetMode::toFull, timeEnd).release());
+        }
         return true;
     }
     return false;
