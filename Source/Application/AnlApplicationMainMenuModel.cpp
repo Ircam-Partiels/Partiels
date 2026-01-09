@@ -188,6 +188,11 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                                {
                                    Instance::get().getApplicationAccessor().setAttr<AttrType::silentFileManagement>(!Instance::get().getApplicationAccessor().getAttr<AttrType::silentFileManagement>(), NotificationType::synchronous);
                                });
+    auto const ignoreTimeSelection = accessor.getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+    globalSettingsMenu.addItem(juce::translate("Ignore Time Selection During Quick Export"), true, ignoreTimeSelection, []()
+                               {
+                                   Instance::get().getApplicationAccessor().setAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(!Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(), NotificationType::synchronous);
+                               });
     juce::PopupMenu templateMenu;
     auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
     templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()
