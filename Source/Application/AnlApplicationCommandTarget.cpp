@@ -415,7 +415,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
             auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
             auto const directoryName = exportDirectory == desktop ? juce::translate("Desktop") : exportDirectory.getFileName();
-            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            auto const allFrames = exportSelection.isEmpty() || exportSelection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const message = allFrames ? juce::translate("Export All Frames to DIRNAME") : juce::translate("Export Selected Frames to DIRNAME");
             auto const description = allFrames ? juce::translate("Export all frames using the current export options to DIRNAME") : juce::translate("Export selected frames using the current export options to DIRNAME");
             result.setInfo(message.replace("DIRNAME", directoryName), description.replace("DIRNAME", directoryName), "Edit", 0);
@@ -430,7 +432,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameExportTo:
         {
-            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            auto const allFrames = exportSelection.isEmpty() || exportSelection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const message = allFrames ? juce::translate("Export All Frames to...") : juce::translate("Export Selected Frames to...");
             auto const description = allFrames ? juce::translate("Export all frames using the current export options to a selected destination") : juce::translate("Export selected frames using the current export options to a selected destination");
             result.setInfo(message, description, "Edit", 0);
@@ -445,7 +449,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameOverwriteOriginal:
         {
-            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            auto const allFrames = exportSelection.isEmpty() || exportSelection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const message = allFrames ? juce::translate("Overwrite Original File(s) with All Frames") : juce::translate("Overwrite Original File(s) with Selected Frames");
             auto const description = allFrames ? juce::translate("Overwrite the original result file with all frames") : juce::translate("Overwrite the original result file with selected frames");
 
@@ -466,7 +472,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         case CommandIDs::frameSystemCopy:
         {
-            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            auto const allFrames = exportSelection.isEmpty() || exportSelection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const message = allFrames ? juce::translate("Copy All Frames to System Clipboard") : juce::translate("Copy Selected Frames to System Clipboard");
             auto const description = allFrames ? juce::translate("Copy all frames to system clipboard") : juce::translate("Copy selected frames to system clipboard");
             result.setInfo(message, description, "Edit", 0);
@@ -1257,7 +1265,9 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const exportDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
             auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
-            exportTo(exportDirectory, date, selectedItems, selection);
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            exportTo(exportDirectory, date, selectedItems, exportSelection);
             return true;
         }
         case CommandIDs::frameExportTo:
@@ -1266,7 +1276,9 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto allItem = std::get<0_z>(selectedItems);
             allItem.insert(std::get<1_z>(selectedItems).begin(), std::get<1_z>(selectedItems).end());
             auto const numFiles = Document::Exporter::getNumFilesToExport(documentAcsr, allItem);
-            auto const allFrames = selection.isEmpty() || selection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
+            auto const allFrames = exportSelection.isEmpty() || exportSelection == timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             if(numFiles > 1_z)
             {
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
@@ -1284,7 +1296,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              exportTo(results.getFirst(), {}, selectedItems, selection);
+                                              exportTo(results.getFirst(), {}, selectedItems, exportSelection);
                                           });
             }
             else if(numFiles == 1_z)
@@ -1314,7 +1326,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                               {
                                                   return;
                                               }
-                                              exportTo(results.getFirst(), {}, selectedItems, selection);
+                                              exportTo(results.getFirst(), {}, selectedItems, exportSelection);
                                           });
             }
             return true;
@@ -1355,6 +1367,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                      .withButton(juce::translate("Overwrite"))
                                      .withButton(juce::translate("Cancel"));
 
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
             juce::AlertWindow::showAsync(options, [=, this](int windowResult)
                                          {
                                              if(windowResult != 1)
@@ -1370,7 +1384,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                      auto const& fd = trackAcsr.getAttr<Track::AttrType::fileDescription>();
                                                      if(!fd.isEmpty() && fd.format != Track::FileDescription::Format::binary)
                                                      {
-                                                         auto const trackResult = Document::Exporter::exportTo(lDocumentAcsr, fd.file, selection, std::set<size_t>{}, "", trackId, Document::Exporter::Options(fd), mShouldAbort);
+                                                         auto const trackResult = Document::Exporter::exportTo(lDocumentAcsr, fd.file, exportSelection, std::set<size_t>{}, "", trackId, Document::Exporter::Options(fd), mShouldAbort);
                                                          MiscWeakAssert(trackResult.wasOk());
                                                          if(trackResult.failed())
                                                          {
@@ -1384,6 +1398,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::frameSystemCopy:
         {
+            auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
+            auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
             auto const& trackAcsrs = documentAcsr.getAcsrs<Document::AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)
             {
@@ -1392,7 +1408,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 if(!selectedChannels.empty())
                 {
                     juce::String clipboardResults;
-                    Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, false, shouldAbort);
+                    Track::Exporter::toJson(trackAcsr.get(), exportSelection, selectedChannels, clipboardResults, false, false, shouldAbort);
                     juce::SystemClipboard::copyTextToClipboard(clipboardResults);
                     return true;
                 }
