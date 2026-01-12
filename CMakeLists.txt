@@ -30,7 +30,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
     option(PARTIELS_NOTARIZE "Code-sign and notarize the Windows package after building" OFF)
 endif()
 
-project(Partiels VERSION 2.3.0 LANGUAGES C CXX)
+project(Partiels VERSION 2.4.0 LANGUAGES C CXX)
 
 ### Version ###
 execute_process(COMMAND git log -1 --format=%h WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE PARTIELS_BUILD_ID OUTPUT_STRIP_TRAILING_WHITESPACE)
