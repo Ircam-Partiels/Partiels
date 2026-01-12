@@ -1,4 +1,22 @@
 
+- Add: Support for loading files in Pure Data and Max formats
+- Add: New command to overwrite the original results file
+- Add: Option to ignore time selection during quick export
+- Add: Option to preserve the full duration of the frame during editing
+- Imp: Improve the Chrono class
+- Imp: Use more appropriate colours to highlight the popup menu item located under the mouse pointer
+- Imp: Improve messages for quick export of results
+- Imp: Add multiple item selection support for document export panel
+- Imp: Accelerate the generation of the user manual
+- Imp: Use frontmost track with vertical range for group zoom
+- Imp: Trim marker labels if the next marker overlaps them when painting markers
+- Imp: Update JUCE to 8.0.12
+- Imp: Update Ircam logo
+- Fix: Minor code correction
+- Fix: Preservation of Lab format export options between sessions
+
+v2.3.0
+
 - Add: References to plugins listed on vamp-plugin.org
 - Add: Default preset system for plug-in processors
 - Add: Preset system for track graphic properties (save, load, default)
