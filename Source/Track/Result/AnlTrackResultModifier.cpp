@@ -325,7 +325,7 @@ Track::Result::ChannelData Track::Result::Modifier::duplicateFrames(ChannelData 
     return {};
 }
 
-bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit)
+bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, bool preserveFullDuration, double endTime, juce::String const& commit)
 {
     auto const doErase = [&](auto& results)
     {
@@ -335,19 +335,36 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
         {
             return false;
         }
+
         auto& channelFrames = results[channel];
+        auto const erase = [&](auto const first, auto const last)
+        {
+            // If the preserveFullDuration is true, we need to extend the previous frame duration to fill the gap
+            if(preserveFullDuration && first != channelFrames.begin() && first != channelFrames.end())
+            {
+                auto const previous = std::prev(first);
+                auto const previousEnd = std::get<0_z>(*previous) + std::get<1_z>(*previous);
+                auto const nextStart = last != channelFrames.end() ? std::get<0_z>(*last) : endTime;
+                if(previousEnd >= std::get<0_z>(*first)) // Check if the previous frame overlaps or reaches the erased range
+                {
+                    std::get<1_z>(*previous) = nextStart - std::get<0_z>(*previous);
+                }
+            }
+            channelFrames.erase(first, last);
+        };
+
         auto const start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
         if(range.isEmpty())
         {
             if(start != channelFrames.end() && std::get<0_z>(*start) <= range.getStart())
             {
-                channelFrames.erase(start);
+                erase(start, std::next(start));
                 return true;
             }
             return false;
         }
         auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
-        channelFrames.erase(start, end);
+        erase(start, end);
         return true;
     };
 
@@ -386,7 +403,7 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
     return false;
 }
 
-bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, juce::String const& commit)
+bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, bool preserveFullDuration, double endTime, juce::String const& commit)
 {
     auto const range = getTimeRange(data);
     auto const doInsert = [&](auto& results, auto const& newData)
@@ -402,23 +419,37 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
             return false;
         }
         auto& channelFrames = results[channel];
-        // ensure the frames where the data is copied is empty
+        // Erase the range where the data will be inserted
         auto start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
         auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
+        auto const extendEnd = [&]()
+        {
+            if(preserveFullDuration && end != channelFrames.begin())
+            {
+                auto const previous = std::prev(end);
+                auto const previousEnd = std::get<0_z>(*previous) + std::get<1_z>(*previous);
+                auto const nextStart = end != channelFrames.end() ? std::get<0_z>(*end) : endTime;
+                return previousEnd >= nextStart;
+            }
+            return false;
+        }();
         start = channelFrames.erase(start, end);
-        // inserts the new frames
-        auto const it = channelFrames.insert(start, newData.cbegin(), newData.cend());
-        // sanitize the duration of the frame before
-        auto const sanitizeDuration = [&](auto const iterator)
+        // Insert the new frames
+        auto const first = channelFrames.insert(start, newData.cbegin(), newData.cend());
+        auto const last = std::next(first, static_cast<long>(newData.size()));
+        // Sanitize the duration of the frames
+        auto const sanitizeDuration = [&](auto const iterator, bool forceEnd)
         {
             if(iterator != channelFrames.begin() && iterator != channelFrames.end())
             {
                 auto previous = std::prev(iterator);
-                std::get<1_z>(*previous) = std::min(std::get<1_z>(*previous), std::get<0_z>(*iterator) - std::get<0_z>(*previous));
+                auto const previousDuration = std::get<1_z>(*previous);
+                auto const maxPreviousDuration = std::get<0_z>(*iterator) - std::get<0_z>(*previous);
+                std::get<1_z>(*previous) = forceEnd ? maxPreviousDuration : std::min(previousDuration, maxPreviousDuration);
             }
         };
-        sanitizeDuration(it);
-        sanitizeDuration(std::next(it, static_cast<long>(newData.size())));
+        sanitizeDuration(first, false);
+        sanitizeDuration(last, extendEnd);
         return true;
     };
 
@@ -469,7 +500,7 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
     return false;
 }
 
-bool Track::Result::Modifier::resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double timeEnd, juce::String const& commit)
+bool Track::Result::Modifier::resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double endTime, juce::String const& commit)
 {
     auto const doReset = [&](auto& results)
     {
@@ -490,7 +521,7 @@ bool Track::Result::Modifier::resetFrameDurations(Accessor& accessor, size_t con
             }
             else if(mode == DurationResetMode::toFull)
             {
-                auto const nextEnd = (std::next(it) != channelFrames.end()) ? std::get<0_z>(*std::next(it)) : timeEnd;
+                auto const nextEnd = (std::next(it) != channelFrames.end()) ? std::get<0_z>(*std::next(it)) : endTime;
                 std::get<1_z>(*it) = nextEnd - std::get<0_z>(*it);
             }
         }
@@ -540,15 +571,17 @@ Track::Result::Modifier::ActionBase::ActionBase(std::function<Accessor&()> fn, s
 {
 }
 
-Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection)
+Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, bool preserveFullDuration, double endTime)
 : ActionBase(fn, channel)
 , mSavedData(copyFrames(mGetAccessorFn(), channel, selection))
+, mPreserveFullDuration(preserveFullDuration)
+, mEndTime(endTime)
 {
 }
 
 bool Track::Result::Modifier::ActionErase::perform()
 {
-    if(eraseFrames(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mNewCommit))
+    if(eraseFrames(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mPreserveFullDuration, mEndTime, mNewCommit))
     {
         return true;
     }
@@ -558,7 +591,7 @@ bool Track::Result::Modifier::ActionErase::perform()
 
 bool Track::Result::Modifier::ActionErase::undo()
 {
-    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, mCurrentCommit))
+    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, false, 0.0, mCurrentCommit))
     {
         return true;
     }
@@ -566,17 +599,19 @@ bool Track::Result::Modifier::ActionErase::undo()
     return false;
 }
 
-Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination)
+Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination, bool preserveFullDuration, double endTime)
 : ActionBase(fn, channel)
 , mSavedData(copyFrames(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination)))
 , mChannelData(duplicateFrames(data, destination))
+, mPreserveFullDuration(preserveFullDuration)
+, mEndTime(endTime)
 {
 }
 
 bool Track::Result::Modifier::ActionPaste::perform()
 {
     auto& accessor = mGetAccessorFn();
-    if(insertFrames(accessor, mChannel, mChannelData, mNewCommit))
+    if(insertFrames(accessor, mChannel, mChannelData, mPreserveFullDuration, mEndTime, mNewCommit))
     {
         return true;
     }
@@ -587,16 +622,16 @@ bool Track::Result::Modifier::ActionPaste::perform()
 bool Track::Result::Modifier::ActionPaste::undo()
 {
     auto& accessor = mGetAccessorFn();
-    if(eraseFrames(accessor, mChannel, getTimeRange(mChannelData), mCurrentCommit))
+    if(eraseFrames(accessor, mChannel, getTimeRange(mChannelData), mPreserveFullDuration, mEndTime, mCurrentCommit))
     {
-        if(insertFrames(accessor, mChannel, mSavedData, mCurrentCommit))
+        if(insertFrames(accessor, mChannel, mSavedData, false, 0.0, mCurrentCommit))
         {
             return true;
         }
         else
         {
             MiscWeakAssert(false);
-            if(!insertFrames(accessor, mChannel, mChannelData, mNewCommit))
+            if(!insertFrames(accessor, mChannel, mChannelData, false, 0.0, mNewCommit))
             {
                 MiscWeakAssert(false);
             }
@@ -609,11 +644,11 @@ bool Track::Result::Modifier::ActionPaste::undo()
     return false;
 }
 
-Track::Result::Modifier::ActionResetDuration::ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double timeEnd)
+Track::Result::Modifier::ActionResetDuration::ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double endTime)
 : ActionBase(fn, channel)
 , mSavedData(copyFrames(mGetAccessorFn(), channel, selection))
 , mResetMode(mode)
-, mEndTime(timeEnd)
+, mEndTime(endTime)
 {
 }
 
@@ -629,7 +664,7 @@ bool Track::Result::Modifier::ActionResetDuration::perform()
 
 bool Track::Result::Modifier::ActionResetDuration::undo()
 {
-    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, mCurrentCommit))
+    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, false, 0.0, mCurrentCommit))
     {
         return true;
     }
