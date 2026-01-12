@@ -26,9 +26,9 @@ namespace Track
             ChannelData createFrame(Accessor const& accessor, size_t const channel, double const time);
             ChannelData copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
             ChannelData duplicateFrames(ChannelData const& data, double const destinationTime);
-            bool eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit);
-            bool insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, juce::String const& commit);
-            bool resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double timeEnd, juce::String const& commit);
+            bool eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, bool preserveFullDuration, double endTime, juce::String const& commit);
+            bool insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, bool preserveFullDuration, double endTime, juce::String const& commit);
+            bool resetFrameDurations(Accessor& accessor, size_t const channel, juce::Range<double> const& range, DurationResetMode const mode, double endTime, juce::String const& commit);
 
             template <int D, typename T>
             bool updateFrame(Accessor& accessor, size_t const channel, size_t const index, juce::String const& commit, T const fn)
@@ -115,7 +115,7 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection);
+                ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, bool preserveFullDuration, double endTime);
                 ~ActionErase() override = default;
 
                 // juce::UndoableAction
@@ -124,13 +124,15 @@ namespace Track
 
             private:
                 ChannelData const mSavedData;
+                bool mPreserveFullDuration;
+                double mEndTime;
             };
 
             class ActionPaste
             : public ActionBase
             {
             public:
-                ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination);
+                ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination, bool preserveFullDuration, double endTime);
                 ~ActionPaste() override = default;
 
                 // juce::UndoableAction
@@ -140,13 +142,15 @@ namespace Track
             private:
                 ChannelData const mSavedData;
                 ChannelData const mChannelData;
+                bool mPreserveFullDuration;
+                double mEndTime;
             };
 
             class ActionResetDuration
             : public ActionBase
             {
             public:
-                ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double timeEnd);
+                ActionResetDuration(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, DurationResetMode mode, double endTime);
                 ~ActionResetDuration() override = default;
 
                 // juce::UndoableAction
