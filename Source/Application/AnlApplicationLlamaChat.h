@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
-#include "llama.h"
+#include <llama.h>
 
 ANALYSE_FILE_BEGIN
 
