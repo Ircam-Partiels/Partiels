@@ -754,17 +754,23 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         auto& documentAcsr = Instance::get().getDocumentAccessor();
         auto const options = Instance::get().getApplicationAccessor().getAttr<AttrType::exportOptions>();
-        auto const groupResult = Document::Exporter::exportTo(documentAcsr, fileOrDirectory, selection, std::set<size_t>{}, prefix, std::get<0_z>(selectedItems), options, mShouldAbort);
-        MiscWeakAssert(groupResult.wasOk());
-        if(groupResult.failed())
+        if(!std::get<0_z>(selectedItems).empty())
         {
-            MiscDebug("Application::CommandTarget", groupResult.getErrorMessage());
+            auto const groupResult = Document::Exporter::exportTo(documentAcsr, fileOrDirectory, selection, std::set<size_t>{}, prefix, std::get<0_z>(selectedItems), options, mShouldAbort);
+            MiscWeakAssert(groupResult.wasOk());
+            if(groupResult.failed())
+            {
+                MiscDebug("Application::CommandTarget", groupResult.getErrorMessage());
+            }
         }
-        auto const trackResult = Document::Exporter::exportTo(documentAcsr, fileOrDirectory, selection, std::set<size_t>{}, prefix, std::get<1_z>(selectedItems), options, mShouldAbort);
-        MiscWeakAssert(trackResult.wasOk());
-        if(trackResult.failed())
+        if(!std::get<1_z>(selectedItems).empty())
         {
-            MiscDebug("Application::CommandTarget", trackResult.getErrorMessage());
+            auto const trackResult = Document::Exporter::exportTo(documentAcsr, fileOrDirectory, selection, std::set<size_t>{}, prefix, std::get<1_z>(selectedItems), options, mShouldAbort);
+            MiscWeakAssert(trackResult.wasOk());
+            if(trackResult.failed())
+            {
+                MiscDebug("Application::CommandTarget", trackResult.getErrorMessage());
+            }
         }
     };
 
