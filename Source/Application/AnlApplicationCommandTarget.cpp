@@ -458,17 +458,28 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 
             result.setInfo(message, description, "Edit", 0);
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
-            auto const hasSupportedResultFiles = std::any_of(std::get<1_z>(selectedItems).cbegin(), std::get<1_z>(selectedItems).cend(), [&](auto const& trackId)
-                                                             {
-                                                                 if(!Document::Tools::hasTrackAcsr(documentAcsr, trackId))
-                                                                 {
-                                                                     return false;
-                                                                 }
-                                                                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
-                                                                 auto const& fd = trackAcsr.template getAttr<Track::AttrType::fileDescription>();
-                                                                 return !fd.isEmpty() && fd.format != Track::FileDescription::Format::binary;
-                                                             });
-            result.setActive(isFrameMode && hasSupportedResultFiles);
+            auto const isTrackSupported = [&](auto const& trackId)
+            {
+                if(!Document::Tools::hasTrackAcsr(documentAcsr, trackId))
+                {
+                    return false;
+                }
+                auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                auto const& fd = trackAcsr.template getAttr<Track::AttrType::fileDescription>();
+                return !fd.isEmpty() && fd.format != Track::FileDescription::Format::binary;
+            };
+            auto const hasSupportedGroups = std::any_of(std::get<0_z>(selectedItems).cbegin(), std::get<0_z>(selectedItems).cend(), [&](auto const& groupId)
+                                                        {
+                                                            if(!Document::Tools::hasGroupAcsr(documentAcsr, groupId))
+                                                            {
+                                                                return false;
+                                                            }
+                                                            auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupId);
+                                                            auto const& layout = groupAcsr.template getAttr<Group::AttrType::layout>();
+                                                            return std::any_of(layout.cbegin(), layout.cend(), isTrackSupported);
+                                                        });
+            auto const hasSupportedTracks = std::any_of(std::get<1_z>(selectedItems).cbegin(), std::get<1_z>(selectedItems).cend(), isTrackSupported);
+            result.setActive(isFrameMode && (hasSupportedGroups || hasSupportedTracks));
             break;
         }
         case CommandIDs::frameSystemCopy:
@@ -1352,19 +1363,35 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             juce::StringArray trackNames;
             juce::StringArray trackFiles;
             auto const selectedItems = Document::Selection::getItems(documentAcsr);
-            for(auto const& trackId : std::get<1_z>(selectedItems))
+            auto const addTrackIfSupported = [&](auto const trackId)
             {
                 if(Document::Tools::hasTrackAcsr(documentAcsr, trackId))
                 {
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
-                    auto const& fd = trackAcsr.getAttr<Track::AttrType::fileDescription>();
+                    auto const& fd = trackAcsr.template getAttr<Track::AttrType::fileDescription>();
                     if(!fd.isEmpty() && fd.format != Track::FileDescription::Format::binary)
                     {
                         trackIds.insert(trackId);
-                        trackNames.add(trackAcsr.getAttr<Track::AttrType::name>());
-                        trackFiles.add(trackAcsr.getAttr<Track::AttrType::file>().file.getFullPathName());
+                        trackNames.addIfNotAlreadyThere(trackAcsr.template getAttr<Track::AttrType::name>());
+                        trackFiles.addIfNotAlreadyThere(trackAcsr.template getAttr<Track::AttrType::file>().file.getFullPathName());
                     }
                 }
+            };
+            for(auto const& groupId : std::get<0_z>(selectedItems))
+            {
+                if(Document::Tools::hasGroupAcsr(documentAcsr, groupId))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupId);
+                    auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
+                    for(auto const& trackId : layout)
+                    {
+                        addTrackIfSupported(trackId);
+                    }
+                }
+            }
+            for(auto const& trackId : std::get<1_z>(selectedItems))
+            {
+                addTrackIfSupported(trackId);
             }
 
             auto const message = trackNames.size() == 1
