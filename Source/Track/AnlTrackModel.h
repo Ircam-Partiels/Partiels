@@ -163,6 +163,7 @@ namespace Track
 
     struct GraphicsSettings
     {
+        std::optional<FrameType> type;
         ColourSet colours{};
         juce::FontOptions font{juce::FontOptions("Nunito Sans", 14.0f, juce::Font::plain)};
         float lineWidth = 1.0f;
@@ -171,17 +172,47 @@ namespace Track
 
         const auto tie() const
         {
-            return std::tie(colours, font, lineWidth, unit, labelLayout);
+            return std::tie(type, colours, font, lineWidth, unit, labelLayout);
         }
 
         bool operator==(GraphicsSettings const& rhs) const
         {
-            return tie() == rhs.tie();
+            if(type.has_value() != rhs.type.has_value())
+            {
+                return false;
+            }
+            else if(!type.has_value())
+            {
+                return tie() == rhs.tie();
+            }
+            else if(type.value() != rhs.type.value())
+            {
+                return false;
+            }
+            else
+            {
+                switch(type.value())
+                {
+                    case FrameType::label:
+                    {
+                        return colours.background == rhs.colours.background && colours.foreground == rhs.colours.foreground && colours.duration == rhs.colours.duration && colours.text == rhs.colours.text && colours.shadow == rhs.colours.shadow && font == rhs.font && std::abs(lineWidth - rhs.lineWidth) < std::numeric_limits<float>::epsilon() && unit == rhs.unit && labelLayout == rhs.labelLayout;
+                    }
+                    case FrameType::value:
+                    {
+                        return colours.background == rhs.colours.background && colours.foreground == rhs.colours.foreground && colours.text == rhs.colours.text && colours.shadow == rhs.colours.shadow && font == rhs.font && std::abs(lineWidth - rhs.lineWidth) < std::numeric_limits<float>::epsilon() && unit == rhs.unit;
+                    }
+                    case FrameType::vector:
+                    {
+                        return colours.map == rhs.colours.map;
+                    }
+                }
+            }
+            return false;
         }
 
         bool operator!=(GraphicsSettings const& rhs) const
         {
-            return tie() != rhs.tie();
+            return (*this == rhs) == false;
         }
     };
 

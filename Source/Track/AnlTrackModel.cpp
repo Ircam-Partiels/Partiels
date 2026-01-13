@@ -89,17 +89,13 @@ template <>
 void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "map", value.map);
-        toXml(*child, "background", value.background);
-        toXml(*child, "foreground", value.foreground);
-        toXml(*child, "duration", value.duration);
-        toXml(*child, "text", value.text);
-        toXml(*child, "shadow", value.shadow);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "map", value.map);
+    toXml(*child, "background", value.background);
+    toXml(*child, "foreground", value.foreground);
+    toXml(*child, "duration", value.duration);
+    toXml(*child, "text", value.text);
+    toXml(*child, "shadow", value.shadow);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -190,11 +186,56 @@ void XmlParser::toXml<Track::GraphicsSettings>(juce::XmlElement& xml, juce::Iden
     anlWeakAssert(child != nullptr);
     if(child != nullptr)
     {
-        toXml(*child, "colours", value.colours);
-        toXml(*child, "font", value.font);
-        toXml(*child, "lineWidth", value.lineWidth);
-        toXml(*child, "unit", value.unit);
-        toXml(*child, "labelLayout", value.labelLayout);
+        toXml(*child, "type", value.type);
+        if(!value.type.has_value())
+        {
+            toXml(*child, "colours", value.colours);
+            toXml(*child, "font", value.font);
+            toXml(*child, "lineWidth", value.lineWidth);
+            toXml(*child, "unit", value.unit);
+            toXml(*child, "labelLayout", value.labelLayout);
+        }
+        else
+        {
+            switch(value.type.value())
+            {
+                case Track::FrameType::label:
+                {
+                    auto colourChild = std::make_unique<juce::XmlElement>("colours");
+                    toXml(*colourChild, "background", value.colours.background);
+                    toXml(*colourChild, "foreground", value.colours.foreground);
+                    toXml(*colourChild, "duration", value.colours.duration);
+                    toXml(*colourChild, "text", value.colours.text);
+                    toXml(*colourChild, "shadow", value.colours.shadow);
+                    child->addChildElement(colourChild.release());
+                    toXml(*child, "font", value.font);
+                    toXml(*child, "lineWidth", value.lineWidth);
+                    toXml(*child, "unit", value.unit);
+                    toXml(*child, "labelLayout", value.labelLayout);
+                    break;
+                }
+                case Track::FrameType::value:
+                {
+                    auto colourChild = std::make_unique<juce::XmlElement>("colours");
+                    toXml(*colourChild, "background", value.colours.background);
+                    toXml(*colourChild, "foreground", value.colours.foreground);
+                    toXml(*colourChild, "text", value.colours.text);
+                    toXml(*colourChild, "shadow", value.colours.shadow);
+                    child->addChildElement(colourChild.release());
+                    toXml(*child, "font", value.font);
+                    toXml(*child, "lineWidth", value.lineWidth);
+                    toXml(*child, "unit", value.unit);
+                    break;
+                }
+                case Track::FrameType::vector:
+                {
+                    auto colourChild = std::make_unique<juce::XmlElement>("colours");
+                    toXml(*colourChild, "map", value.colours.map);
+                    child->addChildElement(colourChild.release());
+                    break;
+                }
+            }
+        }
         xml.addChildElement(child.release());
     }
 }
@@ -210,6 +251,7 @@ auto XmlParser::fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, ju
         return defaultValue;
     }
     Track::GraphicsSettings value;
+    value.type = fromXml(*child, "type", defaultValue.type);
     value.colours = fromXml(*child, "colours", defaultValue.colours);
     value.font = fromXml(*child, "font", defaultValue.font);
     value.lineWidth = fromXml(*child, "lineWidth", defaultValue.lineWidth);
@@ -220,15 +262,55 @@ auto XmlParser::fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, ju
 
 void Track::to_json(nlohmann::json& j, GraphicsSettings const& settings)
 {
-    Track::to_json(j["colours"], settings.colours);
-    j["font"] = settings.font;
-    j["lineWidth"] = settings.lineWidth;
-    j["unit"] = settings.unit;
-    Track::to_json(j["labelLayout"], settings.labelLayout);
+    j["type"] = settings.type;
+    if(!settings.type.has_value())
+    {
+        Track::to_json(j["colours"], settings.colours);
+        j["font"] = settings.font;
+        j["lineWidth"] = settings.lineWidth;
+        j["unit"] = settings.unit;
+        Track::to_json(j["labelLayout"], settings.labelLayout);
+    }
+    else
+    {
+        switch(settings.type.value())
+        {
+            case FrameType::label:
+            {
+                j["colours"]["background"] = settings.colours.background;
+                j["colours"]["foreground"] = settings.colours.foreground;
+                j["colours"]["duration"] = settings.colours.duration;
+                j["colours"]["text"] = settings.colours.text;
+                j["colours"]["shadow"] = settings.colours.shadow;
+                j["font"] = settings.font;
+                j["lineWidth"] = settings.lineWidth;
+                j["unit"] = settings.unit;
+                Track::to_json(j["labelLayout"], settings.labelLayout);
+                break;
+            }
+            case FrameType::value:
+            {
+                j["colours"]["background"] = settings.colours.background;
+                j["colours"]["foreground"] = settings.colours.foreground;
+                j["colours"]["text"] = settings.colours.text;
+                j["colours"]["shadow"] = settings.colours.shadow;
+                j["font"] = settings.font;
+                j["lineWidth"] = settings.lineWidth;
+                j["unit"] = settings.unit;
+                break;
+            }
+            case FrameType::vector:
+            {
+                j["colours"]["map"] = settings.colours.map;
+                break;
+            }
+        }
+    }
 }
 
 void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
 {
+    settings.type = j.value("type", settings.type);
     if(j.contains("colours"))
     {
         Track::from_json(j["colours"], settings.colours);

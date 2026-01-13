@@ -133,6 +133,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 }
                 sanitizeZooms(notification);
                 sanitizeExtraOutputs(notification);
+                sanitizeFrameType(notification);
             }
             break;
             case AttrType::file:
@@ -168,6 +169,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             {
                 sanitizeZooms(notification);
                 sanitizeExtraOutputs(notification);
+                sanitizeFrameType(notification);
                 auto const& results = mAccessor.getAttr<AttrType::results>();
                 auto const access = results.getReadAccess();
                 if(static_cast<bool>(access))
@@ -177,7 +179,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                     {
                         auto channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
                         channelsLayout.resize(numChannels.value(), true);
-                        mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
+                        mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, notification);
                     }
                 }
 
@@ -929,6 +931,13 @@ void Track::Director::sanitizeExtraOutputs(NotificationType const notification)
         updateDescription(*columns);
     }
     mAccessor.setAttr<AttrType::description>(description, notification);
+}
+
+void Track::Director::sanitizeFrameType(NotificationType const notification)
+{
+    auto graphicsSettings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    graphicsSettings.type = Tools::getFrameType(mAccessor);
+    mAccessor.setAttr<AttrType::graphicsSettings>(graphicsSettings, notification);
 }
 
 void Track::Director::fileHasBeenRemoved(juce::File const& file)
