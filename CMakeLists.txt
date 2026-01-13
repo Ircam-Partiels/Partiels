@@ -95,10 +95,25 @@ if(NOT PARTIELS_MANUAL_ONLY)
     option(GGML_CPU  "ggml: enable CPU backend" ON)
 
     add_subdirectory(JUCE)
+    add_subdirectory(Dependencies/llama.cpp)
     add_subdirectory(Dependencies/ircam-vamp-extension)
     add_subdirectory(Dependencies/sdif)
     include(Dependencies/Misc/Misc.cmake)
     add_subdirectory(VampPlugins)
+
+if(APPLE)
+    target_compile_options(llama PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-metal PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-cpu PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(ggml-base PRIVATE -Wno-shorten-64-to-32)
+    set_target_properties(ggml-metal PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION "NO")
+elseif(UNIX)
+    target_compile_options(ggml PRIVATE -Wno-unused-function -Wno-unused-parameter)
+elseif(MSVC)
+    set_target_properties(ggml PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    target_compile_options(ggml-base PRIVATE /wd4005)
+endif()
 
     juce_add_gui_app(Partiels
         PRODUCT_NAME                        "Partiels"
@@ -206,6 +221,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     target_link_libraries(Partiels PRIVATE
         ive_host_static
+        llama
         sdif
         MiscData
         TestResultsData
