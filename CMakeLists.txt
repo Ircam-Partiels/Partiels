@@ -233,6 +233,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     add_dependencies(Partiels partiels-vamp-plugins)
 
+    ### Packaging ###
     if(WIN32)
         file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
     else()
@@ -262,7 +263,6 @@ if(NOT PARTIELS_MANUAL_ONLY)
         )
     endif()
 
-    ### Packaging ###
     if(WIN32)
         set(PARTIELS_PACKAGE_OUTDIR "${CMAKE_CURRENT_BINARY_DIR}")
         file(MAKE_DIRECTORY ${PARTIELS_PACKAGE_OUTDIR})
