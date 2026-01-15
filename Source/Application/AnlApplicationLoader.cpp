@@ -38,6 +38,8 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::mcpForClaudeApp:
+            case AttrType::mcpForCopilotApp:
                 break;
         }
     };
@@ -283,6 +285,8 @@ Application::LoaderContent::LoaderContent()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::mcpForClaudeApp:
+            case AttrType::mcpForCopilotApp:
                 break;
             case AttrType::adaptationToSampleRate:
             {
