@@ -1,4 +1,5 @@
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationMcp.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -55,9 +56,22 @@ void Application::Instance::initialise(juce::String const& commandLine)
         bool const mUseCerr;
     };
 
+    static auto constexpr mcpPort = 3939;
     auto const isMpcHost = commandLine.startsWith("--mcp-host");
     mLogger = std::make_unique<Logger>(isMpcHost);
     juce::Logger::setCurrentLogger(mLogger.get());
+    if(isMpcHost)
+    {
+#if JUCE_MAC
+        juce::Process::setDockIconVisible(false);
+#endif
+        MiscDebug("Application", "Running as MCP host");
+        auto const result = Mcp::Host::run(mcpPort);
+        Instance::get().setApplicationReturnValue(result ? 0 : -1);
+        Instance::get().systemRequestedQuit();
+        return;
+    }
+
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
 
@@ -96,6 +110,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
+    mMcpDispatcher = std::make_unique<Mcp::Dispatcher>();
+    mMcpSever = std::make_unique<Mcp::Server>(*mMcpDispatcher.get());
+    if(!mMcpSever->beginWaitingForSocket(mcpPort))
+    {
+        MiscDebug("Application::Instance", "Failed to start MCP server on port " + juce::String(mcpPort));
+    }
+
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -326,6 +347,8 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mMcpSever.reset();
+    mMcpDispatcher.reset();
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mOscTrackDispatcher.reset();
