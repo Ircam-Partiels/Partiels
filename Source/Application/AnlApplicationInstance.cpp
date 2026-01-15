@@ -20,6 +20,43 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
+    class Logger
+    : public juce::Logger
+    {
+    public:
+        Logger(bool useCerr)
+        : mLogFile(juce::FileLogger::getSystemLogFileFolder().getChildFile(ProjectInfo::projectName).getChildFile("Partiels.log"))
+        , mUseCerr(useCerr)
+        {
+            juce::FileLogger::trimFileSize(mLogFile, 128 * 1024);
+            logMessage(juce::String("NAME vVERSION (BUILD_ID - TIME)").replace("NAME", Instance::get().getApplicationName()).replace("VERSION", Instance::get().getApplicationVersion()).replace("BUILD_ID", PARTIELS_BUILD_ID).replace("TIME", juce::Time::getCompilationDate().toString(true, true)));
+            logMessage(juce::String("Log started: TIME").replace("TIME", juce::Time::getCurrentTime().toString(true, true)));
+        }
+
+        // juce::Logger
+        void logMessage(juce::String const& message) override
+        {
+            juce::ScopedLock const sl(mLogLock);
+            if(mUseCerr)
+            {
+                std::cerr << message << std::endl;
+            }
+            else
+            {
+                DBG(message);
+            }
+            juce::FileOutputStream out(mLogFile, 256);
+            out << message << juce::newLine;
+        }
+
+    private:
+        juce::CriticalSection mLogLock;
+        juce::File mLogFile;
+        bool const mUseCerr;
+    };
+
+    mLogger = std::make_unique<Logger>(false);
+    juce::Logger::setCurrentLogger(mLogger.get());
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
 
@@ -153,6 +190,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
         anlDebug("Application", "Failed: not initialized.");
         return;
     }
+    MiscDebug("Application", "Another instance started with command line '" + commandLine + "'");
 
     juce::ArgumentList const args("Partiels", commandLine);
     std::vector<juce::File> files;
@@ -313,6 +351,9 @@ void Application::Instance::shutdown()
     mLookAndFeel.reset();
 
     anlDebug("Application", "Done");
+
+    juce::Logger::setCurrentLogger(nullptr);
+    mLogger.reset();
 }
 
 void Application::Instance::unhandledException(std::exception const* e, juce::String const& sourceFilename, int line)
