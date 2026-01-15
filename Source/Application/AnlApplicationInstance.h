@@ -84,6 +84,7 @@ namespace Application
         void checkPluginsQuarantine();
         static Misc::Version parseVersion(juce::String const& content);
 
+        std::unique_ptr<juce::Logger> mLogger;
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
         std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;
         std::unique_ptr<juce::AudioDeviceManager> mAudioDeviceManager;
