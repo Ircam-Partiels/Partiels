@@ -64,14 +64,14 @@ Keywords: Polyphonic Pitch Analysis, Multiple Pitch Estimation, Automatic Music 
 
 The Basic Pitch plugin estimates the notes of a polyphonic audio (several instruments or a polyphonic instrument) and splits them into monophonic voices ordered from the lowest to the highest notes; each voice is an output of the plugin.
 
-1. Create a single Basic Pitch - Pitch plugin track `{"identifier": "ircambasicpitch:basicpitch", "feature": "pitch"}` with the `"maxvoices"` parameter set to the maximum number of simultaneous notes expected (ask the user if necessary). A linked track is created for each voice: **do not create the tracks of the other voices**, they share the same analysis and the same parameters.
-2. Fetch the document state to get the tracks of all the voices (the tracks are added or removed after the creation if `"maxvoices"` differs from the default value), and give them names that describe the analysis for the user with the number of the voice (e.g. "Piano Notes 1", "Piano Notes 2"...).
+1. Create a single Basic Pitch - Pitch plugin track `{"identifier": "ircambasicpitch:basicpitch", "feature": "pitch"}` with `voiceCount` set to the maximum number of simultaneous notes expected (ask the user if necessary). A linked track is created for each voice from the bottom to the top of the group (the first voice at the bottom): **do not create the tracks of the other voices**, they share the same analysis and the same parameters.
+2. Give the tracks of all the voices (returned by the creation) names that describe the analysis for the user with the number of the voice (e.g. "Piano Notes 1", "Piano Notes 2"...), or set the `name` of the track at creation to suffix it automatically with the number of the voice.
 3. Get the summary of results (with `waitSeconds` if the analysis is running) of the first and last voices, and zoom vertically in the group to contain all the frequencies.
 4. Tips:  
     * Create a gradient for the foreground and text colors of the tracks of the voices.  
     * Set the `"amplitude"` extra threshold of the tracks of the voices to exclude the notes with a low amplitude.  
     * Increase the `"framethreshold"` and `"onsetthreshold"` parameters to detect fewer notes, and the `"minnoteduration"` parameter to ignore the short notes. Modify the parameters of only one of the tracks, the other tracks of the voices are updated automatically.  
-    * Changing the `"maxvoices"` parameter adds or removes the tracks of the voices, fetch the document state again to get them.
+    * Use `get_track_voices` to get the number of voices, its range, and the tracks of all the voices, and `set_track_voice_count` to change the number of voices (the tracks of the voices are added or removed and returned by the tool); the parameters don't change the number of voices.
 
 # Analyze the transients  
 Keywords: Transient Analysis, Transient Detection, Onset Detection, Audio Transients, Attacks
