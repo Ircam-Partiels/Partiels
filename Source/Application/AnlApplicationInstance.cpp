@@ -3,15 +3,6 @@
 
 ANALYSE_FILE_BEGIN
 
-#define AppQuitIfInvalidPointer(ptr)                    \
-    if(ptr == nullptr)                                  \
-    {                                                   \
-        anlDebug("Application", "Allocation Failed!."); \
-        setApplicationReturnValue(-1);                  \
-        quit();                                         \
-        return;                                         \
-    }
-
 juce::String const Application::Instance::getApplicationName()
 {
     return ProjectInfo::projectName;
@@ -43,74 +34,30 @@ void Application::Instance::initialise(juce::String const& commandLine)
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
     mLookAndFeel = std::make_unique<LookAndFeel>();
-    AppQuitIfInvalidPointer(mLookAndFeel);
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
-
     mApplicationCommandManager = std::make_unique<juce::ApplicationCommandManager>();
-    AppQuitIfInvalidPointer(mApplicationCommandManager);
-
     mAudioFormatManager = std::make_unique<juce::AudioFormatManager>();
-    AppQuitIfInvalidPointer(mAudioFormatManager);
     mAudioFormatManager->registerBasicFormats();
-
     mAudioDeviceManager = std::make_unique<juce::AudioDeviceManager>();
-    AppQuitIfInvalidPointer(mAudioDeviceManager);
-
     mUndoManager = std::make_unique<juce::UndoManager>();
-    AppQuitIfInvalidPointer(mUndoManager);
-
     mApplicationAccessor = std::make_unique<Accessor>();
-    AppQuitIfInvalidPointer(mApplicationAccessor);
-
     mApplicationListener = std::make_unique<Accessor::Listener>(typeid(*this).name());
-    AppQuitIfInvalidPointer(mApplicationListener);
-
     mPluginListAccessor = std::make_unique<PluginList::Accessor>();
-    AppQuitIfInvalidPointer(mPluginListAccessor);
-
     mPluginListScanner = std::make_unique<PluginList::Scanner>();
-    AppQuitIfInvalidPointer(mPluginListScanner);
-
     mOscSender = std::make_unique<Osc::Sender>(mApplicationAccessor->getAcsr<AcsrType::osc>());
-    AppQuitIfInvalidPointer(mOscSender);
-
     mDocumentAccessor = std::make_unique<Document::Accessor>();
-    AppQuitIfInvalidPointer(mDocumentAccessor);
-
     mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), *mAudioFormatManager.get(), *mUndoManager.get());
-    AppQuitIfInvalidPointer(mDocumentDirector);
     mDocumentDirector->setBackupDirectory(getBackupFile().getSiblingFile("Tracks"));
-
     mTrackPresetListAccessor = std::make_unique<Track::PresetList::Accessor>();
-    AppQuitIfInvalidPointer(mTrackPresetListAccessor);
-
     mAudioReader = std::make_unique<AudioReader>();
-    AppQuitIfInvalidPointer(mAudioReader);
-
     mProperties = std::make_unique<Properties>();
-    AppQuitIfInvalidPointer(mProperties);
-
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
-    AppQuitIfInvalidPointer(mDocumentFileBased);
-
     mWindow = std::make_unique<Window>();
-    AppQuitIfInvalidPointer(mWindow);
-
     mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
-    AppQuitIfInvalidPointer(mMainMenuModel);
-
     mDownloader = std::make_unique<Downloader>();
-    AppQuitIfInvalidPointer(mDownloader);
-
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
-    AppQuitIfInvalidPointer(mOscTrackDispatcher);
-
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
-    AppQuitIfInvalidPointer(mOscTransportDispatcher);
-
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
-    AppQuitIfInvalidPointer(mOscMouseDispatcher);
-
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
