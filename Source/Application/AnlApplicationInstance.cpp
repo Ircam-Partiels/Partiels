@@ -1,6 +1,7 @@
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationFileManager.h"
 #include "AnlApplicationTools.h"
+#include <AnlNeuralyzerData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -56,8 +57,21 @@ void Application::Instance::initialise(juce::String const& commandLine)
         bool const mUseCerr;
     };
 
-    mLogger = std::make_unique<Logger>(false);
+    auto const isMpcHost = commandLine.startsWith(Neuralyzer::Mcp::Host::defaultArg);
+    mLogger = std::make_unique<Logger>(isMpcHost);
     juce::Logger::setCurrentLogger(mLogger.get());
+    if(isMpcHost)
+    {
+#if JUCE_MAC
+        juce::Process::setDockIconVisible(false);
+#endif
+        MiscDebug("Application", "Running as MCP host");
+        auto const result = Neuralyzer::Mcp::Host::run(Neuralyzer::Mcp::Host::defaultPort);
+        Instance::get().setApplicationReturnValue(result ? 0 : -1);
+        Instance::get().systemRequestedQuit();
+        return;
+    }
+
     MiscDebug("Application", "Begin...");
     MiscDebug("Application", "Command line '" + commandLine + "'");
 
@@ -94,6 +108,34 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
+    mNeuralyzerMcpDispatcher = std::make_unique<Neuralyzer::Mcp::Dispatcher>();
+    mNeuralyzerMcpSever = std::make_unique<Neuralyzer::Mcp::Server>(mApplicationAccessor->getAcsr<AcsrType::neuralyzer>(), *mNeuralyzerMcpDispatcher.get());
+    mNeuralyzerDownloaderManager = std::make_unique<Neuralyzer::Downloader::Manager>();
+    mNeuralyzerAgent = std::make_unique<Neuralyzer::BackgroundAgent>(mApplicationAccessor->getAcsr<AcsrType::neuralyzer>(), *mNeuralyzerMcpDispatcher.get());
+
+    Neuralyzer::Rag::downloadModelsIfNecessary();
+    Neuralyzer::AgentLocal::downloadDefaultModelIfNecessary();
+
+    mDocumentFileBased->onLoaded = [this](juce::File const& file)
+    {
+        auto const sessionFile = Neuralyzer::getSessionFile(file);
+        if(file != juce::File{} && file.existsAsFile() && sessionFile.existsAsFile())
+        {
+            mNeuralyzerAgent->loadSession(sessionFile);
+        }
+        else
+        {
+            mNeuralyzerAgent->startSession();
+        }
+    };
+
+    mDocumentFileBased->onSaved = [this](juce::File const& file)
+    {
+        if(file != juce::File{})
+        {
+            mNeuralyzerAgent->saveSession(Neuralyzer::getSessionFile(file));
+        }
+    };
 
     checkPluginsQuarantine();
 
@@ -113,6 +155,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 mWindow->refreshInterface();
             }
         };
+
         switch(attribute)
         {
             case AttrType::currentDocumentFile:
@@ -324,6 +367,8 @@ void Application::Instance::shutdown()
     if(mDocumentFileBased != nullptr)
     {
         mDocumentFileBased->removeChangeListener(this);
+        mDocumentFileBased->onLoaded = nullptr;
+        mDocumentFileBased->onSaved = nullptr;
     }
     auto backupFile = getBackupFile();
     backupFile.deleteFile();
@@ -333,6 +378,9 @@ void Application::Instance::shutdown()
     mMainMenuModel.reset();
     mWindow.reset();
 
+    mNeuralyzerAgent.reset();
+    mNeuralyzerMcpSever.reset();
+    mNeuralyzerMcpDispatcher.reset();
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mOscTrackDispatcher.reset();
@@ -455,6 +503,16 @@ PluginList::Scanner& Application::Instance::getPluginListScanner()
 Application::Osc::Sender& Application::Instance::getOscSender()
 {
     return *mOscSender.get();
+}
+
+Application::Neuralyzer::BackgroundAgent& Application::Instance::getNeuralyzerAgent()
+{
+    return *mNeuralyzerAgent.get();
+}
+
+Application::Neuralyzer::Downloader::Manager& Application::Instance::getNeuralyzerDownloaderManager()
+{
+    return *mNeuralyzerDownloaderManager.get();
 }
 
 Document::Accessor& Application::Instance::getDocumentAccessor()
