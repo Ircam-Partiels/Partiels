@@ -114,14 +114,14 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     if(APPLE)
     file(GLOB_RECURSE PartielsSources
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/**/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/**/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/**/*.mm
             )
     else()
     file(GLOB_RECURSE PartielsSources
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/**/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/Source/**/*.h
             )
     endif()
     source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "Source" FILES ${PartielsSources})
