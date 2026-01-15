@@ -6,6 +6,8 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationMainMenuModel.h"
 #include "AnlApplicationModel.h"
+#include "AnlApplicationNeuralyzerBackgroundAgent.h"
+#include "AnlApplicationNeuralyzerRag.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationWindow.h"
 
@@ -45,17 +47,14 @@ namespace Application
         static juce::String getWildCardForAudioFormats();
         static LookAndFeel::ColourChart getColourChart();
 
-        void newDocument();
-        void openDocumentFile(juce::File const& file);
-        void openAudioFiles(std::vector<juce::File> const& files);
-        void openFiles(std::vector<juce::File> const& files);
-
         Accessor& getApplicationAccessor();
         Window* getWindow();
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
         Osc::Sender& getOscSender();
+        Neuralyzer::BackgroundAgent& getNeuralyzerAgent();
+        Neuralyzer::Rag::Engine& getNeuralyzerRagEngine();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
@@ -109,6 +108,10 @@ namespace Application
         std::unique_ptr<Osc::TrackDispatcher> mOscTrackDispatcher;
         std::unique_ptr<Osc::TransportDispatcher> mOscTransportDispatcher;
         std::unique_ptr<Osc::MouseDispatcher> mOscMouseDispatcher;
+        std::unique_ptr<Neuralyzer::Mcp::Dispatcher> mNeuralyzerMcpDispatcher;
+        std::unique_ptr<Neuralyzer::Mcp::Server> mNeuralyzerMcpSever;
+        std::unique_ptr<Neuralyzer::Rag::Engine> mNeuralyzerRagEngine;
+        std::unique_ptr<Neuralyzer::BackgroundAgent> mNeuralyzerAgent;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;

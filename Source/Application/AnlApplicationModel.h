@@ -3,6 +3,7 @@
 #include "../Document/AnlDocumentExporter.h"
 #include "../Track/AnlTrackModel.h"
 #include "AnlApplicationLookAndFeel.h"
+#include "AnlApplicationNeuralyzerModel.h"
 #include "AnlApplicationOsc.h"
 
 ANALYSE_FILE_BEGIN
@@ -40,11 +41,14 @@ namespace Application
         , globalGraphicPreset
         , ignoreTimeSelectionDuringQuickExport
         , preserveFullDurationWhenEditing
+        , mcpForClaudeApp
+        , mcpForCopilotApp
     };
     
     enum class AcsrType : size_t
     {
           osc
+        , neuralyzer
     };
 
     using AttrContainer = Model::Container
@@ -68,10 +72,13 @@ namespace Application
     , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::ignoreTimeSelectionDuringQuickExport, bool, Model::Flag::basic>
     , Model::Attr<AttrType::preserveFullDurationWhenEditing, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::mcpForClaudeApp, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::mcpForCopilotApp, bool, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
     < Model::Acsr<AcsrType::osc, Osc::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    , Model::Acsr<AcsrType::neuralyzer, Neuralyzer::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     >;
     // clang-format on
 
@@ -102,6 +109,8 @@ namespace Application
             , {ProjectInfo::versionString}
             , {false}
             , {}
+            , {false}
+            , {false}
             , {false}
             , {false}
         }))
