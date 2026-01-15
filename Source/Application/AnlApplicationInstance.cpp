@@ -1,4 +1,5 @@
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationMcp.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -55,8 +56,22 @@ void Application::Instance::initialise(juce::String const& commandLine)
         bool const mUseCerr;
     };
 
-    mLogger = std::make_unique<Logger>(false);
+    static auto constexpr mcpPort = 3939;
+    auto const isMpcHost = commandLine.startsWith("--mcp-host");
+    mLogger = std::make_unique<Logger>(isMpcHost);
     juce::Logger::setCurrentLogger(mLogger.get());
+    if(isMpcHost)
+    {
+#if JUCE_MAC
+        juce::Process::setDockIconVisible(false);
+#endif
+        MiscDebug("Application", "Running as MCP host");
+        auto const result = Mcp::Host::run(mcpPort);
+        Instance::get().setApplicationReturnValue(result ? 0 : -1);
+        Instance::get().systemRequestedQuit();
+        return;
+    }
+
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
 
@@ -93,6 +108,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
+    mMcpDispatcher = std::make_unique<Mcp::Dispatcher>();
+
     mWindow = std::make_unique<Window>();
     mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
 
@@ -327,6 +344,8 @@ void Application::Instance::shutdown()
     mMainMenuModel.reset();
     mWindow.reset();
 
+    mMcpSever.reset();
+    mMcpDispatcher.reset();
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mOscTrackDispatcher.reset();
