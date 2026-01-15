@@ -5,6 +5,7 @@
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationMainMenuModel.h"
+#include "AnlApplicationMcp.h"
 #include "AnlApplicationModel.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationWindow.h"
@@ -109,6 +110,8 @@ namespace Application
         std::unique_ptr<Osc::TrackDispatcher> mOscTrackDispatcher;
         std::unique_ptr<Osc::TransportDispatcher> mOscTransportDispatcher;
         std::unique_ptr<Osc::MouseDispatcher> mOscMouseDispatcher;
+        std::unique_ptr<Mcp::Dispatcher> mMcpDispatcher;
+        std::unique_ptr<Mcp::Server> mMcpSever;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
