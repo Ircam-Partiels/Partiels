@@ -1,0 +1,5 @@
+{
+    "command": "PARTIELS_PATH",
+    "args": ["--mcp-host"],
+    "timeout": 300000 
+}
