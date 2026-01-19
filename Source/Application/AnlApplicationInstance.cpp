@@ -62,6 +62,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
+        auto const updateMainMenu = [this]
+        {
+            mMainMenuModel->menuItemsChanged();
+#ifdef JUCE_MAC
+            mMainMenuModel->updateAppleMenuItems();
+#endif
+        };
         switch(attribute)
         {
             case AttrType::currentDocumentFile:
@@ -78,10 +85,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             {
                 auto const file = acsr.getAttr<AttrType::currentTranslationFile>();
                 juce::LocalisedStrings::setCurrentMappings(std::make_unique<juce::LocalisedStrings>(file.existsAsFile() ? file : MainMenuModel::getSystemDefaultTranslationFile(), false).release());
-                mMainMenuModel->menuItemsChanged();
-#ifdef JUCE_MAC
-                mMainMenuModel->updateAppleMenuItems();
-#endif
+                updateMainMenu();
                 mWindow->refreshInterface();
                 break;
             }
@@ -92,10 +96,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::showInfoBubble:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             {
-                mMainMenuModel->menuItemsChanged();
-#ifdef JUCE_MAC
-                mMainMenuModel->updateAppleMenuItems();
-#endif
+                updateMainMenu();
                 break;
             }
             case AttrType::desktopGlobalScaleFactor:
@@ -118,10 +119,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             }
             case AttrType::preserveFullDurationWhenEditing:
             {
-                mMainMenuModel->menuItemsChanged();
-#ifdef JUCE_MAC
-                mMainMenuModel->updateAppleMenuItems();
-#endif
+                updateMainMenu();
                 mDocumentDirector->setPreserveFullDurationWhenEditing(acsr.getAttr<AttrType::preserveFullDurationWhenEditing>());
                 break;
             }
