@@ -1,0 +1,429 @@
+{
+  "tools": [
+    {
+      "name": "get_installed_vamp_plugins_list",
+      "description": "Get the list of Vamp plugins (keys and descriptions) installed on the system",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sampleRate": {
+            "type": "number",
+            "description": "Sample rate to use when querying plugin descriptors (defaults to 48000)",
+            "default": 48000
+          }
+        },
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "plugins": {
+            "type": "array",
+            "description": "Array of Vamp plugin keys (identifier + feature) and their descriptions"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Optional list of errors encountered while scanning"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_document_state",
+      "description": "Get the current document state with all groups and tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "deep": {
+            "type": "boolean",
+            "description": "Include detailed track information (descriptions, parameters, inputs). Defaults to false",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "description": "Array of groups in the document",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the group"
+                },
+                "tracks": {
+                  "type": "array",
+                  "description": "Array of tracks in the group",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "identifier": {
+                        "type": "string",
+                        "description": "The unique identifier of the track"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the track"
+                      },
+                      "description": {
+                        "type": "object",
+                        "description": "The description of the track"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "description": "Map of parameter identifiers to their current values"
+                      },
+                      "input": {
+                        "type": "string",
+                        "description": "The identifier of the input track (empty string if no input)" 
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_track_names",
+      "description": "Query the names of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "object",
+            "description": "Map of track identifiers to their names"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_track_descriptions",
+      "description": "Query the plugin descriptions of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "descriptions": {
+            "type": "object",
+            "description": "Map of track identifiers to their plugin descriptions"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_track_parameters",
+      "description": "Query the parameter identifiers and current values of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "description": "Map of track identifiers to their parameter identifiers and current values"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_track_inputs",
+      "description": "Query the input track identifiers of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "description": "Map of track identifiers to their input track identifiers (empty string if no input)"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_track_compatible_inputs",
+      "description": "Query the compatible input tracks for one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "compatibleInputs": {
+            "type": "object",
+            "description": "Map of track identifiers to arrays of compatible input track identifiers"
+          }
+        }
+      }
+    },
+    {
+      "name": "set_track_names",
+      "description": "Set the names of one or more tracks (each track can have a different name)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The new name for this track"
+                }
+              },
+              "required": [
+                "identifier",
+                "name"
+              ]
+            },
+            "description": "Array of track identifier and name pairs"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
+      }
+    },
+    {
+      "name": "set_track_parameters",
+      "description": "Set parameter values for one or more tracks (each track can have different parameters and values)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "parameter": {
+                  "type": "string",
+                  "description": "The identifier of the parameter to modify"
+                },
+                "value": {
+                  "type": "number",
+                  "description": "The new value for the parameter"
+                }
+              },
+              "required": [
+                "identifier",
+                "parameter",
+                "value"
+              ]
+            },
+            "description": "Array of track identifier, parameter, and value tuples"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
+      }
+    },
+    {
+      "name": "set_track_inputs",
+      "description": "Set input track connections for one or more tracks (each track can have a different input)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The identifier of the input track (empty string to disconnect)"
+                }
+              },
+              "required": [
+                "identifier",
+                "input"
+              ]
+            },
+            "description": "Array of track identifier and input track identifier pairs"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
+      }
+    },
+    {
+      "name": "create_tracks_with_plugins",
+      "description": "Create tracks from Vamp plugins",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "plugin": {
+                  "type": "object",
+                  "description": "Vamp plugin key (identifier + feature)",
+                  "properties": {
+                    "identifier": {
+                      "type": "string",
+                      "description": "Plugin identifier"
+                    },
+                    "feature": {
+                      "type": "string",
+                      "description": "Plugin feature/output"
+                    }
+                  },
+                  "required": [
+                    "identifier",
+                    "feature"
+                  ]
+                },
+                "groupIdentifier": {
+                  "type": "string",
+                  "description": "Optional group identifier; defaults to the first group"
+                },
+                "position": {
+                  "type": "integer",
+                  "description": "Optional insertion position within the group (0-based). Defaults to append."
+                }
+              },
+              "required": [
+                "plugin"
+              ]
+            },
+            "description": "Tracks to create with associated plugin keys"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "Identifiers of newly created tracks"
+          }
+        }
+      }
+    },
+    {
+      "name": "remove_tracks",
+      "description": "Remove one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Track identifiers to remove"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "array",
+            "description": "Identifiers of tracks successfully removed"
+          }
+        }
+      }
+    }
+  ]
+}
