@@ -29,6 +29,8 @@ Application::AudioReader::AudioReader()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::mcpForClaudeApp:
+            case AttrType::mcpForCopilotApp:
                 break;
             case AttrType::routingMatrix:
             {
