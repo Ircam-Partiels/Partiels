@@ -1,5 +1,4 @@
 #include "AnlApplicationInstance.h"
-#include "AnlApplicationMcp.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -108,7 +107,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
-    mMcpDispatcher = std::make_unique<Mcp::Dispatcher>();
+    mNeuralyzerMcpDispatcher = std::make_unique<Neuralyzer::Mcp::Dispatcher>();
 
 
     checkPluginsQuarantine();
@@ -128,6 +127,29 @@ void Application::Instance::initialise(juce::String const& commandLine)
             {
                 mWindow->refreshInterface();
             }
+        };
+        auto const updateMcpServer = [this, &acsr]()
+        {
+            auto const mcpForClaudeApp = acsr.getAttr<AttrType::mcpForClaudeApp>();
+            auto const mcpForCopilotApp = acsr.getAttr<AttrType::mcpForCopilotApp>();
+            if(mcpForClaudeApp || mcpForCopilotApp)
+            {
+                if(mNeuralyzerMcpSever == nullptr)
+                {
+                    mNeuralyzerMcpSever = std::make_unique<Neuralyzer::Mcp::Server>(*mNeuralyzerMcpDispatcher.get());
+                }
+                if(!mNeuralyzerMcpSever->beginWaitingForSocket(mcpPort))
+                {
+                    MiscDebug("Application::Instance", "Failed to start MCP server on port " + juce::String(mcpPort));
+                }
+            }
+            else
+            {
+                mNeuralyzerMcpSever.reset();
+            }
+
+            Neuralyzer::Mcp::Server::setClaudeApplicationEnabled(mcpForClaudeApp);
+            Neuralyzer::Mcp::Server::setCopilotApplicationEnabled(mcpForCopilotApp);
         };
         switch(attribute)
         {
@@ -180,6 +202,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
             {
                 updateMainMenu();
                 mDocumentDirector->setPreserveFullDurationWhenEditing(acsr.getAttr<AttrType::preserveFullDurationWhenEditing>());
+                break;
+            }
+            case AttrType::mcpForClaudeApp:
+            case AttrType::mcpForCopilotApp:
+            {
+                updateMainMenu();
+                updateMcpServer();
                 break;
             }
         }
@@ -353,8 +382,8 @@ void Application::Instance::shutdown()
     mMainMenuModel.reset();
     mWindow.reset();
 
-    mMcpSever.reset();
-    mMcpDispatcher.reset();
+    mNeuralyzerMcpSever.reset();
+    mNeuralyzerMcpDispatcher.reset();
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mOscTrackDispatcher.reset();
