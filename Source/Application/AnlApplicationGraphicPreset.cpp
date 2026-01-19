@@ -138,6 +138,8 @@ Application::GraphicPresetContent::GraphicPresetContent()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::mcpForClaudeApp:
+            case AttrType::mcpForCopilotApp:
                 break;
         }
     };
