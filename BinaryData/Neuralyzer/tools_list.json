@@ -1,0 +1,1926 @@
+{
+  "tools": [
+    {
+      "name": "get_installed_vamp_plugins_list",
+      "description": "Get the list of Vamp plugins (keys and brief descriptions) installed on the system",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sampleRate": {
+            "type": "number",
+            "description": "Sample rate to use when querying plugin descriptors (defaults to 48000)",
+            "default": 48000
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "plugins": {
+            "type": "array",
+            "description": "Array of Vamp plugin keys (identifier + feature) and their descriptions"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Optional list of errors encountered while scanning"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_vamp_plugin_descriptions",
+      "description": "Get full descriptions of specific Vamp plugins by their keys",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The plugin identifier"
+                },
+                "feature": {
+                  "type": "string",
+                  "description": "The feature identifier"
+                }
+              },
+              "required": [
+                "identifier",
+                "feature"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of plugin keys (identifier + feature)"
+          },
+          "sampleRate": {
+            "type": "number",
+            "description": "Sample rate to use when querying plugin descriptors (defaults to 48000)",
+            "default": 48000
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "descriptions": {
+            "type": "object",
+            "description": "Map of plugin key strings (identifier:feature) to their full descriptions"
+          },
+          "errors": {
+            "type": "object",
+            "description": "Optional map of plugin key strings to error messages for plugins that could not be loaded"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_document_state",
+      "description": "Get the current document state with all groups and tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "deep": {
+            "type": "boolean",
+            "description": "Include detailed track information (descriptions, parameters, inputs). Defaults to false",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "description": "Array of groups in the document",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the group"
+                },
+                "tracks": {
+                  "type": "array",
+                  "description": "Array of tracks in the group",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "identifier": {
+                        "type": "string",
+                        "description": "The unique identifier of the track"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the track"
+                      },
+                      "description": {
+                        "type": "object",
+                        "description": "The description of the track"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "description": "Map of parameter identifiers to their current values"
+                      },
+                      "input": {
+                        "type": "string",
+                        "description": "The identifier of the input track (empty string if no input)"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The type of the track (label, value, or vector)"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_document_audio_file_layout",
+      "description": "Get the audio file layout (audio input files and channel assignments) of the current document",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "type": "array",
+            "description": "Array of audio file layouts with file paths and channel numbers. Channel -1 = mono mix, 0 or above = specific channel index"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_document_audio_file_layout",
+      "description": "Set the audio file layout (audio input files and channel assignments) of the current document",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "type": "array",
+            "description": "Array of objects with 'file' (absolute path string) and 'channel' (-1 for mono, 0+ for specific channel)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "Absolute path to the audio file"
+                },
+                "channel": {
+                  "type": "integer",
+                  "description": "Channel number: -1 = mono mix, 0 or above = specific channel index"
+                }
+              },
+              "required": [
+                "file",
+                "channel"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "layout"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_audio_file_info",
+      "description": "Get audio file information using juce::AudioFormatReader",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Absolute path to the audio file"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Absolute path to the audio file"
+          },
+          "formatName": {
+            "type": "string",
+            "description": "Audio format name"
+          },
+          "sampleRate": {
+            "type": "number",
+            "description": "Sample rate (Hz)"
+          },
+          "bitsPerSample": {
+            "type": "integer",
+            "description": "Bits per sample"
+          },
+          "usesFloatingPointData": {
+            "type": "boolean",
+            "description": "Whether the audio data is floating point"
+          },
+          "lengthInSamples": {
+            "type": "integer",
+            "description": "Total number of samples"
+          },
+          "durationSeconds": {
+            "type": "number",
+            "description": "Duration in seconds"
+          },
+          "numChannels": {
+            "type": "integer",
+            "description": "Number of channels"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata key/value pairs"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_document_time_zoom",
+      "description": "Get the current time zoom state with both visible and global ranges",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "description": "Currently visible time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            },
+            "additionalProperties": false
+          },
+          "globalRange": {
+            "type": "object",
+            "description": "Full global time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_vertical_zoom",
+      "description": "Get the vertical zoom state of a point or vector track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the track"
+          }
+        },
+        "required": [
+          "identifier"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "globalRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_vertical_zoom",
+      "description": "Set the vertical zoom state of a point or vector track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the track"
+          },
+          "start": {
+            "type": "number",
+            "description": "Visible range start"
+          },
+          "end": {
+            "type": "number",
+            "description": "Visible range end"
+          }
+        },
+        "required": [
+          "identifier",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_group_vertical_zoom",
+      "description": "Get the vertical zoom state of the group overlay track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the group"
+          }
+        },
+        "required": [
+          "identifier"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "globalRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_group_vertical_zoom",
+      "description": "Set the vertical zoom state of the group overlay track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the group"
+          },
+          "start": {
+            "type": "number",
+            "description": "Visible range start"
+          },
+          "end": {
+            "type": "number",
+            "description": "Visible range end"
+          }
+        },
+        "required": [
+          "identifier",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_value_range",
+      "description": "Get the value range of a vector track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the track"
+          }
+        },
+        "required": [
+          "identifier"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "globalRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_value_range",
+      "description": "Set the value range of a vector track",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the track"
+          },
+          "start": {
+            "type": "number",
+            "description": "Range start"
+          },
+          "end": {
+            "type": "number",
+            "description": "Range end"
+          }
+        },
+        "required": [
+          "identifier",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_time_selection",
+      "description": "Get the current time selection range",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number",
+            "description": "Selection start in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "Selection end in seconds"
+          },
+          "isEmpty": {
+            "type": "boolean",
+            "description": "True if there is no time selection"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_selected_items",
+      "description": "Get the currently selected groups and tracks in the document",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifiers of selected groups"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifiers of selected tracks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_attached_files",
+      "description": "Get the list of file paths attached to the current chat query",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Absolute paths of the files attached to the query"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_document_time_zoom",
+      "description": "Set the currently visible time range (zoom viewport)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number",
+            "description": "Visible range start in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "Visible range end in seconds"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "description": "New visible time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_group_names",
+      "description": "Query the names of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the groups"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "object",
+            "description": "Map of group identifiers to their names"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_group_layouts",
+      "description": "Query the layouts of one or more groups (list of track identifiers in order - 0 index is top track)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the groups"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "layouts": {
+            "type": "object",
+            "description": "Map of group identifiers to their track layout (arrays of track identifiers, 0 index is top track)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_group_names",
+      "description": "Set the names of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The new name for this group"
+                }
+              },
+              "required": [
+                "identifier",
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of group identifier and name pairs"
+          }
+        },
+        "required": [
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_group_layouts",
+      "description": "Set the layout (track order) of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "layout": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of track identifiers in the desired order (0 index is top track)"
+                }
+              },
+              "required": [
+                "identifier",
+                "layout"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of group identifier and layout pairs"
+          }
+        },
+        "required": [
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_types",
+      "description": "Query the types of one or more tracks (label for markers, value for lines, vector for matrix/spectrogram)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "object",
+            "description": "Map of track identifiers to their types (label, value, or vector)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_graphics",
+      "description": "Query the graphics properties of one or more tracks. Properties returned depend on track type: label tracks (all colors except map, font, lineWidth, labelLayout), value tracks (all colors except map, font, lineWidth, unit), vector tracks (colorMap, unit)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "object",
+            "description": "Map of track identifiers to their graphics settings. Each track may have: colorMap (string - enum, vector only), colorBackground (string - #RRGGBBAA, label/value only), colorForeground (string - #RRGGBBAA, label/value only), colorDuration (string - #RRGGBBAA, label only), colorText (string - #RRGGBBAA, label/value only), colorShadow (string - #RRGGBBAA, label/value only), fontName (string, label/value only), fontSize (float, label/value only)fontStyle (string, label/value only), lineWidth (float, label/value only), unit (string, value/vector only), labelLayoutPosition (float, label only), labelLayoutJustification (string - enum, label only)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_names",
+      "description": "Query the names of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "object",
+            "description": "Map of track identifiers to their names"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_descriptions",
+      "description": "Query the plugin descriptions of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "descriptions": {
+            "type": "object",
+            "description": "Map of track identifiers to their plugin descriptions"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_parameters",
+      "description": "Query the parameter identifiers and current values of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "description": "Map of track identifiers to their parameter identifiers and current values"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_results_raw",
+      "description": "Export raw track results in CSV format. Important: always use 'get_track_results_summary' method before this method",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          },
+          "timeRanges": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "description": "Optional time ranges [[startTime, endTime], ...] in seconds; results outside all ranges are excluded"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Optional channel indices to export; exports all channels when omitted"
+          },
+          "header": {
+            "type": "string",
+            "description": "The header type: 'none' (no header), 'generic' (use generic names for columns), or 'specific' (use track specific names for columns, if available). Defaults to 'generic'"
+          },
+          "separator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1,
+            "description": "Single-character column separator (default ',')"
+          },
+          "applyExtraThresholds": {
+            "type": "boolean",
+            "description": "When true, filters frames using the track extra-threshold settings (default 'true')"
+          },
+          "allowLargeOutput": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, allows exporting more than 20 filtered results. Keep disabled unless strictly necessary"
+          },
+          "waitSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional maximum wait time in seconds for results access when analysis is still running (default 0)"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "description": "Array of text blocks, one per requested track. Each entry includes a trackId and CSV text in the tool response content"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_results_summary",
+      "description": "Compute summary statistics on track results. Returns statistics (count, min, max, median, mean, variance, skewness when possible) for values and extra-values. Important: always use this method before the 'get_track_results_raw' method",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          },
+          "applyExtraThresholds": {
+            "type": "boolean",
+            "description": "When true, filters frames using the track extra-threshold settings (default 'true')"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Optional channel indices to include; all channels are used when omitted"
+          },
+          "timeRanges": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "description": "Optional time ranges [[startTime, endTime], ...] in seconds; results outside all ranges are excluded"
+          },
+          "waitSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional maximum wait time in seconds for results access when analysis is still running (default 0)"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "type": "array",
+            "description": "Array of per-track statistics. Each entry contains a trackId, track type, optional value stats for value tracks, and extraValues stats for all tracks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_results_raw",
+      "description": "Modify the results of a track.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier of the track"
+          },
+          "results": {
+            "type": "string",
+            "description": "The results in the CSV format. For label track, each row contains time, duration, label, extraValue1, extraValue2, ... (extra values are optional). For value track, each row contains time, value, extraValue1, extraValue2, ... (extra values are optional). For vector track, each row contains time, value1, value2, ..., extraValue1, extraValue2, ... (extra values are optional)."
+          },
+          "timeRange": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "Optional time range [startTime, endTime] to update; when omitted, updates the full result range"
+          },
+          "separator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1,
+            "description": "Single-character column separator (default ',')"
+          }
+        },
+        "required": [
+          "identifier",
+          "results"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Human-readable summary of the update operation"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_inputs",
+      "description": "Query the input track identifiers of one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "description": "Map of track identifiers to their input track identifiers (empty string if no input)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_is_visible_in_group",
+      "description": "Query the visibility of one or more tracks in their group",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleInGroup": {
+            "type": "object",
+            "description": "Map of track identifiers to their visibleInGroup boolean state"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_compatible_inputs",
+      "description": "Query the compatible input tracks for one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "receiver_track_identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the receiver track"
+                },
+                "receiver_input_identifier": {
+                  "type": "string",
+                  "description": "The identifier of the input of the receiver track"
+                }
+              },
+              "required": [
+                "receiver_track_identifier",
+                "receiver_input_identifier"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of receiver track identifier and receiver input identifier"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "compatibleInputs": {
+            "type": "object",
+            "description": "Map of receiver track identifiers, receiver input identifiers to arrays of compatible sender track identifiers"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_track_extra_thresholds",
+      "description": "Query the extra thresholds used to filter results for one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "extraThresholds": {
+            "type": "object",
+            "description": "Map of track identifiers to arrays of numeric threshold values or null for unset thresholds"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_graphics",
+      "description": "Set graphics properties for one or more tracks. Available properties depend on track type: label tracks (colorBackground, colorForeground, colorDuration, colorText, colorShadow, fontName, fontSize, fontStyle, lineWidth, labelLayoutPosition, labelLayoutJustification), value tracks (colorBackground, colorForeground, colorText, colorShadow, fontName, fontSize, fontStyle, lineWidth, unit), vector tracks (colorMap, unit). color values must be a hexadecimal color strings #RRGGBBAA (e.g. '#aabbccff') and colorMap values must be one of the following strings: 'Parula', 'Heat', 'Jet', 'Turbo', 'Hot', 'Gray', 'Magma', 'Inferno', 'Plasma', 'Viridis', 'Cividis', or 'Github'. Font style values must be one of the following strings: 'normal', 'bold', 'italic', or 'bold italic'. Label layout justification values must be one of the following strings: 'top', 'centred', or 'bottom'",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "colorMap": {
+            "type": "string",
+            "description": "Optional default color map name (vector tracks only) applied when tracks.colorMap is omitted"
+          },
+          "colorBackground": {
+            "type": "string",
+            "description": "Optional default background color as #RRGGBBAA (label/value tracks only) applied when tracks.colorBackground is omitted"
+          },
+          "colorForeground": {
+            "type": "string",
+            "description": "Optional default foreground color as #RRGGBBAA (label/value tracks only) applied when tracks.colorForeground is omitted"
+          },
+          "colorDuration": {
+            "type": "string",
+            "description": "Optional default duration color as #RRGGBBAA (label tracks only) applied when tracks.colorDuration is omitted"
+          },
+          "colorText": {
+            "type": "string",
+            "description": "Optional default text color as #RRGGBBAA (label/value tracks only) applied when tracks.colorText is omitted"
+          },
+          "colorShadow": {
+            "type": "string",
+            "description": "Optional default shadow color as #RRGGBBAA (label/value tracks only) applied when tracks.colorShadow is omitted"
+          },
+          "fontName": {
+            "type": "string",
+            "description": "Optional default font typeface name (label/value tracks only) applied when tracks.fontName is omitted"
+          },
+          "fontSize": {
+            "type": "number",
+            "description": "Optional default font size in points (label/value tracks only) applied when tracks.fontSize is omitted"
+          },
+          "fontStyle": {
+            "type": "string",
+            "description": "Optional default font style (label/value tracks only) applied when tracks.fontStyle is omitted"
+          },
+          "lineWidth": {
+            "type": "number",
+            "description": "Optional default line width in pixels (label/value tracks only) applied when tracks.lineWidth is omitted"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Optional default unit string (value/vector tracks only) applied when tracks.unit is omitted"
+          },
+          "labelLayoutPosition": {
+            "type": "number",
+            "description": "Optional default label layout position (label tracks only) applied when tracks.labelLayoutPosition is omitted"
+          },
+          "labelLayoutJustification": {
+            "type": "string",
+            "description": "Optional default label layout justification (label tracks only) applied when tracks.labelLayoutJustification is omitted"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "colorMap": {
+                  "type": "string",
+                  "description": "color map name (vector tracks only, 'Parula', 'Heat', 'Jet', 'Turbo', 'Hot', 'Gray', 'Magma', 'Inferno', 'Plasma', 'Viridis', 'Cividis', or 'Github')"
+                },
+                "colorBackground": {
+                  "type": "string",
+                  "description": "Background color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorForeground": {
+                  "type": "string",
+                  "description": "Foreground color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorDuration": {
+                  "type": "string",
+                  "description": "Duration color as #RRGGBBAA color string (label tracks only)"
+                },
+                "colorText": {
+                  "type": "string",
+                  "description": "Text color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorShadow": {
+                  "type": "string",
+                  "description": "Shadow color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "fontName": {
+                  "type": "string",
+                  "description": "Font typeface name (label/value tracks only)"
+                },
+                "fontSize": {
+                  "type": "number",
+                  "description": "Font size in points (label/value tracks only)"
+                },
+                "fontStyle": {
+                  "type": "string",
+                  "description": "Font style name (label/value tracks only)"
+                },
+                "lineWidth": {
+                  "type": "number",
+                  "description": "Line width in pixels (label/value tracks only)"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit string (value/vector tracks only, empty string to clear)"
+                },
+                "labelLayoutPosition": {
+                  "type": "number",
+                  "description": "Label layout position (label tracks only)"
+                },
+                "labelLayoutJustification": {
+                  "type": "string",
+                  "description": "Label layout justification: 'top', 'centred', or 'bottom' (label tracks only)"
+                }
+              },
+              "required": [
+                "identifier"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of track identifiers with their graphics properties to modify"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_names",
+      "description": "Set the names of one or more tracks (each track can have a different name)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The new name for this track"
+                }
+              },
+              "required": [
+                "identifier",
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of track identifier and name pairs"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_parameters",
+      "description": "Set parameter values for one or more tracks (each track can have different parameters and values)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "array",
+            "description": "Optional default array of key/value parameter pairs applied first to all tracks; tracks.parameters then overrides these defaults",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "The identifier of the parameter to modify"
+                },
+                "value": {
+                  "type": "number",
+                  "description": "The new value for the parameter"
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "parameters": {
+                  "type": "array",
+                  "description": "Array of key/value parameter pairs to modify",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "description": "The identifier of the parameter to modify"
+                      },
+                      "value": {
+                        "type": "number",
+                        "description": "The new value for the parameter"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "identifier"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of track identifiers with optional key/value parameter arrays applied on top of top-level parameters"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_inputs",
+      "description": "Set input track connections for one or more tracks (each track can have a different input)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "receiver_input_identifier": {
+            "type": "string",
+            "description": "Optional default receiver input identifier applied to all tracks when tracks.receiver_input_identifier is omitted"
+          },
+          "sender_track_identifier": {
+            "type": "string",
+            "description": "Optional default sender track identifier applied to all tracks when tracks.sender_track_identifier is omitted (empty string to disconnect)"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "receiver_track_identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the receiver track"
+                },
+                "receiver_input_identifier": {
+                  "type": "string",
+                  "description": "The identifier of the input of the receiver track"
+                },
+                 "sender_track_identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the sender track (empty string to disconnect)"
+                }
+              },
+              "required": [
+                "receiver_track_identifier"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of receiver track identifiers with optional receiver input identifier and sender track identifier"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_is_visible_in_group",
+      "description": "Set the visibility of one or more tracks in their group",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "visibleInGroup": {
+                  "type": "boolean",
+                  "description": "Whether this track is visible in its group"
+                }
+              },
+              "required": [
+                "identifier",
+                "visibleInGroup"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of track identifier and visibleInGroup state pairs"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_track_extra_thresholds",
+      "description": "Set the extra thresholds used to filter results for one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "extraThresholds": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "Optional default array of threshold values applied when tracks.extraThresholds is omitted"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "extraThresholds": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "description": "Array of threshold values matching the plugin extra outputs; use null to leave a threshold unset"
+                }
+              },
+              "required": [
+                "identifier"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Array of track identifiers with optional extraThresholds arrays"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_tracks_with_plugins",
+      "description": "Create tracks from Vamp plugins",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plugin": {
+            "type": "object",
+            "description": "Optional default Vamp plugin key (identifier + feature) applied when tracks.plugin is omitted",
+            "properties": {
+              "identifier": {
+                "type": "string",
+                "description": "Plugin identifier"
+              },
+              "feature": {
+                "type": "string",
+                "description": "Plugin feature/output"
+              }
+            },
+            "required": [
+              "identifier",
+              "feature"
+            ],
+            "additionalProperties": false
+          },
+          "groupIdentifier": {
+            "type": "string",
+            "description": "Optional default group identifier applied when tracks.groupIdentifier is omitted"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Optional default array of key/value parameter pairs applied with tracks.parameters after track creation",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "The identifier of the parameter to modify"
+                },
+                "value": {
+                  "type": "number",
+                  "description": "The new value for the parameter"
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "plugin": {
+                  "type": "object",
+                  "description": "Vamp plugin key (identifier + feature)",
+                  "properties": {
+                    "identifier": {
+                      "type": "string",
+                      "description": "Plugin identifier"
+                    },
+                    "feature": {
+                      "type": "string",
+                      "description": "Plugin feature/output"
+                    }
+                  },
+                  "required": [
+                    "identifier",
+                    "feature"
+                  ],
+                  "additionalProperties": false
+                },
+                "groupIdentifier": {
+                  "type": "string",
+                  "description": "Optional group identifier; defaults to the first group"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Optional custom name for the created track; defaults to the automatic plugin/feature name"
+                },
+                "parameters": {
+                  "type": "array",
+                  "description": "Optional array of key/value parameter pairs to apply after track creation",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "description": "The identifier of the parameter to modify"
+                      },
+                      "value": {
+                        "type": "number",
+                        "description": "The new value for the parameter"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "position": {
+                  "type": "integer",
+                  "description": "Optional insertion position within the group (0-based). Defaults to append."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "description": "Tracks to create with optional per-track overrides for plugin, groupIdentifier, and parameters"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "Identifiers of newly created tracks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_tracks_with_files",
+      "description": "Create tracks from analysis/result files",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groupIdentifier": {
+            "type": "string",
+            "description": "Optional default group identifier applied when tracks.groupIdentifier is omitted"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "Absolute path to the analysis/result file to import as a track"
+                },
+                "groupIdentifier": {
+                  "type": "string",
+                  "description": "Optional group identifier; defaults to the first group"
+                },
+                "position": {
+                  "type": "integer",
+                  "description": "Optional insertion position within the group (0-based). Defaults to append."
+                }
+              },
+              "required": [
+                "file"
+              ],
+              "additionalProperties": false
+            },
+              "description": "Tracks to create from associated files with optional per-track groupIdentifier override"
+          }
+        },
+        "required": [
+          "tracks"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "Identifiers of newly created tracks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "remove_tracks",
+      "description": "Remove one or more tracks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Track identifiers to remove"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "array",
+            "description": "Identifiers of tracks successfully removed"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_groups",
+      "description": "Create one or more new groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Optional name for the new group"
+                },
+                "position": {
+                  "type": "integer",
+                  "description": "Optional insertion position (0-based). Defaults to append."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "description": "Groups to create with their optional names and positions"
+          }
+        },
+        "required": [
+          "groups"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "Identifiers of newly created groups"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "remove_groups",
+      "description": "Remove one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Group identifiers to remove"
+          }
+        },
+        "required": [
+          "identifiers"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "array",
+            "description": "Identifiers of groups successfully removed"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}
