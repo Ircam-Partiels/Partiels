@@ -40,6 +40,7 @@ namespace Application
         , globalGraphicPreset
         , ignoreTimeSelectionDuringQuickExport
         , preserveFullDurationWhenEditing
+        , mcpForClaudeApp
     };
     
     enum class AcsrType : size_t
@@ -68,6 +69,7 @@ namespace Application
     , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::ignoreTimeSelectionDuringQuickExport, bool, Model::Flag::basic>
     , Model::Attr<AttrType::preserveFullDurationWhenEditing, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::mcpForClaudeApp, bool, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -102,6 +104,7 @@ namespace Application
             , {ProjectInfo::versionString}
             , {false}
             , {}
+            , {false}
             , {false}
             , {false}
         }))
