@@ -198,6 +198,12 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                                {
                                    Instance::get().getApplicationAccessor().setAttr<AttrType::preserveFullDurationWhenEditing>(!Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>(), NotificationType::synchronous);
                                });
+    auto const mcpForClaudeApp = accessor.getAttr<AttrType::mcpForClaudeApp>();
+    globalSettingsMenu.addItem(juce::translate("MCP for the Claude Desktop Application"), true, mcpForClaudeApp, []()
+                               {
+                                   Instance::get().getApplicationAccessor().setAttr<AttrType::mcpForClaudeApp>(!Instance::get().getApplicationAccessor().getAttr<AttrType::mcpForClaudeApp>(), NotificationType::synchronous);
+                               });
+
     juce::PopupMenu templateMenu;
     auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
     templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()

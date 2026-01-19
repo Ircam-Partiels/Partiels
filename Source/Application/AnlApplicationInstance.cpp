@@ -178,6 +178,23 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 mDocumentDirector->setPreserveFullDurationWhenEditing(acsr.getAttr<AttrType::preserveFullDurationWhenEditing>());
                 break;
             }
+            case AttrType::mcpForClaudeApp:
+            {
+                updateMainMenu();
+                if(acsr.getAttr<AttrType::mcpForClaudeApp>())
+                {
+                    mMcpSever = std::make_unique<Mcp::Server>(*mMcpDispatcher.get());
+                    if(!mMcpSever->beginWaitingForSocket(mcpPort))
+                    {
+                        MiscDebug("Application::Instance", "Failed to start MCP server on port " + juce::String(mcpPort));
+                    }
+                }
+                else
+                {
+                    mMcpSever.reset();
+                }
+                break;
+            }
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
