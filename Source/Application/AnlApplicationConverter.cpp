@@ -169,6 +169,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::mcpForClaudeApp:
                 break;
             case AttrType::autoLoadConvertedFile:
             {
