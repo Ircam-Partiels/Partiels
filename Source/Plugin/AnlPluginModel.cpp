@@ -11,7 +11,7 @@ bool Plugin::Output::operator==(Output const& rhs) const noexcept
            unit == rhs.unit &&
            hasFixedBinCount == rhs.hasFixedBinCount &&
            (!hasFixedBinCount || binCount == rhs.binCount) &&
-           binNames == rhs.binNames &&
+           // binNames == rhs.binNames &&
            hasKnownExtents == rhs.hasKnownExtents &&
            (!hasKnownExtents || std::abs(minValue - rhs.minValue) < std::numeric_limits<float>::epsilon()) &&
            (!hasKnownExtents || std::abs(maxValue - rhs.maxValue) < std::numeric_limits<float>::epsilon()) &&
@@ -56,7 +56,7 @@ void Plugin::to_json(nlohmann::json& j, Output const& output)
     j["unit"] = output.unit;
     j["hasFixedBinCount"] = output.hasFixedBinCount;
     j["binCount"] = output.binCount;
-    j["binNames"] = output.binNames;
+    // j["binNames"] = output.binNames;
     j["hasKnownExtents"] = output.hasKnownExtents;
     j["minValue"] = output.minValue;
     j["maxValue"] = output.maxValue;
@@ -75,7 +75,7 @@ void Plugin::from_json(nlohmann::json const& j, Output& output)
     output.unit = j.value("unit", output.unit);
     output.hasFixedBinCount = j.value("hasFixedBinCount", output.hasFixedBinCount);
     output.binCount = j.value("binCount", output.binCount);
-    output.binNames = j.value("binNames", output.binNames);
+    // output.binNames = j.value("binNames", output.binNames);
     output.hasKnownExtents = j.value("hasKnownExtents", output.hasKnownExtents);
     output.minValue = j.value("minValue", output.minValue);
     output.maxValue = j.value("maxValue", output.maxValue);
@@ -301,13 +301,13 @@ void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier co
         toXml(*child, "hasFixedBinCount", value.hasFixedBinCount);
         toXml(*child, "binCount", value.binCount);
         // If the plugins has only empty names, this is ignored
-        if(std::any_of(value.binNames.cbegin(), value.binNames.cend(), [](auto const& name)
-                       {
-                           return !name.empty();
-                       }))
-        {
-            toXml(*child, "binNames", value.binNames);
-        }
+        //        if(std::any_of(value.binNames.cbegin(), value.binNames.cend(), [](auto const& name)
+        //                       {
+        //                           return !name.empty();
+        //                       }))
+        //        {
+        //            toXml(*child, "binNames", value.binNames);
+        //        }
         toXml(*child, "hasKnownExtents", value.hasKnownExtents);
         toXml(*child, "minValue", value.minValue);
         toXml(*child, "maxValue", value.maxValue);
@@ -337,7 +337,7 @@ auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Ident
     value.unit = fromXml(*child, "unit", defaultValue.unit);
     value.hasFixedBinCount = fromXml(*child, "hasFixedBinCount", defaultValue.hasFixedBinCount);
     value.binCount = fromXml(*child, "binCount", defaultValue.binCount);
-    value.binNames = fromXml(*child, "binNames", defaultValue.binNames);
+    // value.binNames = fromXml(*child, "binNames", defaultValue.binNames);
     value.hasKnownExtents = fromXml(*child, "hasKnownExtents", defaultValue.hasKnownExtents);
     value.minValue = fromXml(*child, "minValue", defaultValue.minValue);
     value.maxValue = fromXml(*child, "maxValue", defaultValue.maxValue);
