@@ -52,12 +52,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mAudioReader = std::make_unique<AudioReader>();
     mProperties = std::make_unique<Properties>();
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
-    mWindow = std::make_unique<Window>();
-    mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
     mDownloader = std::make_unique<Downloader>();
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
+    mWindow = std::make_unique<Window>();
+    mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
+
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -285,12 +286,13 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mMainMenuModel.reset();
+    mWindow.reset();
+
     mOscMouseDispatcher.reset();
     mOscTransportDispatcher.reset();
     mOscTrackDispatcher.reset();
     mDownloader.reset();
-    mMainMenuModel.reset();
-    mWindow.reset();
     mDocumentFileBased.reset();
     mAudioReader.reset();
     mProperties.reset();
