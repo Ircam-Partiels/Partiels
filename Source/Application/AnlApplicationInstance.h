@@ -104,13 +104,15 @@ namespace Application
         std::unique_ptr<Properties> mProperties;
         std::unique_ptr<Document::FileBased> mDocumentFileBased;
 
-        std::unique_ptr<Window> mWindow;
-        std::unique_ptr<MainMenuModel> mMainMenuModel;
-        std::unique_ptr<CommandLine> mCommandLine;
         std::unique_ptr<Downloader> mDownloader;
         std::unique_ptr<Osc::TrackDispatcher> mOscTrackDispatcher;
         std::unique_ptr<Osc::TransportDispatcher> mOscTransportDispatcher;
         std::unique_ptr<Osc::MouseDispatcher> mOscMouseDispatcher;
+
+        std::unique_ptr<Window> mWindow;
+        std::unique_ptr<MainMenuModel> mMainMenuModel;
+
+        std::unique_ptr<CommandLine> mCommandLine;
 
         std::atomic<bool> mIsPluginListReady{true};
         juce::File mPreviousFile{};
