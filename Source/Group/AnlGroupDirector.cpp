@@ -177,27 +177,24 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
     };
 
     auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState);
-    if(action != nullptr)
+    switch(state)
     {
-        switch(state)
+        case ActionState::abort:
         {
-            case ActionState::abort:
-            {
-                action->undo();
-            }
-            break;
-            case ActionState::newTransaction:
-            {
-                mUndoManager.beginNewTransaction(name);
-                mUndoManager.perform(action.release());
-            }
-            break;
-            case ActionState::continueTransaction:
-            {
-                mUndoManager.perform(action.release());
-            }
-            break;
+            action->undo();
         }
+        break;
+        case ActionState::newTransaction:
+        {
+            mUndoManager.beginNewTransaction(name);
+            mUndoManager.perform(action.release());
+        }
+        break;
+        case ActionState::continueTransaction:
+        {
+            mUndoManager.perform(action.release());
+        }
+        break;
     }
 
     if(includeTracks)
