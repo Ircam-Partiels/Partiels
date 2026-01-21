@@ -185,6 +185,7 @@ bool Document::Exporter::Options::isCompatible(Track::FrameType frameType) const
         case Format::sdif:
             return true;
     }
+    return false;
 }
 
 void Document::Exporter::Options::setPlotDimension(juce::String const& identifier)
