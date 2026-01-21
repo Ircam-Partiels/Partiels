@@ -119,6 +119,28 @@ Video recordings of Partiels presentations are available in this [discussion](ht
 
 The following academic publications present the Partiels software:
 
+### RFIM 2025 Journal Article
+
+**Partiels, une suite logicielle dédiée à l'analyse des fichiers audionumériques**  
+Pierre Guillot  
+*Revue francophone d'informatique musicale (RFIM), n° 11 — Frugalité, pérennité et création*  
+December 2025  
+[📄 PDF](https://revues.mshparisnord.fr/rfim/pdf/922.pdf) | [🔗 Article](https://revues.mshparisnord.fr/rfim/index.php?id=922)
+
+```bibtex
+@article{guillot_rfim_2025,
+    author  = {Guillot, Pierre},
+    title   = {Partiels, une suite logicielle dédiée à l'analyse des fichiers audionumériques},
+    journal = {Revue Francophone d'Informatique et Musique},
+    number  = {11},
+    year    = {2025},
+    month   = dec,
+    doi     = {10.56698/rfim.922},
+    url     = {https://revues.mshparisnord.fr/rfim/index.php?id=922},
+    pdf     = {https://revues.mshparisnord.fr/rfim/pdf/922.pdf}
+}
+```
+
 ### DAFx 2025 Conference Paper
 
 **Partiels : Exploring, Analyzing and Understanding Sounds**  
