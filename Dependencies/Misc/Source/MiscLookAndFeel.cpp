@@ -180,7 +180,7 @@ void LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(juce::ScrollBar::ColourIds::thumbColourId, colourChart.get(Type::inactive));
 
     // juce::ListBox
-    setColour(juce::ListBox::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::ListBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ListBox::ColourIds::outlineColourId, colourChart.get(Type::border));
     setColour(juce::ListBox::ColourIds::textColourId, colourChart.get(Type::text));
 
