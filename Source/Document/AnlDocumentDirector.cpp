@@ -518,27 +518,24 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
     };
 
     auto action = std::make_unique<Action>(mAccessor, mSavedState);
-    if(action != nullptr)
+    switch(state)
     {
-        switch(state)
+        case ActionState::abort:
         {
-            case ActionState::abort:
-            {
-                action->undo();
-            }
-            break;
-            case ActionState::newTransaction:
-            {
-                mUndoManager.beginNewTransaction(name);
-                mUndoManager.perform(action.release());
-            }
-            break;
-            case ActionState::continueTransaction:
-            {
-                mUndoManager.perform(action.release());
-            }
-            break;
+            action->undo();
         }
+        break;
+        case ActionState::newTransaction:
+        {
+            mUndoManager.beginNewTransaction(name);
+            mUndoManager.perform(action.release());
+        }
+        break;
+        case ActionState::continueTransaction:
+        {
+            mUndoManager.perform(action.release());
+        }
+        break;
     }
 }
 

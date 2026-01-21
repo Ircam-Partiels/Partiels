@@ -93,11 +93,8 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
         };
 
         auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentTime, time);
-        if(action != nullptr)
-        {
-            undoManager.beginNewTransaction(juce::translate("Change Frame Time"));
-            undoManager.perform(action.release());
-        }
+        undoManager.beginNewTransaction(juce::translate("Change Frame Time"));
+        undoManager.perform(action.release());
     };
 }
 
@@ -215,11 +212,8 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
         };
 
         auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentDuration, time);
-        if(action != nullptr)
-        {
-            undoManager.beginNewTransaction(juce::translate("Change Frame Duration"));
-            undoManager.perform(action.release());
-        }
+        undoManager.beginNewTransaction(juce::translate("Change Frame Duration"));
+        undoManager.perform(action.release());
     };
 }
 
@@ -337,11 +331,8 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
         };
 
         auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentLabel, mLabel.getText().toStdString());
-        if(action != nullptr)
-        {
-            undoManager.beginNewTransaction(juce::translate("Change Frame Label"));
-            undoManager.perform(action.release());
-        }
+        undoManager.beginNewTransaction(juce::translate("Change Frame Label"));
+        undoManager.perform(action.release());
     };
 
     addAndMakeVisible(mNumberField);
@@ -398,11 +389,8 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
         };
 
         auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentValue, mNumberField.isOptional() ? std::optional<float>{} : std::optional<float>(static_cast<float>(newValue)));
-        if(action != nullptr)
-        {
-            undoManager.beginNewTransaction(juce::translate("Change Frame Value"));
-            undoManager.perform(action.release());
-        }
+        undoManager.beginNewTransaction(juce::translate("Change Frame Value"));
+        undoManager.perform(action.release());
     };
 }
 
@@ -594,11 +582,8 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
 
         auto const maxValue = Tools::getExtraRange(mAccessor, mExtraIndex).value_or(juce::Range<double>()).getEnd();
         auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mExtraIndex, mCurrentValue, newValue, maxValue);
-        if(action != nullptr)
-        {
-            undoManager.beginNewTransaction(juce::translate("Change Frame Extra Value"));
-            undoManager.perform(action.release());
-        }
+        undoManager.beginNewTransaction(juce::translate("Change Frame Extra Value"));
+        undoManager.perform(action.release());
     };
 }
 
