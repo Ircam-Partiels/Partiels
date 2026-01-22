@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="132097" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/Dona.ptldoc"
+          grid="1" autoresize="1" samplerate="44100.0" channels="1" description="">
+  <reader>
+    <value file="/Users/guillot/Desktop/Dona.wav" channel="0"/>
+  </reader>
+  <layout value="1024b79dbc114e7e83b5adf970009a17"/>
+  <timeZoom MiscModelVersion="132097" globalRange_start="0.0" globalRange_end="9.353356009070295"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="1.0">
+    <grid MiscModelVersion="132097" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="132097" startPlayhead="0.616206589492431" looping="0"
+             loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0" autoScroll="1"
+             gain="1.0" magnetize="0"/>
+  <groups MiscModelVersion="132097" identifier="1024b79dbc114e7e83b5adf970009a17"
+          name="Group 1" height="747" colour="0" expanded="0" referenceid="">
+    <layout value="0d9a05caaf4b47baa4b03ee07f1716b7"/>
+    <zoom MiscModelVersion="132097" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="132097" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="132097" identifier="0d9a05caaf4b47baa4b03ee07f1716b7"
+          name="Fast Fourier Transform" input="" sampleRate="44100.0" height="120"
+          showInGroup="1" oscIdentifier="" sendViaOsc="0" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" includeHeaderRow="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="Fast Fourier Transform" inputDomain="0" maker="Ircam" version="7"
+                 category="Visualisation" details="The Fast Fourier transform analysis performed by SuperVP&#10;Copyright 2024 Ircam. All rights reserved. Plugin by Pierre Guillot and Matthew Harris. SuperVP by Axel R&#246;bel and Fr&#233;d&#233;ric Cornu.">
+      <defaultState blockSize="64" stepSize="0" windowType="3">
+        <parameters key="fftoversampling" value="0.0"/>
+        <parameters key="windowoverlapping" value="1.0"/>
+        <parameters key="windowsize" value="23.21995544433594"/>
+        <parameters key="windowtype" value="1.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="windowtype" name="Window Type" description="The window type of the analysis"
+               unit="" minValue="0.0" maxValue="2.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="Blackman"/>
+          <valueNames value="Hanning"/>
+          <valueNames value="Hamming"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="windowsize" name="Window Size" description="The size of the window of the analysis"
+               unit="ms" minValue="0.3333333432674408" maxValue="10000.0" defaultValue="23.21995544433594"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="windowoverlapping" name="Window Overlapping" description="The overlapping of the window of the analysis"
+               unit="x" minValue="0.0" maxValue="4.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="3"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+          <valueNames value="16"/>
+          <valueNames value="32"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="fftoversampling" name="FFT Oversampling" description="The FFT oversampling of the analysis"
+               unit="x" minValue="0.0" maxValue="3.0" defaultValue="0.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="1"/>
+          <valueNames value="2"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+        </value>
+      </parameters>
+      <output identifier="spectrogram" name="Spectrogram" description="Energy of the frequency spectrum bins calculated from the input signal"
+              unit="dB" hasFixedBinCount="1" binCount="513" hasKnownExtents="1"
+              minValue="-120.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="0"/>
+    </description>
+    <key identifier="supervp:supervpspectrogramfft" feature="spectrogram"/>
+    <state blockSize="64" stepSize="64" windowType="3">
+      <parameters key="fftoversampling" value="0.0"/>
+      <parameters key="windowoverlapping" value="1.0"/>
+      <parameters key="windowsize" value="23.21995544433594"/>
+      <parameters key="windowtype" value="1.0"/>
+    </state>
+    <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
+      <colours map="7" background="0" foreground="ff000000" duration="66000000"
+               text="ff000000" shadow="0"/>
+      <labelLayout position="12.0" justification="0"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="132097" globalRange_start="-120.0" globalRange_end="0.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
+               visibleRange_end="0.0">
+      <grid MiscModelVersion="132097" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132097" globalRange_start="0.0" globalRange_end="513.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="513.0">
+      <grid MiscModelVersion="132097" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>

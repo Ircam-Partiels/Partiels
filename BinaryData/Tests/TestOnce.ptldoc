@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="132096" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/Partiels/BinaryData/Tests/TestOnce.ptldoc"
+          grid="1" autoresize="1" samplerate="44100.0" channels="1" description="">
+  <reader>
+    <value file="/Users/guillot/Nextcloud/Action Culturelle/Sean.wav" channel="0"/>
+  </reader>
+  <layout value="98601322c84a49e18575ebf7805978cf"/>
+  <timeZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="2.593151927437642"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="2.593151927437642">
+    <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="132096" startPlayhead="0.09929254931417505"
+             looping="0" loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0"
+             autoScroll="1" gain="1.0" magnetize="0"/>
+  <groups MiscModelVersion="132096" identifier="98601322c84a49e18575ebf7805978cf"
+          name="Group 1" height="747" colour="0" expanded="0" referenceid="">
+    <layout value="f08ec765a4474c07af3dd458ffa053f3"/>
+    <layout value="561ddfe2b50d496b9412abeabf09d77f"/>
+    <layout value="9b7987b77e894c35808f767af6794bb9"/>
+    <zoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="132096" identifier="9b7987b77e894c35808f767af6794bb9"
+          name="Fast Fourier Transform" input="" sampleRate="44100.0" height="106"
+          showInGroup="1" oscIdentifier="" sendViaOsc="0" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" includeHeaderRow="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="Fast Fourier Transform" inputDomain="0" maker="Ircam" version="7"
+                 category="Visualisation" details="The Fast Fourier transform analysis performed by SuperVP&#10;Copyright 2024 Ircam. All rights reserved. Plugin by Pierre Guillot and Matthew Harris. SuperVP by Axel R&#246;bel and Fr&#233;d&#233;ric Cornu.">
+      <defaultState blockSize="64" stepSize="0" windowType="3">
+        <parameters key="fftoversampling" value="0.0"/>
+        <parameters key="windowoverlapping" value="1.0"/>
+        <parameters key="windowsize" value="23.21995544433594"/>
+        <parameters key="windowtype" value="1.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="windowtype" name="Window Type" description="The window type of the analysis"
+               unit="" minValue="0.0" maxValue="2.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="Blackman"/>
+          <valueNames value="Hanning"/>
+          <valueNames value="Hamming"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="windowsize" name="Window Size" description="The size of the window of the analysis"
+               unit="ms" minValue="0.3333333432674408" maxValue="10000.0" defaultValue="23.21995544433594"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="windowoverlapping" name="Window Overlapping" description="The overlapping of the window of the analysis"
+               unit="x" minValue="0.0" maxValue="4.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="3"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+          <valueNames value="16"/>
+          <valueNames value="32"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="fftoversampling" name="FFT Oversampling" description="The FFT oversampling of the analysis"
+               unit="x" minValue="0.0" maxValue="3.0" defaultValue="0.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="1"/>
+          <valueNames value="2"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+        </value>
+      </parameters>
+      <output identifier="spectrogram" name="Spectrogram" description="Energy of the frequency spectrum bins calculated from the input signal"
+              unit="dB" hasFixedBinCount="1" binCount="513" hasKnownExtents="1"
+              minValue="-120.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="0"/>
+    </description>
+    <key identifier="supervp:supervpspectrogramfft" feature="spectrogram"/>
+    <state blockSize="64" stepSize="64" windowType="3">
+      <parameters key="fftoversampling" value="0.0"/>
+      <parameters key="windowoverlapping" value="1.0"/>
+      <parameters key="windowsize" value="23.21995544433594"/>
+      <parameters key="windowtype" value="1.0"/>
+    </state>
+    <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
+      <colours map="0" background="0" foreground="ff000000" duration="66000000"
+               text="ff000000" shadow="0"/>
+      <labelLayout position="12.0" justification="0"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="132096" globalRange_start="-120.0" globalRange_end="0.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
+               visibleRange_end="0.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="513.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="513.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="132096" identifier="f08ec765a4474c07af3dd458ffa053f3"
+          name="Whisper" input="" sampleRate="48000.0" height="107" showInGroup="1"
+          oscIdentifier="" sendViaOsc="0" zoomValueMode="0" zoomLogScale="0"
+          zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" includeHeaderRow="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="Whisper" inputDomain="0" maker="Ircam" version="3" category="Speech To Text"
+                 details="Automatic speech recognition using OpenAI's Whisper model.&#10;Whisper models by OpenAI. Whisper.cpp by Georgi Gerganov. Whisper Vamp Plugin by Pierre Guillot. Copyright 2024 Ircam. All rights reserved.">
+      <defaultState blockSize="1024" stepSize="0" windowType="3">
+        <parameters key="model" value="0.0"/>
+        <parameters key="splitmode" value="2.0"/>
+        <parameters key="suppressnonspeechtokens" value="1.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="model" name="Model" description="The model used to generate the tokens"
+               unit="" minValue="0.0" maxValue="5.0" defaultValue="0.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="ggml-base-q5_1 (embedded)"/>
+          <valueNames value="ggml-medium-q5_0"/>
+          <valueNames value="ggml-tiny-q5_1"/>
+          <valueNames value="ggml-small-q5_1"/>
+          <valueNames value="ggml-large-v2-q5_0"/>
+          <valueNames value="ggml-large-v3-turbo-q5_0"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="splitmode" name="Split Mode" description="The model splits the text on sentences, words or tokens"
+               unit="" minValue="0.0" maxValue="2.0" defaultValue="2.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="Sentences"/>
+          <valueNames value="Words"/>
+          <valueNames value="Tokens"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="suppressnonspeechtokens" name="Suppress Non-Speech Tokens"
+               description="The model suppresses non-speech tokens" unit=""
+               minValue="0.0" maxValue="1.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0"/>
+      </parameters>
+      <output identifier="token" name="Token" description="Tokens generated by text-to-speech transcription"
+              unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="1"/>
+      <extraOutputs>
+        <value identifier="probability" name="Probability" description="The probability of the generated token"
+               unit="" hasKnownExtents="1" minValue="0.0" maxValue="1.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+      <input identifier="token" name="Region" description="Time regions used to separate token generation sequences"
+             unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+             minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+             sampleType="2" sampleRate="0.0" hasDuration="0"/>
+    </description>
+    <key identifier="ircamwhisper:whisper" feature="token"/>
+    <state blockSize="1024" stepSize="1024" windowType="3">
+      <parameters key="model" value="0.0"/>
+      <parameters key="splitmode" value="0.0"/>
+      <parameters key="suppressnonspeechtokens" value="1.0"/>
+    </state>
+    <graphicsSettings font="Nunito Sans; 18.0 Regular" lineWidth="1.0">
+      <colours map="7" background="ff000000" foreground="ffffffff" duration="0"
+               text="ffffffff" shadow="0"/>
+      <labelLayout position="12.0" justification="1"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="0.0"
+               minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="132096" identifier="561ddfe2b50d496b9412abeabf09d77f"
+          name="Feature Scoring" input="" sampleRate="48000.0" height="107"
+          showInGroup="1" oscIdentifier="" sendViaOsc="0" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" includeHeaderRow="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="Feature Scoring" inputDomain="0" maker="Ircam" version="7"
+                 category="Pitch" details="The F0 Feature Scoring analysis performed by SuperVP&#10;Copyright 2024 Ircam. All rights reserved. Plugin by Pierre Guillot and Matthew Harris. SuperVP by Axel R&#246;bel and Fr&#233;d&#233;ric Cornu.">
+      <defaultState blockSize="64" stepSize="0" windowType="3">
+        <parameters key="envelopeweight" value="0.1400000005960464"/>
+        <parameters key="fftoversampling" value="0.0"/>
+        <parameters key="maxpitch" value="1000.0"/>
+        <parameters key="maxspectrumfreq" value="3000.0"/>
+        <parameters key="minpitch" value="50.0"/>
+        <parameters key="relnoisethreshold" value="-70.0"/>
+        <parameters key="smoothorder" value="1.0"/>
+        <parameters key="spectralmatchweight" value="0.2599999904632568"/>
+        <parameters key="windowoverlapping" value="1.0"/>
+        <parameters key="windowsize" value="23.21995544433594"/>
+        <parameters key="windowtype" value="1.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="windowtype" name="Window Type" description="The window type of the analysis"
+               unit="" minValue="0.0" maxValue="2.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="Blackman"/>
+          <valueNames value="Hanning"/>
+          <valueNames value="Hamming"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="windowsize" name="Window Size" description="The size of the window of the analysis"
+               unit="ms" minValue="0.3333333432674408" maxValue="10000.0" defaultValue="23.21995544433594"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="windowoverlapping" name="Window Overlapping" description="The overlapping of the window of the analysis"
+               unit="x" minValue="0.0" maxValue="4.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="3"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+          <valueNames value="16"/>
+          <valueNames value="32"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="fftoversampling" name="FFT Oversampling" description="The FFT oversampling of the analysis"
+               unit="x" minValue="0.0" maxValue="3.0" defaultValue="0.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="1"/>
+          <valueNames value="2"/>
+          <valueNames value="4"/>
+          <valueNames value="8"/>
+        </value>
+      </parameters>
+      <parameters>
+        <value identifier="minpitch" name="Minimum Pitch" description="The minimum frequency of the pitch estimation"
+               unit="Hz" minValue="1.0" maxValue="96000.0" defaultValue="50.0"
+               isQuantized="1" quantizeStep="1.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxpitch" name="Maximum Pitch" description="The maximum frequency of the pitch estimation"
+               unit="Hz" minValue="1.0" maxValue="96000.0" defaultValue="1000.0"
+               isQuantized="1" quantizeStep="1.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="maxspectrumfreq" name="Maximum Spectrum Frequency"
+               description="The maximum frequency in the spectrum" unit="Hz"
+               minValue="1.0" maxValue="96000.0" defaultValue="3000.0" isQuantized="1"
+               quantizeStep="1.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="relnoisethreshold" name="Relative Noise Threshold"
+               description="The relative noise threshold" unit="dB" minValue="-120.0"
+               maxValue="0.0" defaultValue="-70.0" isQuantized="1" quantizeStep="1.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="smoothorder" name="Smooth Order" description="The median smoothing order"
+               unit="" minValue="1.0" maxValue="31.0" defaultValue="1.0" isQuantized="1"
+               quantizeStep="2.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="envelopeweight" name="Envelope Weight" description="The envelope weight (should not exceed 1 minus the spectral match weight)"
+               unit="" minValue="0.0" maxValue="1.0" defaultValue="0.1400000005960464"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <parameters>
+        <value identifier="spectralmatchweight" name="Spectral Match Weight"
+               description="The spectral match weight (should not exceed 1 minus the envelope weight)"
+               unit="" minValue="0.0" maxValue="1.0" defaultValue="0.2599999904632568"
+               isQuantized="0" quantizeStep="0.0"/>
+      </parameters>
+      <output identifier="fundamental" name="Pitch" description="Pitch estimated from the input signal"
+              unit="Hz" hasFixedBinCount="1" binCount="1" hasKnownExtents="1"
+              minValue="0.0" maxValue="22050.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="0"/>
+      <extraOutputs>
+        <value identifier="score" name="Score" description="The score of the estimated periodicity"
+               unit="" hasKnownExtents="1" minValue="0.0" maxValue="1.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+    </description>
+    <key identifier="supervp:supervpf0featurescoring" feature="fundamental"/>
+    <state blockSize="64" stepSize="64" windowType="3">
+      <parameters key="envelopeweight" value="0.1400000005960464"/>
+      <parameters key="fftoversampling" value="0.0"/>
+      <parameters key="maxpitch" value="1000.0"/>
+      <parameters key="maxspectrumfreq" value="3000.0"/>
+      <parameters key="minpitch" value="50.0"/>
+      <parameters key="relnoisethreshold" value="-70.0"/>
+      <parameters key="smoothorder" value="1.0"/>
+      <parameters key="spectralmatchweight" value="0.2599999904632568"/>
+      <parameters key="windowoverlapping" value="1.0"/>
+      <parameters key="windowsize" value="23.21995544433594"/>
+      <parameters key="windowtype" value="1.0"/>
+    </state>
+    <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="2.0">
+      <colours map="7" background="0" foreground="ffff0000" duration="66000000"
+               text="ffff0000" shadow="0"/>
+      <labelLayout position="12.0" justification="0"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="22050.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
+               visibleRange_end="22050.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132096" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132096" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
