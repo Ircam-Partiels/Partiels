@@ -48,6 +48,100 @@ std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
     return std::make_tuple(juce::String{}, 0_z);
 }
 
+std::optional<juce::String> Application::Tools::addPluginTrack(juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key)
+{
+    auto& documentDir = Instance::get().getDocumentDirector();
+    auto const trackIdentifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
+    if(!trackIdentifier.has_value())
+    {
+        return trackIdentifier;
+    }
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier.value());
+    auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier.value());
+    auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
+
+    std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
+    std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
+                   {
+                       return visibleState == Group::ChannelVisibilityState::visible;
+                   });
+
+    auto const name = [&]() -> juce::String
+    {
+        try
+        {
+            auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
+            return description.name;
+        }
+        catch(...)
+        {
+            return "";
+        }
+    }();
+
+    trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::synchronous);
+    trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+
+    // Apply default presets if defined
+    auto const procPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::processor>();
+    auto const procPresetIt = procPresets.find(key);
+    if(procPresetIt != procPresets.cend())
+    {
+        trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
+    }
+    auto const graphicPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::graphic>();
+    auto const graphicPresetIt = graphicPresets.find(key);
+    if(graphicPresetIt != graphicPresets.cend())
+    {
+        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(graphicPresetIt->second, NotificationType::synchronous);
+    }
+    else
+    {
+        // Use global graphic preset as fallback
+        auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
+        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
+    }
+
+    trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+    return trackIdentifier;
+}
+
+void Application::Tools::revealTracks(std::set<juce::String> trackIdentifiers)
+{
+    auto& documentDir = Instance::get().getDocumentDirector();
+    auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
+    for(auto const& newReference : newReferences)
+    {
+        if(trackIdentifiers.count(newReference.first) > 0_z)
+        {
+            trackIdentifiers.erase(newReference.first);
+            trackIdentifiers.insert(newReference.second);
+        }
+    }
+
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    for(auto const& trackIdentifier : trackIdentifiers)
+    {
+        anlWeakAssert(Document::Tools::isTrackInGroup(documentAcsr, trackIdentifier));
+        if(Document::Tools::isTrackInGroup(documentAcsr, trackIdentifier))
+        {
+            auto& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier);
+            groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+        }
+    }
+
+    // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
+    juce::Timer::callAfterDelay(500, [trackIdentifiers = std::move(trackIdentifiers)]()
+                                {
+                                    Document::Selection::clearAll(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
+                                    for(auto const& trackIdentifier : trackIdentifiers)
+                                    {
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {trackIdentifier, {}}, false, false, NotificationType::synchronous);
+                                    }
+                                });
+}
+
 void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> position, std::set<Plugin::Key> const& keys)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
@@ -86,97 +180,44 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
         trackPosition = 0_z;
     }
 
-    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
     std::set<juce::String> trackIdentifiers;
+    std::set<Plugin::Key> fails;
     for(auto const& key : keys)
     {
-        auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
+        auto const identifier = addPluginTrack(groupIdentifier, trackPosition, key);
         if(identifier.has_value())
         {
-            auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
-            std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
-            std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
-                           {
-                               return visibleState == Group::ChannelVisibilityState::visible;
-                           });
-
-            auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-            auto const getPluginName = [&]() -> juce::String
-            {
-                try
-                {
-                    auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
-                    return description.name;
-                }
-                catch(...)
-                {
-                    return "";
-                }
-            };
-
-            trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
-            trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
-
-            // Apply default presets if defined
-            auto const procPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::processor>();
-            auto const procPresetIt = procPresets.find(key);
-            if(procPresetIt != procPresets.cend())
-            {
-                trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
-            }
-            auto const graphicPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::graphic>();
-            auto const graphicPresetIt = graphicPresets.find(key);
-            if(graphicPresetIt != graphicPresets.cend())
-            {
-                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(graphicPresetIt->second, NotificationType::synchronous);
-            }
-            else
-            {
-                // Use global graphic preset as fallback
-                auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
-                trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
-            }
-
-            trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
-
             trackIdentifiers.insert(identifier.value());
             ++trackPosition;
+        }
+        else
+        {
+            fails.insert(key);
         }
     }
 
     if(!trackIdentifiers.empty())
     {
-        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
-        auto const newReferences = documentDir.sanitize(NotificationType::synchronous);
-        for(auto const& newReference : newReferences)
-        {
-            if(trackIdentifiers.count(newReference.first) > 0_z)
-            {
-                trackIdentifiers.erase(newReference.first);
-                trackIdentifiers.insert(newReference.second);
-            }
-        }
-        // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [trackIdentifiers]()
-                                    {
-                                        Document::Selection::clearAll(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
-                                        for(auto const& trackIdentifier : trackIdentifiers)
-                                        {
-                                            Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {trackIdentifier, {}}, false, false, NotificationType::synchronous);
-                                        }
-                                    });
+        revealTracks(trackIdentifiers);
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Tracks"));
     }
     else
     {
         documentDir.endAction(ActionState::abort);
+    }
+    if(!fails.empty())
+    {
+        juce::StringArray pluginNames;
+        for(auto const& key : fails)
+        {
+            pluginNames.add(key.identifier + ":" + key.feature);
+        }
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Track cannot be created!"))
-                                 .withMessage(juce::translate("The track cannot be inserted into the document."))
+                                 .withTitle(juce::translate("Tracks cannot be created!"))
+                                 .withMessage(juce::translate("There are NUMFAILS tracks out of TOTAL that could not be created in the document. They correspond to the plugins: PLUGINNAMES.").replace("NUMFAILS", juce::String(fails.size())).replace("TOTAL", juce::String(keys.size())).replace("PLUGINNAMES", pluginNames.joinIntoString("\n")))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
-        return;
     }
 }
 

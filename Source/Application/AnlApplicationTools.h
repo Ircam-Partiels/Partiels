@@ -10,6 +10,8 @@ namespace Application
     {
         size_t getNewGroupPosition();
         std::tuple<juce::String, size_t> getNewTrackPosition();
+        std::optional<juce::String> addPluginTrack(juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key);
+        void revealTracks(std::set<juce::String> trackIdentifiers);
         void addPluginTracks(std::tuple<juce::String, size_t> position, std::set<Plugin::Key> const& keys);
         void addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file);
 
