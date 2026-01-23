@@ -936,3 +936,6 @@ countries: fr be
 "Are you sure you want to overwrite the original files for NUMTRACKS track(s)?\n\nTracks: TRACKNAMES\n\nThis action cannot be undone." = "Êtes-vous sûr de vouloir écraser les fichiers d'origine pour NUMTRACKS piste(s) ?\n\nPistes : TRACKNAMES\n\nCette action ne peut pas être annulée."
 "Overwrite Original File(s)?" = "Écraser le(s) fichier(s) d'origine ?"
 "Partiels by DEV at COMPANY" = "Partiels par DEV à COMPANY"
+"Tracks cannot be created!" = "Les pistes ne peuvent pas être créées !"
+"There are NUMFAILS tracks out of TOTAL that could not be created in the document. They correspond to the plugins:\nPLUGINMESSAGES." = "Il y a NUMFAILS pistes sur TOTAL qui n'ont pas pu être créées dans le document. Elles correspondent aux plugins :\nPLUGINMESSAGES."
+"There are NUMFAILS tracks out of TOTAL that could not be created in the document. They correspond to the files:\nFILEMESSAGES." = "Il y a NUMFAILS pistes sur TOTAL qui n'ont pas pu être créées dans le document. Elles correspondent aux fichiers :\nFILEMESSAGES."
