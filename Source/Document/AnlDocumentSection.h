@@ -56,6 +56,8 @@ namespace Document
 
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
+        void moveGroup(juce::String const& groupIdentifier, size_t index);
+        void copyGroup(juce::String const& groupIdentifier, size_t index);
 
         Selection::Item getSelectionItem(juce::Component* component, juce::MouseEvent const& event) const;
 

@@ -893,7 +893,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                           {
                                               return;
                                           }
-                                          Instance::get().importFile(position, results.getFirst());
+                                          std::vector<juce::File> files;
+                                          for(auto const& result : results)
+                                          {
+                                              files.push_back(result);
+                                          }
+                                          Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), files);
                                       });
             return true;
         }
@@ -927,27 +932,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editNewGroup:
         {
-            documentDir.startAction();
-
-            auto const position = Tools::getNewGroupPosition();
-            auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
-            if(identifier.has_value())
-            {
-                auto const references = documentDir.sanitize(NotificationType::synchronous);
-                auto const groupIdentifier = references.count(identifier.value()) > 0_z ? references.at(identifier.value()) : identifier.value();
-                documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
-                Document::Selection::selectItem(documentAcsr, {groupIdentifier, {}}, true, false, NotificationType::synchronous);
-            }
-            else
-            {
-                documentDir.endAction(ActionState::abort);
-                auto const options = juce::MessageBoxOptions()
-                                         .withIconType(juce::AlertWindow::WarningIcon)
-                                         .withTitle(juce::translate("Group cannot be created!"))
-                                         .withMessage(juce::translate("The group cannot be inserted into the document."))
-                                         .withButton(juce::translate("Ok"));
-                juce::AlertWindow::showAsync(options, nullptr);
-            }
+            Tools::addGroups(1_z, Tools::getNewGroupPosition());
             return true;
         }
         case CommandIDs::editNewTrack:

@@ -1,5 +1,6 @@
 #include "AnlDocumentSection.h"
 #include "AnlDocumentAudioReader.h"
+#include "AnlDocumentSelection.h"
 #include "AnlDocumentTools.h"
 #include <AnlIconsData.h>
 
@@ -90,53 +91,11 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     {
         if(copy)
         {
-            anlWeakAssert(Tools::hasGroupAcsr(mAccessor, identifier));
-            if(!Tools::hasGroupAcsr(mAccessor, identifier))
-            {
-                return;
-            }
-            mDirector.startAction();
-            auto const references = mDirector.sanitize(NotificationType::synchronous);
-            auto const existingGroupIdentifier = references.count(identifier) > 0_z ? references.at(identifier) : identifier;
-            anlWeakAssert(Tools::hasGroupAcsr(mAccessor, existingGroupIdentifier));
-            if(!Tools::hasGroupAcsr(mAccessor, existingGroupIdentifier))
-            {
-                return;
-            }
-            auto const newGroupIdentifier = mDirector.addGroup(index, NotificationType::synchronous);
-            if(!newGroupIdentifier.has_value())
-            {
-                mDirector.endAction(ActionState::abort);
-            }
-
-            auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, existingGroupIdentifier);
-            Group::Accessor copyAcsr;
-            copyAcsr.copyFrom(groupAcsr, NotificationType::synchronous);
-            copyAcsr.setAttr<Group::AttrType::identifier>(newGroupIdentifier.value(), NotificationType::synchronous);
-            copyAcsr.setAttr<Group::AttrType::layout>(std::vector<juce::String>(), NotificationType::synchronous);
-            auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, newGroupIdentifier.value());
-            newGroupAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
-
-            auto const trackIdentifiers = groupAcsr.getAttr<Group::AttrType::layout>();
-            for(size_t i = 0; i < trackIdentifiers.size(); ++i)
-            {
-                if(!mDirector.copyTrack(newGroupIdentifier.value(), i, trackIdentifiers.at(i), NotificationType::synchronous).has_value())
-                {
-                    mDirector.endAction(ActionState::abort);
-                    return;
-                }
-            }
-            [[maybe_unused]] auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Group"));
+            copyGroup(identifier, index);
         }
         else
         {
-            mDirector.startAction();
-            auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
-            layout.insert(layout.begin() + static_cast<long>(index), identifier);
-            mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
-            [[maybe_unused]] auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Move Group"));
+            moveGroup(identifier, index);
         }
     };
 
@@ -713,52 +672,103 @@ void Document::Section::updateAutoresize()
 
 void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
 {
-    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
-    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
-    {
-        return;
-    }
-
     mDirector.startAction();
     auto& groupAcsr = groupDirector.getAccessor();
     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-    if(mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
+    auto const result = mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous);
+    if(result.failed())
     {
-        auto const references = mDirector.sanitize(NotificationType::synchronous);
-        auto const sanitizedTrackIdentifier = references.count(trackIdentifier) > 0_z ? references.at(trackIdentifier) : trackIdentifier;
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
-        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
-        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::abort);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Track cannot be moved!"))
+                                 .withMessage(result.getErrorMessage())
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
     else
     {
-        mDirector.endAction(ActionState::abort);
+        auto const references = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedTrackIdentifier = references.count(trackIdentifier) > 0_z ? references.at(trackIdentifier) : trackIdentifier;
+        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
+        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
     }
 }
 
 void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
 {
-    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
-    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
-    {
-        return;
-    }
-
     mDirector.startAction();
     auto& groupAcsr = groupDirector.getAccessor();
     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-    auto const newTrackIdentifier = mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous);
-    if(newTrackIdentifier.has_value())
+    auto const [result, newTrackIdentifier] = mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous);
+    if(result.failed())
     {
-        auto const references = mDirector.sanitize(NotificationType::synchronous);
-        auto const sanitizedTrackIdentifier = references.count(newTrackIdentifier.value()) > 0_z ? references.at(newTrackIdentifier.value()) : newTrackIdentifier.value();
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
-        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
-        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::abort);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Track cannot be copied!"))
+                                 .withMessage(result.getErrorMessage())
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
     else
     {
+        auto const references = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedTrackIdentifier = references.count(newTrackIdentifier) > 0_z ? references.at(newTrackIdentifier) : newTrackIdentifier;
+        mLastSelectedItem = {sanitizedTrackIdentifier, {}};
+        Selection::selectItem(mAccessor, {sanitizedTrackIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
+    }
+}
+
+void Document::Section::moveGroup(juce::String const& groupIdentifier, size_t index)
+{
+    mDirector.startAction();
+    auto const references = mDirector.sanitize(NotificationType::synchronous);
+    auto const existingGroupIdentifier = references.count(groupIdentifier) > 0_z ? references.at(groupIdentifier) : groupIdentifier;
+    auto const result = mDirector.moveGroup(existingGroupIdentifier, index, NotificationType::synchronous);
+    if(result.failed())
+    {
         mDirector.endAction(ActionState::abort);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Group cannot be moved!"))
+                                 .withMessage(result.getErrorMessage())
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+    }
+    else
+    {
+        auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedGroupIdentifier = newReferences.count(existingGroupIdentifier) > 0_z ? newReferences.at(existingGroupIdentifier) : existingGroupIdentifier;
+        Document::Selection::selectItem(mAccessor, {sanitizedGroupIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Move Group"));
+    }
+}
+
+void Document::Section::copyGroup(juce::String const& groupIdentifier, size_t index)
+{
+    mDirector.startAction();
+    auto const references = mDirector.sanitize(NotificationType::synchronous);
+    auto const existingGroupIdentifier = references.count(groupIdentifier) > 0_z ? references.at(groupIdentifier) : groupIdentifier;
+    auto const [result, newIdentifier] = mDirector.copyGroup(existingGroupIdentifier, index, NotificationType::synchronous);
+    if(result.failed())
+    {
+        mDirector.endAction(ActionState::abort);
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Group cannot be copied!"))
+                                 .withMessage(result.getErrorMessage())
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+    }
+    else
+    {
+        auto const newReferences = mDirector.sanitize(NotificationType::synchronous);
+        auto const sanitizedGroupIdentifier = references.count(newIdentifier) > 0_z ? references.at(newIdentifier) : newIdentifier;
+        Document::Selection::selectItem(mAccessor, {sanitizedGroupIdentifier, {}}, true, false, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Group"));
     }
 }
 
