@@ -168,7 +168,10 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["parameters"] = description.parameters;
     j["output"] = description.output;
     j["extraOutputs"] = description.extraOutputs;
-    j["input"] = description.input;
+    if(!description.input.identifier.empty())
+    {
+        j["input"] = description.input;
+    }
     j["programs"] = description.programs;
 }
 
@@ -184,7 +187,7 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.parameters = j.value("parameters", description.parameters);
     description.output = j.value("output", description.output);
     description.extraOutputs = j.value("extraOutputs", description.extraOutputs);
-    description.input = j.value("input", description.output);
+    description.input = j.value("input", description.input);
     description.programs = j.value("programs", description.programs);
 }
 
