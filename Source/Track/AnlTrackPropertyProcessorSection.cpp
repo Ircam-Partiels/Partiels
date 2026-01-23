@@ -616,8 +616,7 @@ void Track::PropertyProcessorSection::updateState()
     if(mPropertyInputTrack.entry.isVisible())
     {
         auto const& hierarchyManager = mDirector.getHierarchyManager();
-        auto const frameType = Tools::getFrameType(description.input);
-        auto const otherTracks = frameType.has_value() ? hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>(), frameType.value()) : std::vector<HierarchyManager::TrackInfo>{};
+        auto const otherTracks = hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>());
         mPropertyInputTrack.entry.clear(silent);
         mPropertyInputTrackList.clear();
         auto listId = 1;

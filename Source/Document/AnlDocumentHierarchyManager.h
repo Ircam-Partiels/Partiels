@@ -17,8 +17,8 @@ namespace Document
         ~HierarchyManager() override = default;
 
         // Track::HierarchyManager
-        std::vector<TrackInfo> getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const override;
-        bool isTrackValidFor(juce::String const& current, Track::FrameType const frameType, juce::String const& identifier) const override;
+        std::vector<TrackInfo> getAvailableTracksFor(juce::String const& ownerIdentifier) const override;
+        bool isTrackValidFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier) const override;
         bool hasAccessor(juce::String const& identifier) const override;
         Track::Accessor const& getAccessor(juce::String const& identifier) const override;
 

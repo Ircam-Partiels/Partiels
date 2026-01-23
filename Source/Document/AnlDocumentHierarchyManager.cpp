@@ -10,8 +10,16 @@ Document::HierarchyManager::HierarchyManager(Accessor& accessor)
 {
 }
 
-std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const
+std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::getAvailableTracksFor(juce::String const& ownerIdentifier) const
 {
+    if(!Tools::hasTrackAcsr(mAccessor, ownerIdentifier))
+    {
+        return {};
+    }
+    if(!Track::Tools::supportsInputTrack(Tools::getTrackAcsr(mAccessor, ownerIdentifier)))
+    {
+        return {};
+    }
     std::vector<TrackInfo> tracks;
     auto const groupLayout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& groupIdentifier : groupLayout)
@@ -23,7 +31,7 @@ std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::g
             for(auto const& trackAcsr : trackAcsrs)
             {
                 auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-                if(isTrackValidFor(current, frameType, identifier))
+                if(isTrackValidFor(ownerIdentifier, identifier))
                 {
                     auto const trackName = trackAcsr.get().getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
@@ -35,33 +43,44 @@ std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::g
     return tracks;
 }
 
-bool Document::HierarchyManager::isTrackValidFor(juce::String const& current, Track::FrameType const frameType, juce::String const& identifier) const
+bool Document::HierarchyManager::isTrackValidFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier) const
 {
-    std::function<bool(Track::Accessor const&)> const hasValidInheritance = [&](Track::Accessor const& trackAcsr)
+    std::function<bool(Track::Accessor const&)> const hasValidInheritance = [&](Track::Accessor const& inputTrackAcsr)
     {
-        auto const& trackIdentifier = trackAcsr.getAttr<Track::AttrType::identifier>();
-        if(trackIdentifier == current)
+        auto const& trackIdentifier = inputTrackAcsr.getAttr<Track::AttrType::identifier>();
+        if(trackIdentifier == ownerIdentifier)
         {
             return false;
         }
-        auto const& input = trackAcsr.getAttr<Track::AttrType::input>();
-        if(input.isNotEmpty() && Tools::hasTrackAcsr(mAccessor, input))
+        auto const& subInputIdentifier = inputTrackAcsr.getAttr<Track::AttrType::input>();
+        if(subInputIdentifier.isNotEmpty() && Tools::hasTrackAcsr(mAccessor, subInputIdentifier))
         {
-            return hasValidInheritance(Tools::getTrackAcsr(mAccessor, input));
+            return hasValidInheritance(Tools::getTrackAcsr(mAccessor, subInputIdentifier));
         }
         return true;
     };
 
-    if(!Tools::hasTrackAcsr(mAccessor, identifier))
+    if(!Tools::hasTrackAcsr(mAccessor, ownerIdentifier) || !Tools::hasTrackAcsr(mAccessor, inputIdentifier))
     {
         return false;
     }
-    auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-    if(Track::Tools::getFrameType(trackAcsr) != frameType)
+    auto const& ownerTrackAcsr = Tools::getTrackAcsr(mAccessor, ownerIdentifier);
+    auto const ownerFrameType = Track::Tools::getFrameType(ownerTrackAcsr);
+    if(!ownerFrameType.has_value())
     {
         return false;
     }
-    return hasValidInheritance(trackAcsr);
+    auto const& inputTrackAcsr = Tools::getTrackAcsr(mAccessor, inputIdentifier);
+    auto const inputFrameType = Track::Tools::getFrameType(inputTrackAcsr);
+    if(!inputFrameType.has_value())
+    {
+        return false;
+    }
+    if(inputFrameType.value() != ownerFrameType.value())
+    {
+        return false;
+    }
+    return hasValidInheritance(inputTrackAcsr);
 }
 
 bool Document::HierarchyManager::hasAccessor(juce::String const& identifier) const
