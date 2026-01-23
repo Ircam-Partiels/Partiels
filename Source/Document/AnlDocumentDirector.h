@@ -35,13 +35,15 @@ namespace Document
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 
-        std::optional<juce::String> addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification);
-        bool removeTrack(juce::String const identifier, NotificationType const notification);
-        std::optional<juce::String> addGroup(size_t position, NotificationType const notification);
-        bool removeGroup(juce::String const identifier, NotificationType const notification);
+        std::tuple<juce::Result, juce::String> addTrack(juce::String const groupIdentifier, size_t position, NotificationType const notification);
+        juce::Result removeTrack(juce::String const identifier, NotificationType const notification);
+        juce::Result moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
+        std::tuple<juce::Result, juce::String> copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
-        bool moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
-        std::optional<juce::String> copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
+        std::tuple<juce::Result, juce::String> addGroup(size_t position, NotificationType const notification);
+        juce::Result removeGroup(juce::String const identifier, NotificationType const notification);
+        juce::Result moveGroup(juce::String const groupIdentifier, size_t index, NotificationType const notification);
+        std::tuple<juce::Result, juce::String> copyGroup(juce::String const groupIdentifier, size_t index, NotificationType const notification);
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setFileMapper(juce::File const& saved, juce::File const& current);

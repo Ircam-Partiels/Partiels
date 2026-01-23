@@ -23,7 +23,7 @@ namespace PluginList
         void visibilityChanged() override;
         bool keyPressed(juce::KeyPress const& key) override;
 
-        std::function<void(std::set<Plugin::Key> keys)> onAddPlugins = nullptr;
+        std::function<void(std::vector<Plugin::Key> keys)> onAddPlugins = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
 
     private:

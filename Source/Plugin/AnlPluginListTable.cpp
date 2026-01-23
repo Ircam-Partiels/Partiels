@@ -171,14 +171,14 @@ void PluginList::Table::notifyAddSelectedPlugins()
         return;
     }
     auto const indices = mPluginTable.getSelectedRows();
-    std::set<Plugin::Key> selection;
+    std::vector<Plugin::Key> selection;
     for(int i = 0; i < indices.size(); ++i)
     {
         auto const index = indices[i];
         MiscWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
         if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
         {
-            selection.insert(mFilteredList[static_cast<size_t>(index)].first);
+            selection.push_back(mFilteredList[static_cast<size_t>(index)].first);
         }
     }
     MiscWeakAssert(!selection.empty());

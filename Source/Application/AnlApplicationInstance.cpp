@@ -524,11 +524,6 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     juce::AlertWindow::showAsync(options, nullptr);
 }
 
-void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
-{
-    Tools::addFileTrack(position, file);
-}
-
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
     return *mApplicationAccessor.get();
