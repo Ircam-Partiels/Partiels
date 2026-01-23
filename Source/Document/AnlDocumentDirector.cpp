@@ -364,6 +364,11 @@ Document::Accessor& Document::Director::getAccessor()
     return mAccessor;
 }
 
+Document::HierarchyManager& Document::Director::getHierarchyManager()
+{
+    return mHierarchyManager;
+}
+
 juce::AudioFormatManager& Document::Director::getAudioFormatManager()
 {
     return mAudioFormatManager;

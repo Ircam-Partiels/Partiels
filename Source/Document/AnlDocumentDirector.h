@@ -18,6 +18,7 @@ namespace Document
         ~Director() override;
 
         Accessor& getAccessor();
+        HierarchyManager& getHierarchyManager();
         juce::AudioFormatManager& getAudioFormatManager();
         Group::Director& getGroupDirector(juce::String const& identifier);
         Track::Director const& getTrackDirector(juce::String const& identifier) const override;
