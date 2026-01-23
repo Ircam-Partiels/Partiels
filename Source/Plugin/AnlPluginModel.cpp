@@ -409,7 +409,10 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
         toXml(*child, "parameters", value.parameters);
         toXml(*child, "output", value.output);
         toXml(*child, "extraOutputs", value.extraOutputs);
-        toXml(*child, "input", value.input);
+        if(!value.input.identifier.empty())
+        {
+            toXml(*child, "input", value.input);
+        }
         toXml(*child, "programs", value.programs);
         xml.addChildElement(child.release());
     }
@@ -436,7 +439,14 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
     value.extraOutputs = fromXml(*child, "extraOutputs", defaultValue.extraOutputs);
-    value.input = fromXml(*child, "input", defaultValue.input);
+    if(child->getChildByName("input") != nullptr)
+    {
+        value.input = fromXml(*child, "input", defaultValue.input);
+    }
+    else
+    {
+        value.input = defaultValue.input;
+    }
     value.programs = fromXml(*child, "programs", defaultValue.programs);
     return value;
 }
