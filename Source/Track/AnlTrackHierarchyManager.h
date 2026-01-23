@@ -19,8 +19,8 @@ namespace Track
             juce::String name;
         };
 
-        virtual std::vector<TrackInfo> getAvailableTracksFor(juce::String const& current, FrameType const frameType) const = 0;
-        virtual bool isTrackValidFor(juce::String const& current, Track::FrameType const frameType, juce::String const& identifier) const = 0;
+        virtual std::vector<TrackInfo> getAvailableTracksFor(juce::String const& ownerIdentifier) const = 0;
+        virtual bool isTrackValidFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier) const = 0;
         virtual bool hasAccessor(juce::String const& identifier) const = 0;
         virtual Accessor const& getAccessor(juce::String const& identifier) const = 0;
 

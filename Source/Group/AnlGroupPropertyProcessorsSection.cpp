@@ -314,18 +314,8 @@ void Group::PropertyProcessorsSection::setInputTrack(juce::String const& identif
 {
     auto const supportsInputTrack = [=, this](Track::Accessor const& acsr)
     {
-        if(!Track::Tools::supportsInputTrack(acsr))
-        {
-            return false;
-        }
         auto const& hierarchyManager = mDirector.getHierarchyManager();
-        auto const& input = acsr.getAttr<Track::AttrType::description>().input;
-        auto const frameType = Track::Tools::getFrameType(input);
-        if(!frameType.has_value())
-        {
-            return false;
-        }
-        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), frameType.value(), identifier);
+        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), identifier);
     };
 
     askToModifyProcessors([this](bool result)
@@ -500,15 +490,10 @@ void Group::PropertyProcessorsSection::updateInputTrack()
             identifiers.insert(identifier);
             inputs.insert(trackAcsr.get().getAttr<Track::AttrType::input>());
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
-            auto const& input = trackAcsr.get().getAttr<Track::AttrType::description>().input;
-            auto const frameType = Track::Tools::getFrameType(input);
-            if(frameType.has_value())
+            auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier);
+            for(auto const& inputTrack : inputTracks)
             {
-                auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier, frameType.value());
-                for(auto const& inputTrack : inputTracks)
-                {
-                    otherTracks[inputTrack.identifier] = inputTrack;
-                }
+                otherTracks[inputTrack.identifier] = inputTrack;
             }
         }
     }
