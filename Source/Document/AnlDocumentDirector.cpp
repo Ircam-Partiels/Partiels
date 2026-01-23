@@ -544,65 +544,132 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
     }
 }
 
-std::optional<juce::String> Document::Director::addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification)
+std::tuple<juce::Result, juce::String> Document::Director::addTrack(juce::String const groupIdentifier, size_t position, NotificationType const notification)
 {
-    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifer));
-    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifer))
+    MiscStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier))
     {
-        return std::optional<juce::String>();
+        return std::make_tuple(juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", groupIdentifier)), juce::String());
     }
 
     auto const index = mAccessor.getNumAcsrs<AcsrType::tracks>();
     if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
     {
-        return std::optional<juce::String>();
+        return std::make_tuple(juce::Result::fail(juce::translate("Could not insert new track into the document.")), juce::String());
     }
 
     auto const identifier = createNextUuid();
-
     auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
     trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
 
-    auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifer);
+    auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
     auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
-    anlStrongAssert(position <= layout.size());
+    MiscStrongAssert(position <= layout.size());
     position = std::min(position, layout.size());
     layout.insert(layout.begin() + static_cast<long>(position), identifier);
     groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::synchronous);
-    return std::optional<juce::String>(identifier);
+    return std::make_tuple(juce::Result::ok(), identifier);
 }
 
-bool Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
+juce::Result Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
 {
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
                                  {
                                      return acsr.getAttr<Track::AttrType::identifier>() == identifier;
                                  });
-    anlWeakAssert(it != trackAcsrs.cend());
+    MiscStrongAssert(it != trackAcsrs.cend());
     if(it == trackAcsrs.cend())
     {
-        return false;
+        return juce::Result::fail(juce::translate("The specified track \"TRACKID\" does not exist.").replace("TRACKID", identifier));
     }
 
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     for(auto& groupAcsr : groupAcsrs)
     {
         auto const groupLayout = copy_with_erased(groupAcsr.get().getAttr<Group::AttrType::layout>(), identifier);
-        groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
+        groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, notification);
     }
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
-    return true;
+    return juce::Result::ok();
 }
 
-std::optional<juce::String> Document::Director::addGroup(size_t position, NotificationType const notification)
+juce::Result Document::Director::moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+{
+    MiscStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier))
+    {
+        return juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", groupIdentifier));
+    }
+    MiscStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    {
+        return juce::Result::fail(juce::translate("The specified track \"TRACKID\" does not exist.").replace("TRACKID", trackIdentifier));
+    }
+    MiscStrongAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
+    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
+    {
+        return juce::Result::fail(juce::translate("The track \"TRACKID\" is not part of any group.").replace("TRACKID", trackIdentifier));
+    }
+
+    {
+        auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
+        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
+    }
+
+    {
+        auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
+        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
+        layout.insert(layout.cbegin() + static_cast<long>(index), trackIdentifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
+        groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+    }
+    return juce::Result::ok();
+}
+
+std::tuple<juce::Result, juce::String> Document::Director::copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+{
+    MiscStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", groupIdentifier)), juce::String());
+    }
+    MiscStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The specified track \"TRACKID\" does not exist.").replace("TRACKID", trackIdentifier)), juce::String());
+    }
+    MiscStrongAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
+    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The track \"TRACKID\" is not part of any group.").replace("TRACKID", trackIdentifier)), juce::String());
+    }
+
+    auto const [addResult, newTrackIdentifier] = addTrack(groupIdentifier, index, notification);
+    if(addResult.failed())
+    {
+        return std::make_tuple(addResult, juce::String());
+    }
+
+    // Create a copy of the original track with the new identifier and
+    // use it to copy all attributes to the new track
+    auto& newTrackAcsr = Tools::getTrackAcsr(mAccessor, newTrackIdentifier);
+    Track::Accessor copy;
+    copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), NotificationType::synchronous);
+    copy.setAttr<Track::AttrType::identifier>(newTrackIdentifier, NotificationType::synchronous);
+    newTrackAcsr.copyFrom(copy, notification);
+    return std::make_tuple(juce::Result::ok(), newTrackIdentifier);
+}
+
+std::tuple<juce::Result, juce::String> Document::Director::addGroup(size_t position, NotificationType const notification)
 {
     auto const index = mAccessor.getNumAcsrs<AcsrType::groups>();
     if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
     {
-        return std::optional<juce::String>();
+        return std::make_tuple(juce::Result::fail(juce::translate("Could not insert new group into the document.")), juce::String());
     }
 
     auto const getNonExistingName = [this](auto groupIndex)
@@ -625,30 +692,34 @@ std::optional<juce::String> Document::Director::addGroup(size_t position, Notifi
     groupAcsr.setAttr<Group::AttrType::name>(getNonExistingName(index + 1_z), notification);
 
     auto layout = mAccessor.getAttr<AttrType::layout>();
-    anlStrongAssert(position <= layout.size());
+    MiscStrongAssert(position <= layout.size());
     position = std::min(position, layout.size());
     layout.insert(layout.begin() + static_cast<long>(position), identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
-    return std::optional<juce::String>(identifier);
+    return std::make_tuple(juce::Result::ok(), identifier);
 }
 
-bool Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
+juce::Result Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
 {
     auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
                                  {
                                      return acsr.getAttr<Group::AttrType::identifier>() == identifier;
                                  });
-    anlWeakAssert(it != groupAcsrs.cend());
+    MiscStrongAssert(it != groupAcsrs.cend());
     if(it == groupAcsrs.cend())
     {
-        return false;
+        return juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", identifier));
     }
 
     auto const groupLayout = it->get().getAttr<Group::AttrType::layout>();
-    for(auto const& tarckIdentifier : groupLayout)
+    for(auto const& trackIdentifier : groupLayout)
     {
-        removeTrack(tarckIdentifier, notification);
+        auto const trackResult = removeTrack(trackIdentifier, notification);
+        if(trackResult.failed())
+        {
+            return trackResult;
+        }
     }
 
     auto const layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
@@ -656,69 +727,58 @@ bool Document::Director::removeGroup(juce::String const identifier, Notification
 
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
-    return true;
+    return juce::Result::ok();
 }
 
-bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+juce::Result Document::Director::moveGroup(juce::String const groupIdentifier, size_t index, NotificationType const notification)
 {
-    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
-    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
-    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier) || !Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    MiscStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier))
     {
-        return false;
+        return juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", groupIdentifier));
     }
-    // The track should already be in a group
-    anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
-    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
-    {
-        return false;
-    }
-
-    // Remove track from previous group owner
-    {
-        auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
-        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
-        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
-    }
-
-    // Add track to new group owner
-    {
-        auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
-        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
-        layout.insert(layout.cbegin() + static_cast<long>(index), trackIdentifier);
-        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
-        groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
-    }
-    return true;
+    auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), groupIdentifier);
+    layout.insert(layout.begin() + static_cast<long>(index), groupIdentifier);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
+    return juce::Result::ok();
 }
 
-std::optional<juce::String> Document::Director::copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+std::tuple<juce::Result, juce::String> Document::Director::copyGroup(juce::String const groupIdentifier, size_t index, NotificationType const notification)
 {
-    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
-    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
-    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier) || !Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    MiscStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier))
     {
-        return {};
-    }
-    // The track should already be in a group
-    anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
-    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
-    {
-        return {};
+        return std::make_tuple(juce::Result::fail(juce::translate("The specified group \"GROUPID\" does not exist.").replace("GROUPID", groupIdentifier)), juce::String());
     }
 
-    auto newTrackIdentifier = addTrack(groupIdentifier, index, notification);
-    if(!newTrackIdentifier.has_value())
+    auto const [result, newGroupIdentifier] = addGroup(index, notification);
+    if(result.failed())
     {
-        return {};
+        return std::make_tuple(result, juce::String());
     }
 
-    auto& newTrackAcsr = Tools::getTrackAcsr(mAccessor, newTrackIdentifier.value());
-    Track::Accessor copy;
-    copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), notification);
-    copy.setAttr<Track::AttrType::identifier>(newTrackIdentifier.value(), notification);
-    newTrackAcsr.copyFrom(copy, notification);
-    return newTrackIdentifier;
+    // Create a copy of the original group with the new identifier and
+    // use it to copy all attributes to the new group
+    auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
+    Group::Accessor copyAcsr;
+    copyAcsr.copyFrom(groupAcsr, notification);
+    copyAcsr.setAttr<Group::AttrType::identifier>(newGroupIdentifier, NotificationType::synchronous);
+    copyAcsr.setAttr<Group::AttrType::layout>(std::vector<juce::String>(), NotificationType::synchronous);
+    auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, newGroupIdentifier);
+    newGroupAcsr.copyFrom(copyAcsr, notification);
+
+    // Copy all the tracks of the original group into the new group
+    auto const trackIdentifiers = groupAcsr.getAttr<Group::AttrType::layout>();
+    for(size_t i = 0; i < trackIdentifiers.size(); ++i)
+    {
+        auto const [newTrackResult, trackIdentifier] = copyTrack(newGroupIdentifier, i, trackIdentifiers.at(i), notification);
+        juce::ignoreUnused(trackIdentifier);
+        if(newTrackResult.failed())
+        {
+            return std::make_tuple(newTrackResult, juce::String());
+        }
+    }
+    return std::make_tuple(juce::Result::ok(), newGroupIdentifier);
 }
 
 std::map<juce::String, juce::String> Document::Director::sanitize(NotificationType const notification)
@@ -735,12 +795,13 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
         anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z);
         if(!trackAcsrs.empty() && mAccessor.getNumAcsrs<AcsrType::groups>() == 0_z)
         {
-            auto const identifier = addGroup(0, notification);
-            anlStrongAssert(identifier.has_value());
-            if(!identifier.has_value())
+            auto const [addGroupResult, newGroupId] = addGroup(0, notification);
+            anlStrongAssert(addGroupResult.wasOk());
+            if(addGroupResult.failed())
             {
                 return references;
             }
+            juce::ignoreUnused(newGroupId);
         }
     }
 
@@ -755,14 +816,14 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
             if(identifier.isEmpty())
             {
                 auto const newidentifier = createNextUuid();
-                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, notification);
                 identifiers.insert(newidentifier);
             }
             else if(!identifiers.insert(identifier).second)
             {
                 auto const newidentifier = createNextUuid();
                 references[identifier] = newidentifier;
-                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, notification);
                 identifiers.insert(newidentifier);
             }
         }
@@ -775,14 +836,14 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
             if(identifier.isEmpty())
             {
                 auto const newidentifier = createNextUuid();
-                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, notification);
                 identifiers.insert(newidentifier);
             }
             else if(!identifiers.insert(identifier).second)
             {
                 auto const newidentifier = createNextUuid();
                 references[identifier] = newidentifier;
-                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, notification);
                 identifiers.insert(newidentifier);
             }
         }

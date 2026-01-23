@@ -422,7 +422,7 @@ void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files
     auto const documentWildcard = Instance::getWildCardForDocumentFile();
     auto const openWildcard = documentWildcard + (documentHasAudioFiles ? "" : ";" + audioFormatsWildcard);
     auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
-    auto const getFiles = [&]()
+    auto const validFiles = [&]()
     {
         std::vector<juce::File> openFiles;
         std::vector<juce::File> importFiles;
@@ -439,19 +439,15 @@ void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files
             }
         }
         return std::make_tuple(openFiles, importFiles);
-    };
-    auto const validFiles = getFiles();
+    }();
     if(!std::get<0>(validFiles).empty())
     {
         Instance::get().openFiles(std::get<0>(validFiles));
     }
-    else
+    else if(!std::get<1>(validFiles).empty())
     {
-        for(auto const& importFile : std::get<1>(validFiles))
-        {
-            auto const position = Tools::getNewTrackPosition();
-            Instance::get().importFile(position, importFile);
-        }
+        auto const position = Tools::getNewTrackPosition();
+        Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), std::get<1>(validFiles));
     }
 }
 

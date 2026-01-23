@@ -644,7 +644,7 @@ void Application::ConverterContent::exportToJson()
                                   {
                                       if(loadInDocument)
                                       {
-                                          Tools::addFileTrack(position, jsonFile);
+                                          Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), {jsonFile});
                                       }
                                       else
                                       {
