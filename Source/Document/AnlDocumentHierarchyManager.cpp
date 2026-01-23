@@ -65,7 +65,7 @@ bool Document::HierarchyManager::isTrackValidFor(juce::String const& ownerIdenti
         return false;
     }
     auto const& ownerTrackAcsr = Tools::getTrackAcsr(mAccessor, ownerIdentifier);
-    auto const ownerFrameType = Track::Tools::getFrameType(ownerTrackAcsr);
+    auto const ownerFrameType = Track::Tools::getFrameType(ownerTrackAcsr.getAttr<Track::AttrType::description>().input);
     if(!ownerFrameType.has_value())
     {
         return false;
