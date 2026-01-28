@@ -503,12 +503,18 @@ bool Track::Director::hasChanged() const
     return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());
 }
 
+bool Track::Director::isPerformingAction() const
+{
+    return mIsPerformingAction;
+}
+
 void Track::Director::startAction()
 {
     MiscDebug("Track", "Director::startAction");
     anlWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
+        MiscWeakAssert(!hasChanged());
         mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
     }
 }
@@ -517,9 +523,9 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
 {
     MiscDebug("Track", "Director::endAction");
     anlWeakAssert(mIsPerformingAction == true);
+    mIsPerformingAction = false;
     if(!hasChanged())
     {
-        mIsPerformingAction = false;
         return;
     }
 
@@ -597,7 +603,6 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
         break;
     }
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
-    mIsPerformingAction = false;
 }
 
 void Track::Director::setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification)

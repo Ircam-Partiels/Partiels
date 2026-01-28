@@ -32,6 +32,7 @@ namespace Document
 
         [[nodiscard]] std::map<juce::String, juce::String> sanitize(NotificationType const notification);
 
+        bool isPerformingAction() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 
@@ -82,6 +83,7 @@ namespace Document
         bool mSilentResultsFileManagement{false};
         bool mIsPreserveFullDurationWhenEditingEnabled{false};
         std::pair<juce::File, juce::File> mFileMapper;
+        bool mIsPerformingAction{false};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

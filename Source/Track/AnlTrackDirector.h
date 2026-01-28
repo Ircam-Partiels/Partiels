@@ -36,6 +36,7 @@ namespace Track
         void setSafeAccessorRetriever(SafeAccessorRetriever const& sav);
 
         bool hasChanged() const;
+        bool isPerformingAction() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 

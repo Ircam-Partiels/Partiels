@@ -479,13 +479,27 @@ void Document::Director::setPluginTable(PluginList::Table* table, std::function<
     }
 }
 
+bool Document::Director::isPerformingAction() const
+{
+    return mIsPerformingAction;
+}
+
 void Document::Director::startAction()
 {
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    MiscDebug("Document::Director", "startAction");
+    anlWeakAssert(mIsPerformingAction == false);
+    if(!std::exchange(mIsPerformingAction, true))
+    {
+        MiscWeakAssert(mAccessor.isEquivalentTo(mSavedState));
+        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    }
 }
 
 void Document::Director::endAction(ActionState state, juce::String const& name)
 {
+    MiscDebug("Document::Director", "endAction");
+    anlWeakAssert(mIsPerformingAction == true);
+    mIsPerformingAction = false;
     if(mAccessor.isEquivalentTo(mSavedState))
     {
         return;
@@ -542,6 +556,7 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
         }
         break;
     }
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
 std::tuple<juce::Result, juce::String> Document::Director::addTrack(juce::String const groupIdentifier, size_t position, NotificationType const notification)
