@@ -20,6 +20,7 @@ namespace Group
 
         void updateTracks(NotificationType notification);
 
+        bool isPerformingAction() const;
         bool hasChanged(bool includeTracks) const;
         void startAction(bool includeTracks);
         void endAction(bool includeTracks, ActionState state, juce::String const& name = {});
@@ -41,6 +42,7 @@ namespace Group
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
         std::function<Accessor&()> mSafeAccessorRetrieverFn = nullptr;
+        bool mIsPerformingAction{false};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
