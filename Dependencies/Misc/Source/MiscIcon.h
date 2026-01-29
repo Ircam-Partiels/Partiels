@@ -5,7 +5,7 @@
 MISC_FILE_BEGIN
 
 class Icon
-: public juce::ImageButton
+: public juce::Button
 {
 public:
     // clang-format off
@@ -21,17 +21,14 @@ public:
     ~Icon() override = default;
 
     void setImages(juce::Image const image, juce::Image const onImage = {});
-    using juce::ImageButton::setImages;
 
     juce::ModifierKeys getModifierKeys() const;
 
-    // juce::Component
-    void colourChanged() override;
-    void parentHierarchyChanged() override;
+    // juce::Button
+    void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
 
 protected:
     // juce::Button
-    void buttonStateChanged() override;
     using juce::Button::clicked;
     void clicked(juce::ModifierKeys const& keys) override;
 
