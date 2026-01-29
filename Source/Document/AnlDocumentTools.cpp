@@ -235,7 +235,7 @@ void Document::Tools::resizeItem(Accessor& accessor, juce::String const& itemIde
 
             int getMaxReferenceHeight() const
             {
-                return mParentHeight - (mPreviousHeight + mFollowingItems * minHeight);
+                return std::max(mParentHeight - (mPreviousHeight + mFollowingItems * minHeight), minHeight + 1);
             }
 
         private:
@@ -317,7 +317,7 @@ void Document::Tools::resizeItem(Accessor& accessor, juce::String const& itemIde
                         if(!isBefore)
                         {
                             auto const scaledHeight = static_cast<float>(trackAcsr.getAttr<Track::AttrType::height>()) * followingRatio + remainder;
-                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                            auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, std::max(remainingHeight, minHeight + 1));
                             remainder = scaledHeight - static_cast<float>(effectiveHeight);
                             remainingHeight -= effectiveHeight;
                             trackAcsr.setAttr<Track::AttrType::height>(effectiveHeight, NotificationType::synchronous);
