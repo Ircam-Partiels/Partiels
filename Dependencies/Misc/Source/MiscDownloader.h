@@ -14,6 +14,10 @@ public:
 
     void launch(juce::URL url, juce::String const& header, std::function<void(juce::File file)> callback);
 
+    // A method for downloading from a URL to a local file with a progress
+    // callback that allows the process to be stopped if necessary.
+    static juce::Result download(juce::URL const& url, juce::File const& target, std::function<bool(int, int)> callback);
+
 private:
     // juce::URL::DownloadTaskListener
     void finished(juce::URL::DownloadTask* task, bool success) override;

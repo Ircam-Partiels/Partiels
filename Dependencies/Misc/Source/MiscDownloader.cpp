@@ -62,4 +62,66 @@ void Downloader::handleAsyncUpdate()
     }
 }
 
+juce::Result Downloader::download(juce::URL const& url, juce::File const& target, std::function<bool(int, int)> callback)
+{
+    try
+    {
+        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                                 .withConnectionTimeoutMs(30000)
+                                 .withProgressCallback([=](int numBytes, int totalBytes)
+                                                       {
+                                                           return callback != nullptr ? callback(numBytes, totalBytes) : true;
+                                                       });
+        auto inputStream = url.createInputStream(options);
+        MiscWeakAssert(inputStream != nullptr);
+        if(inputStream == nullptr)
+        {
+            MiscDebug("Downloader", "Failed to create input stream from URL \"" + url.toString(true) + "\"");
+            return juce::Result::fail(juce::translate("Failed to create input stream from URL \"URLPATH\".").replace("URLPATH", url.toString(true)));
+        }
+
+        juce::FileOutputStream outputStream(target);
+        if(!outputStream.openedOk())
+        {
+            MiscDebug("Downloader", "Failed to create output stream for the file \"" + target.getFullPathName() + "\"");
+            return juce::Result::fail(juce::translate("Failed to create output stream for the file \"FILEPATH\".").replace("FILEPATH", target.getFullPathName()));
+        }
+
+        static auto constexpr bufferSize = 8192;
+        std::vector<char> buffer(bufferSize);
+        while(!inputStream->isExhausted())
+        {
+            auto bytesRead = inputStream->read(buffer.data(), static_cast<int>(buffer.size()));
+            if(bytesRead < 0)
+            {
+                MiscDebug("Downloader", "Error while reading from URL \"" + url.toString(true) + "\" (negative bytes read).");
+                return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": read error.")
+                                              .replace("URLPATH", url.toString(true)));
+            }
+            if(bytesRead == 0)
+            {
+                if(inputStream->isExhausted())
+                {
+                    break;
+                }
+                MiscDebug("Downloader", "Error while reading from URL \"" + url.toString(true) + "\" (premature end of stream).");
+                return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": premature end of stream.")
+                                              .replace("URLPATH", url.toString(true)));
+            }
+            if(!outputStream.write(buffer.data(), static_cast<size_t>(bytesRead)))
+            {
+                MiscDebug("Downloader", "Failed to write to the file \"" + target.getFullPathName() + "\"");
+                return juce::Result::fail(juce::translate("Failed to write to the file \"FILEPATH\".").replace("FILEPATH", target.getFullPathName()));
+            }
+        }
+        outputStream.flush();
+    }
+    catch(std::exception const& e)
+    {
+        MiscDebug("Downloader", "Failed to download the file from URL \"" + url.toString(true) + "\": " + e.what() + ".");
+        return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": ERROR.").replace("URLPATH", url.toString(true)).replace("ERROR", e.what()));
+    }
+    return juce::Result::ok();
+}
+
 MISC_FILE_END
