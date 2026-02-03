@@ -296,7 +296,7 @@ void Document::Tools::resizeItem(Accessor& accessor, juce::String const& itemIde
                 if(!isBefore)
                 {
                     auto const scaledHeight = static_cast<float>(groupAcsr.getAttr<Group::AttrType::height>()) * followingRatio + remainder;
-                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, remainingHeight);
+                    auto const effectiveHeight = std::clamp(static_cast<int>(std::round(scaledHeight)), minHeight, std::max(remainingHeight, minHeight + 1));
                     remainder = scaledHeight - static_cast<float>(effectiveHeight);
                     remainingHeight -= effectiveHeight;
                     groupAcsr.setAttr<Group::AttrType::height>(effectiveHeight, NotificationType::synchronous);
