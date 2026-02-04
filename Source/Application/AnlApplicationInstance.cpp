@@ -315,6 +315,12 @@ void Application::Instance::shutdown()
     anlDebug("Application", "Done");
 }
 
+void Application::Instance::unhandledException(std::exception const* e, juce::String const& sourceFilename, int line)
+{
+    MiscDebug("Application", "Unhandled exception in " + sourceFilename + ":" + juce::String(line) + " - " + (e != nullptr ? e->what() : "unknown exception"));
+    MiscWeakAssert(false);
+}
+
 juce::ApplicationCommandTarget* Application::Instance::getNextCommandTarget()
 {
     return mWindow != nullptr ? dynamic_cast<juce::ApplicationCommandTarget*>(mWindow->getContentComponent()) : nullptr;

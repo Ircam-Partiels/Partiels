@@ -33,6 +33,7 @@ namespace Application
         void anotherInstanceStarted(juce::String const& commandLine) override;
         void systemRequestedQuit() override;
         void shutdown() override;
+        void unhandledException(std::exception const* e, juce::String const& sourceFilename, int line) override;
 
         // ApplicationCommandTarget
         juce::ApplicationCommandTarget* getNextCommandTarget() override;
