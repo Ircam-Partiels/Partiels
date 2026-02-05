@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
-set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "")
+if(APPLE) # Prevent llama.cpp to recognize the architecture as arm64 when building on Windows with MSVC for AMD64
+    # Note: macOS deployment target is set to 10.15 to satisfy llama.cpp requirements (Apple Silicon / ARM64 support).
+    # Lowering this value may break compatibility with the bundled llama.cpp backend on older macOS versions.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+elseif(UNIX)
+    set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
+set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_XCODE_GENERATE_SCHEME true)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
 set(CMAKE_XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES")
@@ -85,8 +93,25 @@ file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
+### Manual ###
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
+string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
+string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(RELATIVE_PATH PARTIELS_BIN_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData")
+string(REPLACE "src=\"../BinaryData/" "src=\"${PARTIELS_BIN_REL}/" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
+find_program(MDPDF_EXE "mdpdf")
+if(MDPDF_EXE)
+    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf --style=${CMAKE_CURRENT_SOURCE_DIR}/Docs/style.css --gh-style VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    message(STATUS "Manual target cannot be generated because mdpdf is not found")
+endif()
+add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
+
 ### Application ###
 if(NOT PARTIELS_MANUAL_ONLY)
+    #### Dependencies
     if(NOT EXISTS ${VAMP_SDK_PATH})
         include(FetchContent)
         find_package(Git REQUIRED)
@@ -104,12 +129,54 @@ if(NOT PARTIELS_MANUAL_ONLY)
         message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
     endif()
 
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "ggml: build shared libraries" FORCE)
+    set(GGML_USE_METAL ON CACHE BOOL "ggml: use Metal" FORCE)
+    set(GGML_NATIVE ON CACHE BOOL "ggml: optimize the build for the current system" FORCE)
+    option(GGML_METAL_EMBED_LIBRARY "ggml: embed Metal library" ON)
+    option(GGML_LTO "ggml: use LTO" ON)
+    option(GGML_OPENMP "ggml: use OpenMP" OFF)
+    option(GGML_CCACHE "ggml: use ccache" OFF)
+    if(APPLE)
+        option(GGML_BLAS "ggml: use BLAS" OFF)
+    endif()
+    option(GGML_CPU  "ggml: enable CPU backend" ON)
+    option(LLAMA_BUILD_COMMON "llama: build common utils library" ON)
+    option(LLAMA_HTTPLIB    "llama: httplib for downloading functionality" OFF)
+    option(LLAMA_OPENSSL    "llama: use openssl to support HTTPS" OFF)
+    option(BUILD_MD2HTML_EXECUTABLE "Whether to compile the md2html executable" OFF)
+
     add_subdirectory(JUCE)
+    add_subdirectory(Dependencies/llama.cpp)
+    add_subdirectory(Dependencies/hnswlib)
     add_subdirectory(Dependencies/ircam-vamp-extension)
+    add_subdirectory(Dependencies/md4c)
     add_subdirectory(Dependencies/sdif)
     include(Dependencies/Misc/Misc.cmake)
     add_subdirectory(VampPlugins)
 
+    # Set specific compile options and properties for ggml and llama targets
+    function(set_ggml_options)
+        foreach(target IN LISTS ARGN)
+            if(APPLE)
+                target_compile_options(${target} PRIVATE -Wno-shorten-64-to-32 -Wno-implicit-float-conversion -Wno-shadow-field-in-constructor -Wno-missing-noreturn)
+                set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION "NO")
+            elseif(UNIX)
+                target_compile_options(${target} PRIVATE -Wno-unused-function -Wno-unused-parameter)
+            elseif(MSVC)
+                target_compile_options(${target} PRIVATE /wd4005 /wd4244 /wd4305)
+            endif()
+        endforeach()
+    endfunction()
+
+    if(APPLE)
+        set_ggml_options(llama ggml ggml-metal ggml-cpu ggml-base llama-common)
+    elseif(UNIX)
+        set_ggml_options(ggml llama-common)
+    elseif(MSVC)
+        set_ggml_options(llama ggml ggml-base ggml-cpu llama-common)
+    endif()
+
+    #### Partiels Application
     juce_add_gui_app(Partiels
         PRODUCT_NAME                        "Partiels"
         VERSION                             ${PARTIELS_VERSION_STRING}
@@ -153,9 +220,17 @@ if(NOT PARTIELS_MANUAL_ONLY)
     source_group("Source/Global" FILES ${GlobalSources})
     target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources})
 
+    set(PARTIELS_NEURALYZER_RAG_REPO "https://huggingface.co/gpustack")
+    set(PARTIELS_NEURALYZER_RAG_EMBEDDING_MODEL_URL "${PARTIELS_NEURALYZER_RAG_REPO}/bge-m3-GGUF/resolve/main/bge-m3-Q4_K_M.gguf")
+    set(PARTIELS_NEURALYZER_RAG_RERANKER_MODEL_URL "${PARTIELS_NEURALYZER_RAG_REPO}/bge-reranker-v2-m3-GGUF/resolve/main/bge-reranker-v2-m3-Q4_K_M.gguf")
+    set(PARTIELS_NEURALYZER_GUARD_MODEL_URL "https://huggingface.co/QuantFactory/Llama-Guard-3-1B-GGUF/resolve/main/Llama-Guard-3-1B.Q4_K_M.gguf")
+    set(PARTIELS_NEURALYZER_DEFAULT_MODEL "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf")
+
     target_compile_definitions(Partiels PRIVATE
         APP_DOC_PREFIX="ptl"
         DONT_SET_USING_JUCE_NAMESPACE=1
+        JUCE_CATCH_UNHANDLED_EXCEPTIONS=1
+        JUCE_DISABLE_JUCE_VERSION_PRINTING=1
         JUCE_MODAL_LOOPS_PERMITTED=0
         JUCE_ALLOW_STATIC_NULL_VARIABLES=0
         JUCE_LOG_ASSERTIONS=0
@@ -168,8 +243,13 @@ if(NOT PARTIELS_MANUAL_ONLY)
         JUCE_DIRECTSOUND=1
         JUCE_ASIO=1
         MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
+        MISC_IGNORE_ASSERT=0
         PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
         PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
+        PARTIELS_NEURALYZER_RAG_EMBEDDING_MODEL_URL="${PARTIELS_NEURALYZER_RAG_EMBEDDING_MODEL_URL}"
+        PARTIELS_NEURALYZER_RAG_RERANKER_MODEL_URL="${PARTIELS_NEURALYZER_RAG_RERANKER_MODEL_URL}"
+        PARTIELS_NEURALYZER_GUARD_MODEL_URL="${PARTIELS_NEURALYZER_GUARD_MODEL_URL}"
+        PARTIELS_NEURALYZER_DEFAULT_MODEL="${PARTIELS_NEURALYZER_DEFAULT_MODEL}"
         )
     if(UNIX AND NOT APPLE)
         target_compile_definitions(Partiels PRIVATE 
@@ -199,6 +279,17 @@ if(NOT PARTIELS_MANUAL_ONLY)
     file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
     juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
+    file(GLOB PartielsNeuralyzerDataSources
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md
+        )
+    juce_add_binary_data(AnlNeuralyzerData HEADER_NAME "AnlNeuralyzerData.h" NAMESPACE AnlNeuralyzerData SOURCES ${PartielsNeuralyzerDataSources})
+
+    file(GLOB PartielsNeuralyzerTutorialDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/Tutorials/*.md)
+    juce_add_binary_data(AnlNeuralyzerTutorialData HEADER_NAME "AnlNeuralyzerTutorialData.h" NAMESPACE AnlNeuralyzerTutorialData SOURCES ${PartielsNeuralyzerTutorialDataSources})
+
     file(GLOB TestResultsDataSources
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.lab
@@ -207,17 +298,23 @@ if(NOT PARTIELS_MANUAL_ONLY)
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.txt
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.sdif
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.jinja
         )
     juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
     target_link_libraries(Partiels PRIVATE
         ive_host_static
+        llama-common
+        hnswlib::hnswlib
+        md4c
         sdif
         MiscData
         TestResultsData
         AnlResourceData
         AnlIconsData
         AnlCursorsData
+        AnlNeuralyzerData
+        AnlNeuralyzerTutorialData
         juce::juce_gui_extra
         juce::juce_audio_formats
         juce::juce_audio_devices
@@ -391,22 +488,6 @@ if(NOT PARTIELS_MANUAL_ONLY)
     add_dependencies(Partiels PartielsExtractTranslationKeys)
     
 endif() # NOT PARTIELS_MANUAL_ONLY
-
-### Manual ###
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
-string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
-string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(RELATIVE_PATH PARTIELS_BIN_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData")
-string(REPLACE "src=\"../BinaryData/" "src=\"${PARTIELS_BIN_REL}/" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
-find_program(MDPDF_EXE "mdpdf")
-if(MDPDF_EXE)
-    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf --style=${CMAKE_CURRENT_SOURCE_DIR}/Docs/style.css --gh-style VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-else()
-    message(STATUS "Manual target cannot be generated because mdpdf is not found")
-endif()
-add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
 
 ### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
