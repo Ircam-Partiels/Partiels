@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
-set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "")
+if(APPLE) # Prevent llama.cpp to recognize the architecture as arm64 when building on Windows with MSVC for AMD64
+    # Note: macOS deployment target is set to 10.15 to satisfy llama.cpp requirements (Apple Silicon / ARM64 support).
+    # Lowering this value may break compatibility with the bundled llama.cpp backend on older macOS versions.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+elseif(UNIX)
+    set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
 set(CMAKE_XCODE_GENERATE_SCHEME true)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
@@ -67,6 +74,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
 ### Application ###
 if(NOT PARTIELS_MANUAL_ONLY)
+    #### Dependencies
     if(NOT EXISTS ${VAMP_SDK_PATH})
         include(FetchContent)
         find_package(Git REQUIRED)
@@ -84,12 +92,51 @@ if(NOT PARTIELS_MANUAL_ONLY)
         message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
     endif()
 
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "ggml: build shared libraries" FORCE)
+    set(GGML_USE_METAL ON CACHE BOOL "ggml: use Metal" FORCE)
+    set(GGML_NATIVE ON CACHE BOOL "ggml: optimize the build for the current system" FORCE)
+    option(GGML_METAL_EMBED_LIBRARY "ggml: embed Metal library" ON)
+    option(GGML_LTO "ggml: use LTO" ON)
+    option(GGML_OPENMP "ggml: use OpenMP" OFF)
+    option(GGML_CCACHE "ggml: use ccache" OFF)
+    if(APPLE)
+        option(GGML_BLAS "ggml: use BLAS" OFF)
+    endif()
+    option(GGML_CPU  "ggml: enable CPU backend" ON)
+    option(LLAMA_BUILD_COMMON "llama: build common utils library" ON)
+    option(LLAMA_HTTPLIB    "llama: httplib for downloading functionality" OFF)
+    option(LLAMA_OPENSSL    "llama: use openssl to support HTTPS" OFF)
+
     add_subdirectory(JUCE)
+    add_subdirectory(Dependencies/llama.cpp)
     add_subdirectory(Dependencies/ircam-vamp-extension)
     add_subdirectory(Dependencies/sdif)
     include(Dependencies/Misc/Misc.cmake)
     add_subdirectory(VampPlugins)
 
+    # Set specific compile options and properties for ggml and llama targets
+    function(set_ggml_options)
+        foreach(target IN LISTS ARGN)
+            if(APPLE)
+                target_compile_options(${target} PRIVATE -Wno-shorten-64-to-32 -Wno-implicit-float-conversion -Wno-shadow-field-in-constructor)
+                set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION "NO")
+            elseif(UNIX)
+                target_compile_options(${target} PRIVATE -Wno-unused-function -Wno-unused-parameter)
+            elseif(MSVC)
+                target_compile_options(${target} PRIVATE /wd4005 /wd4244 /wd4305)
+            endif()
+        endforeach()
+    endfunction()
+
+    if(APPLE)
+        set_ggml_options(llama ggml ggml-metal ggml-cpu ggml-base common)
+    elseif(UNIX)
+        set_ggml_options(ggml common)
+    elseif(MSVC)
+        set_ggml_options(llama ggml ggml-base ggml-cpu common)
+    endif()
+
+    #### Partiels Application
     juce_add_gui_app(Partiels
         PRODUCT_NAME                        "Partiels"
         VERSION                             ${PARTIELS_VERSION_STRING}
@@ -136,6 +183,8 @@ if(NOT PARTIELS_MANUAL_ONLY)
     target_compile_definitions(Partiels PRIVATE
         APP_DOC_PREFIX="ptl"
         DONT_SET_USING_JUCE_NAMESPACE=1
+        JUCE_CATCH_UNHANDLED_EXCEPTIONS=1
+        JUCE_DISABLE_JUCE_VERSION_PRINTING=1
         JUCE_MODAL_LOOPS_PERMITTED=0
         JUCE_ALLOW_STATIC_NULL_VARIABLES=0
         JUCE_LOG_ASSERTIONS=0
@@ -148,6 +197,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
         JUCE_DIRECTSOUND=1
         JUCE_ASIO=1
         MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
+        MISC_IGNORE_ASSERT=1
         PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
         PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
         )
@@ -179,6 +229,9 @@ if(NOT PARTIELS_MANUAL_ONLY)
     file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
     juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
+    file(GLOB PartielsNeuralyzerDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.jinja)
+    juce_add_binary_data(AnlNeuralyzerData HEADER_NAME "AnlNeuralyzerData.h" NAMESPACE AnlNeuralyzerData SOURCES ${PartielsNeuralyzerDataSources})
+
     file(GLOB TestResultsDataSources
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.lab
@@ -192,12 +245,14 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     target_link_libraries(Partiels PRIVATE
         ive_host_static
+        common
         sdif
         MiscData
         TestResultsData
         AnlResourceData
         AnlIconsData
         AnlCursorsData
+        AnlNeuralyzerData
         juce::juce_gui_extra
         juce::juce_audio_formats
         juce::juce_audio_devices
