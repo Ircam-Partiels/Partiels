@@ -62,16 +62,10 @@ void Downloader::handleAsyncUpdate()
     }
 }
 
-juce::Result Downloader::download(juce::URL const& url, juce::File const& target, std::function<bool(int, int)> callback)
+juce::Result Downloader::download(juce::URL const& url, juce::File const& target, juce::URL::InputStreamOptions const& options)
 {
     try
     {
-        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                                 .withConnectionTimeoutMs(30000)
-                                 .withProgressCallback([=](int numBytes, int totalBytes)
-                                                       {
-                                                           return callback != nullptr ? callback(numBytes, totalBytes) : true;
-                                                       });
         auto inputStream = url.createInputStream(options);
         MiscWeakAssert(inputStream != nullptr);
         if(inputStream == nullptr)
