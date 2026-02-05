@@ -10,7 +10,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 option(PARTIELS_MANUAL_ONLY "Only generate documentation targets (PartielsManual, PartielsPatchs) and release metadata" OFF)
 
 option(PARTIELS_USE_SCCACHE "Use sccache as compiler launcher when available" ON)
-if(PARTIELS_USE_SCCACHE)
+
+if(PARTIELS_USE_SCCACHE AND NOT PARTIELS_MANUAL_ONLY)
     if(NOT CMAKE_C_COMPILER_LAUNCHER AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
         find_program(PARTIELS_SCCACHE_PROGRAM sccache)
         if(PARTIELS_SCCACHE_PROGRAM)
@@ -77,6 +78,48 @@ file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE
 file(READ ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
+
+### Manual ###
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
+string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
+string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(RELATIVE_PATH PARTIELS_BIN_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData")
+string(REPLACE "src=\"../BinaryData/" "src=\"${PARTIELS_BIN_REL}/" MANUAL_CONTENT ${MANUAL_CONTENT})
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
+find_program(MDPDF_EXE "mdpdf")
+if(MDPDF_EXE)
+    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf --style=${CMAKE_CURRENT_SOURCE_DIR}/Docs/style.css --gh-style VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    message(STATUS "Manual target cannot be generated because mdpdf is not found")
+endif()
+add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
+
+### Publishing ###
+set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels: [Linux](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz) / [MacOS (ARM)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-ARM.dmg) / [MacOS (Intel)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-Intel.dmg) / [Windows](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe) / [Manual](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf) / [Patchs](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Patchs.zip)\n") 
+
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins:\n")
+
+set(IVP_URL "https://github.com/Ircam-Partiels/ircam-vamp-plugins")
+set(IVP_TAG "2.1.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
+
+set(VAX_TAG "2.0.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- VAX Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Manual.zip)\n")
+
+set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
+set(CREPE_TAG "3.0.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Crepe Vamp Plugin: [Linux](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Linux.tar.gz) / [MacOS](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-MacOS.pkg) / [Windows](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Windows.exe) / [Manual](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Manual.zip)\n") 
+
+set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
+set(WHISPER_TAG "4.0.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin: [Linux](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz) / [MacOS](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.pkg) / [Windows](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Windows.exe) / [Manual](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Manual.zip)\n") 
+
+set(IPT_URL "https://github.com/Ircam-Partiels/ipt-vamp-plugin")
+set(IPT_TAG "1.2.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- IPT Vamp Plugin: [Linux](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Linux.tar.gz) / [MacOS](${IPT_URL}/releases/download/${IPT_TAG}/IPT-MacOS.pkg) / [Windows](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Windows.exe)\n")
 
 ### Application ###
 if(NOT PARTIELS_MANUAL_ONLY)
@@ -376,48 +419,6 @@ if(NOT PARTIELS_MANUAL_ONLY)
     add_dependencies(PartielsUpdateTranslationPortuguese PartielsExtractTranslationKeys)
 
 endif() # NOT PARTIELS_MANUAL_ONLY
-
-### Manual ###
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md MANUAL_CONTENT)
-string(REPLACE "APPVERSION" "${PARTIELS_BUILD_TAG} (${PARTIELS_BUILD_ID})" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(RELATIVE_PATH PARTIELS_DOCS_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Docs")
-string(REPLACE "src=\"Images/" "src=\"${PARTIELS_DOCS_REL}/Images/" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(RELATIVE_PATH PARTIELS_BIN_REL ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData")
-string(REPLACE "src=\"../BinaryData/" "src=\"${PARTIELS_BIN_REL}/" MANUAL_CONTENT ${MANUAL_CONTENT})
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md ${MANUAL_CONTENT})
-find_program(MDPDF_EXE "mdpdf")
-if(MDPDF_EXE)
-    add_custom_target(PartielsManual COMMAND ${MDPDF_EXE} Partiels-Manual.md Partiels-Manual.pdf --style=${CMAKE_CURRENT_SOURCE_DIR}/Docs/style.css --gh-style VERBATIM WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-else()
-    message(STATUS "Manual target cannot be generated because mdpdf is not found")
-endif()
-add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/Partiels-Patchs.zip" --format=zip "*" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Patchs/.")
-
-### Publishing ###
-set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels: [Linux](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz) / [MacOS (ARM)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-ARM.dmg) / [MacOS (Intel)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-Intel.dmg) / [Windows](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe) / [Manual](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf) / [Patchs](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Patchs.zip)\n") 
-
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins:\n")
-
-set(IVP_URL "https://github.com/Ircam-Partiels/ircam-vamp-plugins")
-set(IVP_TAG "2.1.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Ircam Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/Ircam-Vamp-Plugins-Manuals.zip)\n")
-
-set(VAX_TAG "2.0.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- VAX Vamp Plugins: [Linux](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Linux.zip) / [MacOS](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-MacOS.zip) / [Windows](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Windows.zip) / [Manual](${IVP_URL}/releases/download/${IVP_TAG}/VAX-Vamp-Plugin-v${VAX_TAG}-Manual.zip)\n")
-
-set(CREPE_URL "https://github.com/Ircam-Partiels/crepe-vamp-plugin")
-set(CREPE_TAG "3.0.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Crepe Vamp Plugin: [Linux](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Linux.tar.gz) / [MacOS](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-MacOS.pkg) / [Windows](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Windows.exe) / [Manual](${CREPE_URL}/releases/download/${CREPE_TAG}/Crepe-Manual.zip)\n") 
-
-set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
-set(WHISPER_TAG "4.0.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin: [Linux](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz) / [MacOS](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.pkg) / [Windows](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Windows.exe) / [Manual](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Manual.zip)\n") 
-
-set(IPT_URL "https://github.com/Ircam-Partiels/ipt-vamp-plugin")
-set(IPT_TAG "1.2.0")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- IPT Vamp Plugin: [Linux](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Linux.tar.gz) / [MacOS](${IPT_URL}/releases/download/${IPT_TAG}/IPT-MacOS.pkg) / [Windows](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Windows.exe)\n")
 
 ### Testing ###
 if(NOT PARTIELS_MANUAL_ONLY)
