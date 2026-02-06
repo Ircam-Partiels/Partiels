@@ -159,7 +159,7 @@ namespace Application::Neuralyzer::Mcp
                 if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
                 {
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
-                    names[identifier] = trackAcsr.getAttr<Track::AttrType::name>().toStdString();
+                    names[identifier] = trackAcsr.getAttr<Track::AttrType::name>();
                 }
                 else
                 {
@@ -280,7 +280,7 @@ namespace Application::Neuralyzer::Mcp
                     if(Track::Tools::supportsInputTrack(trackAcsr))
                     {
                         auto const inputTrack = trackAcsr.getAttr<Track::AttrType::input>();
-                        inputTracks[identifier] = inputTrack.toStdString();
+                        inputTracks[identifier] = inputTrack;
                     }
                     else
                     {
@@ -325,7 +325,7 @@ namespace Application::Neuralyzer::Mcp
                 nlohmann::json trackArray = nlohmann::json::array();
                 for(auto const& trackInfo : compatibleTracks)
                 {
-                    trackArray.push_back(trackInfo.identifier.toStdString());
+                    trackArray.push_back(trackInfo.identifier);
                 }
                 tracks[identifier] = trackArray;
             }
@@ -392,7 +392,7 @@ namespace Application::Neuralyzer::Mcp
             }
             nlohmann::json content;
             content["type"] = "text";
-            content["text"] = results.joinIntoString("\n").toStdString();
+            content["text"] = results.joinIntoString("\n");
             response["content"].push_back(content);
             return response;
         }
@@ -431,7 +431,7 @@ namespace Application::Neuralyzer::Mcp
                     return createError("The 'value' field is required and must be a number.");
                 }
                 auto const identifier = juce::String(trackJson.at("identifier").get<std::string>());
-                auto const parameter = juce::String(trackJson.at("parameter").get<std::string>());
+                auto const parameter = trackJson.at("parameter").get<std::string>();
                 auto const value = trackJson.at("value").get<float>();
                 if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
                 {
@@ -446,7 +446,7 @@ namespace Application::Neuralyzer::Mcp
                     {
                         auto const clampedValue = std::clamp(value, paramIt->minValue, paramIt->maxValue);
                         auto state = trackAcsr.getAttr<Track::AttrType::state>();
-                        state.parameters[parameter.toStdString()] = clampedValue;
+                        state.parameters[parameter] = clampedValue;
                         trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::asynchronous);
                         results.add(juce::String("The parameter \"PARAM\" of the track \"TRACKID\" has been set to \"VAL\".").replace("TRACKID", identifier).replace("PARAM", parameter).replace("VAL", juce::String(clampedValue)));
                     }
@@ -474,7 +474,7 @@ namespace Application::Neuralyzer::Mcp
             }
             nlohmann::json content;
             content["type"] = "text";
-            content["text"] = results.joinIntoString("\n").toStdString();
+            content["text"] = results.joinIntoString("\n");
             response["content"].push_back(content);
             return response;
         }
@@ -559,7 +559,7 @@ namespace Application::Neuralyzer::Mcp
             }
             nlohmann::json content;
             content["type"] = "text";
-            content["text"] = results.joinIntoString("\n").toStdString();
+            content["text"] = results.joinIntoString("\n");
             response["content"].push_back(content);
             return response;
         }
@@ -611,7 +611,7 @@ namespace Application::Neuralyzer::Mcp
                     Plugin::Key pluginKey;
                     pluginKey.identifier = pluginIdentifier;
                     pluginKey.feature = pluginFeature;
-                    auto const group = trackJson.value("group", layout.front().toStdString());
+                    auto const group = trackJson.value("group", layout.front());
                     auto const groupId = references.count(group) > 0_z ? references.at(group) : group;
                     auto const position = trackJson.value("position", 0_z);
                     auto const [result, identifier] = Tools::addPluginTrack(groupId, position, pluginKey);
@@ -622,7 +622,7 @@ namespace Application::Neuralyzer::Mcp
                         break;
                     }
                     trackIdentifiers.insert(identifier);
-                    created.push_back(identifier.toStdString());
+                    created.push_back(identifier);
                     results.add(juce::String("Created track \"TRACKID\" with plugin \"PK\".").replace("TRACKID", identifier).replace("PK", pluginKey.identifier + ":" + pluginKey.feature));
                 }
                 if(!response.at("isError").get<bool>())
@@ -638,7 +638,7 @@ namespace Application::Neuralyzer::Mcp
                 content["type"] = "text";
                 nlohmann::json payload;
                 payload["created"] = created;
-                payload["messages"] = juce::String(results.joinIntoString("\n")).toStdString();
+                payload["messages"] = juce::String(results.joinIntoString("\n"));
                 content["text"] = payload.dump();
                 response["content"].push_back(content);
             }
@@ -687,7 +687,7 @@ namespace Application::Neuralyzer::Mcp
                     }
                     else
                     {
-                        removed.push_back(identifier.toStdString());
+                        removed.push_back(identifier);
                     }
                 }
                 else
@@ -709,7 +709,7 @@ namespace Application::Neuralyzer::Mcp
             content["type"] = "text";
             nlohmann::json payload;
             payload["removed"] = removed;
-            payload["messages"] = juce::String(results.joinIntoString("\n")).toStdString();
+            payload["messages"] = juce::String(results.joinIntoString("\n"));
             content["text"] = payload.dump();
             response["content"].push_back(content);
             return response;
