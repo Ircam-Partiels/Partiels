@@ -428,6 +428,7 @@ juce::Result Application::Neuralyzer::Agent::sendSystemMessage(std::string instr
     // Generate full prompt and extract just the new portion
     mChatInputs.add_generation_prompt = false;
     mChatInputs.use_jinja = true;
+    mChatInputs.enable_thinking = false;
 
     auto const params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
     // Extract just the new prompt portion (since last message)
