@@ -121,6 +121,22 @@ namespace Application::Neuralyzer::Mcp
                         {
                             track["input"] = trackAcsr.getAttr<Track::AttrType::input>().toStdString();
                         }
+                        auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                        if(frameType.has_value())
+                        {
+                            switch(frameType.value())
+                            {
+                                case Track::FrameType::label:
+                                    track["type"] = "label";
+                                    break;
+                                case Track::FrameType::value:
+                                    track["type"] = "value";
+                                    break;
+                                case Track::FrameType::vector:
+                                    track["type"] = "vector";
+                                    break;
+                            }
+                        }
                     }
                     tracks.push_back(std::move(track));
                 }
@@ -342,6 +358,63 @@ namespace Application::Neuralyzer::Mcp
         }
 
         // Track Getter Section
+        if(toolName == "get_track_types")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            nlohmann::json types;
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            for(auto const& identifierJson : identifiers)
+            {
+                if(!identifierJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = identifierJson.get<std::string>();
+                if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+                    auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                    if(frameType.has_value())
+                    {
+                        switch(frameType.value())
+                        {
+                            case Track::FrameType::label:
+                                types[identifier] = "label";
+                                break;
+                            case Track::FrameType::value:
+                                types[identifier] = "value";
+                                break;
+                            case Track::FrameType::vector:
+                                types[identifier] = "vector";
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        types[identifier] = "unknown";
+                    }
+                }
+                else
+                {
+                    response["isError"] = true;
+                    types[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                }
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = types.dump();
+            response["content"].push_back(content);
+            return response;
+        }
         if(toolName == "get_track_names")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
