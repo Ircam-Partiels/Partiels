@@ -84,6 +84,10 @@
                       "input": {
                         "type": "string",
                         "description": "The identifier of the input track (empty string if no input)" 
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The type of the track (label, value, or vector)"
                       }
                     }
                   }
@@ -217,6 +221,34 @@
         "required": [
           "groups"
         ]
+      }
+    },
+    {
+      "name": "get_track_types",
+      "description": "Query the types of one or more tracks (label for markers, value for lines, vector for matrix/spectrogram)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "object",
+            "description": "Map of track identifiers to their types (label, value, or vector)"
+          }
+        }
       }
     },
     {
