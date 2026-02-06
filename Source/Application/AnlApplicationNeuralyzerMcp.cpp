@@ -83,6 +83,7 @@ namespace Application::Neuralyzer::Mcp
             return response;
         }
 
+        // Document Getter Section
         if(toolName == "get_document_state")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
