@@ -95,6 +95,131 @@
       }
     },
     {
+      "name": "get_group_names",
+      "description": "Query the names of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the groups"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "object",
+            "description": "Map of group identifiers to their names"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_group_layouts",
+      "description": "Query the layouts of one or more groups (list of track identifiers in order)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the groups"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "layouts": {
+            "type": "object",
+            "description": "Map of group identifiers to their track layout (arrays of track identifiers)"
+          }
+        }
+      }
+    },
+    {
+      "name": "set_group_names",
+      "description": "Set the names of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The new name for this group"
+                }
+              },
+              "required": [
+                "identifier",
+                "name"
+              ]
+            },
+            "description": "Array of group identifier and name pairs"
+          }
+        },
+        "required": [
+          "groups"
+        ]
+      }
+    },
+    {
+      "name": "set_group_layouts",
+      "description": "Set the layout (track order) of one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the group"
+                },
+                "layout": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of track identifiers in the desired order"
+                }
+              },
+              "required": [
+                "identifier",
+                "layout"
+              ]
+            },
+            "description": "Array of group identifier and layout pairs"
+          }
+        },
+        "required": [
+          "groups"
+        ]
+      }
+    },
+    {
       "name": "get_track_names",
       "description": "Query the names of one or more tracks",
       "inputSchema": {
