@@ -164,7 +164,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    names[identifier] = "The track doesn't exist.";
+                    names[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
                 }
             }
             nlohmann::json content;
@@ -204,7 +204,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    descriptions[identifier] = "The track doesn't exist.";
+                    descriptions[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
                 }
             }
             nlohmann::json content;
@@ -244,7 +244,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    parameters[identifier] = "The track doesn't exist.";
+                    parameters[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
                 }
             }
             nlohmann::json content;
@@ -284,13 +284,13 @@ namespace Application::Neuralyzer::Mcp
                     }
                     else
                     {
-                        inputTracks[identifier] = "The track doesn't support input track.";
+                        inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't support input track.").replace("TRACKID", identifier);;
                     }
                 }
                 else
                 {
                     response["isError"] = true;
-                    inputTracks[identifier] = "The track doesn't exist.";
+                    inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
                 }
             }
             nlohmann::json content;
@@ -373,12 +373,12 @@ namespace Application::Neuralyzer::Mcp
                 {
                     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
                     trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::asynchronous);
-                    results.add(juce::String("The track \"ID\" has been renamed \"NAME\".").replace("ID", identifier).replace("NAME", name));
+                    results.add(juce::String("The track \"TRACKID\" has been renamed \"NAME\".").replace("TRACKID", identifier).replace("NAME", name));
                 }
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"ID\" doesn't exist.").replace("ID", identifier));
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
                     break;
                 }
             }
@@ -448,19 +448,19 @@ namespace Application::Neuralyzer::Mcp
                         auto state = trackAcsr.getAttr<Track::AttrType::state>();
                         state.parameters[parameter.toStdString()] = clampedValue;
                         trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::asynchronous);
-                        results.add(juce::String("The parameter \"PARAM\" of the track \"ID\" has been set to \"VAL\".").replace("ID", identifier).replace("PARAM", parameter).replace("VAL", juce::String(clampedValue)));
+                        results.add(juce::String("The parameter \"PARAM\" of the track \"TRACKID\" has been set to \"VAL\".").replace("TRACKID", identifier).replace("PARAM", parameter).replace("VAL", juce::String(clampedValue)));
                     }
                     else
                     {
                         response["isError"] = true;
-                        results.add(juce::String("The parameter \"PARAM\" of the track \"ID\" doesn't exist.").replace("ID", identifier).replace("PARAM", parameter));
+                        results.add(juce::String("The parameter \"PARAM\" of the track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier).replace("PARAM", parameter));
                         break;
                     }
                 }
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"ID\" doesn't exist.").replace("ID", identifier));
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
                     break;
                 }
             }
@@ -516,36 +516,36 @@ namespace Application::Neuralyzer::Mcp
                     if(!input.isEmpty() && !Document::Tools::hasTrackAcsr(documentAcsr, input))
                     {
                         response["isError"] = true;
-                        results.add(juce::String("The input track \"ID\" doesn't exist.").replace("ID", input));
+                        results.add(juce::String("The input track \"TRACKID\" doesn't exist.").replace("TRACKID", input));
                         break;
                     }
                     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
                     if(!Track::Tools::supportsInputTrack(trackAcsr))
                     {
                         response["isError"] = true;
-                        results.add(juce::String("The track \"ID\" doesn't support input.").replace("ID", identifier));
+                        results.add(juce::String("The track \"TRACKID\" doesn't support input.").replace("TRACKID", identifier));
                         break;
                     }
                     if(!hierarchyManager.isTrackValidFor(identifier, input))
                     {
                         response["isError"] = true;
-                        results.add(juce::String("The track \"ID\" doesn't support input \"INPUTID\" (unsupported format or circular dependency).").replace("ID", identifier).replace("INPUTID", input));
+                        results.add(juce::String("The track \"TRACKID\" doesn't support input \"INPUTID\" (unsupported format or circular dependency).").replace("TRACKID", identifier).replace("INPUTID", input));
                         break;
                     }
                     trackAcsr.setAttr<Track::AttrType::input>(input, NotificationType::asynchronous);
                     if(input.isEmpty())
                     {
-                        results.add(juce::String("The track \"ID\" input has been disconnected.").replace("ID", identifier));
+                        results.add(juce::String("The track \"TRACKID\" input has been disconnected.").replace("TRACKID", identifier));
                     }
                     else
                     {
-                        results.add(juce::String("The track \"ID\" now uses \"INPUT\" as input.").replace("ID", identifier).replace("INPUT", input));
+                        results.add(juce::String("The track \"TRACKID\" now uses \"INPUT\" as input.").replace("TRACKID", identifier).replace("INPUT", input));
                     }
                 }
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"ID\" doesn't exist.").replace("ID", identifier));
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
                     break;
                 }
             }
@@ -623,7 +623,7 @@ namespace Application::Neuralyzer::Mcp
                     }
                     trackIdentifiers.insert(identifier);
                     created.push_back(identifier.toStdString());
-                    results.add(juce::String("Created track \"ID\" with plugin \"PK\".").replace("ID", identifier).replace("PK", pluginKey.identifier + ":" + pluginKey.feature));
+                    results.add(juce::String("Created track \"TRACKID\" with plugin \"PK\".").replace("TRACKID", identifier).replace("PK", pluginKey.identifier + ":" + pluginKey.feature));
                 }
                 if(!response.at("isError").get<bool>())
                 {
@@ -682,7 +682,7 @@ namespace Application::Neuralyzer::Mcp
                     if(result.failed())
                     {
                         response["isError"] = true;
-                        results.add(juce::String("The track \"ID\" could not be removed: REASON.").replace("ID", identifier).replace("REASON", result.getErrorMessage()));
+                        results.add(juce::String("The track \"TRACKID\" could not be removed: REASON.").replace("TRACKID", identifier).replace("REASON", result.getErrorMessage()));
                         break;
                     }
                     else
@@ -693,7 +693,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"ID\" doesn't exist.").replace("ID", identifier));
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
                     break;
                 }
             }
