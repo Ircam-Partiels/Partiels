@@ -254,7 +254,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
+                    results.add(juce::String("The group \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
                     break;
                 }
             }
@@ -322,7 +322,7 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    results.add(juce::String("The track \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
+                    results.add(juce::String("The group \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
                     break;
                 }
             }
@@ -372,7 +372,6 @@ namespace Application::Neuralyzer::Mcp
                 {
                     response["isError"] = true;
                     names[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
-                    ;
                 }
             }
             nlohmann::json content;
