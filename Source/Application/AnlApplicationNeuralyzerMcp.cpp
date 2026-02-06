@@ -526,7 +526,6 @@ namespace Application::Neuralyzer::Mcp
                 {
                     response["isError"] = true;
                     parameters[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
-                    ;
                 }
             }
             nlohmann::json content;
@@ -574,7 +573,6 @@ namespace Application::Neuralyzer::Mcp
                 {
                     response["isError"] = true;
                     inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
-                    ;
                 }
             }
             nlohmann::json content;
