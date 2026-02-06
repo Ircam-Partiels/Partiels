@@ -134,6 +134,213 @@ namespace Application::Neuralyzer::Mcp
             return response;
         }
 
+        // Group Getter Section
+        if(toolName == "get_group_names")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            nlohmann::json names;
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            for(auto const& identifierJson : identifiers)
+            {
+                if(!identifierJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = identifierJson.get<std::string>();
+                if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+                    names[identifier] = groupAcsr.getAttr<Group::AttrType::name>();
+                }
+                else
+                {
+                    response["isError"] = true;
+                    names[identifier] = juce::String("The group \"GROUPID\" doesn't exist.").replace("GROUPID", identifier);
+                }
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = names.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "get_group_layouts")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            nlohmann::json layouts;
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            for(auto const& identifierJson : identifiers)
+            {
+                if(!identifierJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = identifierJson.get<std::string>();
+                if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+                    layouts[identifier] = groupAcsr.getAttr<Group::AttrType::layout>();
+                }
+                else
+                {
+                    response["isError"] = true;
+                    layouts[identifier] = juce::String("The group \"GROUPID\" doesn't exist.").replace("GROUPID", identifier);
+                }
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = layouts.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+
+        // Group Setter Section
+        if(toolName == "set_group_names")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("groups") || !arguments.at("groups").is_array())
+            {
+                return createError("The 'groups' argument is required and must be an array of objects.");
+            }
+            auto const& groups = arguments.at("groups");
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            for(auto const& groupJson : groups)
+            {
+                if(!groupJson.is_object())
+                {
+                    return createError("The 'tracks' argument is required and must be an array of objects.");
+                }
+                if(!groupJson.contains("identifier") || !groupJson.at("identifier").is_string())
+                {
+                    return createError("The 'identifier' field is required and must be a string.");
+                }
+                if(!groupJson.contains("name") || !groupJson.at("name").is_string())
+                {
+                    return createError("The 'name' field is required and must be a string.");
+                }
+                auto const identifier = juce::String(groupJson.at("identifier").get<std::string>());
+                auto const name = juce::String(groupJson.at("name").get<std::string>());
+                if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+                {
+                    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+                    groupAcsr.setAttr<Group::AttrType::name>(name, NotificationType::asynchronous);
+                    results.add(juce::String("The group \"GROUPID\" has been renamed \"NAME\".").replace("GROUPID", identifier).replace("NAME", name));
+                }
+                else
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("The track \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
+                    break;
+                }
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Change group name (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = results.joinIntoString("\n");
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "set_group_layouts")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("groups") || !arguments.at("groups").is_array())
+            {
+                return createError("The 'groups' argument is required and must be an array of objects.");
+            }
+            auto const& groups = arguments.at("groups");
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            for(auto const& groupJson : groups)
+            {
+                if(!groupJson.is_object())
+                {
+                    return createError("The 'tracks' argument is required and must be an array of objects.");
+                }
+                if(!groupJson.contains("identifier") || !groupJson.at("identifier").is_string())
+                {
+                    return createError("The 'identifier' field is required and must be a string.");
+                }
+                if(!groupJson.contains("layout") || !groupJson.at("layout").is_array())
+                {
+                    return createError("The 'layout' field is required and must be an array of strings.");
+                }
+                auto const identifier = juce::String(groupJson.at("identifier").get<std::string>());
+                auto const layoutJson = groupJson.at("layout");
+                if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+                {
+                    std::vector<juce::String> layout;
+                    for(auto const& trackIdJson : layoutJson)
+                    {
+                        if(!trackIdJson.is_string())
+                        {
+                            return createError("The 'layout' field is required and must be an array of strings.");
+                        }
+                        layout.push_back(trackIdJson.get<juce::String>());
+                    }
+                    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+                    groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::asynchronous);
+                    results.add(juce::String("The group \"GROUPID\" layout has been modified.").replace("GROUPID", identifier));
+                }
+                else
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("The track \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
+                    break;
+                }
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Change group layout (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = results.joinIntoString("\n");
+            response["content"].push_back(content);
+            return response;
+        }
+
         // Track Getter Section
         if(toolName == "get_track_names")
         {
@@ -164,7 +371,8 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    names[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
+                    names[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                    ;
                 }
             }
             nlohmann::json content;
@@ -204,7 +412,8 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    descriptions[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
+                    descriptions[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                    ;
                 }
             }
             nlohmann::json content;
@@ -244,7 +453,8 @@ namespace Application::Neuralyzer::Mcp
                 else
                 {
                     response["isError"] = true;
-                    parameters[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
+                    parameters[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                    ;
                 }
             }
             nlohmann::json content;
@@ -284,13 +494,15 @@ namespace Application::Neuralyzer::Mcp
                     }
                     else
                     {
-                        inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't support input track.").replace("TRACKID", identifier);;
+                        inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't support input track.").replace("TRACKID", identifier);
+                        ;
                     }
                 }
                 else
                 {
                     response["isError"] = true;
-                    inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);;
+                    inputTracks[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                    ;
                 }
             }
             nlohmann::json content;
