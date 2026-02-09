@@ -194,6 +194,64 @@ namespace Application::Neuralyzer::Mcp
             return response;
         }
 
+        if(toolName == "get_audio_file_info")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("file") || !arguments.at("file").is_string())
+            {
+                return createError("The 'file' argument is required and must be a string.");
+            }
+
+            auto const filePath = arguments.at("file").get<std::string>();
+            juce::File const file(filePath);
+            if(!file.existsAsFile() || !file.hasReadAccess())
+            {
+                return createError("The 'file' argument must point to a readable file.");
+            }
+
+            auto& formatManager = Instance::get().getAudioFormatManager();
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(formatManager.createReaderFor(file));
+            if(reader == nullptr)
+            {
+                return createError("Failed to create audio reader for file.");
+            }
+
+            nlohmann::json payload;
+            payload["file"] = file.getFullPathName().toStdString();
+            payload["formatName"] = reader->getFormatName().toStdString();
+            payload["sampleRate"] = reader->sampleRate;
+            payload["bitsPerSample"] = reader->bitsPerSample;
+            payload["usesFloatingPointData"] = reader->usesFloatingPointData;
+            payload["lengthInSamples"] = static_cast<int64_t>(reader->lengthInSamples);
+            if(reader->sampleRate > 0.0)
+            {
+                payload["durationSeconds"] = static_cast<double>(reader->lengthInSamples) / reader->sampleRate;
+            }
+            else
+            {
+                payload["durationSeconds"] = 0.0;
+            }
+            payload["numChannels"] = reader->numChannels;
+
+            nlohmann::json metadata = nlohmann::json::object();
+            auto const& metadataValues = reader->metadataValues;
+            for(auto const& key : metadataValues.getAllKeys())
+            {
+                metadata[key.toStdString()] = metadataValues[key].toStdString();
+            }
+            payload["metadata"] = metadata;
+
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+
         // Document Setter Section
         if(toolName == "set_document_audio_file_layout")
         {
