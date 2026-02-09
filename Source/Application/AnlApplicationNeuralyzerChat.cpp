@@ -537,4 +537,32 @@ void Application::Neuralyzer::Chat::QueryEditor::textEditorTextChanged(juce::Tex
     }
 }
 
+bool Application::Neuralyzer::Chat::QueryEditor::isInterestedInFileDrag(juce::StringArray const& files)
+{
+    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
+    return std::any_of(files.begin(), files.end(), [&](auto const& fileName)
+                       {
+                           return audioFormatsWildcard.containsIgnoreCase(juce::File(fileName).getFileExtension());
+                       });
+}
+
+void Application::Neuralyzer::Chat::QueryEditor::fileDragEnter([[maybe_unused]] juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
+{
+}
+
+void Application::Neuralyzer::Chat::QueryEditor::fileDragExit([[maybe_unused]] juce::StringArray const& files)
+{
+}
+
+void Application::Neuralyzer::Chat::QueryEditor::filesDropped(juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
+{
+    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
+    for(auto const& file : files)
+    {
+        if(audioFormatsWildcard.containsIgnoreCase(juce::File(file).getFileExtension()))
+        {
+        }
+    }
+}
+
 ANALYSE_FILE_END
