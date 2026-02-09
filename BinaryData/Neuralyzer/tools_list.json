@@ -145,6 +145,61 @@
       }
     },
     {
+      "name": "get_audio_file_info",
+      "description": "Get audio file information using juce::AudioFormatReader",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Absolute path to the audio file"
+          }
+        },
+        "required": ["file"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Absolute path to the audio file"
+          },
+          "formatName": {
+            "type": "string",
+            "description": "Audio format name"
+          },
+          "sampleRate": {
+            "type": "number",
+            "description": "Sample rate (Hz)"
+          },
+          "bitsPerSample": {
+            "type": "integer",
+            "description": "Bits per sample"
+          },
+          "usesFloatingPointData": {
+            "type": "boolean",
+            "description": "Whether the audio data is floating point"
+          },
+          "lengthInSamples": {
+            "type": "integer",
+            "description": "Total number of samples"
+          },
+          "durationSeconds": {
+            "type": "number",
+            "description": "Duration in seconds"
+          },
+          "numChannels": {
+            "type": "integer",
+            "description": "Number of channels"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata key/value pairs"
+          }
+        }
+      }
+    },
+    {
       "name": "get_group_names",
       "description": "Query the names of one or more groups",
       "inputSchema": {
