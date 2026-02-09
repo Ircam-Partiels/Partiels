@@ -99,6 +99,52 @@
       }
     },
     {
+      "name": "get_document_audio_file_layout",
+      "description": "Get the audio file layout (audio input files and channel assignments) of the current document",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "type": "array",
+            "description": "Array of audio file layouts with file paths and channel numbers. Channel -1 = mono mix, 0 or above = specific channel index"
+          }
+        }
+      }
+    },
+    {
+      "name": "set_document_audio_file_layout",
+      "description": "Set the audio file layout (audio input files and channel assignments) of the current document",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "type": "array",
+            "description": "Array of objects with 'file' (absolute path string) and 'channel' (-1 for mono, 0+ for specific channel)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "Absolute path to the audio file"
+                },
+                "channel": {
+                  "type": "integer",
+                  "description": "Channel number: -1 = mono mix, 0 or above = specific channel index"
+                }
+              },
+              "required": ["file", "channel"]
+            }
+          }
+        },
+        "required": ["layout"]
+      }
+    },
+    {
       "name": "get_group_names",
       "description": "Query the names of one or more groups",
       "inputSchema": {
