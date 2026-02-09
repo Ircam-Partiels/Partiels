@@ -19,6 +19,30 @@ nlohmann::json Application::Neuralyzer::Mcp::createError(std::string const& what
 
 namespace Application::Neuralyzer::Mcp
 {
+    static std::string colourToString(juce::Colour const& colour)
+    {
+        std::stringstream ss;
+        ss << "#";
+        ss << std::hex << (colour.getRed() << 24 | colour.getGreen() << 16 | colour.getBlue() << 8 | colour.getAlpha() << 0);
+        return ss.str();
+    }
+
+    static std::optional<juce::Colour> stringToColour(std::string const& str)
+    {
+        if(str.size() != 9 || str[0] != '#')
+        {
+            return {};
+        }
+        unsigned int value = 0;
+        std::stringstream ss(str.substr(1));
+        ss >> std::hex >> value;
+        auto const r = static_cast<uint8_t>((value >> 24) & 0xFF);
+        auto const g = static_cast<uint8_t>((value >> 16) & 0xFF);
+        auto const b = static_cast<uint8_t>((value >> 8) & 0xFF);
+        auto const a = static_cast<uint8_t>((value >> 0) & 0xFF);
+        return juce::Colour::fromRGBA(r, g, b, a);
+    }
+
     static nlohmann::json callTools(nlohmann::json const& request)
     {
         MiscDebug("Application::Neuralyzer::Mcp::Dispatcher", "Received MCP tools/call");
@@ -415,6 +439,98 @@ namespace Application::Neuralyzer::Mcp
             response["content"].push_back(content);
             return response;
         }
+        if(toolName == "get_track_graphics")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            nlohmann::json graphics;
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            for(auto const& identifierJson : identifiers)
+            {
+                if(!identifierJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = identifierJson.get<std::string>();
+                if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+                    auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                    auto const& settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
+                    nlohmann::json trackGraphics;
+                    if(frameType.has_value() && frameType.value() == Track::FrameType::vector)
+                    {
+                        switch(frameType.value())
+                        {
+                            case Track::FrameType::label:
+                            {
+                                trackGraphics["colorBackground"] = colourToString(settings.colours.background);
+                                trackGraphics["colorForeground"] = colourToString(settings.colours.foreground);
+                                trackGraphics["colorDuration"] = colourToString(settings.colours.duration);
+                                trackGraphics["colorText"] = colourToString(settings.colours.text);
+                                trackGraphics["colorShadow"] = colourToString(settings.colours.shadow);
+
+                                trackGraphics["fontName"] = settings.font.getName();
+                                trackGraphics["fontSize"] = settings.font.getHeight();
+                                trackGraphics["fontStyle"] = settings.font.getStyle();
+                                trackGraphics["lineWidth"] = settings.lineWidth;
+
+                                trackGraphics["labelLayoutPosition"] = settings.labelLayout.position;
+                                trackGraphics["labelLayoutJustification"] = magic_enum::enum_name(settings.labelLayout.justification);
+                                break;
+                            }
+                            case Track::FrameType::value:
+                            {
+                                trackGraphics["colorBackground"] = colourToString(settings.colours.background);
+                                trackGraphics["colorForeground"] = colourToString(settings.colours.foreground);
+                                trackGraphics["colorText"] = colourToString(settings.colours.text);
+                                trackGraphics["colorShadow"] = colourToString(settings.colours.shadow);
+
+                                trackGraphics["fontName"] = settings.font.getName();
+                                trackGraphics["fontSize"] = settings.font.getHeight();
+                                trackGraphics["fontStyle"] = settings.font.getStyle();
+                                trackGraphics["lineWidth"] = settings.lineWidth;
+
+                                if(settings.unit.has_value())
+                                {
+                                    trackGraphics["unit"] = settings.unit.value();
+                                }
+                                break;
+                            }
+                            case Track::FrameType::vector:
+                            {
+                                trackGraphics["colorMap"] = magic_enum::enum_name(settings.colours.map);
+
+                                if(settings.unit.has_value())
+                                {
+                                    trackGraphics["unit"] = settings.unit.value();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    graphics[identifier] = trackGraphics;
+                }
+                else
+                {
+                    response["isError"] = true;
+                    graphics[identifier] = "The track doesn't exist.";
+                }
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = graphics.dump();
+            response["content"].push_back(content);
+            return response;
+        }
         if(toolName == "get_track_names")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
@@ -485,7 +601,6 @@ namespace Application::Neuralyzer::Mcp
                 {
                     response["isError"] = true;
                     descriptions[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
-                    ;
                 }
             }
             nlohmann::json content;
@@ -619,6 +734,295 @@ namespace Application::Neuralyzer::Mcp
         }
 
         // Track Setter Section
+        if(toolName == "set_track_graphics")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("tracks") || !arguments.at("tracks").is_array())
+            {
+                return createError("The 'tracks' argument is required and must be an array of objects.");
+            }
+            auto const& tracks = arguments.at("tracks");
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            for(auto const& trackJson : tracks)
+            {
+                if(!trackJson.is_object())
+                {
+                    return createError("The 'tracks' argument is required and must be an array of objects.");
+                }
+                if(!trackJson.contains("identifier") || !trackJson.at("identifier").is_string())
+                {
+                    return createError("The 'identifier' field is required and must be a string.");
+                }
+                auto const identifier = juce::String(trackJson.at("identifier").get<std::string>());
+                if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+                {
+                    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+                    auto const frameType = Track::Tools::getFrameType(trackAcsr);
+                    auto settings = trackAcsr.getAttr<Track::AttrType::graphicsSettings>();
+                    auto const isLabel = frameType.has_value() || frameType.value() == Track::FrameType::label;
+                    auto const isValue = frameType.has_value() || frameType.value() == Track::FrameType::value;
+                    auto const isVector = frameType.has_value() || frameType.value() == Track::FrameType::vector;
+
+                    // Colour map (vector tracks only)
+                    if(trackJson.contains("colorMap"))
+                    {
+                        if(!trackJson.at("colorMap").is_string())
+                        {
+                            return createError("The 'colorMap' field must be a string.");
+                        }
+                        auto const colorMapStr = trackJson.at("colorMap").get<std::string>();
+                        auto const colorMap = magic_enum::enum_cast<Track::ColourMap>(colorMapStr);
+                        if(!colorMap.has_value())
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The colour map 'COLORMAPNAME' doesn't exist. The value can be 'Parula', 'Heat', 'Jet', 'Turbo', 'Hot', 'Gray', 'Magma', 'Inferno', 'Plasma', 'Viridis', 'Cividis', or 'Github'").replace("COLORMAPNAME", colorMapStr));
+                            break;
+                        }
+                        else if(isVector)
+                        {
+                            settings.colours.map = colorMap.value();
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The track \"TRACKID\" doesn't support the \"colorMap\" property.").replace("TRACKID", identifier));
+                            break;
+                        }
+                    }
+
+                    auto const parseColour = [&](const char* fieldName, auto& refValue, bool isCompatible)
+                    {
+                        auto const colourStr = trackJson.at(fieldName).get<std::string>();
+                        auto const colour = stringToColour(colourStr);
+                        if(!colour.has_value())
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The colour code 'COLORCODE' is invalid and must be in the format #RRGGBBAA.").replace("COLORCODE", colourStr));
+                            return false;
+                        }
+                        if(isCompatible)
+                        {
+                            refValue = colour.value();
+                            return true;
+                        }
+                        response["isError"] = true;
+                        results.add(juce::String("The track \"TRACKID\" doesn't support the \"FIELDNAME\" property.").replace("TRACKID", identifier).replace("FIELDNAME", fieldName));
+                        return false;
+                    };
+
+                    // Colours (label and value tracks)
+                    if(trackJson.contains("colorBackground"))
+                    {
+                        if(!trackJson.at("colorBackground").is_string())
+                        {
+                            return createError("The 'colorBackground' field must be a string.");
+                        }
+                        if(!parseColour("colorBackground", settings.colours.background, isLabel || isValue))
+                        {
+                            break;
+                        }
+                    }
+                    if(trackJson.contains("colorForeground"))
+                    {
+                        if(!trackJson.at("colorForeground").is_string())
+                        {
+                            return createError("The 'colorForeground' field must be a string.");
+                        }
+                        if(!parseColour("colorForeground", settings.colours.foreground, isLabel || isValue))
+                        {
+                            break;
+                        }
+                    }
+                    if(trackJson.contains("colorDuration"))
+                    {
+                        if(!trackJson.at("colorDuration").is_string())
+                        {
+                            return createError("The 'colorDuration' field must be a string.");
+                        }
+                        if(!parseColour("colorDuration", settings.colours.duration, isLabel))
+                        {
+                            break;
+                        }
+                    }
+                    if(trackJson.contains("colorText"))
+                    {
+                        if(!trackJson.at("colorText").is_string())
+                        {
+                            return createError("The 'colorText' field must be a string.");
+                        }
+                        if(!parseColour("colorText", settings.colours.text, isLabel))
+                        {
+                            break;
+                        }
+                    }
+                    if(trackJson.contains("colorShadow"))
+                    {
+                        if(!trackJson.at("colorShadow").is_string())
+                        {
+                            return createError("The 'colorShadow' field must be a string.");
+                        }
+                        if(!parseColour("colorShadow", settings.colours.text, isLabel))
+                        {
+                            break;
+                        }
+                    }
+
+                    // Font (label and value tracks)
+                    if(trackJson.contains("fontName") || trackJson.contains("fontSize") || trackJson.contains("fontStyle"))
+                    {
+                        auto fontName = settings.font.getName();
+                        auto fontStyle = settings.font.getStyle();
+                        auto fontSize = settings.font.getHeight();
+
+                        if(trackJson.contains("fontName"))
+                        {
+                            if(!trackJson.at("fontName").is_string())
+                            {
+                                return createError("The 'fontName' field must be a string.");
+                            }
+                            fontName = juce::String(trackJson.at("fontName").get<std::string>());
+                        }
+                        if(trackJson.contains("fontStyle"))
+                        {
+                            if(!trackJson.at("fontStyle").is_string())
+                            {
+                                return createError("The 'fontStyle' field must be a string.");
+                            }
+                            fontStyle = juce::String(trackJson.at("fontStyle").get<std::string>());
+                        }
+                        if(trackJson.contains("fontSize"))
+                        {
+                            if(!trackJson.at("fontSize").is_number())
+                            {
+                                return createError("The 'fontSize' field must be a floating point number.");
+                            }
+                            fontSize = trackJson.at("fontSize").get<float>();
+                        }
+
+                        if(isLabel || isValue)
+                        {
+                            settings.font = juce::FontOptions(fontName, fontStyle, fontSize);
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The track \"TRACKID\" doesn't support the fonts properties.").replace("TRACKID", identifier));
+                            break;
+                        }
+                    }
+
+                    // Line width (label and value tracks)
+                    if(trackJson.contains("lineWidth"))
+                    {
+                        if(!trackJson.at("lineWidth").is_number())
+                        {
+                            return createError("The 'lineWidth' field must be a floating point number.");
+                        }
+                        if(isLabel || isValue)
+                        {
+                            settings.lineWidth = trackJson.at("lineWidth").get<float>();
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The track \"TRACKID\" doesn't support the lineWidth property.").replace("TRACKID", identifier));
+                            break;
+                        }
+                    }
+
+                    // Unit (value and vector tracks)
+                    if(trackJson.contains("unit"))
+                    {
+                        if(!trackJson.at("unit").is_string())
+                        {
+                            return createError("The 'unit' field must be a string.");
+                        }
+                        if(isValue || isValue)
+                        {
+                            auto const unitStr = juce::String(trackJson.at("unit").get<std::string>());
+                            settings.unit = unitStr.isEmpty() ? std::nullopt : std::optional<juce::String>(unitStr);
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The track \"TRACKID\" doesn't support the unit property.").replace("TRACKID", identifier));
+                            break;
+                        }
+                    }
+
+                    // Label layout (label tracks only)
+                    if(trackJson.contains("labelLayoutPosition") || trackJson.contains("labelLayoutJustification"))
+                    {
+                        auto position = settings.labelLayout.position;
+                        auto justification = settings.labelLayout.justification;
+                        if(trackJson.contains("labelLayoutPosition"))
+                        {
+                            if(!trackJson.at("labelLayoutPosition").is_number())
+                            {
+                                return createError("The 'labelLayoutPosition' field must be a floating point number.");
+                            }
+                            position = trackJson.at("labelLayoutPosition").get<float>();
+                        }
+                        if(trackJson.contains("labelLayoutJustification"))
+                        {
+                            if(!trackJson.at("labelLayoutJustification").is_string())
+                            {
+                                return createError("The 'labelLayoutJustification' field must be a string.");
+                            }
+                            auto const justificationStr = trackJson.at("labelLayoutJustification").get<std::string>();
+                            auto const justificationOpt = magic_enum::enum_cast<Track::LabelLayout::Justification>(justificationStr);
+                            if(!justificationOpt.has_value())
+                            {
+                                response["isError"] = true;
+                                results.add(juce::String("The label layout justification 'LABELLAYOUTJUST' doesn't exist. The value can be 'top', 'centred', or 'bottom'").replace("LABELLAYOUTJUST", justificationStr));
+                                break;
+                            }
+                            justification = justificationOpt.value();
+                        }
+                        if(isLabel)
+                        {
+                            settings.labelLayout.position = position;
+                            settings.labelLayout.justification = justification;
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            results.add(juce::String("The track \"TRACKID\" doesn't support the label layout properties.").replace("TRACKID", identifier));
+                            break;
+                        }
+                    }
+
+                    trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::asynchronous);
+                    results.add(juce::String("The graphics settings of track \"TRACKID\" have been updated.").replace("TRACKID", identifier));
+                }
+                else
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
+                    break;
+                }
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Change track graphics (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = results.joinIntoString("\n").toStdString();
+            response["content"].push_back(content);
+            return response;
+        }
         if(toolName == "set_track_names")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
