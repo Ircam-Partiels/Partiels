@@ -173,6 +173,66 @@ namespace Application::Neuralyzer::Mcp
             response["content"].push_back(content);
             return response;
         }
+        if(toolName == "get_document_audio_file_layout")
+        {
+            auto const& documentAccessor = Instance::get().getDocumentAccessor();
+            auto const layouts = documentAccessor.getAttr<Document::AttrType::reader>();
+
+            auto layoutsJson = nlohmann::json::array();
+            for(auto const& layout : layouts)
+            {
+                nlohmann::json item;
+                item["file"] = layout.file.getFullPathName();
+                item["channel"] = layout.channel;
+                layoutsJson.push_back(item);
+            }
+
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = layoutsJson.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+
+        // Document Setter Section
+        if(toolName == "set_document_audio_file_layout")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("layout") || !arguments.at("layout").is_array())
+            {
+                return createError("The 'layout' field is required and must be an array.");
+            }
+
+            std::vector<AudioFileLayout> layouts;
+            for(auto const& item : arguments.at("layout"))
+            {
+                if(!item.is_object() || !item.contains("file") || !item.at("file").is_string())
+                {
+                    return createError("Each layout item must be an object with a 'file' string field.");
+                }
+                if(!item.contains("channel") || !item.at("channel").is_number_integer())
+                {
+                    return createError("Each layout item must have a 'channel' integer field.");
+                }
+
+                auto const filePath = item.at("file").get<std::string>();
+                auto const channel = item.at("channel").get<int>();
+                layouts.push_back(AudioFileLayout(juce::File(filePath), channel));
+            }
+
+            auto& documentAccessor = Instance::get().getDocumentAccessor();
+            documentAccessor.setAttr<Document::AttrType::reader>(layouts, NotificationType::synchronous);
+
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = "Audio file layout updated successfully";
+            response["content"].push_back(content);
+            return response;
+        }
 
         // Group Getter Section
         if(toolName == "get_group_names")
