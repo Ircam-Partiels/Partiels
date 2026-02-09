@@ -1400,6 +1400,131 @@ namespace Application::Neuralyzer::Mcp
             response["content"].push_back(content);
             return response;
         }
+
+        // Group Creation/Removal Section
+        if(toolName == "create_groups")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("groups") || !arguments.at("groups").is_array())
+            {
+                return createError("The 'groups' argument is required and must be an array of objects.");
+            }
+            auto const& groups = arguments.at("groups");
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            nlohmann::json created = nlohmann::json::array();
+            for(auto const& groupJson : groups)
+            {
+                if(!groupJson.is_object())
+                {
+                    return createError("The 'groups' argument is required and must be an array of objects.");
+                }
+                if(groupJson.contains("name") && !groupJson.at("name").is_string())
+                {
+                    return createError("The 'name' field is required and must be a string.");
+                }
+                auto const name = groupJson.value("name", juce::String{});
+                auto const position = groupJson.value("position", 0_z);
+                auto const [result, identifier] = documentDir.addGroup(position, NotificationType::synchronous);
+                if(result.failed())
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("Failed to create group \"NAME\": REASON.").replace("NAME", name).replace("REASON", result.getErrorMessage()));
+                    break;
+                }
+                auto& documentAcsr = Instance::get().getDocumentAccessor();
+                auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+                if(!name.isEmpty())
+                {
+                    groupAcsr.setAttr<Group::AttrType::name>(name, NotificationType::synchronous);
+                }
+                created.push_back(identifier);
+                results.add(juce::String("Created group \"GROUPID\" with name \"NAME\".").replace("GROUPID", identifier).replace("NAME", groupAcsr.getAttr<Group::AttrType::name>()));
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Create groups (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            nlohmann::json payload;
+            payload["created"] = created;
+            payload["messages"] = juce::String(results.joinIntoString("\n"));
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "remove_groups")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            nlohmann::json removed = nlohmann::json::array();
+            for(auto const& idJson : identifiers)
+            {
+                if(!idJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = juce::String(idJson.get<std::string>());
+                if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+                {
+                    auto const result = documentDir.removeGroup(identifier, NotificationType::synchronous);
+                    if(result.failed())
+                    {
+                        response["isError"] = true;
+                        results.add(juce::String("The group \"GROUPID\" could not be removed: REASON.").replace("GROUPID", identifier).replace("REASON", result.getErrorMessage()));
+                        break;
+                    }
+                    else
+                    {
+                        removed.push_back(identifier);
+                    }
+                }
+                else
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("The group \"GROUPID\" doesn't exist.").replace("GROUPID", identifier));
+                    break;
+                }
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Remove groups (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            nlohmann::json payload;
+            payload["removed"] = removed;
+            payload["messages"] = juce::String(results.joinIntoString("\n"));
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
         return createError("Unknown tool " + toolName);
     }
 } // namespace Application::Neuralyzer::Mcp
