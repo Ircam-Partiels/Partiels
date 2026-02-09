@@ -689,6 +689,74 @@
           }
         }
       }
+    },
+    {
+      "name": "create_groups",
+      "description": "Create one or more new groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Optional name for the new group"
+                },
+                "position": {
+                  "type": "integer",
+                  "description": "Optional insertion position (0-based). Defaults to append."
+                }
+              },
+              "required": [
+              ]
+            },
+            "description": "Groups to create with their optional names and positions"
+          }
+        },
+        "required": [
+          "groups"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "Identifiers of newly created groups"
+          }
+        }
+      }
+    },
+    {
+      "name": "remove_groups",
+      "description": "Remove one or more groups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Group identifiers to remove"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "array",
+            "description": "Identifiers of groups successfully removed"
+          }
+        }
+      }
     }
   ]
 }
