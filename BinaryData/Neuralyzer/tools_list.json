@@ -128,7 +128,7 @@
     },
     {
       "name": "get_group_layouts",
-      "description": "Query the layouts of one or more groups (list of track identifiers in order)",
+      "description": "Query the layouts of one or more groups (list of track identifiers in order - 0 index is top track)",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -149,7 +149,7 @@
         "properties": {
           "layouts": {
             "type": "object",
-            "description": "Map of group identifiers to their track layout (arrays of track identifiers)"
+            "description": "Map of group identifiers to their track layout (arrays of track identifiers, 0 index is top track)"
           }
         }
       }
@@ -207,7 +207,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "description": "Array of track identifiers in the desired order"
+                  "description": "Array of track identifiers in the desired order (0 index is top track)"
                 }
               },
               "required": [
