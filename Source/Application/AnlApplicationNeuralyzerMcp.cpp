@@ -288,7 +288,7 @@ namespace Application::Neuralyzer::Mcp
                 if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
                 {
                     auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
-                    groupAcsr.setAttr<Group::AttrType::name>(name, NotificationType::asynchronous);
+                    groupAcsr.setAttr<Group::AttrType::name>(name, NotificationType::synchronous);
                     results.add(juce::String("The group \"GROUPID\" has been renamed \"NAME\".").replace("GROUPID", identifier).replace("NAME", name));
                 }
                 else
@@ -356,7 +356,7 @@ namespace Application::Neuralyzer::Mcp
                         layout.push_back(trackIdJson.get<juce::String>());
                     }
                     auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
-                    groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::asynchronous);
+                    groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::synchronous);
                     results.add(juce::String("The group \"GROUPID\" layout has been modified.").replace("GROUPID", identifier));
                 }
                 else
@@ -999,7 +999,7 @@ namespace Application::Neuralyzer::Mcp
                         }
                     }
 
-                    trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::asynchronous);
+                    trackAcsr.setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                     results.add(juce::String("The graphics settings of track \"TRACKID\" have been updated.").replace("TRACKID", identifier));
                 }
                 else
@@ -1058,7 +1058,7 @@ namespace Application::Neuralyzer::Mcp
                 if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
                 {
                     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
-                    trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::asynchronous);
+                    trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::synchronous);
                     results.add(juce::String("The track \"TRACKID\" has been renamed \"NAME\".").replace("TRACKID", identifier).replace("NAME", name));
                 }
                 else
@@ -1133,7 +1133,7 @@ namespace Application::Neuralyzer::Mcp
                         auto const clampedValue = std::clamp(value, paramIt->minValue, paramIt->maxValue);
                         auto state = trackAcsr.getAttr<Track::AttrType::state>();
                         state.parameters[parameter] = clampedValue;
-                        trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::asynchronous);
+                        trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                         results.add(juce::String("The parameter \"PARAM\" of the track \"TRACKID\" has been set to \"VAL\".").replace("TRACKID", identifier).replace("PARAM", parameter).replace("VAL", juce::String(clampedValue)));
                     }
                     else
@@ -1218,7 +1218,7 @@ namespace Application::Neuralyzer::Mcp
                         results.add(juce::String("The track \"TRACKID\" doesn't support input \"INPUTID\" (unsupported format or circular dependency).").replace("TRACKID", identifier).replace("INPUTID", input));
                         break;
                     }
-                    trackAcsr.setAttr<Track::AttrType::input>(input, NotificationType::asynchronous);
+                    trackAcsr.setAttr<Track::AttrType::input>(input, NotificationType::synchronous);
                     if(input.isEmpty())
                     {
                         results.add(juce::String("The track \"TRACKID\" input has been disconnected.").replace("TRACKID", identifier));
