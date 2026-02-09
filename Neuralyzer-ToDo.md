@@ -10,11 +10,12 @@
 - [] Add access to internet Vamp plugins
 - [] Add prompt for specific approach in MCP 
 - [] Ask to undo/redo/fix the previous prompt
-- [] Add support for Graphics properties via MCP
-- [] Add support for groups via MCP
+- [x] Add support for Graphics properties via MCP
+- [x] Add support for groups via MCP
 - [] Provide information about the audio file via MCP
 - [] Improve batch manahement
 - [] Add instruction to Jinja ?
+- [] Use Qwen3 instead of 2.5
 
 ### Sequence 1
 
