@@ -7,8 +7,11 @@ Use these project-specific notes before searching the tree or running ad-hoc com
 - Core code in [Source](../Source) (Application/Document/Group/Track/Plugin/Misc) with Vamp plugins in [VampPlugins](../VampPlugins) and packaged resources/tests/translations under [BinaryData](../BinaryData).
 
 ## Build and Test Fast Path
-- Prefer Debug: `cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug` then `cmake --build build` (≈7s). Release takes 10+ minutes—do not cancel.
-- macOS is fine with `-G Xcode`, Linux needs JUCE deps (see [JUCE/docs/Linux Dependencies.md](../JUCE/docs/Linux%20Dependencies.md)).
+- Configure  (prefer Debug for faster builds/tests): 
+  - macOS: `cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=Debug` 
+  - Windows: `cmake -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug`
+  - Linux: `cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`. Linux needs JUCE deps (see [JUCE/docs/Linux Dependencies.md](../JUCE/docs/Linux%20Dependencies.md)).
+- Build: `cmake --build build` (fast for Debug, slow for Release).
 - Run tests: `ctest -C Debug -VV --test-dir build --output-on-failure` (≈20s). Set `VAMP_PATH=build/VampPlugins/Debug:build/Debug` for plugin-dependent tests.
 
 ## Running the App
