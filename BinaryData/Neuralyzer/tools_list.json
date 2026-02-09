@@ -252,6 +252,34 @@
       }
     },
     {
+      "name": "get_track_graphics",
+      "description": "Query the graphics properties of one or more tracks. Properties returned depend on track type: label tracks (all colors except map, font, lineWidth, labelLayout), value tracks (all colors except map, font, lineWidth, unit), vector tracks (colorMap, unit)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "object",
+            "description": "Map of track identifiers to their graphics settings. Each track may have: colorMap (string - enum, vector only), colorBackground (string - #RRGGBBAA, label/value only), colorForeground (string - #RRGGBBAA, label/value only), colorDuration (string - #RRGGBBAA, label only), colorText (string - #RRGGBBAA, label/value only), colorShadow (string - #RRGGBBAA, label/value only), fontName (string, label/value only), fontSize (float, label/value only)fontStyle (string, label/value only), lineWidth (float, label/value only), unit (string, value/vector only), labelLayoutPosition (float, label only), labelLayoutJustification (string - enum, label only)"
+          }
+        }
+      }
+    },
+    {
       "name": "get_track_names",
       "description": "Query the names of one or more tracks",
       "inputSchema": {
@@ -389,6 +417,86 @@
             "description": "Map of track identifiers to arrays of compatible input track identifiers"
           }
         }
+      }
+    },
+    {
+      "name": "set_track_graphics",
+      "description": "Set graphics properties for one or more tracks. Available properties depend on track type: label tracks (colorBackground, colorForeground, colorDuration, colorText, colorShadow, fontName, fontSize, fontStyle, lineWidth, labelLayoutPosition, labelLayoutJustification), value tracks (colorBackground, colorForeground, colorText, colorShadow, fontName, fontSize, fontStyle, lineWidth, unit), vector tracks (colorMap, unit). color values must be a hexadecimal color strings #RRGGBBAA (e.g. '#aabbccff') and colorMap values must be one of the following strings: 'Parula', 'Heat', 'Jet', 'Turbo', 'Hot', 'Gray', 'Magma', 'Inferno', 'Plasma', 'Viridis', 'Cividis', or 'Github'. Font style values must be one of the following strings: 'normal', 'bold', 'italic', or 'bold italic'. Label layout justification values must be one of the following strings: 'top', 'centred', or 'bottom'",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "colorMap": {
+                  "type": "string",
+                  "description": "color map name (vector tracks only, 'Parula', 'Heat', 'Jet', 'Turbo', 'Hot', 'Gray', 'Magma', 'Inferno', 'Plasma', 'Viridis', 'Cividis', or 'Github')"
+                },
+                "colorBackground": {
+                  "type": "string",
+                  "description": "Background color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorForeground": {
+                  "type": "string",
+                  "description": "Foreground color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorDuration": {
+                  "type": "string",
+                  "description": "Duration color as #RRGGBBAA color string (label tracks only)"
+                },
+                "colorText": {
+                  "type": "string",
+                  "description": "Text color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "colorShadow": {
+                  "type": "string",
+                  "description": "Shadow color as #RRGGBBAA color string (label/value tracks only)"
+                },
+                "fontName": {
+                  "type": "string",
+                  "description": "Font typeface name (label/value tracks only)"
+                },
+                "fontSize": {
+                  "type": "number",
+                  "description": "Font size in points (label/value tracks only)"
+                },
+                "fontStyle": {
+                  "type": "string",
+                  "description": "Font style name (label/value tracks only)"
+                },
+                "lineWidth": {
+                  "type": "number",
+                  "description": "Line width in pixels (label/value tracks only)"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit string (value/vector tracks only, empty string to clear)"
+                },
+                "labelLayoutPosition": {
+                  "type": "number",
+                  "description": "Label layout position (label tracks only)"
+                },
+                "labelLayoutJustification": {
+                  "type": "string",
+                  "description": "Label layout justification: 'top', 'centred', or 'bottom' (label tracks only)"
+                }
+              },
+              "required": [
+                "identifier"
+              ]
+            },
+            "description": "Array of track identifiers with their graphics properties to modify"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
       }
     },
     {
