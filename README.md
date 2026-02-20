@@ -101,8 +101,9 @@ You can also manually trigger a release build from the GitHub Actions UI. This i
 ## Credits
 
 **[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
-Contributions to development by Thomas Barbé and Nolan Dupont.  
 Copyright 2026 IRCAM. All rights reserved.
+
+Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.  
 
 ### Dependencies:
 - **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
