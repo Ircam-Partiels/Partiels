@@ -370,6 +370,10 @@ void Document::Tools::resizeItems(Accessor& accessor, bool preserveRatio, int pa
         }
     }
 
+    if(numItems == 0 || previousHeight == 0 || static_cast<long long>(numItems) * minHeight > parentHeight)
+    {
+        return;
+    }
     auto remainder = 0.0f;
     auto remainingHeight = std::max(parentHeight, minHeight);
     if(preserveRatio)
