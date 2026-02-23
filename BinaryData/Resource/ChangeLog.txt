@@ -1,4 +1,19 @@
 
+- Imp: Code cleanup and minor fixes
+- Fix: Potential crash when refreshing the main window
+- Imp: Improve Copilot instructions
+- Imp: Improve input track support (hierarchy manager, XML/JSON parsing)
+- Imp: Improve track/group management and undo/redo
+- Imp: Improve image button support
+- Add: Add URL download method improvements
+- Fix: Security issue when resizing tracks and groups
+- Imp: Improve exception support
+- Add: Add file logger system
+- Imp: Improve GitHub Actions workflows
+- Add: Add Brazilian Portuguese translations
+
+v2.4.0
+
 - Add: Support for loading files in Pure Data and Max formats
 - Add: New command to overwrite the original results file
 - Add: Option to ignore time selection during quick export
