@@ -19,6 +19,20 @@ namespace nlohmann
     };
 
     template <>
+    struct adl_serializer<juce::URL>
+    {
+        static void to_json(json& j, juce::URL const& url)
+        {
+            j = url.toString(false);
+        }
+
+        static void from_json(json const& j, juce::URL& url)
+        {
+            url = juce::URL(j.get<juce::String>());
+        }
+    };
+
+    template <>
     struct adl_serializer<juce::Colour>
     {
         static void to_json(json& j, juce::Colour const& colour)
