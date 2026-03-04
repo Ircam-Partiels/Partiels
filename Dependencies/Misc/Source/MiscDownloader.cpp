@@ -66,12 +66,30 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
 {
     try
     {
-        auto inputStream = url.createInputStream(options);
+        auto callback = options.getProgressCallback();
+        juce::int64 bytesSent = 0;
+        auto totalBytes = 0;
+        auto ratio = 1.0;
+        auto shouldContinue = true;
+        auto inputStream = url.createInputStream(options.withProgressCallback({}));
         MiscWeakAssert(inputStream != nullptr);
         if(inputStream == nullptr)
         {
             MiscDebug("Downloader", "Failed to create input stream from URL \"" + url.toString(true) + "\"");
             return juce::Result::fail(juce::translate("Failed to create input stream from URL \"URLPATH\".").replace("URLPATH", url.toString(true)));
+        }
+        auto const totalLength = inputStream->getTotalLength();
+        auto const maxLength = std::min(totalLength, static_cast<juce::int64>(std::numeric_limits<int>::max()));
+        ratio = maxLength > 0 ? static_cast<double>(totalLength) / static_cast<double>(maxLength) : 1.0;
+        totalBytes = static_cast<int>(maxLength > 0 ? maxLength : 0.0);
+        if(callback != nullptr)
+        {
+            shouldContinue = callback(0, totalBytes);
+            if(!shouldContinue)
+            {
+                MiscDebug("Downloader", "Download cancelled by user for URL \"" + url.toString(true) + "\".");
+                return juce::Result::fail(juce::translate("Download cancelled by user for URL \"URLPATH\".").replace("URLPATH", url.toString(true)));
+            }
         }
 
         juce::FileOutputStream outputStream(target);
@@ -92,6 +110,7 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
                 return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": read error.")
                                               .replace("URLPATH", url.toString(true)));
             }
+            bytesSent += bytesRead;
             if(bytesRead == 0)
             {
                 if(inputStream->isExhausted())
@@ -107,8 +126,24 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
                 MiscDebug("Downloader", "Failed to write to the file \"" + target.getFullPathName() + "\"");
                 return juce::Result::fail(juce::translate("Failed to write to the file \"FILEPATH\".").replace("FILEPATH", target.getFullPathName()));
             }
+            if(callback != nullptr)
+            {
+                auto const adv = std::min(static_cast<juce::int64>(std::round(static_cast<double>(bytesSent) / ratio)), maxLength);
+                shouldContinue = callback(static_cast<int>(adv), totalBytes);
+                if(!shouldContinue)
+                {
+                    MiscDebug("Downloader", "Download cancelled by user for URL \"" + url.toString(true) + "\".");
+                    return juce::Result::fail(juce::translate("Download cancelled by user for URL \"URLPATH\".").replace("URLPATH", url.toString(true)));
+                }
+            }
         }
         outputStream.flush();
+        if(callback != nullptr)
+        {
+            // Final progress notification; ignore return value because the download
+            // has already completed and cannot be cancelled at this point.
+            (void)callback(totalBytes, totalBytes);
+        }
     }
     catch(std::exception const& e)
     {
