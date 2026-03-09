@@ -117,13 +117,31 @@ void Track::Writer::mouseDown(juce::MouseEvent const& event)
             auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
             auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
             auto const& markerChannel = markers->at(channelIndex);
-            auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
-            if(it == markerChannel.cend() || std::get<0_z>(*it) > time + epsilon)
-            {
-                break;
-            }
-            auto const next = std::next(it);
             mEditDuration = event.mods.isAltDown();
+            Results::Markers::value_type::const_iterator it;
+            if(mEditDuration)
+            {
+                // In duration mode, find the marker whose duration span contains the click time
+                auto const upperIt = std::upper_bound(markerChannel.cbegin(), markerChannel.cend(), time + epsilon, Result::upper_cmp<Results::Marker>);
+                if(upperIt == markerChannel.cbegin())
+                {
+                    break;
+                }
+                it = std::prev(upperIt);
+                auto const markerEnd = std::get<0_z>(*it) + std::get<1_z>(*it);
+                if(std::get<1_z>(*it) <= 0.0 || time > markerEnd + epsilon)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
+                if(it == markerChannel.cend() || std::get<0_z>(*it) > time + epsilon)
+                {
+                    break;
+                }
+            }
             mCurrentEdition.channel = channelIndex;
             if(mEditDuration)
             {
