@@ -141,6 +141,8 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, Agent& agent)
             case AttrType::modelFile:
             case AttrType::contextSize:
             case AttrType::batchSize:
+            case AttrType::minP:
+            case AttrType::temperature:
             {
                 if(ModelInfo(acsr).valid() || mIsInitialized.load())
                 {

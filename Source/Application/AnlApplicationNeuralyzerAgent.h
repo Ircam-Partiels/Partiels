@@ -2,7 +2,7 @@
 
 #include "AnlApplicationNeuralyzerMcp.h"
 #include "AnlApplicationNeuralyzerModel.h"
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wshadow-field-in-constructor", "-Wimplicit-float-conversion", "-Wunused-function", "-Wzero-as-null-pointer-constant")
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wshadow-field-in-constructor", "-Wimplicit-float-conversion", "-Wunused-function", "-Wzero-as-null-pointer-constant", "-Wfloat-equal", "-Wsign-conversion", "-Wdeprecated-copy-with-dtor")
 #include <chat.h>
 #include <common.h>
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE

@@ -12,12 +12,16 @@ namespace Application
         enum class AttrType : size_t
         {
               modelFile
+            , minP
+            , temperature
             , contextSize
             , batchSize
         };
         
         using AttrContainer = Model::Container
         < Model::Attr<AttrType::modelFile, juce::File, Model::Flag::basic>
+        , Model::Attr<AttrType::minP, float, Model::Flag::basic>
+        , Model::Attr<AttrType::temperature, float, Model::Flag::basic>
         , Model::Attr<AttrType::contextSize, uint32_t, Model::Flag::basic>
         , Model::Attr<AttrType::batchSize, uint32_t, Model::Flag::basic>
         >;
@@ -32,6 +36,8 @@ namespace Application
             Accessor()
             : Accessor(AttrContainer({
                                           {juce::File{}}
+                                        , {0.05f}
+                                        , {0.2f}
                                         , {0u}
                                         , {0u}
                                     }))
@@ -46,6 +52,8 @@ namespace Application
             juce::File tplt;
             uint32_t contextSize = 0u;
             uint32_t batchSize = 0u;
+            float minP = 0.05f;
+            float temperature = 0.2f;
 
             ModelInfo() = default;
             ModelInfo(Accessor const& accessor);
@@ -55,7 +63,9 @@ namespace Application
                 return model == rhs.model &&
                        tplt == rhs.tplt &&
                        contextSize == rhs.contextSize &&
-                       batchSize == rhs.batchSize;
+                       batchSize == rhs.batchSize &&
+                       std::abs(minP - rhs.minP) < std::numeric_limits<float>::epsilon() &&
+                       std::abs(temperature - rhs.temperature) < std::numeric_limits<float>::epsilon();
             }
 
             inline bool operator!=(ModelInfo const& rhs) const noexcept

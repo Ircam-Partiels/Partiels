@@ -7,6 +7,8 @@ Application::Neuralyzer::ModelInfo::ModelInfo(Accessor const& accessor)
 , tplt(model.withFileExtension(".jinja"))
 , contextSize(accessor.getAttr<AttrType::contextSize>())
 , batchSize(accessor.getAttr<AttrType::batchSize>())
+, minP(accessor.getAttr<AttrType::minP>())
+, temperature(accessor.getAttr<AttrType::temperature>())
 {
 }
 

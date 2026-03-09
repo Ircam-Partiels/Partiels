@@ -33,7 +33,7 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
                 parserParams.parse_tool_calls = true;
 
                 // Use the appropriate parser based on format type
-                if(chatParams.format == COMMON_CHAT_FORMAT_PEG_NATIVE || chatParams.format == COMMON_CHAT_FORMAT_PEG_CONSTRUCTED || chatParams.format == COMMON_CHAT_FORMAT_PEG_SIMPLE)
+                if(chatParams.format == COMMON_CHAT_FORMAT_PEG_NATIVE || chatParams.format == COMMON_CHAT_FORMAT_PEG_SIMPLE)
                 {
                     // PEG formats require the PEG parser with arena
                     // Load the PEG arena from the saved parser string
@@ -219,8 +219,6 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::St
     mMessageEndPositions.clear();
 
     static int32_t constexpr numGpuLayers = 99;
-    static auto constexpr temperature = 0.2f;
-    static auto constexpr minP = 0.05f;
     static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
     if(info.model == juce::File())
     {
@@ -274,8 +272,9 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::St
 
     // Initialize the sampler
     mSampler = SamplerPtr(llama_sampler_chain_init(llama_sampler_chain_default_params()), &llama_sampler_free);
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_min_p(minP, 1));
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_temp(temperature));
+    // llama_sampler_chain_add(mSampler.get(), llama_sampler_init_greedy()); //llama_sampler_init_top_k(info.topK));
+    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_min_p(info.minP, 1));
+    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_temp(info.temperature));
     llama_sampler_chain_add(mSampler.get(), llama_sampler_init_dist(seed));
     // Add repetition penalties: last_n=64, repeat=1.15, freq=0.1, presence=0.1
     llama_sampler_chain_add(mSampler.get(), llama_sampler_init_penalties(64, 1.15f, 0.1f, 0.1f));
