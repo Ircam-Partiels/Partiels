@@ -123,8 +123,18 @@ void Track::Writer::mouseDown(juce::MouseEvent const& event)
                 break;
             }
             auto const next = std::next(it);
+            mEditDuration = event.mods.isAltDown();
             mCurrentEdition.channel = channelIndex;
-            mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
+            if(mEditDuration)
+            {
+                mMouseDownTime = time;
+                mInitialDuration = std::get<1_z>(*it);
+                mCurrentEdition.data = std::vector<Result::Data::Marker>{{std::get<0_z>(*it), std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
+            }
+            else
+            {
+                mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
+            }
             mCurrentEdition.range.setStart(std::get<0_z>(*it));
             mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
         }

@@ -43,7 +43,9 @@ namespace Track
 
         ActionMode mActionMode;
         bool mMouseWasDragged{false};
+        bool mEditDuration{false};
         double mMouseDownTime{0.0};
+        double mInitialDuration{0.0};
         Edition mCurrentEdition;
     };
 } // namespace Track
