@@ -63,6 +63,8 @@ namespace Application
             PropertyList mModel;
             PropertyList mContextSize;
             PropertyList mBatchSize;
+            PropertyNumber mMinP;
+            PropertyNumber mTemperature;
             ColouredPanel mSeparator;
             PropertyTextButton mModelsDirectory;
             TimerClock mTimerClock;

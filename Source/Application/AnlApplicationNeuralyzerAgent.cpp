@@ -30,13 +30,8 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
             {
                 // Create parser config from stored chat params
                 common_chat_parser_params parserParams(chatParams);
-                parserParams.parse_tool_calls = true;
-
-                // Use the appropriate parser based on format type
-                if(chatParams.format == COMMON_CHAT_FORMAT_PEG_NATIVE || chatParams.format == COMMON_CHAT_FORMAT_PEG_CONSTRUCTED || chatParams.format == COMMON_CHAT_FORMAT_PEG_SIMPLE)
+                if(!chatParams.parser.empty())
                 {
-                    // PEG formats require the PEG parser with arena
-                    // Load the PEG arena from the saved parser string
                     parserParams.parser.load(chatParams.parser);
                 }
                 // Use generic parser for all other formats
@@ -56,17 +51,17 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
         catch(std::exception const& e)
         {
             MiscDebug("Application::Neuralyzer::Agent", e.what());
-            return createResults(juce::Result::fail(e.what()));
+            return createResults(juce::Result::fail(juce::String("Error parsing tool calls: ") + e.what() + ". Ensure the character cases, the JSON or XML formats are respected."));
         }
         catch(...)
         {
-            return createResults(juce::Result::fail("Unknown error parsing tool calls"));
+            return createResults(juce::Result::fail("Error parsing tool calls: Unknown error"));
         }
     }();
 
     if(std::get<0>(toolCalls).failed())
     {
-        return std::make_pair(2, std::get<0>(toolCalls).getErrorMessage().toStdString() + "\nPlease respond again.");
+        return std::make_pair(2, std::get<0>(toolCalls).getErrorMessage().toStdString() + "\nRespond again, correcting the error.");
     }
     if(std::get<1>(toolCalls).empty())
     {
@@ -153,19 +148,59 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
     return std::make_pair(allSuccess ? 1 : 2, results + "\nBased on these results, provide your final answer or call more tools if needed. If necessary, ensure your response is accurate based on the current state of the document.");
 }
 
+static std::tuple<juce::Result, common_chat_msg> getAssistantResponse(struct common_sampler* sampler, struct llama_context* context, std::atomic<bool> const& shouldQuit, std::function<void(std::string const&)> callback)
+{
+    common_chat_msg msg;
+    msg.role = "assistant";
+    while(true)
+    {
+        if(shouldQuit.load())
+        {
+            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), msg);
+        }
+
+        // Sample the next token using common_sampler
+        auto new_token_id = common_sampler_sample(sampler, context, -1);
+        common_sampler_accept(sampler, new_token_id, true);
+        auto const* vocab = llama_model_get_vocab(llama_get_model(context));
+        // Check if it's an end-of-generation token
+        if(llama_vocab_is_eog(vocab, new_token_id))
+        {
+            break;
+        }
+
+        auto const piece = common_token_to_piece(vocab, new_token_id, true);
+        msg.content += piece;
+        if(callback != nullptr)
+        {
+            callback(msg.content);
+        }
+
+        auto const batch = llama_batch_get_one(&new_token_id, 1);
+        auto const ret = llama_decode(context, batch);
+        MiscWeakAssert(ret == 0);
+        if(ret != 0)
+        {
+            return std::make_tuple(juce::Result::fail(juce::translate("Failed to decode.")), msg);
+        }
+    }
+
+    return std::make_tuple(juce::Result::ok(), msg);
+}
+
 void Application::Neuralyzer::Agent::initialize()
 {
     static std::once_flag initFlag;
     std::call_once(initFlag, []()
                    {
-                       MiscDebug("Application::Neuralyzer::Agent", "Initialize...");
+                       MiscDebug("Application::Neuralyzer::Agent", "Global Initialize...");
                        llama_log_set([](enum ggml_log_level, [[maybe_unused]] char const* text, void*)
                                      {
                                          MiscDebug("Application::Neuralyzer::Agent::Init", text);
                                      },
                                      nullptr);
                        llama_backend_init();
-                       MiscDebug("Application::Neuralyzer::Agent", "Initialized");
+                       MiscDebug("Application::Neuralyzer::Agent", "Global Initialized");
                    });
 }
 
@@ -174,10 +209,10 @@ void Application::Neuralyzer::Agent::release()
     static std::once_flag releaseFlag;
     std::call_once(releaseFlag, []()
                    {
-                       MiscDebug("Application::Neuralyzer::Agent", "Release...");
+                       MiscDebug("Application::Neuralyzer::Agent", "Global Release...");
                        llama_backend_free();
                        llama_log_set(nullptr, nullptr);
-                       MiscDebug("Application::Neuralyzer::Agent", "Released");
+                       MiscDebug("Application::Neuralyzer::Agent", "Global Released");
                    });
 }
 
@@ -190,12 +225,9 @@ Application::Neuralyzer::Agent::~Agent()
 {
     std::unique_lock<std::mutex> callLock(mCallMutex);
     llama_log_set(logCallback, nullptr);
-    mSampler.reset();
-    mContext.reset();
-    mModel.reset();
+    mInitResult.reset();
     mChatTemplates = nullptr;
     mChatInputs = common_chat_templates_inputs{};
-    mPreviousPromptSize = 0;
     mMessageEndPositions.clear();
 }
 
@@ -204,24 +236,18 @@ Application::Neuralyzer::Mcp::Dispatcher& Application::Neuralyzer::Agent::getMcp
     return mNeuralyzerMcpDispatcher;
 }
 
-juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::String const& instruction)
+juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
 {
     std::unique_lock<std::mutex> callLock(mCallMutex);
     // Set log callback to suppress unnecessary output
     llama_log_set(logCallback, nullptr);
+    MiscDebug("Application::Neuralyzer::Agent", "Initialize...");
 
-    mSampler.reset();
-    mContext.reset();
-    mModel.reset();
+    mInitResult.reset();
     mChatTemplates = nullptr;
     mChatInputs = common_chat_templates_inputs{};
-    mPreviousPromptSize = 0;
     mMessageEndPositions.clear();
 
-    static int32_t constexpr numGpuLayers = 99;
-    static auto constexpr temperature = 0.2f;
-    static auto constexpr minP = 0.05f;
-    static uint32_t constexpr seed = LLAMA_DEFAULT_SEED;
     if(info.model == juce::File())
     {
         MiscDebug("Application::Neuralyzer::Agent", "The model file is not set.");
@@ -233,16 +259,23 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::St
         return juce::Result::fail(juce::translate("The model file does not exist: FLNAME").replace("FLNAME", info.model.getFullPathName()));
     }
 
-    // Initialize the model
-    llama_model_params model_params = llama_model_default_params();
-    model_params.n_gpu_layers = numGpuLayers;
-    model_params.progress_callback = [](float, void* data)
+    // Configure common_params for model and context initialization
+    common_params params;
+    params.use_jinja = true;
+    params.model.path = info.model.getFullPathName().toStdString();
+    params.chat_template = info.tplt.getFullPathName().toStdString();
+    auto const modelMaxCtx = 65536; // Cap to 65k to prevent overflow issues in some backends
+    params.n_ctx = std::min(std::max(info.contextSize, 256), modelMaxCtx);
+    params.n_batch = std::max(info.batchSize, 256);
+    params.load_progress_callback_user_data = static_cast<void*>(this);
+    params.load_progress_callback = [](float, void* data) -> bool
     {
         return !reinterpret_cast<Agent*>(data)->mShouldQuit.load();
     };
-    model_params.progress_callback_user_data = static_cast<void*>(this);
-    mModel = ModelPtr(llama_model_load_from_file(info.model.getFullPathName().toRawUTF8(), model_params), &llama_model_free);
-    if(mModel == nullptr)
+
+    // Initialize model, context and sampler as a single lifetime-managed object.
+    mInitResult = common_init_from_params(params);
+    if(mInitResult == nullptr || mInitResult->model() == nullptr)
     {
         MiscDebug("Application::Neuralyzer::Agent", "Failed to load model from: " + info.model.getFullPathName());
         return juce::Result::fail(juce::translate("Failed to load model from: FLNAME").replace("FLNAME", info.model.getFullPathName()));
@@ -253,46 +286,29 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::St
         return juce::Result::fail(juce::translate("Model loading aborted by user."));
     }
 
-    // Initialize the context
-    auto ctx_params = llama_context_default_params();
-    auto const modelMaxCtx = std::min(static_cast<uint32_t>(llama_model_n_ctx_train(mModel.get())), 65536u); // Cap to 65k to prevent overflow issues in some backends
-    ctx_params.n_ctx = std::max(info.contextSize, 256u);
-    ctx_params.n_ctx = std::min(ctx_params.n_ctx, modelMaxCtx); // Use the smaller of the requested context size and the model's maximum
-    ctx_params.n_batch = std::max(info.batchSize, 256u);
-    ctx_params.abort_callback = [](void* data)
-    {
-        return reinterpret_cast<Agent*>(data)->mShouldQuit.load();
-    };
-    ctx_params.abort_callback_data = static_cast<void*>(this);
+    llama_set_abort_callback(mInitResult->context(), [](void* data)
+                             {
+                                 return reinterpret_cast<Agent*>(data)->mShouldQuit.load();
+                             },
+                             static_cast<void*>(this));
 
-    mContext = ContextPtr(llama_init_from_model(mModel.get(), ctx_params), &llama_free);
-    if(mContext == nullptr)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to create llama context");
-        return juce::Result::fail(juce::translate("Failed to create llama context"));
-    }
-
-    // Initialize the sampler
-    mSampler = SamplerPtr(llama_sampler_chain_init(llama_sampler_chain_default_params()), &llama_sampler_free);
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_min_p(minP, 1));
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_temp(temperature));
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_dist(seed));
-    // Add repetition penalties: last_n=64, repeat=1.15, freq=0.1, presence=0.1
-    llama_sampler_chain_add(mSampler.get(), llama_sampler_init_penalties(64, 1.15f, 0.1f, 0.1f));
+    MiscDebug("Application::Neuralyzer::Agent", "Model, context, and sampler loaded successfully.");
 
     // Initialize chat templates with Jinja support
-    mChatInputs.use_jinja = true;
-    mChatInputs.enable_thinking = true;
-    auto const templateOverride = info.tplt.loadFileAsString().toStdString();
+    if(!params.chat_template.empty() && !common_chat_verify_template(params.chat_template, true))
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "The chat template is not supported: " + info.tplt.getFullPathName());
+        return juce::Result::fail(juce::translate("The chat template is not supported: FLNAME").replace("FLNAME", info.tplt.getFullPathName()));
+    }
     try
     {
-        mChatTemplates = common_chat_templates_init(mModel.get(), templateOverride);
+        mChatTemplates = common_chat_templates_init(mInitResult->model(), params.chat_template);
     }
     catch(...)
     {
         MiscWeakAssert(false);
         MiscDebug("Application::Neuralyzer::Agent", "Failed to initialize chat templates: fallback to default.");
-        mChatTemplates = common_chat_templates_init(mModel.get(), std::string{});
+        mChatTemplates = common_chat_templates_init(mInitResult->model(), std::string{});
     }
     if(mChatTemplates == nullptr)
     {
@@ -305,104 +321,9 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info, juce::St
         return juce::Result::fail(juce::translate("Model loading aborted by user."));
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", "Successfully initialized model: " + info.model.getFullPathName());
-    return instruction.isEmpty() ? juce::Result::ok() : sendSystemMessage(instruction.toStdString());
-}
-
-juce::Result Application::Neuralyzer::Agent::loadState(juce::File state)
-{
-    std::unique_lock<std::mutex> callLock(mCallMutex);
-    if(mContext == nullptr || mSampler == nullptr)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
-        return juce::Result::fail(juce::translate("The model is not initialized."));
-    }
-
-    if(!state.existsAsFile())
-    {
-        return juce::Result::fail(juce::translate("The state file does not exist: FLNAME").replace("FLNAME", state.getFullPathName()));
-    }
-
-    // Set log callback to suppress unnecessary output
-    llama_log_set(logCallback, nullptr);
-
-    size_t nloaded = 0;
-    auto const numCtx = llama_n_ctx(mContext.get());
-    std::vector<llama_token> array(numCtx);
-    if(!llama_state_load_file(mContext.get(), state.getFullPathName().toRawUTF8(), array.data(), array.size(), &nloaded))
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file: " + state.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to load state from file: FLNAME").replace("FLNAME", state.getFullPathName()));
-    }
-    if(nloaded == 0)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
-    }
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
-    return juce::Result::ok();
-}
-
-juce::Result Application::Neuralyzer::Agent::saveState(juce::File state)
-{
-    std::unique_lock<std::mutex> callLock(mCallMutex);
-    if(mContext == nullptr || mSampler == nullptr)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
-        return juce::Result::fail(juce::translate("The model is not initialized."));
-    }
-
-    if(state == juce::File())
-    {
-        return juce::Result::fail(juce::translate("The state file is not set."));
-    }
-
-    // Ensure directory exists
-    auto const parentDir = state.getParentDirectory();
-    if(!parentDir.exists())
-    {
-        if(!parentDir.createDirectory())
-        {
-            MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + parentDir.getFullPathName());
-            return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", parentDir.getFullPathName()));
-        }
-    }
-
-    // Set log callback to suppress unnecessary output
-    llama_log_set(logCallback, nullptr);
-
-    // Save KV cache state. We don't persist prompt tokens here (nullptr, 0) since
-    // the KV cache is sufficient for restoring the model state.
-    auto const saved = llama_state_save_file(mContext.get(), state.getFullPathName().toRawUTF8(), nullptr, 0);
-    if(!saved)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state to file: " + state.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", state.getFullPathName()));
-    }
-
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache to state file: ") + state.getFullPathName());
-    return juce::Result::ok();
-}
-
-void Application::Neuralyzer::Agent::resetState()
-{
-    // Clear chat history and KV cache from system prompt onwards
-    std::unique_lock<std::mutex> callLock(mCallMutex);
-    MiscWeakAssert(!mMessageEndPositions.empty());
-    if(mMessageEndPositions.empty())
-    {
-        return;
-    }
-    pruneMessagesFromContext({1, mMessageEndPositions.back()});
-}
-
-juce::Result Application::Neuralyzer::Agent::sendSystemMessage(std::string instruction)
-{
-    if(instruction.empty())
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "The instruction content is empty.");
-        return juce::Result::fail(juce::translate("The instruction content is empty."));
-    }
-
+    mChatInputs.use_jinja = true;
+    mChatInputs.reasoning_format = COMMON_REASONING_FORMAT_DEEPSEEK;
+    mChatInputs.enable_thinking = false;
     // Build tools from MCP
     {
         nlohmann::json request;
@@ -417,31 +338,50 @@ juce::Result Application::Neuralyzer::Agent::sendSystemMessage(std::string instr
         {
             if(!toolJson.contains("name") || !toolJson.contains("description"))
             {
-                continue;
+                return juce::Result::fail(juce::translate("Invalid tool format received from MCP."));
             }
             common_chat_tool tool;
             tool.name = toolJson.at("name").get<std::string>();
             tool.description = toolJson.at("description").get<std::string>();
-            tool.parameters = toolJson.contains("inputSchema") ? toolJson.at("inputSchema").dump() : "{}";
+            tool.parameters = toolJson.contains("inputSchema") ? toolJson.at("inputSchema").dump() : std::string({});
             MiscDebug("Application::Neuralyzer::Agent", juce::String("Added tool: ") + tool.name);
             mChatInputs.tools.push_back(std::move(tool));
         }
     }
+    if(mShouldQuit.load())
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Model loading aborted by user.");
+        return juce::Result::fail(juce::translate("Model loading aborted by user."));
+    }
 
-    // Set log callback to suppress unnecessary output
-    llama_log_set(logCallback, nullptr);
+    MiscDebug("Application::Neuralyzer::Agent", "Successfully initialized model: " + info.model.getFullPathName());
+    return juce::Result::ok();
+}
 
-    // Add system message to chat history
-    common_chat_msg msg;
-    msg.role = "system";
-    msg.content = std::move(instruction);
-    mChatInputs.messages.push_back(std::move(msg));
+std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyzer::Agent::performQuery(std::string const& role, std::string query, bool allowTools)
+{
+    auto const createResults = [](juce::Result result, std::string message = {}, common_chat_params params = {})
+    {
+        return std::make_tuple(std::move(result), std::move(message), std::move(params));
+    };
 
-    MiscDebug("Application::Neuralyzer::Agent",
-              juce::String("Registered ") + juce::String(mChatInputs.tools.size()) + juce::String(" tools for this chat"));
+    auto* context = mInitResult != nullptr ? mInitResult->context() : nullptr;
+    auto* sampler = mInitResult != nullptr ? mInitResult->sampler(0) : nullptr;
+    if(context == nullptr || sampler == nullptr)
+    {
+        return createResults(juce::Result::fail(juce::translate("The model is not initialized.")));
+    }
 
-    // Generate full prompt and extract just the new portion
-    mChatInputs.add_generation_prompt = false;
+    common_chat_msg userMsg;
+    userMsg.role = role;
+    userMsg.content = std::move(query);
+    mChatInputs.messages.push_back(std::move(userMsg));
+    MiscDebug("Application::Neuralyzer::Agent", role + ": " + mChatInputs.messages.back().content);
+
+    // Generate prompt for the current message
+    mChatInputs.add_generation_prompt = true;
+    mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_REQUIRED : COMMON_CHAT_TOOL_CHOICE_NONE; // For tool calling if required
+
     common_chat_params params;
     try
     {
@@ -451,105 +391,30 @@ juce::Result Application::Neuralyzer::Agent::sendSystemMessage(std::string instr
     {
         mChatInputs.messages.pop_back();
         MiscDebug("Application::Neuralyzer::Agent", e.what());
-        return juce::Result::fail(juce::translate("Failed to apply chat templates: ") + e.what());
+        return createResults(juce::Result::fail(juce::translate("Failed to apply chat templates: ") + e.what()));
     }
     catch(...)
     {
         mChatInputs.messages.pop_back();
-        return juce::Result::fail(juce::translate("Failed to apply chat templates: Unknown error"));
-    }
-    // Extract just the new prompt portion (since last message)
-    auto const prompt = params.prompt.size() > mPreviousPromptSize ? params.prompt.substr(mPreviousPromptSize) : params.prompt;
-
-    // Tokenize the formatted system message
-    auto tokens = common_tokenize(mContext.get(), prompt, false, false);
-
-    // Check if system prompt will fit in context
-    MiscWeakAssert(tokens.size() <= static_cast<size_t>(llama_n_ctx(mContext.get())));
-    if(tokens.size() > static_cast<size_t>(llama_n_ctx(mContext.get())))
-    {
-        mChatInputs.messages.pop_back();
-        return juce::Result::fail(juce::translate("System prompt exceeds context capacity."));
+        return createResults(juce::Result::fail(juce::translate("Failed to apply chat templates: Unknown error")));
     }
 
-    // Decode tokens in batches to populate KV cache (no generation/sampling)
-    auto position = 0_z;
-    auto const numBatch = static_cast<size_t>(llama_n_batch(mContext.get()));
-    while(position < std::min(tokens.size(), numBatch))
-    {
-        if(mShouldQuit.load())
-        {
-            mChatInputs.messages.pop_back();
-            llama_memory_seq_rm(llama_get_memory(mContext.get()), 0, 0, -1);
-            return juce::Result::fail(juce::translate("Operation aborted."));
-        }
-        auto const size = std::min(numBatch, tokens.size() - position);
-        auto const batch = llama_batch_get_one(tokens.data() + position, static_cast<int32_t>(size));
-        auto const decodeResult = llama_decode(mContext.get(), batch);
-        MiscWeakAssert(decodeResult == 0);
-        if(decodeResult != 0)
-        {
-            mPreviousPromptSize = 0;
-            mChatInputs.messages.pop_back();
-            llama_memory_seq_rm(llama_get_memory(mContext.get()), 0, 0, -1);
-            MiscDebug("Application::Neuralyzer::Agent", "Failed to decode, ret = " + juce::String(decodeResult));
-            return juce::Result::fail(juce::translate("Failed to decode ERRORCODE.").replace("ERRORCODE", juce::String(decodeResult)));
-        }
-        position += size;
-    }
+    MiscDebug("Application::Neuralyzer::Agent", "Prompt: " + params.prompt);
 
-    // Store the formatted prompt for delta extraction
-    mPreviousPromptSize = params.prompt.size();
-
-    // Track system prompt end position for selective KV cache management
-    auto const systemEndPos = llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1;
-    mMessageEndPositions.push_back(systemEndPos);
-
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("System prompt ends at position: ") + juce::String(systemEndPos));
-    return juce::Result::ok();
-}
-
-std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyzer::Agent::performUserQuery(std::string query, bool allowTools)
-{
-    auto const createResults = [](juce::Result result, std::string message = {}, common_chat_params params = {})
-    {
-        return std::make_tuple(std::move(result), std::move(message), std::move(params));
-    };
-
-    common_chat_msg userMsg;
-    userMsg.role = "user";
-    userMsg.content = std::move(query);
-    mChatInputs.messages.push_back(std::move(userMsg));
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Message user: ") + mChatInputs.messages.back().content);
-
-    // Generate prompt for the current message
-    mChatInputs.add_generation_prompt = true;
-    mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_AUTO : COMMON_CHAT_TOOL_CHOICE_NONE; // Allow tool calling if model decides
-
-    auto const params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
-    auto const prompt = params.prompt.size() > mPreviousPromptSize ? params.prompt.substr(mPreviousPromptSize) : params.prompt;
-
-    auto tokens = common_tokenize(mContext.get(), prompt, true, true);
+    auto tokens = common_tokenize(context, params.prompt, true, true);
 
     // Check if prompt tokens will exceed context capacity
-    auto const promptTokenCount = tokens.size();
-    auto const numCtxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1);
-    auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(mContext.get()));
-    MiscWeakAssert(numCtxUsed + promptTokenCount <= ctxCapacity);
-    if(numCtxUsed + promptTokenCount > ctxCapacity)
+    auto const ctxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
+    auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(context));
+    MiscWeakAssert(ctxUsed + tokens.size() <= ctxCapacity);
+    if(ctxUsed + tokens.size() > ctxCapacity)
     {
         // Context would overflow - rollback and report error
         mChatInputs.messages.pop_back();
         MiscDebug("Application::Neuralyzer::Agent", "Context memory exceeded.");
         return createResults(juce::Result::fail(juce::translate("Context memory exceeded. If the prompt has been generated using tools, adjust the tool usage settings or start a new conversation.")));
     }
-    auto const batchSize = static_cast<size_t>(llama_n_batch(mContext.get()));
-    if(tokens.size() > batchSize)
-    {
-        mChatInputs.messages.pop_back();
-        MiscDebug("Application::Neuralyzer::Agent", "Prompt exceeds batch size.");
-        return createResults(juce::Result::fail(juce::translate("Prompt exceeds batch size. If the prompt has been generated using tools, adjust the tool usage settings or start a new conversation.")));
-    }
+    auto const batchSize = static_cast<size_t>(llama_n_batch(context));
 
     if(mShouldQuit.load())
     {
@@ -558,94 +423,54 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
         return createResults(juce::Result::fail(juce::translate("Operation aborted.")));
     }
 
-    std::string response;
-    bool promptDecoded = false;
-    llama_pos userMsgEndPos = 0; // Will be set after prompt is decoded
-    auto const finalizeState = [&]()
-    {
-        if(!promptDecoded)
-        {
-            // Abort before prompt was decoded - just rollback the message
-            mChatInputs.messages.pop_back();
-        }
-        else if(!response.empty())
-        {
-            // CRITICAL: Save the partial response to maintain history consistency
-            // The KV cache already contains prompt + generated tokens
-            common_chat_msg assistantMsg;
-            assistantMsg.role = "assistant";
-            assistantMsg.content = response;
-            mChatInputs.messages.push_back(std::move(assistantMsg));
-            mMessageEndPositions.push_back(userMsgEndPos);
-            mMessageEndPositions.push_back(llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1);
-        }
-    };
-    // Note: tokens must be non-const for llama_batch_get_one
-    auto batch = llama_batch_get_one(tokens.data(), static_cast<int32_t>(std::min(tokens.size(), batchSize)));
-    while(true)
+    auto const promptStartPos = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
+    // Decode the prompt in chunks so prompts larger than n_batch still work.
+    auto position = 0_z;
+    while(position < tokens.size())
     {
         if(mShouldQuit.load())
         {
-            finalizeState();
-            MiscDebug("Application::Neuralyzer::Agent", juce::String("Generation aborted") + (response.empty() ? juce::String{} : juce::String(", saved partial response with ") + juce::String(response.size()) + juce::String(" characters")));
+            // Abort before prompt was decoded - just rollback the message
+            mChatInputs.messages.pop_back();
+            llama_memory_seq_rm(llama_get_memory(context), 0, promptStartPos, -1);
+            MiscDebug("Application::Neuralyzer::Agent", "Prompt decoding aborted");
             return createResults(juce::Result::fail(juce::translate("Operation aborted.")));
         }
 
-        auto const ret = llama_decode(mContext.get(), batch);
+        auto const size = std::min(batchSize, tokens.size() - position);
+        auto const batch = llama_batch_get_one(tokens.data() + position, static_cast<int32_t>(size));
+        auto const ret = llama_decode(context, batch);
         MiscWeakAssert(ret == 0);
         if(ret != 0)
         {
-            finalizeState();
+            // Abort before prompt was decoded - just rollback the message
+            mChatInputs.messages.pop_back();
+            llama_memory_seq_rm(llama_get_memory(context), 0, promptStartPos, -1);
             return createResults(juce::Result::fail(juce::translate("Failed to decode.")));
         }
-        if(!promptDecoded)
-        {
-            // Record user message end position (after prompt tokens are decoded)
-            promptDecoded = true;
-            userMsgEndPos = llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1;
-        }
+        position += size;
+    }
+    mMessageEndPositions.push_back(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
 
-        // Sample the next token
-        auto new_token_id = llama_sampler_sample(mSampler.get(), mContext.get(), -1);
-        auto const* vocab = llama_model_get_vocab(llama_get_model(mContext.get()));
-        // Check if it's an end-of-generation token
-        if(llama_vocab_is_eog(vocab, new_token_id))
-        {
-            break;
-        }
-
-        auto const piece = [&]()
-        {
-            // Convert the token to a string and add it to the response
-            char buf[1024];
-            auto const n = llama_token_to_piece(vocab, new_token_id, buf, sizeof(buf), 0, true);
-            MiscWeakAssert(n >= 0);
-            if(n < 0)
-            {
-                MiscDebug("Application::Neuralyzer::Agent", "Failed to convert token to piece");
-                return std::string{};
-            }
-            return std::string(buf, static_cast<size_t>(n));
-        }();
-        response += piece;
-        {
-            std::unique_lock<std::mutex> lock(mTempResponseMutex);
-            mTempResponse = response;
-        }
-
-        // Prepare the next batch with the sampled token
-        batch = llama_batch_get_one(&new_token_id, 1);
+    auto const result = getAssistantResponse(sampler, context, mShouldQuit, [&](std::string const& partialResponse)
+                                             {
+                                                 std::unique_lock<std::mutex> lock(mTempResponseMutex);
+                                                 mTempResponse = partialResponse;
+                                             });
+    mMessageEndPositions.push_back(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
+    if(std::get<0>(result).failed())
+    {
+        return createResults(std::get<0>(result), std::get<1>(result).content);
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", response);
-    finalizeState();
+    MiscDebug("Application::Neuralyzer::Agent", std::get<1>(result).content);
 
     // Update the stored prompt for next iteration
     mChatInputs.add_generation_prompt = false;
+    mChatInputs.messages.push_back(std::get<1>(result));
+    mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_AUTO : COMMON_CHAT_TOOL_CHOICE_NONE; // Allow tool calling if model decides
     auto finalParams = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
-    mPreviousPromptSize = finalParams.prompt.size();
-
-    return createResults(juce::Result::ok(), std::move(response), std::move(finalParams));
+    return createResults(juce::Result::ok(), std::get<1>(result).content, std::move(finalParams));
 }
 
 std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQuery(juce::String const& prompt, bool allowTools)
@@ -656,7 +481,7 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
         mTempResponse.clear();
     }
 
-    if(mContext == nullptr || mSampler == nullptr)
+    if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
     {
         MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
         return std::make_tuple(juce::Result::fail(juce::translate("The model is not initialized.")), std::string{});
@@ -666,6 +491,7 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
     llama_log_set(logCallback, nullptr);
 
     // Agent loop: keep calling tools until Llama provides a final answer
+    static auto constexpr currentRole = "user";
     auto currentQuery = prompt.toStdString();
     std::string finalResponse;
     auto numToolCallsErrors = 0;
@@ -682,7 +508,7 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
             MiscDebug("Application::Neuralyzer::Agent", "Context management warning: " + ctxResult.getErrorMessage().toStdString());
         }
 
-        auto const result = performUserQuery(currentQuery, allowTools);
+        auto const result = performQuery(currentRole, currentQuery, allowTools);
         if(std::get<0>(result).failed())
         {
             finalResponse = std::get<1>(result);
@@ -727,19 +553,108 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
     return std::make_tuple(juce::Result::fail(juce::translate("Maximum number of iterations reached.")), finalResponse);
 }
 
-void Application::Neuralyzer::Agent::pruneMessagesFromContext(juce::Range<llama_pos> messageRange)
+juce::Result Application::Neuralyzer::Agent::loadState(juce::File state)
 {
-    if(mContext == nullptr)
+    std::unique_lock<std::mutex> callLock(mCallMutex);
+    if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    auto* context = mInitResult->context();
+
+    if(!state.existsAsFile())
+    {
+        return juce::Result::fail(juce::translate("The state file does not exist: FLNAME").replace("FLNAME", state.getFullPathName()));
+    }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(logCallback, nullptr);
+
+    size_t nloaded = 0;
+    auto const numCtx = llama_n_ctx(context);
+    std::vector<llama_token> array(numCtx);
+    if(!llama_state_load_file(context, state.getFullPathName().toRawUTF8(), array.data(), array.size(), &nloaded))
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file: " + state.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to load state from file: FLNAME").replace("FLNAME", state.getFullPathName()));
+    }
+    if(nloaded == 0)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
+    }
+    MiscDebug("Application::Neuralyzer::Agent", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
+    return juce::Result::ok();
+}
+
+juce::Result Application::Neuralyzer::Agent::saveState(juce::File state)
+{
+    std::unique_lock<std::mutex> callLock(mCallMutex);
+    if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
+    }
+    auto* context = mInitResult->context();
+
+    if(state == juce::File())
+    {
+        return juce::Result::fail(juce::translate("The state file is not set."));
+    }
+
+    // Ensure directory exists
+    auto const parentDir = state.getParentDirectory();
+    if(!parentDir.exists())
+    {
+        if(!parentDir.createDirectory())
+        {
+            MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + parentDir.getFullPathName());
+            return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", parentDir.getFullPathName()));
+        }
+    }
+
+    // Set log callback to suppress unnecessary output
+    llama_log_set(logCallback, nullptr);
+
+    // Save KV cache state. We don't persist prompt tokens here (nullptr, 0) since
+    // the KV cache is sufficient for restoring the model state.
+    auto const saved = llama_state_save_file(context, state.getFullPathName().toRawUTF8(), nullptr, 0);
+    if(!saved)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state to file: " + state.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", state.getFullPathName()));
+    }
+
+    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache to state file: ") + state.getFullPathName());
+    return juce::Result::ok();
+}
+
+void Application::Neuralyzer::Agent::resetState()
+{
+    // Clear chat history and KV cache from system prompt onwards
+    std::unique_lock<std::mutex> callLock(mCallMutex);
+    MiscWeakAssert(!mMessageEndPositions.empty());
+    if(mMessageEndPositions.empty())
     {
         return;
     }
+    pruneMessagesFromContext({1, mMessageEndPositions.back()});
+}
+
+void Application::Neuralyzer::Agent::pruneMessagesFromContext(juce::Range<int32_t> messageRange)
+{
+    if(mInitResult == nullptr || mInitResult->context() == nullptr)
+    {
+        return;
+    }
+    auto* context = mInitResult->context();
     MiscWeakAssert(messageRange.getStart() >= 1 && static_cast<size_t>(messageRange.getEnd()) <= mMessageEndPositions.size());
-    messageRange = messageRange.getIntersectionWith(juce::Range<llama_pos>(1, static_cast<llama_pos>(mMessageEndPositions.size())));
+    messageRange = messageRange.getIntersectionWith(juce::Range<int32_t>(1, static_cast<int32_t>(mMessageEndPositions.size())));
     if(messageRange.isEmpty())
     {
         return;
     }
-    auto const currentPos = llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1;
+    auto const currentPos = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
     // Token range: from end of previous message to end of last message in range
     auto const rangeStartPos = mMessageEndPositions.at(static_cast<size_t>(messageRange.getStart() - 1));
     MiscWeakAssert(rangeStartPos < currentPos);
@@ -751,8 +666,8 @@ void Application::Neuralyzer::Agent::pruneMessagesFromContext(juce::Range<llama_
     auto const shiftPos = rangeEndPos - rangeStartPos;
 
     // Remove KV cache for pruned messages and shift remaining tokens
-    llama_memory_seq_rm(llama_get_memory(mContext.get()), 0, rangeStartPos, rangeEndPos);
-    llama_memory_seq_add(llama_get_memory(mContext.get()), 0, rangeEndPos, currentPos, -shiftPos);
+    llama_memory_seq_rm(llama_get_memory(context), 0, rangeStartPos, rangeEndPos);
+    llama_memory_seq_add(llama_get_memory(context), 0, rangeEndPos, currentPos, -shiftPos);
 
     // Update message end positions
     auto const posStartIt = std::next(mMessageEndPositions.begin(), messageRange.getStart());
@@ -761,30 +676,21 @@ void Application::Neuralyzer::Agent::pruneMessagesFromContext(juce::Range<llama_
     {
         *posIt -= shiftPos;
     }
-    // Erase the pruned messages
-    auto const messageStartIt = std::next(mChatInputs.messages.begin(), messageRange.getStart());
-    auto const messageEndIt = std::next(mChatInputs.messages.begin(), messageRange.getEnd());
-    mChatInputs.messages.erase(messageStartIt, messageEndIt);
-
-    // Recalculate prompt size for remaining messages so delta extraction works correctly
-    mChatInputs.add_generation_prompt = false;
-    auto const params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
-    mPreviousPromptSize = params.prompt.size();
 
     MiscDebug("Application::Neuralyzer::Agent", juce::String("Shifted context by ") + juce::String(shiftPos) + " tokens.");
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Pruned messages to ") + juce::String(mChatInputs.messages.size()) + " messages.");
 }
 
 juce::Result Application::Neuralyzer::Agent::manageContextSize()
 {
-    if(mContext == nullptr)
+    if(mInitResult == nullptr || mInitResult->context() == nullptr)
     {
         return juce::Result::ok();
     }
+    auto* context = mInitResult->context();
 
-    auto numCtxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(mContext.get()), 0) + 1);
-    auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(mContext.get()));
-    auto const batchSize = static_cast<size_t>(llama_n_batch(mContext.get()));
+    auto numCtxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
+    auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(context));
+    auto const batchSize = static_cast<size_t>(llama_n_batch(context));
     if(ctxCapacity >= numCtxUsed + batchSize)
     {
         return juce::Result::ok();
@@ -805,8 +711,8 @@ juce::Result Application::Neuralyzer::Agent::manageContextSize()
 
     // The model already has the conversation [1..compressUpTo] in KV cache
     // Just ask it to summarize what it knows - no need to re-encode the conversation
-    auto const summaryPrompt = "Summarize our conversation so far in 2-3 sentences maximum, focus on key points and decisions made, don't save the tool results:";
-    auto const result = performUserQuery(summaryPrompt, false);
+    auto const summaryPrompt = "Summarize our conversation so far in 2-3 sentences maximum, focus on key points and decisions made, don't save the tool results.";
+    auto const result = performQuery("user", summaryPrompt, false);
     if(std::get<0>(result).failed())
     {
         MiscDebug("Application::Neuralyzer::Agent", juce::String("Failed to get summary: ") + std::get<0>(result).getErrorMessage());

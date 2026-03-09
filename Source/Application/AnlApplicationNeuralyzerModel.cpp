@@ -4,9 +4,11 @@ ANALYSE_FILE_BEGIN
 
 Application::Neuralyzer::ModelInfo::ModelInfo(Accessor const& accessor)
 : model(accessor.getAttr<AttrType::modelFile>())
-, tplt(model.withFileExtension(".jinja"))
+, tplt(model.withFileExtension(".jinja").existsAsFile() ? model.withFileExtension(".jinja") : juce::File())
 , contextSize(accessor.getAttr<AttrType::contextSize>())
 , batchSize(accessor.getAttr<AttrType::batchSize>())
+, minP(accessor.getAttr<AttrType::minP>())
+, temperature(accessor.getAttr<AttrType::temperature>())
 {
 }
 

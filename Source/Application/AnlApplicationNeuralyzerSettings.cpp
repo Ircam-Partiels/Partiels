@@ -346,6 +346,14 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
 , mModel(juce::translate("Model"), juce::translate("The model used by the Neuralyzer"), "", {}, nullptr)
 , mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {}, nullptr)
 , mBatchSize(juce::translate("Batch Size"), juce::translate("The batch size"), "", {}, nullptr)
+, mMinP(juce::translate("Min. Pobability"), juce::translate("Minimum probability for sampling"), "", {0.0f, 1.0f}, 0.01f, [&](float value)
+        {
+            mAccessor.setAttr<AttrType::minP>(value, NotificationType::synchronous);
+        })
+, mTemperature(juce::translate("Temperature"), juce::translate("Temperature for sampling"), "", {0.0f, 2.0f}, 0.01f, [&](float value)
+               {
+                   mAccessor.setAttr<AttrType::temperature>(value, NotificationType::synchronous);
+               })
 , mModelsDirectory(juce::translate("Models Directory"), juce::translate("Reveal the directory where models are stored"), []()
                    {
                        resolveModelDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory)).revealToUser();
@@ -369,7 +377,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     Misc::NumberField::Label::storeProperties(mContextSize.entry.getProperties(), {static_cast<float>(minSize), static_cast<float>(maxSize)}, 1.0f, 0, "");
     mContextSize.entry.onChange = [&, this]()
     {
-        auto const size = static_cast<uint32_t>(std::clamp(mContextSize.entry.getText().getIntValue(), minSize, maxSize));
+        auto const size = static_cast<int32_t>(std::clamp(mContextSize.entry.getText().getIntValue(), minSize, maxSize));
         mAccessor.setAttr<AttrType::contextSize>(size, NotificationType::synchronous);
     };
 
@@ -384,9 +392,12 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     Misc::NumberField::Label::storeProperties(mBatchSize.entry.getProperties(), {static_cast<float>(minSize), static_cast<float>(maxSize)}, 1.0f, 0, "");
     mBatchSize.entry.onChange = [&, this]()
     {
-        auto const size = static_cast<uint32_t>(std::clamp(mBatchSize.entry.getText().getIntValue(), minSize, maxSize));
+        auto const size = static_cast<int32_t>(std::clamp(mBatchSize.entry.getText().getIntValue(), minSize, maxSize));
         mAccessor.setAttr<AttrType::batchSize>(size, NotificationType::synchronous);
     };
+
+    addAndMakeVisible(mMinP);
+    addAndMakeVisible(mTemperature);
 
     addAndMakeVisible(mSeparator);
     mSeparator.setSize(1, 1);
@@ -446,7 +457,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
         }
         for(auto const& model : installedModels)
         {
-            menu.addItem(model.getFileNameWithoutExtension().toLowerCase(), true, model == currentModel, [=]()
+            menu.addItem(model.getFileNameWithoutExtension().toLowerCase(), true, model == currentModel, [=, this]()
                          {
                              mAccessor.setAttr<AttrType::modelFile>(model, NotificationType::synchronous);
                          });
@@ -511,6 +522,18 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 }
                 break;
             }
+            case AttrType::minP:
+            {
+                auto const minP = acsr.getAttr<AttrType::minP>();
+                mMinP.entry.setValue(static_cast<double>(minP), juce::NotificationType::dontSendNotification);
+                break;
+            }
+            case AttrType::temperature:
+            {
+                auto const temperature = acsr.getAttr<AttrType::temperature>();
+                mTemperature.entry.setValue(static_cast<double>(temperature), juce::NotificationType::dontSendNotification);
+                break;
+            }
         }
     };
 
@@ -543,6 +566,8 @@ void Application::Neuralyzer::SettingsContent::resized()
     setBounds(mModel);
     setBounds(mContextSize);
     setBounds(mBatchSize);
+    setBounds(mMinP);
+    setBounds(mTemperature);
     setBounds(mSeparator);
     setBounds(mModelsDirectory);
     for(auto const& process : mDownloadProcesses)

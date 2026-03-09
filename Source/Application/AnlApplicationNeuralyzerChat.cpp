@@ -141,6 +141,8 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, Agent& agent)
             case AttrType::modelFile:
             case AttrType::contextSize:
             case AttrType::batchSize:
+            case AttrType::minP:
+            case AttrType::temperature:
             {
                 if(ModelInfo(acsr).valid() || mIsInitialized.load())
                 {
@@ -286,23 +288,6 @@ void Application::Neuralyzer::Chat::initializeSystem()
         return;
     }
 
-    static auto const instructions = [this]()
-    {
-        nlohmann::json request;
-        request["method"] = "tools/call";
-        nlohmann::json params;
-        params["name"] = "get_installed_vamp_plugins_list";
-        params["arguments"] = nlohmann::json::object();
-        request["params"] = params;
-        auto const response = mAgent.getMcpDispatcher().handle(request);
-        MiscWeakAssert(response.contains("content") && response.at("content").is_array());
-        if(!response.contains("content") || !response.at("content").is_array())
-        {
-            MiscDebug("Application::Neuralyzer::Chat", juce::String("Parsing error: ") + response.dump());
-        }
-        return juce::String(juce::CharPointer_UTF8(AnlNeuralyzerData::Instructions_md)).replace("PLUGINS_LIST", juce::String(response.at("content").dump())).trim();
-    }();
-
     mRequestFuture = std::async(std::launch::async, [=, this]()
                                 {
                                     juce::Thread::setCurrentThreadName("Neuralyzer::Chat::Initialize");
@@ -313,7 +298,7 @@ void Application::Neuralyzer::Chat::initializeSystem()
                                         Chrono chrono{"Neuralyzer"};
                                         // Initialize the model
                                         chrono.start();
-                                        auto initResult = mAgent.initialize(info, instructions);
+                                        auto initResult = mAgent.initialize(info);
                                         chrono.stop("Initialization ended");
                                         if(mAgent.shouldQuit())
                                         {
@@ -328,7 +313,8 @@ void Application::Neuralyzer::Chat::initializeSystem()
 
                                         // Send the introduction query
                                         chrono.start();
-                                        auto queryResult = mAgent.sendUserQuery("Introduce yourself in one sentence.", false);
+                                        static auto const instructions = juce::String(juce::CharPointer_UTF8(AnlNeuralyzerData::Instructions_md));
+                                        auto queryResult = mAgent.sendUserQuery(instructions, false);
                                         chrono.stop("Introduction query ended");
                                         if(mAgent.shouldQuit())
                                         {
