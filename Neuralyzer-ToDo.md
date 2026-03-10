@@ -12,7 +12,7 @@
 - [] Ask to undo/redo/fix the previous prompt
 - [x] Add support for Graphics properties via MCP
 - [x] Add support for groups via MCP
-- [] Provide information about the audio file via MCP
+- [x] Provide information about the audio file via MCP
 - [] Improve batch manahement
 - [] Add instruction to Jinja ?
 - [] Use Qwen3 instead of 2.5
