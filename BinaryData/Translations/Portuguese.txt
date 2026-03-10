@@ -821,6 +821,7 @@ countries: pt br
 "Add Marker" = "Adicionar Marcador"
 "Add Point" = "Adicionar Ponto"
 "Move Marker" = "Mover Marcador"
+"Resize Marker" = "Redimensionar Marcador"
 "Change Frame Time" = "Alterar Tempo do Quadro"
 "Change Frame Duration" = "Alterar Duração do Quadro"
 "Change Frame Label" = "Alterar Rótulo do Quadro"
