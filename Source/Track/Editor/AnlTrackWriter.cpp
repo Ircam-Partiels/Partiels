@@ -117,16 +117,38 @@ void Track::Writer::mouseDown(juce::MouseEvent const& event)
             auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
             auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
             auto const& markerChannel = markers->at(channelIndex);
-            auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
-            if(it == markerChannel.cend() || std::get<0_z>(*it) > time + epsilon)
-            {
-                break;
-            }
-            auto const next = std::next(it);
             mCurrentEdition.channel = channelIndex;
-            mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
-            mCurrentEdition.range.setStart(std::get<0_z>(*it));
-            mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
+            mMouseDownTime = time;
+            if(mEditDuration)
+            {
+                auto const it = std::prev(std::upper_bound(std::next(markerChannel.cbegin()), markerChannel.cend(), time, Result::upper_cmp<Results::Marker>));
+                if(time < std::get<0_z>(*it) - epsilon || time > std::get<0_z>(*it) + std::get<1_z>(*it) + epsilon)
+                {
+                    break;
+                }
+                mInitialDuration = std::get<1_z>(*it);
+                mCurrentEdition.data = std::vector<Result::Data::Marker>{*it};
+                mCurrentEdition.range.setStart(std::get<0_z>(*it));
+                auto const next = std::next(it);
+                mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
+            }
+            else
+            {
+                auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
+                if(it == markerChannel.cend())
+                {
+                    break;
+                }
+                mInitialDuration = std::get<1_z>(*it);
+                if(std::get<0_z>(*it) > time + epsilon)
+                {
+                    break;
+                }
+                mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
+                mCurrentEdition.range.setStart(std::get<0_z>(*it));
+                auto const next = std::next(it);
+                mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
+            }
         }
         break;
     }
@@ -243,8 +265,8 @@ void Track::Writer::mouseDrag(juce::MouseEvent const& event)
                             return;
                         }
                         auto* markersData = std::get_if<std::vector<Result::Data::Marker>>(&mCurrentEdition.data);
-                        MiscWeakAssert(markersData != nullptr);
-                        if(markersData == nullptr && !markersData->empty())
+                        MiscWeakAssert(markersData != nullptr && !markersData->empty());
+                        if(markersData == nullptr || markersData->empty())
                         {
                             return;
                         }
@@ -252,7 +274,18 @@ void Track::Writer::mouseDrag(juce::MouseEvent const& event)
                         mMouseWasDragged = mMouseWasDragged || static_cast<double>(std::abs(event.getDistanceFromDragStartX())) > epsilon;
                         if(mMouseWasDragged)
                         {
-                            std::get<0_z>(markersData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                            auto const currentTime = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                            if(mEditDuration)
+                            {
+                                auto const markerStart = mCurrentEdition.range.getStart();
+                                auto const rangeEnd = mCurrentEdition.range.getEnd();
+                                auto const maxDuration = rangeEnd < std::numeric_limits<double>::max() ? rangeEnd - markerStart : std::numeric_limits<double>::max();
+                                std::get<1_z>(markersData->front()) = std::clamp(mInitialDuration + (currentTime - mMouseDownTime), 0.0, maxDuration);
+                            }
+                            else
+                            {
+                                std::get<0_z>(markersData->front()) = currentTime;
+                            }
                             mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
                         }
                     }
@@ -325,10 +358,10 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
                         if(mMouseWasDragged || static_cast<double>(std::abs(event.getDistanceFromDragStartX())) > epsilon)
                         {
                             auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
-                            auto const preserveFullDuration = mDirector.isPreserveFullDurationWhenEditingEnabled();
+                            auto const preserveFullDuration = mEditDuration ? false : mDirector.isPreserveFullDurationWhenEditingEnabled();
                             auto const endTime = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
                             auto const& edition = mAccessor.getAttr<AttrType::edit>();
-                            undoManager.beginNewTransaction(juce::translate("Move Marker"));
+                            undoManager.beginNewTransaction(juce::translate(mEditDuration ? "Resize Marker" : "Move Marker"));
                             undoManager.perform(std::make_unique<Result::Modifier::ActionErase>(mDirector.getSafeAccessorFn(), edition.channel, edition.range, preserveFullDuration, endTime).release());
                             undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), edition.channel, edition.data, time, preserveFullDuration, endTime).release());
                         }
@@ -342,9 +375,10 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
         }
         break;
     }
-    updateActionMode(event);
     mMouseWasDragged = false;
+    mEditDuration = false;
     mCurrentEdition = {};
+    updateActionMode(event);
     mAccessor.setAttr<AttrType::edit>(Edition{}, NotificationType::synchronous);
 }
 
@@ -369,7 +403,7 @@ void Track::Writer::mouseDoubleClick(juce::MouseEvent const& event)
                 auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
                 mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(time, NotificationType::synchronous);
                 auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
-                if(!Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, epsilon))
+                if(!Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, false, epsilon))
                 {
                     return;
                 }
@@ -416,7 +450,7 @@ void Track::Writer::updateActionMode(juce::MouseEvent const& event)
                 {
                     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, point.x);
                     auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
-                    if(Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, epsilon))
+                    if(Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, !modifiers.isAltDown(), epsilon))
                     {
                         return ActionMode::move;
                     }
@@ -430,21 +464,22 @@ void Track::Writer::updateActionMode(juce::MouseEvent const& event)
         return ActionMode::none;
     };
 
+    mEditDuration = modifiers.isAltDown();
     auto const currentAction = getCurrentAction();
+    switch(currentAction)
+    {
+        case ActionMode::none:
+            setMouseCursor(juce::MouseCursor::StandardCursorType::IBeamCursor);
+            break;
+        case ActionMode::create:
+            setMouseCursor(juce::MouseCursor::StandardCursorType::CrosshairCursor);
+            break;
+        case ActionMode::move:
+            setMouseCursor(mEditDuration ? juce::MouseCursor::StandardCursorType::RightEdgeResizeCursor : juce::MouseCursor::StandardCursorType::LeftRightResizeCursor);
+            break;
+    }
     if(std::exchange(mActionMode, currentAction) != currentAction)
     {
-        switch(currentAction)
-        {
-            case ActionMode::none:
-                setMouseCursor(juce::MouseCursor::StandardCursorType::IBeamCursor);
-                break;
-            case ActionMode::create:
-                setMouseCursor(juce::MouseCursor::StandardCursorType::CrosshairCursor);
-                break;
-            case ActionMode::move:
-                setMouseCursor(juce::MouseCursor::StandardCursorType::LeftRightResizeCursor);
-                break;
-        }
         if(onModeUpdated != nullptr)
         {
             onModeUpdated();
