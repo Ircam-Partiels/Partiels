@@ -821,6 +821,7 @@ countries: fr be
 "Add Marker" = "Ajouter un marqueur"
 "Add Point" = "Ajouter un point"
 "Move Marker" = "Déplacer le marqueur"
+"Resize Marker" = "Redimensionner le marqueur"
 "Change Frame Time" = "Modifier la durée de l'image"
 "Change Frame Duration" = "Modifier la durée de la trame"
 "Change Frame Label" = "Modifier l'étiquette de la trame"
