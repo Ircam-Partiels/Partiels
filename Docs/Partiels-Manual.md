@@ -303,6 +303,7 @@ Editing actions with the mouse require drawing mode:
 
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker track to create a new marker at the corresponding time.  
 - Click on a marker and drag it to move it to the desired time.
+- Click on the marker region with `⎇ Option` (Mac) or `Alt` (Linux/Windows) and drag it to resize its duration.
 - Click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a point track to create new points at the corresponding times and values. 
 
 > 💡 **Tip**: Toggle between navigation mode and drawing mode with the edit button ([Overview](#2-overview) **Ka**), the main menu `Frame → Toggle Drawing mode`, or using the keyboard shortcuts `⌘ Cmd + E` (Mac) or `Ctrl + E` (Linux/Windows).
