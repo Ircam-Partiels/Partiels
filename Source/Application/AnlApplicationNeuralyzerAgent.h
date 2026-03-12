@@ -47,7 +47,6 @@ namespace Application
             Mcp::Dispatcher& mNeuralyzerMcpDispatcher;
             common_init_result_ptr mInitResult;
             common_chat_templates_ptr mChatTemplates;
-            size_t mPreviousPromptSize = 0_z;
             common_chat_templates_inputs mChatInputs;    // Cached inputs for chat template application and messages
             std::vector<llama_pos> mMessageEndPositions; // KV cache position where each message ends
             mutable std::mutex mTempResponseMutex;

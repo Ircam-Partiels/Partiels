@@ -51,7 +51,7 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
         catch(std::exception const& e)
         {
             MiscDebug("Application::Neuralyzer::Agent", e.what());
-            return createResults(juce::Result::fail(juce::String("Error parsing tool calls: ") + e.what() + ". Ensure the character cases, the JSON or XML formats are respected."));
+            return createResults(juce::Result::fail(juce::String("Error parsing tool calls: ") + e.what() + ". Ensure the tool calls are properly formatted according to the expected structure, the letter case is respected, the JSON and/or XML formats are well-formatted."));
         }
         catch(...)
         {
@@ -245,7 +245,6 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
 
     mInitResult.reset();
     mChatTemplates = nullptr;
-    mPreviousPromptSize = 0_z;
     mChatInputs = common_chat_templates_inputs{};
     mMessageEndPositions.clear();
 
@@ -326,6 +325,9 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     mChatInputs.use_jinja = true;
     mChatInputs.reasoning_format = COMMON_REASONING_FORMAT_DEEPSEEK;
     mChatInputs.enable_thinking = false;
+    auto const* vocab = llama_model_get_vocab(mInitResult->model());
+    mChatInputs.add_bos = llama_vocab_get_add_bos(vocab);
+    mChatInputs.add_eos = llama_vocab_get_add_eos(vocab);
     // Build tools from MCP
     {
         nlohmann::json request;
@@ -377,17 +379,32 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     common_chat_msg userMsg;
     userMsg.role = role;
     userMsg.content = std::move(query);
-    mChatInputs.messages.push_back(std::move(userMsg));
-    MiscDebug("Application::Neuralyzer::Agent", role + ": " + mChatInputs.messages.back().content);
-
-    // Generate prompt for the current message
+    mChatInputs.messages.push_back(userMsg);
     mChatInputs.add_generation_prompt = true;
     mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_REQUIRED : COMMON_CHAT_TOOL_CHOICE_NONE; // For tool calling if required
+    MiscDebug("Application::Neuralyzer::Agent", role + ": " + mChatInputs.messages.back().content);
 
     common_chat_params params;
     try
     {
-        params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
+        if(mChatInputs.messages.size() == 1)
+        {
+            params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
+        }
+        else
+        {
+            // Do not use full chat inputs
+            common_chat_templates_inputs chatInputs;
+            chatInputs.use_jinja = mChatInputs.use_jinja;
+            chatInputs.reasoning_format = mChatInputs.reasoning_format;
+            chatInputs.enable_thinking = mChatInputs.enable_thinking;
+            chatInputs.add_generation_prompt = mChatInputs.add_generation_prompt;
+            chatInputs.tool_choice = mChatInputs.tool_choice;
+            chatInputs.add_bos = mChatInputs.add_bos;
+            chatInputs.add_eos = mChatInputs.add_eos;
+            chatInputs.messages.push_back(userMsg);
+            params = common_chat_templates_apply(mChatTemplates.get(), chatInputs);
+        }
     }
     catch(std::exception const& e)
     {
@@ -401,11 +418,8 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
         return createResults(juce::Result::fail(juce::translate("Failed to apply chat templates: Unknown error")));
     }
 
-    auto const prompt = params.prompt.size() > mPreviousPromptSize ? params.prompt.substr(mPreviousPromptSize) : params.prompt;
-    MiscDebug("Application::Neuralyzer::Agent", "Prompt: " + juce::String(prompt).replace("\n", "\\n"));
-    mPreviousPromptSize = params.prompt.size();
-
-    auto tokens = common_tokenize(context, prompt, true, true);
+    MiscDebug("Application::Neuralyzer::Agent", "Prompt: " + juce::String(params.prompt).replace("\n", "\\n"));
+    auto tokens = common_tokenize(context, params.prompt, true, true);
     // Store the formatted prompt for delta extraction
 
     // Check if prompt tokens will exceed context capacity
@@ -475,7 +489,6 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     mChatInputs.messages.push_back(std::get<1>(result));
     mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_AUTO : COMMON_CHAT_TOOL_CHOICE_NONE; // Allow tool calling if model decides
     params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
-    mPreviousPromptSize = params.prompt.size();
 
     return createResults(juce::Result::ok(), std::get<1>(result).content, std::move(params));
 }
