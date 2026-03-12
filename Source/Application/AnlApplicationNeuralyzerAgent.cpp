@@ -245,6 +245,7 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
 
     mInitResult.reset();
     mChatTemplates = nullptr;
+    mPreviousPromptSize = 0_z;
     mChatInputs = common_chat_templates_inputs{};
     mMessageEndPositions.clear();
 
@@ -292,6 +293,7 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
                              },
                              static_cast<void*>(this));
 
+    MiscDebug("Application::Neuralyzer::Agent", common_params_get_system_info(params));
     MiscDebug("Application::Neuralyzer::Agent", "Model, context, and sampler loaded successfully.");
 
     // Initialize chat templates with Jinja support
@@ -399,9 +401,12 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
         return createResults(juce::Result::fail(juce::translate("Failed to apply chat templates: Unknown error")));
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", "Prompt: " + params.prompt);
+    auto const prompt = params.prompt.size() > mPreviousPromptSize ? params.prompt.substr(mPreviousPromptSize) : params.prompt;
+    MiscDebug("Application::Neuralyzer::Agent", "Prompt: " + juce::String(prompt).replace("\n", "\\n"));
+    mPreviousPromptSize = params.prompt.size();
 
-    auto tokens = common_tokenize(context, params.prompt, true, true);
+    auto tokens = common_tokenize(context, prompt, true, true);
+    // Store the formatted prompt for delta extraction
 
     // Check if prompt tokens will exceed context capacity
     auto const ctxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
@@ -469,8 +474,10 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     mChatInputs.add_generation_prompt = false;
     mChatInputs.messages.push_back(std::get<1>(result));
     mChatInputs.tool_choice = allowTools ? COMMON_CHAT_TOOL_CHOICE_AUTO : COMMON_CHAT_TOOL_CHOICE_NONE; // Allow tool calling if model decides
-    auto finalParams = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
-    return createResults(juce::Result::ok(), std::get<1>(result).content, std::move(finalParams));
+    params = common_chat_templates_apply(mChatTemplates.get(), mChatInputs);
+    mPreviousPromptSize = params.prompt.size();
+
+    return createResults(juce::Result::ok(), std::get<1>(result).content, std::move(params));
 }
 
 std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQuery(juce::String const& prompt, bool allowTools)
