@@ -75,7 +75,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, Agent& agent)
     mMenuButton.onClick = [this]()
     {
         juce::PopupMenu menu;
-        auto const canReset = ModelInfo(mAccessor).valid() || mIsInitialized.load();
+        auto const canReset = mAccessor.getAttr<AttrType::modelInfo>().valid() || mIsInitialized.load();
         menu.addItem(juce::translate("Reset History"), canReset, false, [this]()
                      {
                          auto const options = juce::MessageBoxOptions()
@@ -91,7 +91,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, Agent& agent)
                                                           {
                                                               return;
                                                           }
-                                                          if(ModelInfo(mAccessor).valid() || mIsInitialized.load())
+                                                          if(mAccessor.getAttr<AttrType::modelInfo>().valid() || mIsInitialized.load())
                                                           {
                                                               clearHistory();
                                                           }
@@ -138,13 +138,9 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, Agent& agent)
     {
         switch(attr)
         {
-            case AttrType::modelFile:
-            case AttrType::contextSize:
-            case AttrType::batchSize:
-            case AttrType::minP:
-            case AttrType::temperature:
+            case AttrType::modelInfo:
             {
-                if(ModelInfo(acsr).valid() || mIsInitialized.load())
+                if(acsr.getAttr<AttrType::modelInfo>().valid() || mIsInitialized.load())
                 {
                     initializeSystem();
                 }
@@ -167,7 +163,7 @@ void Application::Neuralyzer::Chat::mouseDown(juce::MouseEvent const& event)
 {
     if(event.eventComponent == &mQueryEditor)
     {
-        if(!mIsInitialized.load() && !ModelInfo(mAccessor).valid())
+        if(!mIsInitialized.load() && !mAccessor.getAttr<AttrType::modelInfo>().valid())
         {
             askToConfigureNeuralyzer();
         }
@@ -281,7 +277,7 @@ void Application::Neuralyzer::Chat::initializeSystem()
     MiscWeakAssert(!mAgent.shouldQuit());
     MiscWeakAssert(!mRequestFuture.valid());
 
-    ModelInfo info(mAccessor);
+    auto info = mAccessor.getAttr<AttrType::modelInfo>();
     MiscWeakAssert(info.valid());
     if(!info.valid())
     {

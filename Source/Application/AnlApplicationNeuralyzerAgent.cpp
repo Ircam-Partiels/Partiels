@@ -224,6 +224,7 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
 {
     auto info = ModelInfo{};
     info.model = juce::File(modePath);
+    info.tplt = info.model.withFileExtension(".jinja").existsAsFile() ? info.model.withFileExtension(".jinja") : juce::File{};
     if(modePath.empty() || !info.model.existsAsFile())
     {
         return info;

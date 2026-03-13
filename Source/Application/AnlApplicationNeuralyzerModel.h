@@ -2,16 +2,12 @@
 
 #include "../Misc/AnlMisc.h"
 
-#include <optional>
-
 ANALYSE_FILE_BEGIN
 
 namespace Application
 {
     namespace Neuralyzer
     {
-        class Accessor;
-
         struct ModelInfo
         {
             juce::File model;
@@ -22,7 +18,6 @@ namespace Application
             std::optional<float> temperature;
 
             ModelInfo() = default;
-            ModelInfo(Accessor const& accessor);
 
             inline bool operator==(ModelInfo const& rhs) const noexcept
             {
@@ -53,19 +48,11 @@ namespace Application
         // clang-format off
         enum class AttrType : size_t
         {
-              modelFile
-            , minP
-            , temperature
-            , contextSize
-            , batchSize
+              modelInfo
         };
         
         using AttrContainer = Model::Container
-        < Model::Attr<AttrType::modelFile, juce::File, Model::Flag::basic>
-        , Model::Attr<AttrType::minP, float, Model::Flag::basic>
-        , Model::Attr<AttrType::temperature, float, Model::Flag::basic>
-        , Model::Attr<AttrType::contextSize, int32_t, Model::Flag::basic>
-        , Model::Attr<AttrType::batchSize, int32_t, Model::Flag::basic>
+        < Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
         >;
         // clang-format on
 
@@ -77,11 +64,7 @@ namespace Application
             // clang-format off
             Accessor()
             : Accessor(AttrContainer({
-                                          {juce::File{}}
-                                        , {0.05f}
-                                        , {0.2f}
-                                        , {0}
-                                        , {0}
+                                          {ModelInfo{}}
                                     }))
             {
             }
