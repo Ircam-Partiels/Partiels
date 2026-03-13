@@ -1,5 +1,9 @@
 #include "AnlApplicationNeuralyzerAgent.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <limits>
+
 ANALYSE_FILE_BEGIN
 
 static void logCallback(enum ggml_log_level level, [[maybe_unused]] const char* text, void*)
@@ -216,6 +220,76 @@ void Application::Neuralyzer::Agent::release()
                    });
 }
 
+Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultModelInfo(std::string const& modePath)
+{
+    auto info = ModelInfo{};
+    info.model = juce::File(modePath);
+    if(modePath.empty() || !info.model.existsAsFile())
+    {
+        return info;
+    }
+
+    // llama_params_fit is documented as not thread-safe because it touches logger state.
+    static std::mutex fitMutex;
+    std::unique_lock<std::mutex> lock(fitMutex);
+
+    initialize();
+
+    common_params params;
+    params.model.path = modePath;
+    params.fit_params_min_ctx = 256;
+    info.minP = params.sampling.min_p;
+    info.temperature = params.sampling.temp;
+    auto mparams = common_model_params_to_llama(params);
+    auto cparams = common_context_params_to_llama(params);
+    auto const fitStatus = llama_params_fit(modePath.c_str(), &mparams, &cparams,
+                                            params.tensor_split,
+                                            params.tensor_buft_overrides.data(),
+                                            params.fit_params_target.data(),
+                                            static_cast<uint32_t>(params.fit_params_min_ctx),
+                                            GGML_LOG_LEVEL_ERROR);
+    if(fitStatus == LLAMA_PARAMS_FIT_STATUS_ERROR)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to fit parameters for model: " + info.model.getFullPathName());
+        return info;
+    }
+    if(fitStatus == LLAMA_PARAMS_FIT_STATUS_FAILURE)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Unable to fit parameters to device memory for model: " + info.model.getFullPathName());
+    }
+
+    auto const minContext = static_cast<uint32_t>(params.fit_params_min_ctx);
+    auto constexpr maxInt32 = static_cast<uint32_t>(std::numeric_limits<int32_t>::max());
+    info.contextSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_ctx, maxInt32)));
+    info.batchSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_batch, maxInt32)));
+
+    auto const assignMetaFloat = [](llama_model const* model, enum llama_model_meta_key key, float& value)
+    {
+        char buffer[128] = {0};
+        if(llama_model_meta_val_str(model, llama_model_meta_key_str(key), buffer, sizeof(buffer)) > 0)
+        {
+            char* end = nullptr;
+            auto const parsed = std::strtof(buffer, &end);
+            if(end != nullptr && end != buffer)
+            {
+                value = parsed;
+            }
+        }
+    };
+    auto* model = llama_model_load_from_file(modePath.c_str(), mparams);
+    if(model != nullptr)
+    {
+        assignMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_MIN_P, info.minP);
+        assignMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_TEMP, info.temperature);
+        llama_model_free(model);
+    }
+    else
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load model metadata for sampling defaults: " + info.model.getFullPathName());
+    }
+    return info;
+}
+
 Application::Neuralyzer::Agent::Agent(Mcp::Dispatcher& mcpDispatcher)
 : mNeuralyzerMcpDispatcher(mcpDispatcher)
 {
@@ -264,9 +338,10 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     params.use_jinja = true;
     params.model.path = info.model.getFullPathName().toStdString();
     params.chat_template = info.tplt.getFullPathName().toStdString();
-    auto const modelMaxCtx = 65536; // Cap to 65k to prevent overflow issues in some backends
-    params.n_ctx = std::min(std::max(info.contextSize, 256), modelMaxCtx);
-    params.n_batch = std::max(info.batchSize, 256);
+    //    auto const modelMaxCtx = 65536; // Cap to 65k to prevent overflow issues in some backends
+    //    params.n_ctx = std::min(std::max(info.contextSize, 256), modelMaxCtx);
+    //    params.n_batch = std::max(info.batchSize, 256);
+    params.fit_params_min_ctx = 256; // Enable fit params for all context sizes above 512 tokens
     params.load_progress_callback_user_data = static_cast<void*>(this);
     params.load_progress_callback = [](float, void* data) -> bool
     {
@@ -292,8 +367,11 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
                              },
                              static_cast<void*>(this));
 
-    MiscDebug("Application::Neuralyzer::Agent", common_params_get_system_info(params));
-    MiscDebug("Application::Neuralyzer::Agent", "Model, context, and sampler loaded successfully.");
+    auto const* context = mInitResult->context();
+    auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(context));
+    auto const batchCapacity = static_cast<size_t>(llama_n_batch(context));
+
+    MiscDebug("Application::Neuralyzer::Agent", "Model, context, and sampler loaded successfully with context size: " + juce::String(ctxCapacity) + " and batch size: " + juce::String(batchCapacity));
 
     // Initialize chat templates with Jinja support
     if(!params.chat_template.empty() && !common_chat_verify_template(params.chat_template, true))
