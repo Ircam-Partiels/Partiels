@@ -16,6 +16,7 @@
 - [] Improve batch manahement
 - [] Add instruction to Jinja ?
 - [] Use Qwen3 instead of 2.5
+- [] Add show track in group
 
 ### Sequence 1
 
