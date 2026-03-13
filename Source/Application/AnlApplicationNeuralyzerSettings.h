@@ -61,8 +61,8 @@ namespace Application
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             PropertyList mModel;
-            PropertyList mContextSize;
-            PropertyList mBatchSize;
+            PropertyNumber mContextSize;
+            PropertyNumber mBatchSize;
             PropertyNumber mMinP;
             PropertyNumber mTemperature;
             ColouredPanel mSeparator;

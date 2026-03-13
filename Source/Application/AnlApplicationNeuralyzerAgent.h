@@ -20,7 +20,7 @@ namespace Application
         public:
             static void initialize();
             static void release();
-            static ModelInfo getDefaultModelInfo(std::string const& modePath);
+            static ModelInfo getDefaultModelInfo(juce::File const& modelFile);
 
             Agent(Mcp::Dispatcher& mcpDispatcher);
             ~Agent();

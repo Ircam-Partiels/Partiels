@@ -220,12 +220,10 @@ void Application::Neuralyzer::Agent::release()
                    });
 }
 
-Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultModelInfo(std::string const& modePath)
+Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultModelInfo(juce::File const& modelFile)
 {
-    auto info = ModelInfo{};
-    info.model = juce::File(modePath);
-    info.tplt = info.model.withFileExtension(".jinja").existsAsFile() ? info.model.withFileExtension(".jinja") : juce::File{};
-    if(modePath.empty() || !info.model.existsAsFile())
+    auto info = ModelInfo{modelFile};
+    if(!modelFile.existsAsFile())
     {
         return info;
     }
@@ -237,32 +235,32 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
     initialize();
 
     common_params params;
-    params.model.path = modePath;
-    params.fit_params_min_ctx = 256;
+    params.model.path = modelFile.getFullPathName().toStdString();
+    params.fit_params_min_ctx = minContextSize;
     info.minP = params.sampling.min_p;
     info.temperature = params.sampling.temp;
     auto mparams = common_model_params_to_llama(params);
     auto cparams = common_context_params_to_llama(params);
-    auto const fitStatus = llama_params_fit(modePath.c_str(), &mparams, &cparams,
+    auto const fitStatus = llama_params_fit(params.model.path.c_str(), &mparams, &cparams,
                                             params.tensor_split,
                                             params.tensor_buft_overrides.data(),
                                             params.fit_params_target.data(),
                                             static_cast<uint32_t>(params.fit_params_min_ctx),
                                             GGML_LOG_LEVEL_ERROR);
+    llama_log_set(logCallback, nullptr);
     if(fitStatus == LLAMA_PARAMS_FIT_STATUS_ERROR)
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to fit parameters for model: " + info.model.getFullPathName());
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to fit parameters for model: " + info.modelFile.getFullPathName());
         return info;
     }
-    if(fitStatus == LLAMA_PARAMS_FIT_STATUS_FAILURE)
-    {
-        MiscDebug("Application::Neuralyzer::Agent", "Unable to fit parameters to device memory for model: " + info.model.getFullPathName());
-    }
 
-    auto const minContext = static_cast<uint32_t>(params.fit_params_min_ctx);
-    auto constexpr maxInt32 = static_cast<uint32_t>(std::numeric_limits<int32_t>::max());
-    info.contextSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_ctx, maxInt32)));
-    info.batchSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_batch, maxInt32)));
+    static auto constexpr maxInt32 = std::numeric_limits<int32_t>::max();
+    auto const newContextSize = static_cast<int32_t>(std::min(cparams.n_ctx, static_cast<uint32_t>(maxInt32)));
+    auto const newBatchSize = static_cast<int32_t>(std::min(cparams.n_batch, static_cast<uint32_t>(maxInt32)));
+    auto const lContextSize = fitStatus == LLAMA_PARAMS_FIT_STATUS_FAILURE ? maxContextSuggestedSize : maxInt32;
+    auto const lBatchSize = fitStatus == LLAMA_PARAMS_FIT_STATUS_FAILURE ? maxBatchSize : maxInt32;
+    info.contextSize = std::clamp(newContextSize, minContextSize, lContextSize);
+    info.batchSize = std::clamp(newBatchSize, minBatchSize, lBatchSize);
 
     auto const getMetaFloat = [](llama_model const* model, enum llama_model_meta_key key)
     {
@@ -278,7 +276,7 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
         }
         return std::optional<float>{};
     };
-    auto* model = llama_model_load_from_file(modePath.c_str(), mparams);
+    auto* model = llama_model_load_from_file(params.model.path.c_str(), mparams);
     if(model != nullptr)
     {
         info.minP = getMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_MIN_P);
@@ -287,7 +285,7 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
     }
     else
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load model metadata for sampling defaults: " + info.model.getFullPathName());
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load model metadata for sampling defaults: " + info.modelFile.getFullPathName());
     }
     return info;
 }
@@ -324,39 +322,27 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     mChatInputs = common_chat_templates_inputs{};
     mMessageEndPositions.clear();
 
-    if(info.model == juce::File())
+    if(info.modelFile == juce::File())
     {
         MiscDebug("Application::Neuralyzer::Agent", "The model file is not set.");
         return juce::Result::fail(juce::translate("The model file is not set."));
     }
-    if(!info.model.existsAsFile())
+    if(!info.modelFile.existsAsFile())
     {
-        MiscDebug("Application::Neuralyzer::Agent", "The model file does not exist: " + info.model.getFullPathName());
-        return juce::Result::fail(juce::translate("The model file does not exist: FLNAME").replace("FLNAME", info.model.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "The model file does not exist: " + info.modelFile.getFullPathName());
+        return juce::Result::fail(juce::translate("The model file does not exist: FLNAME").replace("FLNAME", info.modelFile.getFullPathName()));
     }
 
     // Configure common_params for model and context initialization
     common_params params;
     params.use_jinja = true;
-    params.model.path = info.model.getFullPathName().toStdString();
-    params.chat_template = info.tplt.getFullPathName().toStdString();
-    if(info.contextSize.has_value())
-    {
-        params.n_ctx = info.contextSize.value();
-    }
-    if(info.batchSize.has_value())
-    {
-        params.n_batch = info.batchSize.value();
-    }
-    if(info.minP.has_value())
-    {
-        params.sampling.min_p = info.minP.value();
-    }
-    if(info.temperature.has_value())
-    {
-        params.sampling.temp = info.temperature.value();
-    }
-    params.fit_params_min_ctx = 256; // Enable fit params for all context sizes above 512 tokens
+    params.model.path = info.modelFile.getFullPathName().toStdString();
+    auto const templateFile = info.modelFile.withFileExtension(".jinja");
+    params.chat_template = templateFile.loadFileAsString().toStdString();
+    params.n_ctx = info.contextSize.value_or(params.n_ctx);
+    params.n_batch = info.batchSize.value_or(params.n_batch);
+    params.sampling.min_p = info.minP.value_or(params.sampling.min_p);
+    params.sampling.temp = info.temperature.value_or(params.sampling.temp);
     params.load_progress_callback_user_data = static_cast<void*>(this);
     params.load_progress_callback = [](float, void* data) -> bool
     {
@@ -367,8 +353,8 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     mInitResult = common_init_from_params(params);
     if(mInitResult == nullptr || mInitResult->model() == nullptr)
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load model from: " + info.model.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to load model from: FLNAME").replace("FLNAME", info.model.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load model from: " + info.modelFile.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to load model from: FLNAME").replace("FLNAME", info.modelFile.getFullPathName()));
     }
     if(mShouldQuit.load())
     {
@@ -391,8 +377,8 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     // Initialize chat templates with Jinja support
     if(!params.chat_template.empty() && !common_chat_verify_template(params.chat_template, true))
     {
-        MiscDebug("Application::Neuralyzer::Agent", "The chat template is not supported: " + info.tplt.getFullPathName());
-        return juce::Result::fail(juce::translate("The chat template is not supported: FLNAME").replace("FLNAME", info.tplt.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "The chat template is not supported: " + templateFile.getFullPathName());
+        return juce::Result::fail(juce::translate("The chat template is not supported: FLNAME").replace("FLNAME", templateFile.getFullPathName()));
     }
     try
     {
@@ -451,7 +437,7 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
         return juce::Result::fail(juce::translate("Model loading aborted by user."));
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", "Successfully initialized model: " + info.model.getFullPathName());
+    MiscDebug("Application::Neuralyzer::Agent", "Successfully initialized model: " + info.modelFile.getFullPathName());
     return juce::Result::ok();
 }
 

@@ -8,31 +8,23 @@ namespace Application
 {
     namespace Neuralyzer
     {
+        static auto constexpr minContextSize = 4096;
+        static auto constexpr maxContextSize = std::numeric_limits<int32_t>::max();
+        static auto constexpr maxContextSuggestedSize = 65536;
+        static auto constexpr minBatchSize = 256;
+        static auto constexpr maxBatchSize = 16384;
+
         struct ModelInfo
         {
-            juce::File model;
-            juce::File tplt;
+            juce::File modelFile;
             std::optional<int32_t> contextSize;
             std::optional<int32_t> batchSize;
             std::optional<float> minP;
             std::optional<float> temperature;
 
-            ModelInfo() = default;
+            ModelInfo(juce::File const& file = {});
 
-            inline bool operator==(ModelInfo const& rhs) const noexcept
-            {
-                static auto const equals = [](std::optional<float> const& lhsf, std::optional<float> const& rhsf)
-                {
-                    return lhsf.has_value() == rhsf.has_value() && (!lhsf.has_value() || std::abs(lhsf.value() - rhsf.value()) < std::numeric_limits<float>::epsilon());
-                };
-
-                return model == rhs.model &&
-                       tplt == rhs.tplt &&
-                       contextSize == rhs.contextSize &&
-                       batchSize == rhs.batchSize &&
-                       equals(minP, rhs.minP) &&
-                       equals(temperature, rhs.temperature);
-            }
+            bool operator==(ModelInfo const& rhs) const noexcept;
 
             inline bool operator!=(ModelInfo const& rhs) const noexcept
             {
@@ -41,7 +33,7 @@ namespace Application
 
             inline bool valid() const
             {
-                return model.existsAsFile();
+                return modelFile.existsAsFile();
             }
         };
 

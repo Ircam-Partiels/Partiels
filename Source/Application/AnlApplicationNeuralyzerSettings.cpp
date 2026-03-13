@@ -344,8 +344,18 @@ void Application::Neuralyzer::SettingsContent::DownloadProcess::timerCallback()
 Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
 : mAccessor(accessor)
 , mModel(juce::translate("Model"), juce::translate("The model used by the Neuralyzer"), "", {}, nullptr)
-, mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {}, nullptr)
-, mBatchSize(juce::translate("Batch Size"), juce::translate("The batch size"), "", {}, nullptr)
+, mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {static_cast<float>(minContextSize), static_cast<float>(maxContextSize)}, 1.0f, [&](float value)
+               {
+                   auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+                   modelInfo.contextSize = mContextSize.entry.isOptional() ? std::optional<int32_t>{} : std::make_optional(static_cast<int32_t>(value));
+                   mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+               })
+, mBatchSize(juce::translate("Batch Size"), juce::translate("The batch size"), "", {static_cast<float>(minBatchSize), static_cast<float>(maxBatchSize)}, 1.0f, [&](float value)
+             {
+                 auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+                 modelInfo.batchSize = mBatchSize.entry.isOptional() ? std::optional<int32_t>{} : std::make_optional(static_cast<int32_t>(value));
+                 mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+             })
 , mMinP(juce::translate("Min. Pobability"), juce::translate("Minimum probability for sampling"), "", {0.0f, 1.0f}, 0.01f, [&](float value)
         {
             auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
@@ -367,61 +377,10 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
 
-    static auto constexpr minSize = 256;
-    static auto constexpr maxSize = 65536;
-
     addAndMakeVisible(mContextSize);
-    mContextSize.entry.clear(juce::NotificationType::dontSendNotification);
-    mContextSize.entry.setEditableText(true);
-    mContextSize.entry.setTextWhenNothingSelected(juce::translate("Default"));
-    for(auto size = minSize; size <= maxSize; size *= 2)
-    {
-        mContextSize.entry.addItem(juce::String(size), size);
-    }
-    mContextSize.entry.getProperties().set("isNumber", true);
-    Misc::NumberField::Label::storeProperties(mContextSize.entry.getProperties(), {static_cast<float>(minSize), static_cast<float>(maxSize)}, 1.0f, 0, "");
-    mContextSize.entry.onChange = [&, this]()
-    {
-        auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-        auto const text = mContextSize.entry.getText().trim();
-        if(text.isEmpty())
-        {
-            modelInfo.contextSize.reset();
-        }
-        else
-        {
-            auto const size = static_cast<int32_t>(std::clamp(text.getIntValue(), minSize, maxSize));
-            modelInfo.contextSize = size;
-        }
-        mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
-    };
-
+    mContextSize.entry.setOptionalSupported(true, juce::translate("Default"));
     addAndMakeVisible(mBatchSize);
-    mBatchSize.entry.clear(juce::NotificationType::dontSendNotification);
-    mBatchSize.entry.setEditableText(true);
-    mBatchSize.entry.setTextWhenNothingSelected(juce::translate("Default"));
-    for(auto size = minSize; size <= maxSize; size *= 2)
-    {
-        mBatchSize.entry.addItem(juce::String(size), size);
-    }
-    mBatchSize.entry.getProperties().set("isNumber", true);
-    Misc::NumberField::Label::storeProperties(mBatchSize.entry.getProperties(), {static_cast<float>(minSize), static_cast<float>(maxSize)}, 1.0f, 0, "");
-    mBatchSize.entry.onChange = [&, this]()
-    {
-        auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-        auto const text = mBatchSize.entry.getText().trim();
-        if(text.isEmpty())
-        {
-            modelInfo.batchSize.reset();
-        }
-        else
-        {
-            auto const size = static_cast<int32_t>(std::clamp(text.getIntValue(), minSize, maxSize));
-            modelInfo.batchSize = size;
-        }
-        mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
-    };
-
+    mBatchSize.entry.setOptionalSupported(true, juce::translate("Default"));
     addAndMakeVisible(mMinP);
     mMinP.entry.setOptionalSupported(true, juce::translate("Default"));
     addAndMakeVisible(mTemperature);
@@ -436,15 +395,13 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     {
         juce::PopupMenu menu;
         auto installedModels = getInstalledModels();
-        auto const currentModel = mAccessor.getAttr<AttrType::modelInfo>().model;
+        auto const currentModel = mAccessor.getAttr<AttrType::modelInfo>().modelFile;
         // Add default models
         for(auto const& defaultModel : getDefaultModelsInfo())
         {
             if(defaultModel.contains("name") && defaultModel.at("name").is_string())
             {
                 auto const modelName = juce::String(defaultModel.at("name").get<std::string>()).toLowerCase();
-                auto const modelAdjective = defaultModel.value("adjective", juce::String());
-                auto const modelTitle = modelName + (modelAdjective.isEmpty() ? juce::String() : " (" + modelAdjective + ")");
                 auto const localModelIt = std::find_if(installedModels.begin(), installedModels.end(), [&](auto const& installedModel)
                                                        {
                                                            return installedModel.getFileNameWithoutExtension().toLowerCase() == modelName;
@@ -456,7 +413,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                                                                {
                                                                    return process->getModelFile().getFileNameWithoutExtension().toLowerCase() == modelName;
                                                                });
-                    menu.addItem(modelTitle + juce::String(downloadIndicator), isNotDownloading, false, [=, this]()
+                    menu.addItem(modelName + juce::String(downloadIndicator), isNotDownloading, false, [=, this]()
                                  {
                                      auto process = std::make_unique<DownloadProcess>(*this, defaultModel);
                                      if(process->isRunning())
@@ -470,12 +427,9 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 else
                 {
                     auto const model = *localModelIt;
-                    menu.addItem(modelTitle, true, model == currentModel, [=, this]()
+                    menu.addItem(modelName, true, model == currentModel, [=, this]()
                                  {
-                                     auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                                     modelInfo.model = model;
-                                     modelInfo.tplt = model.withFileExtension(".jinja").existsAsFile() ? model.withFileExtension(".jinja") : juce::File{};
-                                     mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+                                     mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
                                  });
                     installedModels.erase(localModelIt);
                 }
@@ -490,10 +444,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
         {
             menu.addItem(model.getFileNameWithoutExtension().toLowerCase(), true, model == currentModel, [=, this]()
                          {
-                             auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                             modelInfo.model = model;
-                             modelInfo.tplt = model.withFileExtension(".jinja").existsAsFile() ? model.withFileExtension(".jinja") : juce::File{};
-                             mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
                          });
         }
 
@@ -507,87 +458,71 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
 
     mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attr)
     {
-        if(attr != AttrType::modelInfo)
+        switch(attr)
         {
-            return;
-        }
-
-        auto const modelInfo = acsr.getAttr<AttrType::modelInfo>();
-        auto const modelFile = modelInfo.model;
-        auto const installedModels = getInstalledModels();
-        auto const it = std::find(installedModels.cbegin(), installedModels.cend(), modelFile);
-        if(it != installedModels.cend() && it->existsAsFile())
-        {
-            mModel.entry.setText(it->getFileNameWithoutExtension().toLowerCase(), juce::NotificationType::dontSendNotification);
-        }
-        else if(modelFile == juce::File{})
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
-        else if(!modelFile.existsAsFile())
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
-
-        if(modelInfo.contextSize.has_value())
-        {
-            auto const contextSize = modelInfo.contextSize.value();
-            if(juce::isPowerOfTwo(contextSize) && contextSize >= static_cast<int>(minSize) && contextSize <= maxSize)
+            case AttrType::modelInfo:
             {
-                mContextSize.entry.setSelectedId(static_cast<int>(contextSize), juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                mContextSize.entry.setText(juce::String(contextSize), juce::NotificationType::dontSendNotification);
-            }
-        }
-        else
-        {
-            mContextSize.entry.setText({}, juce::NotificationType::dontSendNotification);
-            mContextSize.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
+                auto const modelInfo = acsr.getAttr<AttrType::modelInfo>();
+                auto const modelFile = modelInfo.modelFile;
+                auto const installedModels = getInstalledModels();
+                auto const it = std::find(installedModels.cbegin(), installedModels.cend(), modelFile);
+                if(it != installedModels.cend() && it->existsAsFile())
+                {
+                    mModel.entry.setText(it->getFileNameWithoutExtension().toLowerCase(), juce::NotificationType::dontSendNotification);
+                }
+                else if(modelFile == juce::File{})
+                {
+                    mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+                    mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+                }
+                else if(!modelFile.existsAsFile())
+                {
+                    mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
+                    mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+                    mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+                }
 
-        if(modelInfo.batchSize.has_value())
-        {
-            auto const batchSize = modelInfo.batchSize.value();
-            if(juce::isPowerOfTwo(batchSize) && batchSize >= static_cast<int>(minSize) && batchSize <= maxSize)
-            {
-                mBatchSize.entry.setSelectedId(static_cast<int>(batchSize), juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                mBatchSize.entry.setText(juce::String(batchSize), juce::NotificationType::dontSendNotification);
-            }
-        }
-        else
-        {
-            mBatchSize.entry.setText({}, juce::NotificationType::dontSendNotification);
-            mBatchSize.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
+                if(modelInfo.contextSize.has_value())
+                {
+                    mContextSize.entry.setValue(static_cast<double>(modelInfo.contextSize.value()), juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mContextSize.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
+                }
 
-        if(modelInfo.minP.has_value())
-        {
-            mMinP.entry.setValue(static_cast<double>(modelInfo.minP.value()), juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            mMinP.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
-        }
+                if(modelInfo.batchSize.has_value())
+                {
+                    mBatchSize.entry.setValue(static_cast<double>(modelInfo.batchSize.value()), juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mBatchSize.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
+                }
 
-        if(modelInfo.temperature.has_value())
-        {
-            mTemperature.entry.setValue(static_cast<double>(modelInfo.temperature.value()), juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            mTemperature.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
+                if(modelInfo.minP.has_value())
+                {
+                    mMinP.entry.setValue(static_cast<double>(modelInfo.minP.value()), juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mMinP.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
+                }
+
+                if(modelInfo.temperature.has_value())
+                {
+                    mTemperature.entry.setValue(static_cast<double>(modelInfo.temperature.value()), juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mTemperature.entry.setText(juce::translate("Default"), juce::NotificationType::dontSendNotification);
+                }
+                break;
+            }
         }
     };
 
