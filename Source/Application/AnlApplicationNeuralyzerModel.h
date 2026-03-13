@@ -90,4 +90,14 @@ namespace Application
     } // namespace Neuralyzer
 } // namespace Application
 
+namespace XmlParser
+{
+    template <>
+    void toXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Application::Neuralyzer::ModelInfo const& value);
+
+    template <>
+    auto fromXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Application::Neuralyzer::ModelInfo const& defaultValue)
+        -> Application::Neuralyzer::ModelInfo;
+} // namespace XmlParser
+
 ANALYSE_FILE_END
