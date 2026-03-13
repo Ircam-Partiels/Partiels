@@ -51,7 +51,7 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
         catch(std::exception const& e)
         {
             MiscDebug("Application::Neuralyzer::Agent", e.what());
-            return createResults(juce::Result::fail(juce::String("Error parsing tool calls: ") + e.what() + ". Ensure the tool calls are properly formatted according to the expected structure, the letter case is respected, the JSON and/or XML formats are well-formatted."));
+            return createResults(juce::Result::fail(juce::String("Error parsing tool calls: ") + e.what() + ". Ensure the tool calls are properly formatted according to the expected structure, the letter case is respected (lower case for JSON boolean), the JSON and/or XML formats are well-formatted."));
         }
         catch(...)
         {
