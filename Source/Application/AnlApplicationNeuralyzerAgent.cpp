@@ -263,7 +263,7 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
     info.contextSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_ctx, maxInt32)));
     info.batchSize = static_cast<int32_t>(std::max(minContext, std::min(cparams.n_batch, maxInt32)));
 
-    auto const assignMetaFloat = [](llama_model const* model, enum llama_model_meta_key key, float& value)
+    auto const getMetaFloat = [](llama_model const* model, enum llama_model_meta_key key)
     {
         char buffer[128] = {0};
         if(llama_model_meta_val_str(model, llama_model_meta_key_str(key), buffer, sizeof(buffer)) > 0)
@@ -272,15 +272,16 @@ Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getDefaultMod
             auto const parsed = std::strtof(buffer, &end);
             if(end != nullptr && end != buffer)
             {
-                value = parsed;
+                return std::make_optional(parsed);
             }
         }
+        return std::optional<float>{};
     };
     auto* model = llama_model_load_from_file(modePath.c_str(), mparams);
     if(model != nullptr)
     {
-        assignMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_MIN_P, info.minP);
-        assignMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_TEMP, info.temperature);
+        info.minP = getMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_MIN_P);
+        info.temperature = getMetaFloat(model, LLAMA_MODEL_META_KEY_SAMPLING_TEMP);
         llama_model_free(model);
     }
     else
@@ -338,9 +339,22 @@ juce::Result Application::Neuralyzer::Agent::initialize(ModelInfo info)
     params.use_jinja = true;
     params.model.path = info.model.getFullPathName().toStdString();
     params.chat_template = info.tplt.getFullPathName().toStdString();
-    //    auto const modelMaxCtx = 65536; // Cap to 65k to prevent overflow issues in some backends
-    //    params.n_ctx = std::min(std::max(info.contextSize, 256), modelMaxCtx);
-    //    params.n_batch = std::max(info.batchSize, 256);
+    if(info.contextSize.has_value())
+    {
+        params.n_ctx = info.contextSize.value();
+    }
+    if(info.batchSize.has_value())
+    {
+        params.n_batch = info.batchSize.value();
+    }
+    if(info.minP.has_value())
+    {
+        params.sampling.min_p = info.minP.value();
+    }
+    if(info.temperature.has_value())
+    {
+        params.sampling.temp = info.temperature.value();
+    }
     params.fit_params_min_ctx = 256; // Enable fit params for all context sizes above 512 tokens
     params.load_progress_callback_user_data = static_cast<void*>(this);
     params.load_progress_callback = [](float, void* data) -> bool
