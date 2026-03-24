@@ -306,6 +306,8 @@ void Application::Instance::shutdown()
     anlDebug("Application", "Begin...");
     if(mCommandLine != nullptr)
     {
+        juce::Logger::setCurrentLogger(nullptr);
+        mLogger.reset();
         mCommandLine.reset();
         return;
     }
