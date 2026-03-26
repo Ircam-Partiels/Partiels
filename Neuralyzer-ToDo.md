@@ -16,6 +16,8 @@
 - [] Improve batch manahement
 - [x] Use Qwen3.3 instead of 2.5
 - [] Add show track in group
+- [] Add methods for the zooms
+- [] Add methods for the extra values
 - [] Check the available memory size of the system
 
 ### Sequence 1
