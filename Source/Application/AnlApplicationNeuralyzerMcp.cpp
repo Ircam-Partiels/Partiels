@@ -1016,6 +1016,46 @@ namespace Application::Neuralyzer::Mcp
             response["content"].push_back(content);
             return response;
         }
+        if(toolName == "get_track_is_visible_in_group")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("identifiers") || !arguments.at("identifiers").is_array())
+            {
+                return createError("The 'identifiers' argument is required and must be an array of strings.");
+            }
+            auto const& identifiers = arguments.at("identifiers");
+            nlohmann::json visibilityByTrack;
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            for(auto const& identifierJson : identifiers)
+            {
+                if(!identifierJson.is_string())
+                {
+                    return createError("The 'identifiers' argument is required and must be an array of strings.");
+                }
+                auto const identifier = identifierJson.get<std::string>();
+                if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+                    visibilityByTrack[identifier] = trackAcsr.getAttr<Track::AttrType::showInGroup>();
+                }
+                else
+                {
+                    response["isError"] = true;
+                    visibilityByTrack[identifier] = juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier);
+                }
+            }
+            nlohmann::json payload;
+            payload["visibleInGroup"] = visibilityByTrack;
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
         if(toolName == "get_track_compatible_inputs")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
@@ -1558,6 +1598,67 @@ namespace Application::Neuralyzer::Mcp
             if(!response.at("isError").get<bool>())
             {
                 documentDir.endAction(ActionState::newTransaction, juce::translate("Set track input (Neuralyzer)"));
+            }
+            else
+            {
+                documentDir.endAction(ActionState::abort);
+            }
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = results.joinIntoString("\n");
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "set_track_is_visible_in_group")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("tracks") || !arguments.at("tracks").is_array())
+            {
+                return createError("The 'tracks' argument is required and must be an array of objects.");
+            }
+            auto const& tracks = arguments.at("tracks");
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            juce::StringArray results;
+            for(auto const& trackJson : tracks)
+            {
+                if(!trackJson.is_object())
+                {
+                    return createError("The 'tracks' argument is required and must be an array of objects.");
+                }
+                if(!trackJson.contains("identifier") || !trackJson.at("identifier").is_string())
+                {
+                    return createError("The 'identifier' field is required and must be a string.");
+                }
+                if(!trackJson.contains("visibleInGroup") || !trackJson.at("visibleInGroup").is_boolean())
+                {
+                    return createError("The 'visibleInGroup' field is required and must be a boolean.");
+                }
+
+                auto const identifier = juce::String(trackJson.at("identifier").get<std::string>());
+                auto const visibleInGroup = trackJson.at("visibleInGroup").get<bool>();
+
+                if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+                {
+                    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, identifier);
+                    trackAcsr.setAttr<Track::AttrType::showInGroup>(visibleInGroup, NotificationType::synchronous);
+                    results.add(juce::String("The track \"TRACKID\" visibility in group has been set to \"STATE\".").replace("TRACKID", identifier).replace("STATE", visibleInGroup ? "true" : "false"));
+                }
+                else
+                {
+                    response["isError"] = true;
+                    results.add(juce::String("The track \"TRACKID\" doesn't exist.").replace("TRACKID", identifier));
+                    break;
+                }
+            }
+            if(!response.at("isError").get<bool>())
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Set track visibility in group (Neuralyzer)"));
             }
             else
             {
