@@ -2,9 +2,9 @@
 
 ## Beta 2
 - [] Clear the cache of loop prompts
-- [] Reset must simply clear all the cache
+- [x] Reset must simply clear all the cache
 - [] Save/restore the history
-- [] Control temperature and other inference parameters
+- [x] Control temperature and other inference parameters
 - [] Add access to the manual, tutorials, etc. via MCP
 - [] Add acces to internet website via MCP 
 - [] Add access to internet Vamp plugins
@@ -14,9 +14,9 @@
 - [x] Add support for groups via MCP
 - [x] Provide information about the audio file via MCP
 - [] Improve batch manahement
-- [] Add instruction to Jinja ?
-- [] Use Qwen3 instead of 2.5
+- [x] Use Qwen3.3 instead of 2.5
 - [] Add show track in group
+- [] Check the available memory size of the system
 
 ### Sequence 1
 
