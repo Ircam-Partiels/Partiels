@@ -246,6 +246,85 @@
       }
     },
     {
+      "name": "get_document_time_zoom",
+      "description": "Get the current time zoom state with both visible and global ranges",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "description": "Currently visible time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            }
+          },
+          "globalRange": {
+            "type": "object",
+            "description": "Full global time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "set_document_time_zoom",
+      "description": "Set the currently visible time range (zoom viewport)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number",
+            "description": "Visible range start in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "Visible range end in seconds"
+          }
+        },
+        "required": ["start", "end"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleRange": {
+            "type": "object",
+            "description": "New visible time range",
+            "properties": {
+              "start": {
+                "type": "number",
+                "description": "Range start in seconds"
+              },
+              "end": {
+                "type": "number",
+                "description": "Range end in seconds"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "name": "get_group_names",
       "description": "Query the names of one or more groups",
       "inputSchema": {
