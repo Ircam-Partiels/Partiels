@@ -377,6 +377,68 @@ namespace Application::Neuralyzer::Mcp
             return response;
         }
 
+        // Document Time Zoom Section
+        if(toolName == "get_document_time_zoom")
+        {
+            auto& documentAccessor = Instance::get().getDocumentAccessor();
+            auto const& timeZoomAcsr = documentAccessor.getAcsr<Document::AcsrType::timeZoom>();
+
+            auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+
+            nlohmann::json payload;
+            payload["visibleRange"]["start"] = visibleRange.getStart();
+            payload["visibleRange"]["end"] = visibleRange.getEnd();
+            payload["globalRange"]["start"] = globalRange.getStart();
+            payload["globalRange"]["end"] = globalRange.getEnd();
+
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "set_document_time_zoom")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("start") || !arguments.at("start").is_number())
+            {
+                return createError("The 'start' field is required and must be a number.");
+            }
+            if(!arguments.contains("end") || !arguments.at("end").is_number())
+            {
+                return createError("The 'end' field is required and must be a number.");
+            }
+
+            auto const start = arguments.at("start").get<double>();
+            auto const end = arguments.at("end").get<double>();
+
+            if(start >= end)
+            {
+                return createError("The 'start' value must be less than the 'end' value.");
+            }
+
+            auto& documentAccessor = Instance::get().getDocumentAccessor();
+            auto& timeZoomAcsr = documentAccessor.getAcsr<Document::AcsrType::timeZoom>();
+
+            timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>(start, end), NotificationType::synchronous);
+
+            auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            nlohmann::json payload;
+            payload["visibleRange"]["start"] = visibleRange.getStart();
+            payload["visibleRange"]["end"] = visibleRange.getEnd();
+
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = payload.dump();
+            response["content"].push_back(content);
+            return response;
+        }
+
         // Group Getter Section
         if(toolName == "get_group_names")
         {
