@@ -567,6 +567,34 @@
       }
     },
     {
+      "name": "get_track_is_visible_in_group",
+      "description": "Query the visibility of one or more tracks in their group",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unique identifiers of the tracks"
+          }
+        },
+        "required": [
+          "identifiers"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "visibleInGroup": {
+            "type": "object",
+            "description": "Map of track identifiers to their visibleInGroup boolean state"
+          }
+        }
+      }
+    },
+    {
       "name": "get_track_compatible_inputs",
       "description": "Query the compatible input tracks for one or more tracks",
       "inputSchema": {
@@ -771,6 +799,39 @@
               ]
             },
             "description": "Array of track identifier and input track identifier pairs"
+          }
+        },
+        "required": [
+          "tracks"
+        ]
+      }
+    },
+    {
+      "name": "set_track_is_visible_in_group",
+      "description": "Set the visibility of one or more tracks in their group",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The unique identifier of the track"
+                },
+                "visibleInGroup": {
+                  "type": "boolean",
+                  "description": "Whether this track is visible in its group"
+                }
+              },
+              "required": [
+                "identifier",
+                "visibleInGroup"
+              ]
+            },
+            "description": "Array of track identifier and visibleInGroup state pairs"
           }
         },
         "required": [
