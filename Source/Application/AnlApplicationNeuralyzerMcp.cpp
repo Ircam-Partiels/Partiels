@@ -1270,7 +1270,7 @@ namespace Application::Neuralyzer::Mcp
                         }
                     }
 
-                    auto const parseColour = [&](const char* fieldName, auto& refValue, bool isCompatible)
+                    auto const applyColour = [&](const char* fieldName, auto& refValue, bool isCompatible)
                     {
                         auto const colourStr = trackJson.at(fieldName).get<std::string>();
                         auto const colour = stringToColour(colourStr);
@@ -1297,7 +1297,7 @@ namespace Application::Neuralyzer::Mcp
                         {
                             return createError("The 'colorBackground' field must be a string.");
                         }
-                        if(!parseColour("colorBackground", settings.colours.background, isLabel || isValue))
+                        if(!applyColour("colorBackground", settings.colours.background, isLabel || isValue))
                         {
                             break;
                         }
@@ -1308,7 +1308,7 @@ namespace Application::Neuralyzer::Mcp
                         {
                             return createError("The 'colorForeground' field must be a string.");
                         }
-                        if(!parseColour("colorForeground", settings.colours.foreground, isLabel || isValue))
+                        if(!applyColour("colorForeground", settings.colours.foreground, isLabel || isValue))
                         {
                             break;
                         }
@@ -1319,7 +1319,7 @@ namespace Application::Neuralyzer::Mcp
                         {
                             return createError("The 'colorDuration' field must be a string.");
                         }
-                        if(!parseColour("colorDuration", settings.colours.duration, isLabel))
+                        if(!applyColour("colorDuration", settings.colours.duration, isLabel))
                         {
                             break;
                         }
@@ -1330,7 +1330,7 @@ namespace Application::Neuralyzer::Mcp
                         {
                             return createError("The 'colorText' field must be a string.");
                         }
-                        if(!parseColour("colorText", settings.colours.text, isLabel))
+                        if(!applyColour("colorText", settings.colours.text, isLabel))
                         {
                             break;
                         }
@@ -1341,7 +1341,7 @@ namespace Application::Neuralyzer::Mcp
                         {
                             return createError("The 'colorShadow' field must be a string.");
                         }
-                        if(!parseColour("colorShadow", settings.colours.text, isLabel))
+                        if(!applyColour("colorShadow", settings.colours.shadow, isLabel))
                         {
                             break;
                         }
