@@ -168,7 +168,7 @@ static std::tuple<juce::Result, common_chat_msg> getAssistantResponse(struct com
     {
         if(shouldQuit.load())
         {
-            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), msg);
+            return std::make_tuple(juce::Result::fail(juce::translate("Operation aborted.")), std::move(msg));
         }
 
         // Sample the next token using common_sampler
@@ -193,11 +193,11 @@ static std::tuple<juce::Result, common_chat_msg> getAssistantResponse(struct com
         MiscWeakAssert(ret == 0);
         if(ret != 0)
         {
-            return std::make_tuple(juce::Result::fail(juce::translate("Failed to decode.")), msg);
+            return std::make_tuple(juce::Result::fail(juce::translate("Failed to decode.")), std::move(msg));
         }
     }
 
-    return std::make_tuple(juce::Result::ok(), msg);
+    return std::make_tuple(juce::Result::ok(), std::move(msg));
 }
 
 void Application::Neuralyzer::Agent::initialize()
@@ -554,7 +554,6 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
         }
         else
         {
-            numPerformErrors = 0;
             finalResponse = std::get<1>(result);
             auto const toolCallsResult = parseToolCalls(mNeuralyzerMcpDispatcher, std::get<2>(result), finalResponse);
             if(toolCallsResult.first == 0) // No tools called, final answer provided
@@ -566,11 +565,17 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
             if(toolCallsResult.first == 1) // Tools call are ok, use the response for a new query
             {
                 numToolCallsErrors = 0;
+                numPerformErrors = 0;
             }
             else
             {
                 ++numToolCallsErrors;
-                if(numToolCallsErrors == maxToolCallsErrors - 1) // Soon too many errors
+                ++numPerformErrors;
+                if(numPerformErrors == maxPerformErrors)
+                {
+                    return std::make_tuple(std::get<0>(result), std::get<1>(result));
+                }
+                else if(numToolCallsErrors == maxToolCallsErrors - 1) // Soon too many errors
                 {
                     currentQuery += "\nWarning: The previous tool calls had errors. Please be careful with further tool calls. Call one tool at a time and split complex tasks into smaller steps.";
                 }
