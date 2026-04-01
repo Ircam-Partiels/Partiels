@@ -6,9 +6,9 @@ ANALYSE_FILE_BEGIN
 
 static void logCallback(enum ggml_log_level level, [[maybe_unused]] const char* text, void*)
 {
-    if(level >= GGML_LOG_LEVEL_ERROR)
+    if(level >= GGML_LOG_LEVEL_WARN)
     {
-        MiscDebug("Application::Neuralyzer::Agent", text);
+        MiscDebug("Application::Neuralyzer::Agent", juce::CharPointer_UTF8(text));
     }
 }
 
@@ -21,34 +21,26 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
             return std::make_tuple(std::move(result), std::move(tc));
         };
 
-        if(assistantResponse.empty())
+        auto parsed = assistantResponse;
+        //parsed.erase(std::remove(parsed.begin(), parsed.end(), '\n'), parsed.end());
+        parsed = std::regex_replace(parsed, std::regex(R"(>\s*true\s*<)", std::regex::icase), ">true<");
+        parsed = std::regex_replace(parsed, std::regex(R"(>\s*false\s*<)", std::regex::icase), ">false<");
+        if(parsed.empty())
         {
             return createResults(juce::Result::ok());
         }
+
+        // Create parser config from stored chat params
+        common_chat_parser_params parserParams(chatParams);
+        if(!chatParams.parser.empty())
+        {
+            parserParams.parser.load(chatParams.parser);
+        }
+
         try
         {
             // Use the appropriate parser based on format type
-            auto tc = [&]()
-            {
-                // Create parser config from stored chat params
-                common_chat_parser_params parserParams(chatParams);
-                if(!chatParams.parser.empty())
-                {
-                    parserParams.parser.load(chatParams.parser);
-                }
-                // Use generic parser for all other formats
-                // Find the sequence ">True<", ">False<", ">\nTrue\n<", etc. in the response to determine if the tool call was successful or not, and parse the tool calls accordingly
-                auto parsed = assistantResponse;
-                {
-                    std::regex pattern(R"(>\s*true\s*<)", std::regex::icase);
-                    parsed = std::regex_replace(assistantResponse, pattern, ">\ntrue\n<");
-                }
-                {
-                    std::regex pattern(R"(>\s*false\s*<)", std::regex::icase);
-                    parsed = std::regex_replace(parsed, pattern, ">\nfalse\n<");
-                }
-                return common_chat_parse(parsed, false, parserParams).tool_calls;
-            }();
+            auto tc = common_chat_parse(parsed, false, parserParams).tool_calls;
 
             // Tool calls are now in parsed.tool_calls
             if(tc.empty())
