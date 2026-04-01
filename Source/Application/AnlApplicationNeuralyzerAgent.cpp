@@ -1,6 +1,7 @@
 #include "AnlApplicationNeuralyzerAgent.h"
-
 #include <regex>
+#include <../src/llama-model.h>
+#include <../src/llama-context.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -21,11 +22,7 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
             return std::make_tuple(std::move(result), std::move(tc));
         };
 
-        auto parsed = assistantResponse;
-        //parsed.erase(std::remove(parsed.begin(), parsed.end(), '\n'), parsed.end());
-        parsed = std::regex_replace(parsed, std::regex(R"(>\s*true\s*<)", std::regex::icase), ">true<");
-        parsed = std::regex_replace(parsed, std::regex(R"(>\s*false\s*<)", std::regex::icase), ">false<");
-        if(parsed.empty())
+        if(assistantResponse.empty())
         {
             return createResults(juce::Result::ok());
         }
@@ -40,7 +37,7 @@ static std::pair<int, std::string> parseToolCalls(Application::Neuralyzer::Mcp::
         try
         {
             // Use the appropriate parser based on format type
-            auto tc = common_chat_parse(parsed, false, parserParams).tool_calls;
+            auto tc = common_chat_parse(assistantResponse, false, parserParams).tool_calls;
 
             // Tool calls are now in parsed.tool_calls
             if(tc.empty())
@@ -404,7 +401,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     chatInputs.enable_thinking = mChatInputs.enable_thinking;
     chatInputs.add_bos = mChatInputs.add_bos;
     chatInputs.add_eos = mChatInputs.add_eos;
-    if(mChatInputs.messages.empty())
+    //if(mChatInputs.messages.empty())
     {
         chatInputs.tools = mChatInputs.tools;
     }
@@ -547,7 +544,17 @@ std::tuple<juce::Result, std::string> Application::Neuralyzer::Agent::sendUserQu
         else
         {
             finalResponse = std::get<1>(result);
-            auto const toolCallsResult = parseToolCalls(mNeuralyzerMcpDispatcher, std::get<2>(result), finalResponse);
+            auto const toolCallsResult = [&]()
+            {
+                if(mInitResult->model()->arch == LLM_ARCH_QWEN35)
+                {
+                    auto parsed = finalResponse;
+                    parsed = std::regex_replace(parsed, std::regex(R"(>\s*true\s*<)", std::regex::icase), ">\ntrue\n<");
+                    parsed = std::regex_replace(parsed, std::regex(R"(>\s*false\s*<)", std::regex::icase), ">\nfalse\n<");
+                    return parseToolCalls(mNeuralyzerMcpDispatcher, std::get<2>(result), parsed);
+                }
+                return parseToolCalls(mNeuralyzerMcpDispatcher, std::get<2>(result), finalResponse);
+            }();
             if(toolCallsResult.first == 0) // No tools called, final answer provided
             {
                 return std::make_tuple(juce::Result::ok(), std::get<1>(toolCallsResult));
