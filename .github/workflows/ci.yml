@@ -57,6 +57,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         submodules: recursive
+    - uses: mozilla-actions/sccache-action@v0.0.9
     - uses: seanmiddleditch/gha-setup-ninja@master
     - run: sudo apt install imagemagick
     - name: Prepare
@@ -90,6 +91,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         submodules: recursive
+    - uses: mozilla-actions/sccache-action@v0.0.9
     - run: choco install imagemagick -fy -d
     - run: choco install innosetup -fy -d
     - name: Configure
@@ -122,6 +124,7 @@ jobs:
       uses: actions/checkout@v6
       with:
         submodules: recursive
+    - uses: mozilla-actions/sccache-action@v0.0.9
     - uses: actions/setup-node@v6
       with:
         node-version: 20
