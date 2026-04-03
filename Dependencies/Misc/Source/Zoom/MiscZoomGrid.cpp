@@ -3,13 +3,13 @@
 MISC_FILE_BEGIN
 
 Zoom::Grid::PropertyPanel::PropertyPanel()
-: mPropertyTickReference("Tick Reference Value", "The reference value used as the ruler origin", "", {std::numeric_limits<float>::min(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+: mPropertyTickReference("Tick Reference Value", "The reference value used as the ruler origin", "", {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
                                  onChangeBegin(mAccessor);
                              }
-                             mAccessor.setAttr<AttrType::tickReference>(static_cast<double>(value), NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::tickReference>(value, NotificationType::synchronous);
                              if(onChangeEnd != nullptr)
                              {
                                  onChangeEnd(mAccessor);
@@ -35,7 +35,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                             onChangeEnd(mAccessor);
                         }
                     })
-, mPropertyMainTickInterval("Main Tick Interval", "The interval between two main ticks", "", {0.0f, 100000.0f}, 1.0f, [&](float value)
+, mPropertyMainTickInterval("Main Tick Interval", "The interval between two main ticks", "", {0.0, 100000.0}, 1.0, [&](double value)
                             {
                                 if(onChangeBegin != nullptr)
                                 {
@@ -47,25 +47,25 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                     onChangeEnd(mAccessor);
                                 }
                             })
-, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {1.0, 20.0f}, 0.0f, [&](float value)
+, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {1.0, 20.0}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
                                  onChangeBegin(mAccessor);
                              }
-                             mAccessor.setAttr<AttrType::tickPowerBase>(static_cast<double>(value), NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::tickPowerBase>(value, NotificationType::synchronous);
                              if(onChangeEnd != nullptr)
                              {
                                  onChangeEnd(mAccessor);
                              }
                          })
-, mPropertyTickDivisionFactor("Division Factor", "The division factor of the ruler", "", {1.0, 20.0f}, 0.0f, [&](float value)
+, mPropertyTickDivisionFactor("Division Factor", "The division factor of the ruler", "", {1.0, 20.0}, 0.0, [&](double value)
                               {
                                   if(onChangeBegin != nullptr)
                                   {
                                       onChangeBegin(mAccessor);
                                   }
-                                  mAccessor.setAttr<AttrType::tickDivisionFactor>(static_cast<double>(value), NotificationType::synchronous);
+                                  mAccessor.setAttr<AttrType::tickDivisionFactor>(value, NotificationType::synchronous);
                                   if(onChangeEnd != nullptr)
                                   {
                                       onChangeEnd(mAccessor);

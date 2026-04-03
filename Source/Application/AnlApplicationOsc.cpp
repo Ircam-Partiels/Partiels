@@ -249,7 +249,7 @@ Application::Osc::SettingsContent::SettingsContent(Sender& sender)
                 {
                     mAccessor.setAttr<AttrType::name>(name, NotificationType::synchronous);
                 })
-, mPropertyPort(juce::translate("Port"), juce::translate("The port of the remote host to which messages will be send."), "", {0.0f, static_cast<float>(std::numeric_limits<int>::max())}, 1.0f, [this](auto const& port)
+, mPropertyPort(juce::translate("Port"), juce::translate("The port of the remote host to which messages will be send."), "", {0.0, static_cast<double>(std::numeric_limits<int>::max())}, 1.0, [this](auto const& port)
                 {
                     mAccessor.setAttr<AttrType::port>(static_cast<int>(port), NotificationType::synchronous);
                 })

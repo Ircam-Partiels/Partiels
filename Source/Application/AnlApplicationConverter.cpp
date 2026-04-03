@@ -66,14 +66,14 @@ Application::ConverterContent::ConverterContent()
                           mPropertyToJsonMinValue.entry.setTextValueSuffix(text);
                           mPropertyToJsonMaxValue.entry.setTextValueSuffix(text);
                       })
-, mPropertyToJsonMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+, mPropertyToJsonMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
-                              auto const max = std::max(static_cast<float>(mPropertyToJsonMaxValue.entry.getValue()), value);
+                              auto const max = std::max(mPropertyToJsonMaxValue.entry.getValue(), value);
                               mPropertyToJsonMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+, mPropertyToJsonMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
-                              auto const min = std::min(static_cast<float>(mPropertyToJsonMinValue.entry.getValue()), value);
+                              auto const min = std::min(mPropertyToJsonMinValue.entry.getValue(), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
 , mPropertyToJsonLoadInDocument("Load In Current Document", "Load the JSON file directly in the current document", [](bool state)

@@ -596,14 +596,14 @@ std::unique_ptr<juce::Component> Track::Tools::createValueRangeEditor(Accessor& 
         RangeEditor(Zoom::Accessor& accessor, juce::String const name, juce::String const unit)
         : mAccessor(accessor)
         , mName("Name", name)
-        , mPropertyStart("Low Value", "The low value of the visible range", unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+        , mPropertyStart("Low Value", "The low value of the visible range", unit, {0.0, 1.0}, 0.0, [&](double value)
                          {
-                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(static_cast<double>(value));
+                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(value);
                              mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                          })
-        , mPropertyEnd("High Value", "The high value of the visible range", unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+        , mPropertyEnd("High Value", "The high value of the visible range", unit, {0.0, 1.0}, 0.0, [&](double value)
                        {
-                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(static_cast<double>(value));
+                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(value);
                            mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                        })
         {
@@ -675,14 +675,14 @@ std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& ac
         : mAccessor(accessor)
         , mName("Name", name)
         , mNames(names)
-        , mPropertyStart("Low Bin", "The low bin of the visible range", "", {0.0f, 1.0f}, 0.01f, [&](float value)
+        , mPropertyStart("Low Bin", "The low bin of the visible range", "", {0.0, 1.0}, 0.01, [&](double value)
                          {
-                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(static_cast<double>(value));
+                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(value);
                              mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                          })
-        , mPropertyEnd("High Bin", "The high bin of the visible range", "", {0.0f, 1.0f}, 0.01f, [&](float value)
+        , mPropertyEnd("High Bin", "The high bin of the visible range", "", {0.0, 1.0}, 0.01, [&](double value)
                        {
-                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(static_cast<double>(value));
+                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(value);
                            mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                        })
         {

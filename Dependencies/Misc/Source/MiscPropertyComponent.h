@@ -90,7 +90,7 @@ class PropertyNumber
 : public PropertyComponent<NumberField>
 {
 public:
-    PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
+    PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<double> const& range, double interval, std::function<void(double)> fn);
     ~PropertyNumber() override = default;
 };
 

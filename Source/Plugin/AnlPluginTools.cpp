@@ -44,13 +44,13 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
     }
 
     auto const description = juce::String(parameter.description) + " " + rangeToString(parameter.minValue, parameter.maxValue, parameter.isQuantized, parameter.quantizeStep);
-    return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
+    return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<double>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? static_cast<double>(parameter.quantizeStep) : 0.0, [=](double value)
                                             {
                                                 if(applyChange == nullptr)
                                                 {
                                                     return;
                                                 }
-                                                applyChange(parameter, value);
+                                                applyChange(parameter, static_cast<float>(value));
                                             });
 }
 

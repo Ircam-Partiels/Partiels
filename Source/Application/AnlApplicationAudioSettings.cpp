@@ -78,7 +78,7 @@ Application::AudioSettingsContent::AudioSettingsContent()
                               Properties::askToRestoreDefaultAudioSettings(error);
                           }
                       })
-, mPropertyBufferSizeNumber(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
+, mPropertyBufferSizeNumber(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {8.0, 8192.0}, 1.0, [&](double value)
                             {
                                 auto const bufferSize = static_cast<int>(std::round(value));
                                 auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
