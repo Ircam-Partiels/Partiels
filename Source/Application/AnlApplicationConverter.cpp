@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::ConverterContent::ConverterContent()
-: mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
+: mPropertyOpen(juce::translate("Open"), juce::translate("Select a SDIF or a JSON file to convert"), [&]()
                 {
                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
                     if(mFileChooser == nullptr)
@@ -23,30 +23,30 @@ Application::ConverterContent::ConverterContent()
                                                   setFile(results.getFirst());
                                               });
                 })
-, mPropertyName("File", "The SDIF/JSON file to convert", nullptr)
+, mPropertyName(juce::translate("File"), juce::translate("The SDIF/JSON file to convert"), nullptr)
 
-, mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String const& text)
+, mPropertyToSdifFrame(juce::translate("Frame"), juce::translate("Define the frame signature to encode the results in the SDIF file"), [this](juce::String const& text)
                        {
                            juce::ignoreUnused(text);
                            sdifAttributeUpdated();
                        })
-, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String const& text)
+, mPropertyToSdifMatrix(juce::translate("Matrix"), juce::translate("Define the matrix signature to encode the results in the SDIF file"), [this](juce::String const& text)
                         {
                             juce::ignoreUnused(text);
                             sdifAttributeUpdated();
                         })
-, mPropertyToSdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", nullptr)
-, mPropertyToSdifExport("Convert to SDIF", "Convert the JSON file to a SDIF file", [&]()
+, mPropertyToSdifColName(juce::translate("Column Name"), juce::translate("Define the name of the column to encode the results in the SDIF file"), nullptr)
+, mPropertyToSdifExport(juce::translate("Convert to SDIF"), juce::translate("Convert the JSON file to a SDIF file"), [&]()
                         {
                             exportToSdif();
                         })
 
-, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonFrame(juce::translate("Frame"), juce::translate("Select the frame signature to decode from the SDIF file"), "", {}, [&](size_t index)
                        {
                            juce::ignoreUnused(index);
                            selectedFrameUpdated();
                        })
-, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonMatrix(juce::translate("Matrix"), juce::translate("Select the matrix signature to decode from the SDIF file"), "", {}, [&](size_t index)
                         {
                             juce::ignoreUnused(index);
                             selectedMatrixUpdated();

@@ -690,32 +690,32 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
 }
 
 SdifConverter::Panel::Panel()
-: mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String)
+: mPropertyToSdifFrame(juce::translate("Frame"), juce::translate("Define the frame signature to encode the results in the SDIF file"), [this](juce::String)
                        {
                            notify();
                        })
-, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String)
+, mPropertyToSdifMatrix(juce::translate("Matrix"), juce::translate("Define the matrix signature to encode the results in the SDIF file"), [this](juce::String)
                         {
                             notify();
                         })
-, mPropertyToSdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", [this](juce::String)
+, mPropertyToSdifColName(juce::translate("Column Name"), juce::translate("Define the name of the column to encode the results in the SDIF file"), [this](juce::String)
                          {
                              notify();
                          })
 
-, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
+, mPropertyToJsonFrame(juce::translate("Frame"), juce::translate("Select the frame signature to decode from the SDIF file"), "", {}, [&]([[maybe_unused]] size_t index)
                        {
                            selectedFrameUpdated();
                        })
-, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
+, mPropertyToJsonMatrix(juce::translate("Matrix"), juce::translate("Select the matrix signature to decode from the SDIF file"), "", {}, [&]([[maybe_unused]] size_t index)
                         {
                             selectedMatrixUpdated();
                         })
-, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
+, mPropertyToJsonRow(juce::translate("Row"), juce::translate("Select the row(s) to decode from the SDIF file"), "", {}, [&]([[maybe_unused]] size_t index)
                      {
                          selectedRowColumnUpdated();
                      })
-, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
+, mPropertyToJsonColumn(juce::translate("Column"), juce::translate("Select the colum(s) to decode from the SDIF file"), "", {}, [&]([[maybe_unused]] size_t index)
                         {
                             selectedRowColumnUpdated();
                         })
