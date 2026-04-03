@@ -81,7 +81,7 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
         auto const totalLength = inputStream->getTotalLength();
         auto const maxLength = std::min(totalLength, static_cast<juce::int64>(std::numeric_limits<int>::max()));
         ratio = maxLength > 0 ? static_cast<double>(totalLength) / static_cast<double>(maxLength) : 1.0;
-        totalBytes = static_cast<int>(maxLength > 0 ? maxLength : 0.0);
+        totalBytes = static_cast<int>(maxLength > 0 ? maxLength : 0);
         if(callback != nullptr)
         {
             shouldContinue = callback(0, totalBytes);
