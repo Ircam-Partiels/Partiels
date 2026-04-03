@@ -51,36 +51,36 @@ Application::ConverterContent::ConverterContent()
                             juce::ignoreUnused(index);
                             selectedMatrixUpdated();
                         })
-, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonRow(juce::translate("Row"), juce::translate("Select the row(s) to decode from the SDIF file"), "", {}, [&](size_t index)
                      {
                          juce::ignoreUnused(index);
                          selectedRowColumnUpdated();
                      })
-, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonColumn(juce::translate("Column"), juce::translate("Select the colum(s) to decode from the SDIF file"), "", {}, [&](size_t index)
                         {
                             juce::ignoreUnused(index);
                             selectedRowColumnUpdated();
                         })
-, mPropertyToJsonUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
+, mPropertyToJsonUnit(juce::translate("Unit"), juce::translate("Define the unit of the results"), [&](juce::String const& text)
                       {
                           mPropertyToJsonMinValue.entry.setTextValueSuffix(text);
                           mPropertyToJsonMaxValue.entry.setTextValueSuffix(text);
                       })
-, mPropertyToJsonMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+, mPropertyToJsonMinValue(juce::translate("Value Range Min."), juce::translate("Define the minimum value of the results."), "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
                               auto const max = std::max(mPropertyToJsonMaxValue.entry.getValue(), value);
                               mPropertyToJsonMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+, mPropertyToJsonMaxValue(juce::translate("Value Range Max."), juce::translate("Define the maximum value of the results."), "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
                               auto const min = std::min(mPropertyToJsonMinValue.entry.getValue(), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonLoadInDocument("Load In Current Document", "Load the JSON file directly in the current document", [](bool state)
+, mPropertyToJsonLoadInDocument(juce::translate("Load In Current Document"), juce::translate("Load the JSON file directly in the current document"), [](bool state)
                                 {
                                     Instance::get().getApplicationAccessor().setAttr<AttrType::autoLoadConvertedFile>(state, NotificationType::synchronous);
                                 })
-, mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
+, mPropertyToJsonExport(juce::translate("Convert to JSON"), juce::translate("Convert the SDIF file to a JSON file"), [&]()
                         {
                             exportToJson();
                         })
