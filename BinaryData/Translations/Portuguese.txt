@@ -882,7 +882,7 @@ countries: pt br
 "Quick Export Directory" = "Diretório de Exportação Rápida"
 "Comma (,)" = "Vírgula (,)"
 "Space ( )" = "Espaço ( )"
-"Tab (\t)" = "Tab (\t)"
+"Tab (\\t)" = "Tab (\\t)"
 "Pipe (|)" = "Barra vertical (|)"
 "Slash (/)" = "Barra (/)"
 "Colon (:)" = "Dois pontos (:)"
