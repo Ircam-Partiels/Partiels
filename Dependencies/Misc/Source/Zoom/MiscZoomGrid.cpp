@@ -47,7 +47,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                     onChangeEnd(mAccessor);
                                 }
                             })
-, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {1.0, 20.0}, 0.0, [&](double value)
+, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {2.0, 20.0}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
@@ -143,7 +143,7 @@ Zoom::Grid::TickDrawingInfo Zoom::Grid::getTickDrawingInfo(Accessor const& acces
     auto const rangeLength = visibleRange.getLength();
     auto const numTicks = std::max(1.0, std::floor(static_cast<double>(size) / maxStringSize));
     auto const intervalValue = rangeLength / numTicks;
-    auto const tickPowerBase = accessor.getAttr<AttrType::tickPowerBase>();
+    auto const tickPowerBase = std::max(accessor.getAttr<AttrType::tickPowerBase>(), 2.0);
     auto const tickDivisionFactor = accessor.getAttr<AttrType::tickDivisionFactor>();
     auto const intervalPower = std::ceil(std::log(intervalValue) / std::log(tickPowerBase));
     auto const discreteIntervalValueNonDivided = std::pow(tickPowerBase, intervalPower);
