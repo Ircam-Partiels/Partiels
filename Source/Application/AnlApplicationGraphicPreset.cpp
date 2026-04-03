@@ -81,18 +81,18 @@ Application::GraphicPresetContent::GraphicPresetContent()
                     {
                         setFontSize(mPropertyFontSize.entry.getText().getFloatValue());
                     })
-, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
+, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0, 100.0}, 0.5, [&](double value)
                      {
-                         setLineWidth(value);
+                         setLineWidth(static_cast<float>(value));
                      })
 , mPropertyLabelJustification(juce::translate("Label Justification"), juce::translate("The justification of the labels."), "", getLabelJustifications(), [&](size_t index)
                               {
                                   auto fallbackJustification = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>().labelLayout.justification;
                                   setLabelJustification(magic_enum::enum_cast<Track::LabelLayout::Justification>(static_cast<int>(index)).value_or(fallbackJustification));
                               })
-, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
+, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0, 120.0}, 0.1, [this](double position)
                          {
-                             setLabelPosition(position);
+                             setLabelPosition(static_cast<float>(position));
                          })
 {
     addAndMakeVisible(mPropertyColourMap);

@@ -299,7 +299,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                           }
                           setOptions(options, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyWidth(juce::translate("Image Width"), juce::translate("Set the width of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyWidth(juce::translate("Image Width"), juce::translate("Set the width of the image"), juce::translate("pixels"), juce::Range<double>{1.0, 100000000.0}, 1.0, [this](double value)
                  {
                      auto options = mOptions;
                      auto const& identifiers = mSelectedIdentifiers;
@@ -310,7 +310,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                      options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
                      setOptions(options, juce::NotificationType::sendNotificationSync);
                  })
-, mPropertyHeight(juce::translate("Image Height"), juce::translate("Set the height of the image"), juce::translate("pixels"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyHeight(juce::translate("Image Height"), juce::translate("Set the height of the image"), juce::translate("pixels"), juce::Range<double>{1.0, 100000000.0}, 1.0, [this](double value)
                   {
                       auto options = mOptions;
                       auto const& identifiers = mSelectedIdentifiers;
@@ -321,7 +321,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyPpi(juce::translate("Image PPI"), juce::translate("Set the pixel density of the image"), juce::translate("pixels/inch"), juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyPpi(juce::translate("Image PPI"), juce::translate("Set the pixel density of the image"), juce::translate("pixels/inch"), juce::Range<double>{1.0, 100000000.0}, 1.0, [this](double value)
                {
                    auto options = mOptions;
                    auto const& identifiers = mSelectedIdentifiers;

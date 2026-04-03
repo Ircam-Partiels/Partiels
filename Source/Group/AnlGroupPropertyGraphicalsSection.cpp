@@ -167,10 +167,10 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                         setFontSize(mPropertyFontSize.entry.getText().getFloatValue());
                         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's font size"));
                     })
-, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderers of the tracks of the group."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
+, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderers of the tracks of the group."), "", {1.0, 100.0}, 0.5, [&](double value)
                      {
                          mDirector.startAction(true);
-                         setLineWidth(value);
+                         setLineWidth(static_cast<float>(value));
                          mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's line width"));
                      })
 , mPropertyUnit(juce::translate("Unit"), juce::translate("The unit of the values for the graphical renderers of the tracks of the group."), [&](juce::String text)
@@ -183,10 +183,10 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                                   setLabelJustification(magic_enum::enum_cast<Track::LabelLayout::Justification>(static_cast<int>(index)).value_or(Track::LabelLayout::Justification::top));
                                   mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's justification of the labels"));
                               })
-, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
+, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0, 120.0}, 0.1, [this](double position)
                          {
                              mDirector.startAction(true);
-                             setLabelPosition(position);
+                             setLabelPosition(static_cast<float>(position));
                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's position of the labels"));
                          })
 , mPropertyValueRangeLogScale(juce::translate("Value Log. Scale"), juce::translate("Toggle the logarithmic scale of the zoom range of the tracks of the group."), [&](bool value)

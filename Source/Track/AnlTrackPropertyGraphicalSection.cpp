@@ -183,11 +183,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                         mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font size"));
                     })
-, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0f, 100.0f}, 0.5f, [&](float value)
+, mPropertyLineWidth(juce::translate("Line Width"), juce::translate("The line width for the graphical renderer."), "", {1.0, 100.0}, 0.5, [&](double value)
                      {
                          mDirector.startAction();
                          auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
-                         settings.lineWidth = value;
+                         settings.lineWidth = static_cast<float>(value);
                          mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change the line width for the graphical renderer"));
                      })
@@ -202,10 +202,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                                   setLabelJustification(magic_enum::enum_cast<LabelLayout::Justification>(static_cast<int>(index)).value_or(fallbackJustification));
                                   mDirector.endAction(ActionState::newTransaction, juce::translate("Change the justification of the labels"));
                               })
-, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0f, 120.0f}, 0.1f, [this](float position)
+, mPropertyLabelPosition(juce::translate("Label Position"), juce::translate("The position of the labels."), "", {-120.0, 120.0}, 0.1, [this](double position)
                          {
                              mDirector.startAction();
-                             setLabelPosition(position);
+                             setLabelPosition(static_cast<float>(position));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change the position of the labels"));
                          })
 , mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
@@ -230,16 +230,16 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                                       break;
                               }
                           })
-, mPropertyValueRangeMin(juce::translate("Minimum Range Value"), juce::translate("The minimum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
+, mPropertyValueRangeMin(juce::translate("Minimum Range Value"), juce::translate("The minimum value of the output."), "", {static_cast<double>(Zoom::lowest()), static_cast<double>(Zoom::max())}, 0.0, [&](double value)
                          {
                              mDirector.startAction();
-                             setValueRangeMin(static_cast<double>(value));
+                             setValueRangeMin(value);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
-, mPropertyValueRangeMax(juce::translate("Maximum Range Value"), juce::translate("The maximum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
+, mPropertyValueRangeMax(juce::translate("Maximum Range Value"), juce::translate("The maximum value of the output."), "", {static_cast<double>(Zoom::lowest()), static_cast<double>(Zoom::max())}, 0.0, [&](double value)
                          {
                              mDirector.startAction();
-                             setValueRangeMax(static_cast<double>(value));
+                             setValueRangeMax(value);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
 , mPropertyValueRange(juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&]()
@@ -271,7 +271,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                          mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track zoom link"));
                      })
-, mPropertyNumBins(juce::translate("Num Bins"), juce::translate("The number of bins."), "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
+, mPropertyNumBins(juce::translate("Num Bins"), juce::translate("The number of bins."), "", {0.0, static_cast<double>(Zoom::max())}, 1.0, nullptr)
 , mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visible state of the channels."), [&]()
                          {
                              showChannelLayout();

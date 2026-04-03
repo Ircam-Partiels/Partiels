@@ -5,14 +5,14 @@ MISC_FILE_BEGIN
 Zoom::Panel::Panel(Zoom::Accessor& accessor, juce::String const& name, juce::String const& unit)
 : mAccessor(accessor)
 , mName("Name", name)
-, mPropertyStart(juce::translate("Low"), juce::translate("The low value of the RANGENAME range").replace("RANGENAME", name.toLowerCase()), unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+, mPropertyStart(juce::translate("Low"), juce::translate("The low value of the RANGENAME range").replace("RANGENAME", name.toLowerCase()), unit, {0.0, 1.0}, 0.0, [&](double value)
                  {
-                     auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(static_cast<double>(value));
+                     auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(value);
                      mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                  })
-, mPropertyEnd(juce::translate("High"), juce::translate("The high value of the visible range").replace("RANGENAME", name.toLowerCase()), unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+, mPropertyEnd(juce::translate("High"), juce::translate("The high value of the visible range").replace("RANGENAME", name.toLowerCase()), unit, {0.0, 1.0}, 0.0, [&](double value)
                {
-                   auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(static_cast<double>(value));
+                   auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(value);
                    mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                })
 {

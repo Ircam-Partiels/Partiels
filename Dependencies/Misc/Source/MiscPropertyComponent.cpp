@@ -98,18 +98,18 @@ PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& toolt
     entry.setEditable(false, false);
 }
 
-PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<double> const& range, double interval, std::function<void(double)> fn)
 : PropertyComponent<NumberField>(name, tooltip)
 {
-    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval), juce::NotificationType::dontSendNotification);
-    entry.setNumDecimalsDisplayed(interval > 0.0f ? entry.getNumEditedDecimals() : 2);
+    entry.setRange(range, interval, juce::NotificationType::dontSendNotification);
+    entry.setNumDecimalsDisplayed(interval > 0.0 ? entry.getNumEditedDecimals() : 2);
     entry.setJustificationType(juce::Justification::centredRight);
     entry.setTextValueSuffix(suffix);
     entry.onValueChanged = [=](double value)
     {
         if(fn != nullptr)
         {
-            fn(static_cast<float>(value));
+            fn(value);
         }
     };
 }
