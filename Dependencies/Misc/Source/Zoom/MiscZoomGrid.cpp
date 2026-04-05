@@ -3,7 +3,7 @@
 MISC_FILE_BEGIN
 
 Zoom::Grid::PropertyPanel::PropertyPanel()
-: mPropertyTickReference("Tick Reference Value", "The reference value used as the ruler origin", "", {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+: mPropertyTickReference(juce::translate("Tick Reference Value"), juce::translate("The reference value used as the ruler origin"), "", {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
@@ -15,7 +15,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                  onChangeEnd(mAccessor);
                              }
                          })
-, mPropertyTickBase("Ruler Mode", "The mode of the ruler numeral system.", "", std::vector<std::string>{"1", "2", "3", "4", "5", "6"}, [&](size_t index)
+, mPropertyTickBase(juce::translate("Ruler Mode"), juce::translate("The mode of the ruler numeral system."), "", std::vector<std::string>{"1", "2", "3", "4", "5", "6"}, [&](size_t index)
                     {
                         MiscWeakAssert(index < sGridBaseInfoArray.size());
                         if(index >= sGridBaseInfoArray.size())
@@ -35,7 +35,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                             onChangeEnd(mAccessor);
                         }
                     })
-, mPropertyMainTickInterval("Main Tick Interval", "The interval between two main ticks", "", {0.0, 100000.0}, 1.0, [&](double value)
+, mPropertyMainTickInterval(juce::translate("Main Tick Interval"), juce::translate("The interval between two main ticks"), "", {0.0, 100000.0}, 1.0, [&](double value)
                             {
                                 if(onChangeBegin != nullptr)
                                 {
@@ -47,7 +47,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                     onChangeEnd(mAccessor);
                                 }
                             })
-, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {2.0, 20.0}, 0.0, [&](double value)
+, mPropertyTickPowerBase(juce::translate("Power Base"), juce::translate("The power base of the ruler"), "", {2.0, 20.0}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
@@ -59,7 +59,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                  onChangeEnd(mAccessor);
                              }
                          })
-, mPropertyTickDivisionFactor("Division Factor", "The division factor of the ruler", "", {1.0, 20.0}, 0.0, [&](double value)
+, mPropertyTickDivisionFactor(juce::translate("Division Factor"), juce::translate("The division factor of the ruler"), "", {1.0, 20.0}, 0.0, [&](double value)
                               {
                                   if(onChangeBegin != nullptr)
                                   {

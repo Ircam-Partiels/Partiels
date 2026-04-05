@@ -8,12 +8,12 @@ Application::BatcherContent::BatcherContent()
 : mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::channelLayoutAll | AudioFileLayoutTable::SupportMode::channelLayoutMono | AudioFileLayoutTable::SupportMode::multipleSampleRates, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), false, true)
-, mPropertyAdaptationToSampleRate("Adapt to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", [](bool state)
+, mPropertyAdaptationToSampleRate(juce::translate("Adapt to Sample Rate"), juce::translate("Adapt the block size and the step size of the analyzes to the sample rate"), [](bool state)
                                   {
                                       auto& acsr = Instance::get().getApplicationAccessor();
                                       acsr.setAttr<AttrType::adaptationToSampleRate>(state, NotificationType::synchronous);
                                   })
-, mPropertyExport("Process", "Process the files", [this]()
+, mPropertyExport(juce::translate("Process"), juce::translate("Process the files"), [this]()
                   {
                       if(mProcess.valid())
                       {
