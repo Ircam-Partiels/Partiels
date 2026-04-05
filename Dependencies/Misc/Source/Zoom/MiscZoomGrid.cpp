@@ -3,7 +3,7 @@
 MISC_FILE_BEGIN
 
 Zoom::Grid::PropertyPanel::PropertyPanel()
-: mPropertyTickReference(juce::translate("Tick Reference Value"), juce::translate("The reference value used as the ruler origin"), "", {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+: mPropertyTickReference(juce::translate("Tick Reference Value"), juce::translate("The reference value used as the ruler origin"), "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                          {
                              if(onChangeBegin != nullptr)
                              {
