@@ -1002,3 +1002,5 @@ countries: fr be
 "Tick Reference Value" = "Valeur de référence de graduation"
 "Value Range Max." = "Valeur maximale de la plage"
 "Value Range Min." = "Valeur minimale de la plage"
+"Resolve: " = "Résoudre : "
+"Parsing error - invalid type " = "Erreur d'analyse - type invalide "
