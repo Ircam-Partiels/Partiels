@@ -358,7 +358,7 @@ void Application::Instance::shutdown()
     mLogger.reset();
 }
 
-void Application::Instance::unhandledException(std::exception const* e, juce::String const& sourceFilename, int line)
+void Application::Instance::unhandledException([[maybe_unused]] std::exception const* e, [[maybe_unused]] juce::String const& sourceFilename, [[maybe_unused]] int line)
 {
     MiscDebug("Application", "Unhandled exception in " + sourceFilename + ":" + juce::String(line) + " - " + (e != nullptr ? e->what() : "unknown exception"));
     MiscWeakAssert(false);
