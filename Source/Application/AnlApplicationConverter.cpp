@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::ConverterContent::ConverterContent()
-: mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
+: mPropertyOpen(juce::translate("Open"), juce::translate("Select a SDIF or a JSON file to convert"), [&]()
                 {
                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
                     if(mFileChooser == nullptr)
@@ -23,64 +23,64 @@ Application::ConverterContent::ConverterContent()
                                                   setFile(results.getFirst());
                                               });
                 })
-, mPropertyName("File", "The SDIF/JSON file to convert", nullptr)
+, mPropertyName(juce::translate("File"), juce::translate("The SDIF/JSON file to convert"), nullptr)
 
-, mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String const& text)
+, mPropertyToSdifFrame(juce::translate("Frame"), juce::translate("Define the frame signature to encode the results in the SDIF file"), [this](juce::String const& text)
                        {
                            juce::ignoreUnused(text);
                            sdifAttributeUpdated();
                        })
-, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String const& text)
+, mPropertyToSdifMatrix(juce::translate("Matrix"), juce::translate("Define the matrix signature to encode the results in the SDIF file"), [this](juce::String const& text)
                         {
                             juce::ignoreUnused(text);
                             sdifAttributeUpdated();
                         })
-, mPropertyToSdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", nullptr)
-, mPropertyToSdifExport("Convert to SDIF", "Convert the JSON file to a SDIF file", [&]()
+, mPropertyToSdifColName(juce::translate("Column Name"), juce::translate("Define the name of the column to encode the results in the SDIF file"), nullptr)
+, mPropertyToSdifExport(juce::translate("Convert to SDIF"), juce::translate("Convert the JSON file to a SDIF file"), [&]()
                         {
                             exportToSdif();
                         })
 
-, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonFrame(juce::translate("Frame"), juce::translate("Select the frame signature to decode from the SDIF file"), "", {}, [&](size_t index)
                        {
                            juce::ignoreUnused(index);
                            selectedFrameUpdated();
                        })
-, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonMatrix(juce::translate("Matrix"), juce::translate("Select the matrix signature to decode from the SDIF file"), "", {}, [&](size_t index)
                         {
                             juce::ignoreUnused(index);
                             selectedMatrixUpdated();
                         })
-, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonRow(juce::translate("Row"), juce::translate("Select the row(s) to decode from the SDIF file"), "", {}, [&](size_t index)
                      {
                          juce::ignoreUnused(index);
                          selectedRowColumnUpdated();
                      })
-, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonColumn(juce::translate("Column"), juce::translate("Select the column(s) to decode from the SDIF file"), "", {}, [&](size_t index)
                         {
                             juce::ignoreUnused(index);
                             selectedRowColumnUpdated();
                         })
-, mPropertyToJsonUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
+, mPropertyToJsonUnit(juce::translate("Unit"), juce::translate("Define the unit of the results"), [&](juce::String const& text)
                       {
                           mPropertyToJsonMinValue.entry.setTextValueSuffix(text);
                           mPropertyToJsonMaxValue.entry.setTextValueSuffix(text);
                       })
-, mPropertyToJsonMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+, mPropertyToJsonMinValue(juce::translate("Value Range Min."), juce::translate("Define the minimum value of the results."), "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
                               auto const max = std::max(mPropertyToJsonMaxValue.entry.getValue(), value);
                               mPropertyToJsonMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
+, mPropertyToJsonMaxValue(juce::translate("Value Range Max."), juce::translate("Define the maximum value of the results."), "", {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()}, 0.0, [&](double value)
                           {
                               auto const min = std::min(mPropertyToJsonMinValue.entry.getValue(), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonLoadInDocument("Load In Current Document", "Load the JSON file directly in the current document", [](bool state)
+, mPropertyToJsonLoadInDocument(juce::translate("Load In Current Document"), juce::translate("Load the JSON file directly in the current document"), [](bool state)
                                 {
                                     Instance::get().getApplicationAccessor().setAttr<AttrType::autoLoadConvertedFile>(state, NotificationType::synchronous);
                                 })
-, mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
+, mPropertyToJsonExport(juce::translate("Convert to JSON"), juce::translate("Convert the SDIF file to a JSON file"), [&]()
                         {
                             exportToJson();
                         })

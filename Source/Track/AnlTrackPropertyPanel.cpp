@@ -20,7 +20,7 @@ Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPa
 
 Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
-, mPropertyName("Name", "The name of the track", [&](juce::String text)
+, mPropertyName(juce::translate("Name"), juce::translate("The name of the track"), [&](juce::String text)
                 {
                     mDirector.startAction();
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);

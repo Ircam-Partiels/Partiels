@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 
 Application::ExporterContent::ExporterContent()
 : mExporterPanel(Instance::get().getDocumentAccessor(), true, true)
-, mPropertyExport("Export", "Export the results", [this]()
+, mPropertyExport(juce::translate("Export"), juce::translate("Export the results"), [this]()
                   {
                       if(mProcess.valid())
                       {
