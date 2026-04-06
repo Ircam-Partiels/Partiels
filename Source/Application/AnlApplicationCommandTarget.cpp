@@ -1598,22 +1598,18 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 position += offset;
                 for(auto& groupId : Document::Selection::getGroups(documentAcsr))
                 {
-                    if(auto var = std::make_unique<juce::DynamicObject>())
-                    {
-                        var->setProperty("x", position.x);
-                        var->setProperty("y", position.y);
-                        Document::Tools::getGroupAcsr(documentAcsr, groupId).sendSignal(Group::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                    }
+                    auto var = std::make_unique<juce::DynamicObject>();
+                    var->setProperty("x", position.x);
+                    var->setProperty("y", position.y);
+                    Document::Tools::getGroupAcsr(documentAcsr, groupId).sendSignal(Group::SignalType::showProperties, var.release(), NotificationType::synchronous);
                     position += offset;
                 }
                 for(auto& trackId : Document::Selection::getTracks(documentAcsr))
                 {
-                    if(auto var = std::make_unique<juce::DynamicObject>())
-                    {
-                        var->setProperty("x", position.x);
-                        var->setProperty("y", position.y);
-                        Document::Tools::getTrackAcsr(documentAcsr, trackId).sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                    }
+                    auto var = std::make_unique<juce::DynamicObject>();
+                    var->setProperty("x", position.x);
+                    var->setProperty("y", position.y);
+                    Document::Tools::getTrackAcsr(documentAcsr, trackId).sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
                     position += offset;
                 }
             }

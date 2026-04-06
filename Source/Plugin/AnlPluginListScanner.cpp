@@ -37,11 +37,6 @@ Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, floa
         throw std::runtime_error("plugin allocation failed");
     }
     auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key);
-    if(wrapper == nullptr)
-    {
-        throw std::runtime_error("plugin allocation failed");
-    }
-
     auto* pointer = wrapper.get();
     mPlugins[entry] = std::move(wrapper);
     return pointer;
@@ -125,10 +120,6 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
         return {};
     }
     auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key.identifier);
-    if(wrapper == nullptr)
-    {
-        return {};
-    }
     return Plugin::loadDescription(*wrapper.get(), key);
 }
 

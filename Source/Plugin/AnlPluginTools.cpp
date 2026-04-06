@@ -148,11 +148,6 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitial
         throw LoadingError("plugin library couldn't be loaded");
     }
     auto wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
-    if(wrapper == nullptr)
-    {
-        throw LoadingError("plugin library couldn't be loaded");
-    }
-
     auto const maxChannels = wrapper->getMaxChannelCount();
     while(wrapper != nullptr)
     {
@@ -167,10 +162,6 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitial
                 throw LoadingError("plugin library couldn't be loaded");
             }
             wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
-            if(wrapper == nullptr)
-            {
-                throw LoadingError("plugin library couldn't be loaded");
-            }
         }
     }
     return plugins;
