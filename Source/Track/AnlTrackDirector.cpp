@@ -1253,10 +1253,6 @@ void Track::Director::askForFile()
 {
     auto const file = mAccessor.getAttr<AttrType::file>().file;
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load track's results file..."), file, Loader::getWildCardForAllFormats());
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<Director> safePointer(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)

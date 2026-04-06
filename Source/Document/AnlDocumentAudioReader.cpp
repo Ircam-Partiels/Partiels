@@ -161,11 +161,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
     }
 
     auto reader = std::make_unique<AudioFormatReader>(std::move(readers));
-    if(reader == nullptr)
-    {
-        errors.add(juce::translate("The audio reader cannot be allocated!"));
-    }
-    else if(reader->hasMultipleSampleRate)
+    if(reader->hasMultipleSampleRate)
     {
         errors.add(juce::translate("The sample rates of the audio files are not identical!"));
     }

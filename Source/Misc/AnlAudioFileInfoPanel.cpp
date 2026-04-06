@@ -57,15 +57,11 @@ void AudioFileInfoPanel::setAudioFormatReader(juce::File const& file, juce::Audi
     {
         auto const& value = metadataValues[key];
         auto property = std::make_unique<PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
-        MiscWeakAssert(property != nullptr);
-        if(property != nullptr)
-        {
-            property->entry.setText(value, juce::NotificationType::dontSendNotification);
-            property->entry.setJustificationType(juce::Justification::right);
-            property->entry.setEditable(false);
-            panels.push_back(*property.get());
-            mMetaDataPanels.push_back(std::move(property));
-        }
+        property->entry.setText(value, juce::NotificationType::dontSendNotification);
+        property->entry.setJustificationType(juce::Justification::right);
+        property->entry.setEditable(false);
+        panels.push_back(*property.get());
+        mMetaDataPanels.push_back(std::move(property));
     }
     mConcertinaTable.setComponents(panels);
     resized();

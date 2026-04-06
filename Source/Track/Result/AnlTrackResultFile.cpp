@@ -155,21 +155,17 @@ template <>
 void XmlParser::toXml<Track::Result::FileDescription>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Result::FileDescription const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "path", value.file);
-        toXml(*child, "format", value.format);
-        toXml(*child, "extension", value.extension);
-        toXml(*child, "includeHeaderRow", value.includeHeaderRow);
-        toXml(*child, "reaperType", value.reaperType);
-        toXml(*child, "columnSeparator", value.columnSeparator);
-        toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
-        toXml(*child, "includeDescription", value.includeDescription);
-        toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
-        toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "path", value.file);
+    toXml(*child, "format", value.format);
+    toXml(*child, "extension", value.extension);
+    toXml(*child, "includeHeaderRow", value.includeHeaderRow);
+    toXml(*child, "reaperType", value.reaperType);
+    toXml(*child, "columnSeparator", value.columnSeparator);
+    toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
+    toXml(*child, "includeDescription", value.includeDescription);
+    toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
+    toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
+    xml.addChildElement(child.release());
 }
 
 template <>

@@ -51,11 +51,7 @@ Track::Scroller::Scroller(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
                 while(channelsLayout.size() > mMouseScrollers.size())
                 {
                     auto scroller = std::make_unique<MouseScroller>();
-                    anlWeakAssert(scroller != nullptr);
-                    if(scroller != nullptr)
-                    {
-                        addChildComponent(scroller.get());
-                    }
+                    addChildComponent(scroller.get());
                     mMouseScrollers.push_back(std::move(scroller));
                 }
                 applicationCommandListChanged();

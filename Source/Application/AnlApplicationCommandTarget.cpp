@@ -805,10 +805,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto const wildcard = Instance::getWildCardForAudioFormats() + ";" + Instance::getWildCardForDocumentFile();
             mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), Instance::get().getDocumentFileBased().getFile(), wildcard);
-            if(mFileChooser == nullptr)
-            {
-                return true;
-            }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
             mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [&](juce::FileChooser const& fileChooser)
                                       {
@@ -881,10 +877,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto const position = Tools::getNewTrackPosition();
             mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, Instance::getWildCardForImportFormats());
-            if(mFileChooser == nullptr)
-            {
-                return true;
-            }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
             mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
                                       {
@@ -1051,10 +1043,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto const wildcard = Instance::getWildCardForDocumentFile();
             mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), Instance::get().getDocumentFileBased().getFile(), wildcard);
-            if(mFileChooser == nullptr)
-            {
-                return true;
-            }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
             mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, &documentDir](juce::FileChooser const& fileChooser)
                                       {
@@ -1295,10 +1283,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
                 auto const message = allFrames ? juce::translate("Export all frames to directory") : juce::translate("Export selected frames to directory");
                 mFileChooser = std::make_unique<juce::FileChooser>(message, currentDirectory);
-                if(mFileChooser == nullptr)
-                {
-                    return true;
-                }
                 using Flags = juce::FileBrowserComponent::FileChooserFlags;
                 mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=](juce::FileChooser const& fileChooser)
                                           {
@@ -1325,10 +1309,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const defaultFile = currentDirectory.getChildFile(trackName).withFileExtension(options.getFormatExtension());
                 auto const message = allFrames ? juce::translate("Export all frames to file") : juce::translate("Export selected frames to file");
                 mFileChooser = std::make_unique<juce::FileChooser>(message, defaultFile, options.getFormatWilcard());
-                if(mFileChooser == nullptr)
-                {
-                    return true;
-                }
                 using Flags = juce::FileBrowserComponent::FileChooserFlags;
                 mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=](juce::FileChooser const& fileChooser)
                                           {
@@ -1731,10 +1711,6 @@ void Application::CommandTarget::selectDefaultTemplateFile()
     auto const wildcard = Instance::getWildCardForDocumentFile();
     auto const file = Instance::get().getDocumentFileBased().getFile();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a template..."), file, wildcard);
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [](juce::FileChooser const& fileChooser)
                               {
@@ -1752,10 +1728,6 @@ void Application::CommandTarget::selectQuickExportDirectory()
 {
     auto const currentDirectory = Instance::get().getApplicationAccessor().getAttr<AttrType::quickExportDirectory>();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a directory for quick export..."), currentDirectory);
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [](juce::FileChooser const& fileChooser)
                               {

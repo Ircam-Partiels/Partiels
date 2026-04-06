@@ -60,36 +60,32 @@ Track::Ruler::Ruler(Accessor& accessor)
                 while(channelsLayout.size() > mRulers.size())
                 {
                     auto ruler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
-                    anlWeakAssert(ruler != nullptr);
-                    if(ruler != nullptr)
+                    ruler->onMouseDown = [&, rulerPtr = ruler.get()](juce::MouseEvent const& event)
                     {
-                        ruler->onMouseDown = [&, rulerPtr = ruler.get()](juce::MouseEvent const& event)
+                        if(event.mods.isPopupMenu())
                         {
-                            if(event.mods.isPopupMenu())
+                            auto rangeEditor = mFrameType == Track::FrameType::value ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
+                            if(rangeEditor == nullptr)
                             {
-                                auto rangeEditor = mFrameType == Track::FrameType::value ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
-                                if(rangeEditor == nullptr)
-                                {
-                                    return false;
-                                }
-                                auto const point = juce::Desktop::getMousePosition();
-                                auto const rulerBounds = rulerPtr->getScreenBounds();
-                                auto const width = rulerBounds.getWidth();
-                                auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
-                                auto& box = juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr);
-                                box.setLookAndFeel(std::addressof(getLookAndFeel()));
-                                box.setArrowSize(0.0f);
                                 return false;
                             }
-                            return true;
-                        };
-                        ruler->onDoubleClick = [&]([[maybe_unused]] juce::MouseEvent const& event)
-                        {
-                            auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-                            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                        };
-                        addChildComponent(ruler.get());
-                    }
+                            auto const point = juce::Desktop::getMousePosition();
+                            auto const rulerBounds = rulerPtr->getScreenBounds();
+                            auto const width = rulerBounds.getWidth();
+                            auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
+                            auto& box = juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr);
+                            box.setLookAndFeel(std::addressof(getLookAndFeel()));
+                            box.setArrowSize(0.0f);
+                            return false;
+                        }
+                        return true;
+                    };
+                    ruler->onDoubleClick = [&]([[maybe_unused]] juce::MouseEvent const& event)
+                    {
+                        auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                    };
+                    addChildComponent(ruler.get());
                     mRulers.push_back(std::move(ruler));
                 }
                 colourChanged();

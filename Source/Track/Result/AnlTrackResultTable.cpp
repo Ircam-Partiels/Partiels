@@ -411,7 +411,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     if(columnId == static_cast<int>(ColumnType::time))
     {
         auto cell = std::make_unique<CellTime>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->updateAndValidate(*channel))
+        if(cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -419,7 +419,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     else if(columnId == static_cast<int>(ColumnType::duration))
     {
         auto cell = std::make_unique<CellDuration>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->updateAndValidate(*channel))
+        if(cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -427,7 +427,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     else if(columnId == static_cast<int>(ColumnType::value))
     {
         auto cell = std::make_unique<CellValue>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->updateAndValidate(*channel))
+        if(cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -435,7 +435,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     else
     {
         auto cell = std::make_unique<CellExtra>(mDirector, mTimeZoomAccessor, *channel, frameIndex, columnId - static_cast<int>(static_cast<int>(ColumnType::extra)));
-        if(cell != nullptr && cell->updateAndValidate(*channel))
+        if(cell->updateAndValidate(*channel))
         {
             return cell.release();
         }

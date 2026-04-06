@@ -74,23 +74,19 @@ Track::Navigator::Navigator(Accessor& accessor, Zoom::Accessor& timeZoomAccessor
                 while(channelsLayout.size() > mVerticalRulers.size())
                 {
                     auto ruler = std::make_unique<Zoom::Ruler>(zoomAcsr.value().get(), Zoom::Ruler::Orientation::vertical);
-                    anlWeakAssert(ruler != nullptr);
-                    if(ruler != nullptr)
+                    ruler->setInterceptsMouseClicks(false, false);
+                    ruler->setColour(Zoom::Ruler::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+                    ruler->setColour(Zoom::Ruler::ColourIds::gridColourId, juce::Colours::transparentBlack);
+                    ruler->onMouseDown = [&](juce::MouseEvent const& event)
                     {
-                        ruler->setInterceptsMouseClicks(false, false);
-                        ruler->setColour(Zoom::Ruler::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
-                        ruler->setColour(Zoom::Ruler::ColourIds::gridColourId, juce::Colours::transparentBlack);
-                        ruler->onMouseDown = [&](juce::MouseEvent const& event)
-                        {
-                            return Zoom::Ruler::getNavigationMode(event.mods) != Zoom::Ruler::NavigationMode::navigate;
-                        };
-                        ruler->onDoubleClick = [this]([[maybe_unused]] juce::MouseEvent const& event)
-                        {
-                            auto const& valueGlobalRange = mVerticalZoomAcsr.value().get().getAttr<Zoom::AttrType::globalRange>();
-                            mVerticalZoomAcsr.value().get().setAttr<Zoom::AttrType::visibleRange>(valueGlobalRange, NotificationType::synchronous);
-                        };
-                        addChildComponent(ruler.get());
-                    }
+                        return Zoom::Ruler::getNavigationMode(event.mods) != Zoom::Ruler::NavigationMode::navigate;
+                    };
+                    ruler->onDoubleClick = [this]([[maybe_unused]] juce::MouseEvent const& event)
+                    {
+                        auto const& valueGlobalRange = mVerticalZoomAcsr.value().get().getAttr<Zoom::AttrType::globalRange>();
+                        mVerticalZoomAcsr.value().get().setAttr<Zoom::AttrType::visibleRange>(valueGlobalRange, NotificationType::synchronous);
+                    };
+                    addChildComponent(ruler.get());
                     mVerticalRulers.push_back(std::move(ruler));
                 }
                 resized();
