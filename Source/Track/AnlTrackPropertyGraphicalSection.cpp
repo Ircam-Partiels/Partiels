@@ -984,13 +984,9 @@ void Track::PropertyGraphicalSection::updateExtraTheshold()
     {
         auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
         auto& property = mPropertyExtraThresholds[index];
-        MiscWeakAssert(property != nullptr);
-        if(property != nullptr) [[likely]]
-        {
-            auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
-            property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
-            property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
-        }
+        auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
+        property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
+        property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
     }
 }
 

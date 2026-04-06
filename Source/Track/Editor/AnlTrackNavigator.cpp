@@ -113,11 +113,7 @@ void Track::Navigator::resized()
     mTimeRuler.setBounds(bounds);
     for(auto& ruler : mVerticalRulers)
     {
-        anlWeakAssert(ruler != nullptr);
-        if(ruler != nullptr)
-        {
-            ruler->setVisible(false);
-        }
+        ruler->setVisible(false);
     }
     if(!mVerticalZoomAcsr.has_value())
     {
@@ -129,12 +125,8 @@ void Track::Navigator::resized()
         anlWeakAssert(verticalRange.first < mVerticalRulers.size());
         if(verticalRange.first < mVerticalRulers.size())
         {
-            auto& ruler = mVerticalRulers[verticalRange.first];
-            if(ruler != nullptr)
-            {
-                ruler->setVisible(true);
-                ruler->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
-            }
+            mVerticalRulers[verticalRange.first]->setVisible(true);
+            mVerticalRulers[verticalRange.first]->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
         }
     }
 }
@@ -175,8 +167,7 @@ void Track::Navigator::updateInteraction(juce::ModifierKeys const& modifiers)
             removeMouseListener(std::addressof(mTimeRuler));
             for(auto& ruler : mVerticalRulers)
             {
-                anlWeakAssert(ruler != nullptr);
-                if(ruler != nullptr && ruler->isVisible())
+                if(ruler->isVisible())
                 {
                     removeMouseListener(ruler.get());
                 }
@@ -187,8 +178,7 @@ void Track::Navigator::updateInteraction(juce::ModifierKeys const& modifiers)
             addMouseListener(std::addressof(mTimeRuler), true);
             for(auto& ruler : mVerticalRulers)
             {
-                anlWeakAssert(ruler != nullptr);
-                if(ruler != nullptr && ruler->isVisible())
+                if(ruler->isVisible())
                 {
                     addMouseListener(ruler.get(), true);
                 }

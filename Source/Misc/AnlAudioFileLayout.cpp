@@ -447,10 +447,7 @@ void AudioFileLayoutTable::setSelection(std::set<size_t> indices, juce::Notifica
 
     for(auto index = 0_z; index < mChannels.size(); ++index)
     {
-        if(mChannels[index] != nullptr)
-        {
-            mChannels[index]->setSelected(indices.count(index) > 0_z);
-        }
+        mChannels[index]->setSelected(indices.count(index) > 0_z);
     }
 
     if(mSelection != indices)

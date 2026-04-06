@@ -56,11 +56,7 @@ Track::Selector::Selector(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
                 }
                 for(auto& bar : mSelectionBars)
                 {
-                    anlWeakAssert(bar != nullptr);
-                    if(bar != nullptr)
-                    {
-                        bar->setVisible(false);
-                    }
+                    bar->setVisible(false);
                 }
                 colourChanged();
                 applicationCommandListChanged();
@@ -89,13 +85,8 @@ void Track::Selector::resized()
         anlWeakAssert(verticalRange.first < mSelectionBars.size());
         if(verticalRange.first < mSelectionBars.size())
         {
-            auto& bar = mSelectionBars[verticalRange.first];
-            MiscWeakAssert(bar != nullptr);
-            if(bar != nullptr)
-            {
-                bar->setVisible(true);
-                bar->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
-            }
+            mSelectionBars[verticalRange.first]->setVisible(true);
+            mSelectionBars[verticalRange.first]->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
         }
     }
 }
@@ -106,13 +97,8 @@ void Track::Selector::colourChanged()
     auto const offColour = onColour.withAlpha(onColour.getFloatAlpha() * 0.5f);
     for(auto channel = 0_z; channel < mSelectionBars.size() && channel < mFocusInfo.size(); ++channel)
     {
-        auto& bar = mSelectionBars[channel];
-        MiscWeakAssert(bar != nullptr);
-        if(bar != nullptr)
-        {
-            auto const colour = mFocusInfo.test(channel) ? onColour : offColour;
-            bar->setColour(Transport::SelectionBar::thumbCoulourId, colour);
-        }
+        auto const colour = mFocusInfo.test(channel) ? onColour : offColour;
+        mSelectionBars[channel]->setColour(Transport::SelectionBar::thumbCoulourId, colour);
     }
 }
 
@@ -125,11 +111,7 @@ void Track::Selector::applicationCommandInvoked(juce::ApplicationCommandTarget::
             auto const isDrawingMode = info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked;
             for(auto& bar : mSelectionBars)
             {
-                anlWeakAssert(bar != nullptr);
-                if(bar != nullptr)
-                {
-                    bar->setDefaultMouseCursor(isDrawingMode ? juce::MouseCursor::IBeamCursor : juce::MouseCursor::NormalCursor);
-                }
+                bar->setDefaultMouseCursor(isDrawingMode ? juce::MouseCursor::IBeamCursor : juce::MouseCursor::NormalCursor);
             }
             break;
         }

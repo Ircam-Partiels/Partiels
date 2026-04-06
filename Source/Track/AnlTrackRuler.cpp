@@ -112,11 +112,7 @@ void Track::Ruler::resized()
 
     for(auto& ruler : mRulers)
     {
-        anlWeakAssert(ruler != nullptr);
-        if(ruler != nullptr)
-        {
-            ruler->setVisible(false);
-        }
+        ruler->setVisible(false);
     }
     auto const bounds = getLocalBounds();
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
@@ -125,12 +121,8 @@ void Track::Ruler::resized()
         anlWeakAssert(verticalRange.first < mRulers.size());
         if(verticalRange.first < mRulers.size())
         {
-            auto& ruler = mRulers[verticalRange.first];
-            if(ruler != nullptr)
-            {
-                ruler->setVisible(true);
-                ruler->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
-            }
+            mRulers[verticalRange.first]->setVisible(true);
+            mRulers[verticalRange.first]->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
         }
     }
 }
@@ -146,11 +138,7 @@ void Track::Ruler::colourChanged()
 {
     for(auto& ruler : mRulers)
     {
-        anlWeakAssert(ruler != nullptr);
-        if(ruler != nullptr)
-        {
-            ruler->setColour(Zoom::Ruler::ColourIds::gridColourId, findColour(Decorator::ColourIds::normalBorderColourId));
-        }
+        ruler->setColour(Zoom::Ruler::ColourIds::gridColourId, findColour(Decorator::ColourIds::normalBorderColourId));
     }
 }
 

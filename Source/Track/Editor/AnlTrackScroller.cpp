@@ -75,11 +75,7 @@ void Track::Scroller::resized()
     auto const bounds = getLocalBounds();
     for(auto& scroller : mMouseScrollers)
     {
-        anlWeakAssert(scroller != nullptr);
-        if(scroller != nullptr)
-        {
-            scroller->setVisible(false);
-        }
+        scroller->setVisible(false);
     }
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, bounds);
     for(auto const& verticalRange : verticalRanges)
@@ -87,12 +83,8 @@ void Track::Scroller::resized()
         anlWeakAssert(verticalRange.first < mMouseScrollers.size());
         if(verticalRange.first < mMouseScrollers.size())
         {
-            auto& scoller = mMouseScrollers[verticalRange.first];
-            if(scoller != nullptr)
-            {
-                scoller->setVisible(true);
-                scoller->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
-            }
+            mMouseScrollers[verticalRange.first]->setVisible(true);
+            mMouseScrollers[verticalRange.first]->setBounds(bounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd()));
         }
     }
 }
@@ -101,8 +93,7 @@ void Track::Scroller::mouseMagnify(juce::MouseEvent const& event, float magnifyA
 {
     for(auto& scroller : mMouseScrollers)
     {
-        anlWeakAssert(scroller != nullptr);
-        if(scroller != nullptr && scroller->isVisible())
+        if(scroller->isVisible())
         {
             auto const relEvent = event.getEventRelativeTo(scroller.get());
             if(scroller->contains(relEvent.position))
@@ -118,8 +109,7 @@ void Track::Scroller::mouseWheelMove(juce::MouseEvent const& event, juce::MouseW
 {
     for(auto& scroller : mMouseScrollers)
     {
-        anlWeakAssert(scroller != nullptr);
-        if(scroller != nullptr && scroller->isVisible())
+        if(scroller->isVisible())
         {
             auto const relEvent = event.getEventRelativeTo(scroller.get());
             if(scroller->contains(relEvent.position))
@@ -142,11 +132,7 @@ void Track::Scroller::applicationCommandInvoked(juce::ApplicationCommandTarget::
             auto transportAcsrRef = useTransport ? optional_ref<Transport::Accessor>(std::ref(mTransportAccessor)) : optional_ref<Transport::Accessor>{};
             for(auto& scoller : mMouseScrollers)
             {
-                anlWeakAssert(scoller != nullptr);
-                if(scoller != nullptr)
-                {
-                    scoller->setAccessors(mTimeZoomAccessor, zoomAcsr, transportAcsrRef);
-                }
+                scoller->setAccessors(mTimeZoomAccessor, zoomAcsr, transportAcsrRef);
             }
             break;
         }

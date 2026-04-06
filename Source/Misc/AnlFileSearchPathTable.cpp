@@ -344,10 +344,7 @@ void FileSearchPathTable::setSelection(std::set<size_t> indices, juce::Notificat
 
     for(auto index = 0_z; index < mDirectories.size(); ++index)
     {
-        if(mDirectories[index] != nullptr)
-        {
-            mDirectories[index]->setSelected(indices.count(index) > 0_z);
-        }
+        mDirectories[index]->setSelected(indices.count(index) > 0_z);
     }
 
     if(mSelection != indices)
