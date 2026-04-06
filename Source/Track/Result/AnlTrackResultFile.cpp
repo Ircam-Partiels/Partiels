@@ -126,13 +126,9 @@ template <>
 void XmlParser::toXml<Track::Result::FileInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Result::FileInfo const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "path", value.file);
-        toXml(*child, "commit", value.commit);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "path", value.file);
+    toXml(*child, "commit", value.commit);
+    xml.addChildElement(child.release());
 }
 
 template <>

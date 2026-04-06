@@ -69,10 +69,7 @@ Application::KeyMappingsContent::Container::~Container()
     mKeyPressMappingSet.removeChangeListener(this);
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            mComponentListener.detachFrom(section->table);
-        }
+        mComponentListener.detachFrom(section->table);
     }
     mSections.clear();
 }
@@ -89,10 +86,7 @@ void Application::KeyMappingsContent::Container::resized()
     };
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            setBounds(section->table);
-        }
+        setBounds(section->table);
     }
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
@@ -101,10 +95,7 @@ void Application::KeyMappingsContent::Container::changeListenerCallback([[maybe_
 {
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            mComponentListener.detachFrom(section->table);
-        }
+        mComponentListener.detachFrom(section->table);
     }
     mSections.clear();
     auto const& commandManager = mKeyPressMappingSet.getCommandManager();
