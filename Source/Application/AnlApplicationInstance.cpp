@@ -88,7 +88,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mTrackPresetListAccessor = std::make_unique<Track::PresetList::Accessor>();
     mAudioReader = std::make_unique<AudioReader>();
     mProperties = std::make_unique<Properties>();
-    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
+    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), juce::translate("Open a document"), juce::translate("Save the document"));
     mDownloader = std::make_unique<Downloader>();
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
