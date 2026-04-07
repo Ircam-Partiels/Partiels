@@ -791,11 +791,6 @@ void Application::Instance::checkPluginsQuarantine()
 
 void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate)
 {
-    MiscWeakAssert(mApplicationAccessor != nullptr && mDownloader != nullptr);
-    if(mApplicationAccessor == nullptr || mDownloader == nullptr)
-    {
-        return;
-    }
     mDownloader->launch({"https://api.github.com/repos/Ircam-Partiels/Partiels/releases/latest"}, {"Accept: application/vnd.github+json\" \"X-GitHub-Api-Version: 2022-11-28\nX-GitHub-Api-Version: 2022-11-28"}, [=](juce::File file)
                         {
                             static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
@@ -851,18 +846,9 @@ void Application::Instance::darkModeSettingChanged()
 
 void Application::Instance::updateLookAndFeel()
 {
-    MiscWeakAssert(mLookAndFeel != nullptr);
-    if(mLookAndFeel == nullptr)
-    {
-        return;
-    }
-
     mLookAndFeel->setColourChart(getColourChart());
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
-    if(mMainMenuModel != nullptr)
-    {
-        mMainMenuModel->menuItemsChanged();
-    }
+    mMainMenuModel->menuItemsChanged();
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
         for(int i = 0; i < modalComponentManager->getNumModalComponents(); ++i)

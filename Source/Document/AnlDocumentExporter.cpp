@@ -1374,26 +1374,22 @@ template <>
 void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::Identifier const& attributeName, Document::Exporter::Options const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "format", value.format);
-        toXml(*child, "useAutoSize", value.useAutoSize);
-        toXml(*child, "imageWidth", value.imageWidth);
-        toXml(*child, "imageHeight", value.imageHeight);
-        toXml(*child, "imagePpi", value.imagePpi);
-        toXml(*child, "includeHeaderRow", value.includeHeaderRow);
-        toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
-        toXml(*child, "columnSeparator", value.columnSeparator);
-        toXml(*child, "labSeparator", value.labSeparator);
-        toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
-        toXml(*child, "includeDescription", value.includeDescription);
-        toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
-        toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
-        toXml(*child, "sdifColumnName", value.sdifColumnName);
-        toXml(*child, "outsideGridJustification", value.outsideGridJustification.getFlags());
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "format", value.format);
+    toXml(*child, "useAutoSize", value.useAutoSize);
+    toXml(*child, "imageWidth", value.imageWidth);
+    toXml(*child, "imageHeight", value.imageHeight);
+    toXml(*child, "imagePpi", value.imagePpi);
+    toXml(*child, "includeHeaderRow", value.includeHeaderRow);
+    toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
+    toXml(*child, "columnSeparator", value.columnSeparator);
+    toXml(*child, "labSeparator", value.labSeparator);
+    toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
+    toXml(*child, "includeDescription", value.includeDescription);
+    toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
+    toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
+    toXml(*child, "sdifColumnName", value.sdifColumnName);
+    toXml(*child, "outsideGridJustification", value.outsideGridJustification.getFlags());
+    xml.addChildElement(child.release());
 }
 
 template <>

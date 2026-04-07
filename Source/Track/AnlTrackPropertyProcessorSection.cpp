@@ -480,10 +480,6 @@ void Track::PropertyProcessorSection::restoreDefaultPreset()
 void Track::PropertyProcessorSection::loadPreset()
 {
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load processor preset from file..."), juce::File{}, App::getFileWildCardFor("preset"));
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
@@ -530,10 +526,6 @@ void Track::PropertyProcessorSection::loadPreset()
 void Track::PropertyProcessorSection::savePreset()
 {
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as processor preset..."), juce::File{}, App::getFileWildCardFor("preset"));
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)

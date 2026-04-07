@@ -120,59 +120,55 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 auto& trackAcsr = trackAcsrs[index].get();
                 trackAcsr.setAttr<Track::AttrType::grid>(mAccessor.getAttr<AttrType::grid>(), notification);
                 auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, mHierarchyManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
-                anlStrongAssert(director != nullptr);
-                if(director != nullptr)
+                director->setAlertCatcher(mAlertCatcher);
+                director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
+                director->setBackupDirectory(mBackupDirectory);
+                director->setSilentResultsFileManagement(mSilentResultsFileManagement);
+                director->setPreserveFullDurationWhenEditing(mIsPreserveFullDurationWhenEditingEnabled);
+                director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                 {
-                    director->setAlertCatcher(mAlertCatcher);
-                    director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
-                    director->setBackupDirectory(mBackupDirectory);
-                    director->setSilentResultsFileManagement(mSilentResultsFileManagement);
-                    director->setPreserveFullDurationWhenEditing(mIsPreserveFullDurationWhenEditingEnabled);
-                    director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
+                    for(auto& group : mGroups)
                     {
-                        for(auto& group : mGroups)
+                        if(group != nullptr)
                         {
-                            if(group != nullptr)
-                            {
-                                group->updateTracks(localNotification);
-                            }
+                            group->updateTracks(localNotification);
                         }
-                        Track::SafeAccessorRetriever sav;
-                        sav.getAccessorFn = getSafeTrackAccessorFn(ptr->getAccessor().getAttr<Track::AttrType::identifier>());
-                        sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
-                        sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
-                        ptr->setSafeAccessorRetriever(sav);
-                        mHierarchyManager.notifyHierarchyChanged(localNotification);
-                    };
-                    director->onNameUpdated = [this](NotificationType localNotification)
-                    {
-                        mHierarchyManager.notifyHierarchyChanged(localNotification);
-                    };
-                    director->onInputUpdated = [this](NotificationType localNotification)
-                    {
-                        mHierarchyManager.notifyHierarchyChanged(localNotification);
-                    };
-                    director->onResultsUpdated = [this, ptr = director.get()](NotificationType localNotification)
-                    {
-                        updateMarkers(localNotification);
-                        mHierarchyManager.notifyHierarchyChanged(localNotification);
-                        mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), localNotification);
-                    };
-                    director->onChannelsLayoutUpdated = [this](NotificationType localNotification)
-                    {
-                        updateMarkers(localNotification);
-                    };
-                    director->onFocusUpdated = [this](NotificationType localNotification)
-                    {
-                        updateMarkers(localNotification);
-                    };
-
+                    }
                     Track::SafeAccessorRetriever sav;
-                    sav.getAccessorFn = getSafeTrackAccessorFn(trackAcsr.getAttr<Track::AttrType::identifier>());
+                    sav.getAccessorFn = getSafeTrackAccessorFn(ptr->getAccessor().getAttr<Track::AttrType::identifier>());
                     sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
                     sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
-                    director->setSafeAccessorRetriever(sav);
-                }
+                    ptr->setSafeAccessorRetriever(sav);
+                    mHierarchyManager.notifyHierarchyChanged(localNotification);
+                };
+                director->onNameUpdated = [this](NotificationType localNotification)
+                {
+                    mHierarchyManager.notifyHierarchyChanged(localNotification);
+                };
+                director->onInputUpdated = [this](NotificationType localNotification)
+                {
+                    mHierarchyManager.notifyHierarchyChanged(localNotification);
+                };
+                director->onResultsUpdated = [this, ptr = director.get()](NotificationType localNotification)
+                {
+                    updateMarkers(localNotification);
+                    mHierarchyManager.notifyHierarchyChanged(localNotification);
+                    mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), localNotification);
+                };
+                director->onChannelsLayoutUpdated = [this](NotificationType localNotification)
+                {
+                    updateMarkers(localNotification);
+                };
+                director->onFocusUpdated = [this](NotificationType localNotification)
+                {
+                    updateMarkers(localNotification);
+                };
+
+                Track::SafeAccessorRetriever sav;
+                sav.getAccessorFn = getSafeTrackAccessorFn(trackAcsr.getAttr<Track::AttrType::identifier>());
+                sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
+                sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
+                director->setSafeAccessorRetriever(sav);
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -193,28 +189,24 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
                 auto& groupAcsr = groupAcsrs[index].get();
                 auto director = std::make_unique<Group::Director>(groupAcsr, *this, mHierarchyManager, mUndoManager);
-                anlStrongAssert(director != nullptr);
-                if(director != nullptr)
+                director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType n)
                 {
-                    director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType n)
-                    {
-                        juce::ignoreUnused(n);
-                        ptr->setSafeAccessorRetriever(getSafeGroupAccessorFn(ptr->getAccessor().getAttr<Group::AttrType::identifier>()));
-                    };
-                    director->onNameUpdated = [this](NotificationType n)
-                    {
-                        mHierarchyManager.notifyHierarchyChanged(n);
-                    };
-                    director->onLayoutUpdated = [this](NotificationType n)
-                    {
-                        mHierarchyManager.notifyHierarchyChanged(n);
-                    };
-                    director->onFocusUpdated = [this](NotificationType n)
-                    {
-                        updateMarkers(n);
-                    };
-                    director->setSafeAccessorRetriever(getSafeGroupAccessorFn(groupAcsr.getAttr<Group::AttrType::identifier>()));
-                }
+                    juce::ignoreUnused(n);
+                    ptr->setSafeAccessorRetriever(getSafeGroupAccessorFn(ptr->getAccessor().getAttr<Group::AttrType::identifier>()));
+                };
+                director->onNameUpdated = [this](NotificationType n)
+                {
+                    mHierarchyManager.notifyHierarchyChanged(n);
+                };
+                director->onLayoutUpdated = [this](NotificationType n)
+                {
+                    mHierarchyManager.notifyHierarchyChanged(n);
+                };
+                director->onFocusUpdated = [this](NotificationType n)
+                {
+                    updateMarkers(n);
+                };
+                director->setSafeAccessorRetriever(getSafeGroupAccessorFn(groupAcsr.getAttr<Group::AttrType::identifier>()));
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
 
                 groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
@@ -1008,11 +1000,6 @@ void Document::Director::restoreAudioFile(juce::File const& file)
 {
     auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
-    MiscWeakAssert(mFileChooser != nullptr);
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<Director> weakReference(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)

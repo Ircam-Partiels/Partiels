@@ -8,10 +8,6 @@ Application::ConverterContent::ConverterContent()
 : mPropertyOpen(juce::translate("Open"), juce::translate("Select a SDIF or a JSON file to convert"), [&]()
                 {
                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
-                    if(mFileChooser == nullptr)
-                    {
-                        return;
-                    }
                     using Flags = juce::FileBrowserComponent::FileChooserFlags;
                     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
                                               {
@@ -538,10 +534,6 @@ void Application::ConverterContent::exportToSdif()
     auto const matrixIdentifier = SdifConverter::getSignature(matrixName);
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a SDIF file"), mFile.withFileExtension("sdif"), "*.sdif");
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
                               {
@@ -624,10 +616,6 @@ void Application::ConverterContent::exportToJson()
     auto const loadInDocument = mPropertyToJsonLoadInDocument.entry.getToggleState();
     auto const position = Tools::getNewTrackPosition();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
                               {

@@ -135,13 +135,10 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     catcher.showAsync();
 
     auto var = std::make_unique<juce::DynamicObject>();
-    if(var != nullptr)
-    {
-        auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
-        var->setProperty("x", viewport.getX());
-        var->setProperty("y", viewport.getY());
-        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
-    }
+    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
+    var->setProperty("x", viewport.getX());
+    var->setProperty("y", viewport.getY());
+    mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
 
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
 
@@ -310,13 +307,10 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     catcher.showAsync();
 
     auto var = std::make_unique<juce::DynamicObject>();
-    if(var != nullptr)
-    {
-        auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
-        var->setProperty("x", viewport.getX());
-        var->setProperty("y", viewport.getY());
-        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
-    }
+    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
+    var->setProperty("x", viewport.getX());
+    var->setProperty("y", viewport.getY());
+    mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
 
     triggerAsyncUpdate();
 
@@ -452,12 +446,9 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
     accessor.copyFrom(tempAcsr, NotificationType::synchronous);
 
     auto var = std::make_unique<juce::DynamicObject>();
-    if(var != nullptr)
-    {
-        var->setProperty("x", viewport.getX());
-        var->setProperty("y", viewport.getY());
-        accessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
-    }
+    var->setProperty("x", viewport.getX());
+    var->setProperty("y", viewport.getY());
+    accessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
 }
 
 juce::String Document::FileBased::getPathReplacement(juce::XmlElement const& element)

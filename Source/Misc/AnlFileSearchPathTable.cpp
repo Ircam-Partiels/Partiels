@@ -53,10 +53,6 @@ FileSearchPathTable::Directory::Directory(FileSearchPathTable& owner, size_t ind
     mEntry.replaceButton.onClick = [=, this]()
     {
         mOwner.mFileChooser = std::make_unique<juce::FileChooser>(juce::translate(juce::translate("Replace the directory...")));
-        if(mOwner.mFileChooser == nullptr)
-        {
-            return;
-        }
         using Flags = juce::FileBrowserComponent::FileChooserFlags;
         mOwner.mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=, this](juce::FileChooser const& fileChooser)
                                          {
@@ -194,10 +190,6 @@ FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
     {
         auto const path = mDirectories.empty() ? mDefaultPath : mFileSearchPath[0];
         mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Add a folder..."), path);
-        if(mFileChooser == nullptr)
-        {
-            return;
-        }
         using Flags = juce::FileBrowserComponent::FileChooserFlags;
         mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories | Flags::canSelectMultipleItems, [this](juce::FileChooser const& fileChooser)
                                   {
@@ -352,10 +344,7 @@ void FileSearchPathTable::setSelection(std::set<size_t> indices, juce::Notificat
 
     for(auto index = 0_z; index < mDirectories.size(); ++index)
     {
-        if(mDirectories[index] != nullptr)
-        {
-            mDirectories[index]->setSelected(indices.count(index) > 0_z);
-        }
+        mDirectories[index]->setSelected(indices.count(index) > 0_z);
     }
 
     if(mSelection != indices)
@@ -484,11 +473,8 @@ void FileSearchPathTable::updateFileSearchPath()
     for(auto const& file : mFileSearchPath)
     {
         auto directoryComponent = std::make_unique<Directory>(*this, static_cast<int>(contents.size()), file);
-        if(directoryComponent != nullptr)
-        {
-            contents.push_back(*directoryComponent.get());
-            mDirectories.push_back(std::move(directoryComponent));
-        }
+        contents.push_back(*directoryComponent.get());
+        mDirectories.push_back(std::move(directoryComponent));
     }
     mDraggableTable.setComponents(contents);
     resized();

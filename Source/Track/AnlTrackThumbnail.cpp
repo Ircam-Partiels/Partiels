@@ -29,13 +29,10 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             return;
         }
         auto var = std::make_unique<juce::DynamicObject>();
-        if(var != nullptr)
-        {
-            auto const center = mResultsButton.getScreenBounds().getCentre();
-            var->setProperty("x", center.x);
-            var->setProperty("y", center.y - 40);
-            mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
-        }
+        auto const center = mResultsButton.getScreenBounds().getCentre();
+        var->setProperty("x", center.x);
+        var->setProperty("y", center.y - 40);
+        mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
     };
 
     mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
@@ -46,13 +43,10 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             return;
         }
         auto var = std::make_unique<juce::DynamicObject>();
-        if(var != nullptr)
-        {
-            auto const center = mPropertiesButton.getScreenBounds().getCentre();
-            var->setProperty("x", center.x);
-            var->setProperty("y", center.y - 40);
-            mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
-        }
+        auto const center = mPropertiesButton.getScreenBounds().getCentre();
+        var->setProperty("x", center.x);
+        var->setProperty("y", center.y - 40);
+        mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
     };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)

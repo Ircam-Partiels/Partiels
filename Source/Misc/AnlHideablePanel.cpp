@@ -135,10 +135,7 @@ void HideablePanel::setContent(juce::String const& title, juce::Component* conte
     {
         mContainer = std::make_unique<Container>(title, *content);
         addAndMakeVisible(mContainer.get());
-        if(mContainer != nullptr)
-        {
-            setSize(mContainer->getWidth(), mContainer->getHeight());
-        }
+        setSize(mContainer->getWidth(), mContainer->getHeight());
     }
 }
 

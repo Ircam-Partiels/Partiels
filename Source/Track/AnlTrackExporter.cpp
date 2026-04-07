@@ -73,11 +73,6 @@ juce::Result Track::Exporter::toProcessorPreset(Accessor const& accessor, juce::
 
     auto const title = juce::translate("Export as processor preset failed!");
     auto xml = std::make_unique<juce::XmlElement>("preset");
-    anlWeakAssert(xml != nullptr);
-    if(xml == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a processor preset because the track cannot be parsed.").replace("ANLNAME", name));
-    }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
     XmlParser::toXml(*xml.get(), "state", accessor.getAttr<AttrType::state>());
@@ -118,11 +113,6 @@ juce::Result Track::Exporter::toGraphicPreset(Accessor const& accessor, juce::Fi
     auto const name = accessor.getAttr<AttrType::name>();
 
     auto xml = std::make_unique<juce::XmlElement>("graphicPreset");
-    anlWeakAssert(xml != nullptr);
-    if(xml == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a graphic preset because the track cannot be parsed.").replace("ANLNAME", name));
-    }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
     XmlParser::toXml(*xml.get(), "graphicsSettings", accessor.getAttr<AttrType::graphicsSettings>());

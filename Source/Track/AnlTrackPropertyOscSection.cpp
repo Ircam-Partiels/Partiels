@@ -68,11 +68,8 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
     {
         juce::SystemClipboard::copyTextToClipboard(Tools::getEffectiveOscIdentifier(mAccessor));
         mTooltip = std::make_unique<juce::TooltipWindow>(nullptr);
-        if(mTooltip != nullptr)
-        {
-            mTooltip->displayTip(juce::Desktop::getMousePosition(), juce::translate("OSC identifier copied to clipboard"));
-            startTimer(500);
-        }
+        mTooltip->displayTip(juce::Desktop::getMousePosition(), juce::translate("OSC identifier copied to clipboard"));
+        startTimer(500);
     };
     mCopyButton.setTooltip(juce::translate("Copy to clipboard"));
 

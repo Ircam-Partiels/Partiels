@@ -180,18 +180,10 @@ void Application::BatcherContent::process()
     auto const identifiers = mExporterPanel.getSelectedIdentifiers();
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Process files to..."));
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=, this](juce::FileChooser const& fileChooser)
                               {
                                   auto copyAcsr = std::make_unique<Document::Accessor>();
-                                  if(copyAcsr == nullptr)
-                                  {
-                                      return;
-                                  }
                                   auto const files = fileChooser.getResults();
                                   if(files.isEmpty())
                                   {

@@ -523,11 +523,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
         };
 
         auto valueZoomListener = std::make_unique<Zoom::Accessor::SmartListener>(typeid(*this).name(), zoomAcsr, zoomAttrChanged);
-        MiscWeakAssert(valueZoomListener != nullptr);
-        if(valueZoomListener != nullptr)
-        {
-            mZoomListeners.push_back(std::move(valueZoomListener));
-        }
+        mZoomListeners.push_back(std::move(valueZoomListener));
     };
 
     for(auto& trackAcsr : documentAcsr.getAcsrs<Document::AcsrType::tracks>())
@@ -536,25 +532,21 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
         if(trackConnected)
         {
             auto trackListener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), trackAttrChanged);
-            MiscWeakAssert(trackListener != nullptr);
-            if(trackListener != nullptr)
+            mTrackListeners.push_back(std::move(trackListener));
+            switch(Track::Tools::getFrameType(trackAcsr.get()).value_or(Track::FrameType::label))
             {
-                mTrackListeners.push_back(std::move(trackListener));
-                switch(Track::Tools::getFrameType(trackAcsr.get()).value_or(Track::FrameType::label))
+                case Track::FrameType::label:
+                    break;
+                case Track::FrameType::value:
                 {
-                    case Track::FrameType::label:
-                        break;
-                    case Track::FrameType::value:
-                    {
-                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
-                        break;
-                    }
-                    case Track::FrameType::vector:
-                    {
-                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
-                        addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>());
-                        break;
-                    }
+                    addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
+                    break;
+                }
+                case Track::FrameType::vector:
+                {
+                    addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::valueZoom>());
+                    addZoomListener(trackAcsr.get().getAcsr<Track::AcsrType::binZoom>());
+                    break;
                 }
             }
         }

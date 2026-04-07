@@ -50,10 +50,6 @@ Application::CommandLine::CommandLine()
              }
 
              mExecutor = std::make_unique<Document::Executor>();
-             if(mExecutor == nullptr)
-             {
-                 fail("Cannot allocate executor!");
-             }
              auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
              if(result.failed())
              {
@@ -214,10 +210,6 @@ Application::CommandLine::CommandLine()
              options.useAutoSize = false;
 
              mExecutor = std::make_unique<Document::Executor>();
-             if(mExecutor == nullptr)
-             {
-                 fail("Cannot allocate executor!");
-             }
              mExecutor->onEnded = [=, this]()
              {
                  LookAndFeel lookAndFeel;
@@ -383,16 +375,12 @@ Application::CommandLine::CommandLine()
                  for(auto const& plugin : std::get<0>(plugins))
                  {
                      auto pluginXml = std::make_unique<juce::XmlElement>("plugin");
-                     MiscWeakAssert(pluginXml != nullptr && "Cannot allocate plugin XML element!");
-                     if(pluginXml != nullptr)
+                     XmlParser::toXml(*pluginXml, "key", plugin.first);
+                     if(includeDescription)
                      {
-                         XmlParser::toXml(*pluginXml, "key", plugin.first);
-                         if(includeDescription)
-                         {
-                             XmlParser::toXml(*pluginXml, "description", plugin.second);
-                         }
-                         xml.addChildElement(pluginXml.release());
+                         XmlParser::toXml(*pluginXml, "description", plugin.second);
                      }
+                     xml.addChildElement(pluginXml.release());
                  }
                  std::cout << xml.toString() << std::endl;
              }
@@ -523,11 +511,6 @@ std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun
     }
 
     auto cli = std::make_unique<CommandLine>();
-    if(cli == nullptr)
-    {
-        anlDebug("Application", "Command line allocation failed!");
-        return nullptr;
-    }
 
 #if JUCE_MAC
     juce::Process::setDockIconVisible(false);

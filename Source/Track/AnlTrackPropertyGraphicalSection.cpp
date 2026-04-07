@@ -737,12 +737,8 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
         auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f)}, step, startChange, applyChange, endChange, true);
-        anlWeakAssert(property != nullptr);
-        if(property != nullptr)
-        {
-            addAndMakeVisible(property.get());
-            mPropertyExtraThresholds.push_back(std::move(property));
-        }
+        addAndMakeVisible(property.get());
+        mPropertyExtraThresholds.push_back(std::move(property));
     }
 }
 
@@ -988,13 +984,9 @@ void Track::PropertyGraphicalSection::updateExtraTheshold()
     {
         auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
         auto& property = mPropertyExtraThresholds[index];
-        MiscWeakAssert(property != nullptr);
-        if(property != nullptr) [[likely]]
-        {
-            auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
-            property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
-            property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
-        }
+        auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
+        property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
+        property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
     }
 }
 
@@ -1020,10 +1012,6 @@ void Track::PropertyGraphicalSection::updateGridPanel()
 void Track::PropertyGraphicalSection::loadPreset()
 {
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load graphic preset from file..."), juce::File{}, App::getFileWildCardFor("graphic"));
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
@@ -1061,10 +1049,6 @@ void Track::PropertyGraphicalSection::loadPreset()
 void Track::PropertyGraphicalSection::savePreset()
 {
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as graphic preset..."), juce::File{}, App::getFileWildCardFor("graphic"));
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
