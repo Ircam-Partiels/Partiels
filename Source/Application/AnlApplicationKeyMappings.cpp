@@ -14,19 +14,16 @@ Application::KeyMappingsContent::Container::Section::Content::Content(juce::Appl
             if(!command->defaultKeypresses.isEmpty())
             {
                 auto property = std::make_unique<PropertyLabel>(command->shortName, command->description);
-                if(property != nullptr)
+                if(command->defaultKeypresses[0] == juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0))
                 {
-                    if(command->defaultKeypresses[0] == juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0))
-                    {
-                        property->entry.setText(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0).getTextDescription(), juce::NotificationType::dontSendNotification);
-                    }
-                    else
-                    {
-                        property->entry.setText(command->defaultKeypresses[0].getTextDescription(), juce::NotificationType::dontSendNotification);
-                    }
-                    addAndMakeVisible(property.get());
-                    mProperties.push_back(std::move(property));
+                    property->entry.setText(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0).getTextDescription(), juce::NotificationType::dontSendNotification);
                 }
+                else
+                {
+                    property->entry.setText(command->defaultKeypresses[0].getTextDescription(), juce::NotificationType::dontSendNotification);
+                }
+                addAndMakeVisible(property.get());
+                mProperties.push_back(std::move(property));
             }
         }
     }
@@ -72,10 +69,7 @@ Application::KeyMappingsContent::Container::~Container()
     mKeyPressMappingSet.removeChangeListener(this);
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            mComponentListener.detachFrom(section->table);
-        }
+        mComponentListener.detachFrom(section->table);
     }
     mSections.clear();
 }
@@ -92,10 +86,7 @@ void Application::KeyMappingsContent::Container::resized()
     };
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            setBounds(section->table);
-        }
+        setBounds(section->table);
     }
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
@@ -104,10 +95,7 @@ void Application::KeyMappingsContent::Container::changeListenerCallback([[maybe_
 {
     for(auto& section : mSections)
     {
-        if(section != nullptr)
-        {
-            mComponentListener.detachFrom(section->table);
-        }
+        mComponentListener.detachFrom(section->table);
     }
     mSections.clear();
     auto const& commandManager = mKeyPressMappingSet.getCommandManager();
@@ -128,12 +116,9 @@ void Application::KeyMappingsContent::Container::changeListenerCallback([[maybe_
         if(hasKeyCommand(category))
         {
             auto section = std::make_unique<Section>(commandManager, category);
-            if(section != nullptr)
-            {
-                addAndMakeVisible(section->table);
-                mComponentListener.attachTo(section->table);
-                mSections.push_back(std::move(section));
-            }
+            addAndMakeVisible(section->table);
+            mComponentListener.attachTo(section->table);
+            mSections.push_back(std::move(section));
         }
     }
     resized();

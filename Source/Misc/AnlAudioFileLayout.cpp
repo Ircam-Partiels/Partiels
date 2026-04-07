@@ -7,13 +7,9 @@ template <>
 void XmlParser::toXml<AudioFileLayout>(juce::XmlElement& xml, juce::Identifier const& attributeName, AudioFileLayout const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    MiscWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "file", value.file);
-        toXml(*child, "channel", value.channel);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "file", value.file);
+    toXml(*child, "channel", value.channel);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -179,10 +175,6 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
                                              }
                                              auto const wildcard = mOwner.mAudioFormatManager.getWildcardForAllFormats();
                                              mOwner.mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), mAudioFileLayout.file, wildcard);
-                                             if(mOwner.mFileChooser == nullptr)
-                                             {
-                                                 return;
-                                             }
                                              using Flags = juce::FileBrowserComponent::FileChooserFlags;
                                              mOwner.mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                                                                               {
@@ -287,10 +279,6 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     {
         auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
         mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load audio files..."), juce::File{}, wildcard);
-        if(mFileChooser == nullptr)
-        {
-            return;
-        }
         using Flags = juce::FileBrowserComponent::FileChooserFlags;
 #ifdef JUCE_WINDOWS
         auto const openFlags = Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems;
@@ -459,10 +447,7 @@ void AudioFileLayoutTable::setSelection(std::set<size_t> indices, juce::Notifica
 
     for(auto index = 0_z; index < mChannels.size(); ++index)
     {
-        if(mChannels[index] != nullptr)
-        {
-            mChannels[index]->setSelected(indices.count(index) > 0_z);
-        }
+        mChannels[index]->setSelected(indices.count(index) > 0_z);
     }
 
     if(mSelection != indices)
@@ -602,11 +587,8 @@ void AudioFileLayoutTable::updateLayout()
     for(auto const& channel : mLayout)
     {
         auto channelComponent = std::make_unique<Channel>(*this, static_cast<int>(contents.size()), channel, mSupportMode);
-        if(channelComponent != nullptr)
-        {
-            contents.push_back(*channelComponent.get());
-            mChannels.push_back(std::move(channelComponent));
-        }
+        contents.push_back(*channelComponent.get());
+        mChannels.push_back(std::move(channelComponent));
     }
     mDraggableTable.setComponents(contents);
 

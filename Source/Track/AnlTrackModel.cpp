@@ -89,17 +89,13 @@ template <>
 void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "map", value.map);
-        toXml(*child, "background", value.background);
-        toXml(*child, "foreground", value.foreground);
-        toXml(*child, "duration", value.duration);
-        toXml(*child, "text", value.text);
-        toXml(*child, "shadow", value.shadow);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "map", value.map);
+    toXml(*child, "background", value.background);
+    toXml(*child, "foreground", value.foreground);
+    toXml(*child, "duration", value.duration);
+    toXml(*child, "text", value.text);
+    toXml(*child, "shadow", value.shadow);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -146,13 +142,9 @@ template <>
 void XmlParser::toXml<Track::LabelLayout>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::LabelLayout const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "position", value.position);
-        toXml(*child, "justification", value.justification);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "position", value.position);
+    toXml(*child, "justification", value.justification);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -187,16 +179,12 @@ template <>
 void XmlParser::toXml<Track::GraphicsSettings>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::GraphicsSettings const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "colours", value.colours);
-        toXml(*child, "font", value.font);
-        toXml(*child, "lineWidth", value.lineWidth);
-        toXml(*child, "unit", value.unit);
-        toXml(*child, "labelLayout", value.labelLayout);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "colours", value.colours);
+    toXml(*child, "font", value.font);
+    toXml(*child, "lineWidth", value.lineWidth);
+    toXml(*child, "unit", value.unit);
+    toXml(*child, "labelLayout", value.labelLayout);
+    xml.addChildElement(child.release());
 }
 
 template <>

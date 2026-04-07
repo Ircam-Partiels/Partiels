@@ -109,10 +109,6 @@ void Application::ExporterContent::exportToFile()
     auto const useDirectory = Document::Exporter::getNumFilesToExport(documentAcsr, identifiers) > 1_z;
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
-    if(mFileChooser == nullptr)
-    {
-        return;
-    }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     auto const fcFlags = useDirectory ? (Flags::canSelectDirectories | Flags::openMode) : (Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting);
     mFileChooser->launchAsync(fcFlags, [=, this](juce::FileChooser const& fileChooser)

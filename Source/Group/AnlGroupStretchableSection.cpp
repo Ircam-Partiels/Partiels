@@ -212,11 +212,7 @@ void Group::StretchableSection::updateContent()
             auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
             auto& trackDirector = mDirector.getTrackDirector(identifier);
             auto trackSection = std::make_unique<Track::Section>(trackDirector, mApplicationCommandManager, mTimeZoomAccessor, mTransportAccessor, mTrackPresetListAccessor, mResizerFn);
-            MiscWeakAssert(trackSection != nullptr);
-            if(trackSection != nullptr)
-            {
-                trackSection->addMouseListener(this, false);
-            }
+            trackSection->addMouseListener(this, false);
             return trackSection;
         },
         nullptr);

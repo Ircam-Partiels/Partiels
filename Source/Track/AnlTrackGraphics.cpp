@@ -63,14 +63,6 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
 
     mData = results;
     mAccess = std::make_unique<Result::Access>(access);
-    if(mAccess == nullptr)
-    {
-        if(onRenderingEnded != nullptr)
-        {
-            onRenderingEnded({});
-        }
-        return hasPluginColorMap;
-    }
 
     auto featureIndex = 0;
     if(plugin != nullptr)

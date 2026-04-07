@@ -217,13 +217,9 @@ template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "identifier", value.identifier);
-        toXml(*child, "feature", value.feature);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "identifier", value.identifier);
+    toXml(*child, "feature", value.feature);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -246,21 +242,17 @@ template <>
 void XmlParser::toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Parameter const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "identifier", value.identifier);
-        toXml(*child, "name", value.name);
-        toXml(*child, "description", value.description);
-        toXml(*child, "unit", value.unit);
-        toXml(*child, "minValue", value.minValue);
-        toXml(*child, "maxValue", value.maxValue);
-        toXml(*child, "defaultValue", value.defaultValue);
-        toXml(*child, "isQuantized", value.isQuantized);
-        toXml(*child, "quantizeStep", value.quantizeStep);
-        toXml(*child, "valueNames", value.valueNames);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "identifier", value.identifier);
+    toXml(*child, "name", value.name);
+    toXml(*child, "description", value.description);
+    toXml(*child, "unit", value.unit);
+    toXml(*child, "minValue", value.minValue);
+    toXml(*child, "maxValue", value.maxValue);
+    toXml(*child, "defaultValue", value.defaultValue);
+    toXml(*child, "isQuantized", value.isQuantized);
+    toXml(*child, "quantizeStep", value.quantizeStep);
+    toXml(*child, "valueNames", value.valueNames);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -291,33 +283,29 @@ template <>
 void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Output const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
+    toXml(*child, "identifier", value.identifier);
+    toXml(*child, "name", value.name);
+    toXml(*child, "description", value.description);
+    toXml(*child, "unit", value.unit);
+    toXml(*child, "hasFixedBinCount", value.hasFixedBinCount);
+    toXml(*child, "binCount", value.binCount);
+    // If the plugins has only empty names, this is ignored
+    if(std::any_of(value.binNames.cbegin(), value.binNames.cend(), [](auto const& name)
+                   {
+                       return !name.empty();
+                   }))
     {
-        toXml(*child, "identifier", value.identifier);
-        toXml(*child, "name", value.name);
-        toXml(*child, "description", value.description);
-        toXml(*child, "unit", value.unit);
-        toXml(*child, "hasFixedBinCount", value.hasFixedBinCount);
-        toXml(*child, "binCount", value.binCount);
-        // If the plugins has only empty names, this is ignored
-        if(std::any_of(value.binNames.cbegin(), value.binNames.cend(), [](auto const& name)
-                       {
-                           return !name.empty();
-                       }))
-        {
-            toXml(*child, "binNames", value.binNames);
-        }
-        toXml(*child, "hasKnownExtents", value.hasKnownExtents);
-        toXml(*child, "minValue", value.minValue);
-        toXml(*child, "maxValue", value.maxValue);
-        toXml(*child, "isQuantized", value.isQuantized);
-        toXml(*child, "quantizeStep", value.quantizeStep);
-        toXml(*child, "sampleType", value.sampleType);
-        toXml(*child, "sampleRate", value.sampleRate);
-        toXml(*child, "hasDuration", value.hasDuration);
-        xml.addChildElement(child.release());
+        toXml(*child, "binNames", value.binNames);
     }
+    toXml(*child, "hasKnownExtents", value.hasKnownExtents);
+    toXml(*child, "minValue", value.minValue);
+    toXml(*child, "maxValue", value.maxValue);
+    toXml(*child, "isQuantized", value.isQuantized);
+    toXml(*child, "quantizeStep", value.quantizeStep);
+    toXml(*child, "sampleType", value.sampleType);
+    toXml(*child, "sampleRate", value.sampleRate);
+    toXml(*child, "hasDuration", value.hasDuration);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -353,20 +341,16 @@ template <>
 void XmlParser::toXml<Plugin::OutputExtra>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::OutputExtra const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "identifier", value.identifier);
-        toXml(*child, "name", value.name);
-        toXml(*child, "description", value.description);
-        toXml(*child, "unit", value.unit);
-        toXml(*child, "hasKnownExtents", value.hasKnownExtents);
-        toXml(*child, "minValue", value.minValue);
-        toXml(*child, "maxValue", value.maxValue);
-        toXml(*child, "isQuantized", value.isQuantized);
-        toXml(*child, "quantizeStep", value.quantizeStep);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "identifier", value.identifier);
+    toXml(*child, "name", value.name);
+    toXml(*child, "description", value.description);
+    toXml(*child, "unit", value.unit);
+    toXml(*child, "hasKnownExtents", value.hasKnownExtents);
+    toXml(*child, "minValue", value.minValue);
+    toXml(*child, "maxValue", value.maxValue);
+    toXml(*child, "isQuantized", value.isQuantized);
+    toXml(*child, "quantizeStep", value.quantizeStep);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -396,26 +380,22 @@ template <>
 void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Description const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
+    toXml(*child, "name", value.name);
+    toXml(*child, "inputDomain", value.inputDomain);
+    toXml(*child, "maker", value.maker);
+    toXml(*child, "version", value.version);
+    toXml(*child, "category", value.category);
+    toXml(*child, "details", value.details);
+    toXml(*child, "defaultState", value.defaultState);
+    toXml(*child, "parameters", value.parameters);
+    toXml(*child, "output", value.output);
+    toXml(*child, "extraOutputs", value.extraOutputs);
+    if(!value.input.identifier.empty())
     {
-        toXml(*child, "name", value.name);
-        toXml(*child, "inputDomain", value.inputDomain);
-        toXml(*child, "maker", value.maker);
-        toXml(*child, "version", value.version);
-        toXml(*child, "category", value.category);
-        toXml(*child, "details", value.details);
-        toXml(*child, "defaultState", value.defaultState);
-        toXml(*child, "parameters", value.parameters);
-        toXml(*child, "output", value.output);
-        toXml(*child, "extraOutputs", value.extraOutputs);
-        if(!value.input.identifier.empty())
-        {
-            toXml(*child, "input", value.input);
-        }
-        toXml(*child, "programs", value.programs);
-        xml.addChildElement(child.release());
+        toXml(*child, "input", value.input);
     }
+    toXml(*child, "programs", value.programs);
+    xml.addChildElement(child.release());
 }
 
 template <>
@@ -455,15 +435,11 @@ template <>
 void XmlParser::toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::State const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "blockSize", value.blockSize);
-        toXml(*child, "stepSize", value.stepSize);
-        toXml(*child, "windowType", value.windowType);
-        toXml(*child, "parameters", value.parameters);
-        xml.addChildElement(child.release());
-    }
+    toXml(*child, "blockSize", value.blockSize);
+    toXml(*child, "stepSize", value.stepSize);
+    toXml(*child, "windowType", value.windowType);
+    toXml(*child, "parameters", value.parameters);
+    xml.addChildElement(child.release());
 }
 
 template <>

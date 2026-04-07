@@ -409,12 +409,9 @@ void Track::Writer::mouseDoubleClick(juce::MouseEvent const& event)
                 }
 
                 auto var = std::make_unique<juce::DynamicObject>();
-                if(var != nullptr)
-                {
-                    var->setProperty("x", event.getScreenX());
-                    var->setProperty("y", event.getScreenY() - 40);
-                    mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
-                }
+                var->setProperty("x", event.getScreenX());
+                var->setProperty("y", event.getScreenY() - 40);
+                mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
             }
             break;
             case FrameType::value:

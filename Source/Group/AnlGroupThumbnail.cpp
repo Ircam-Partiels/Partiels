@@ -54,16 +54,14 @@ Group::Thumbnail::Thumbnail(Director& director)
                                  {
                                      return;
                                  }
-                                 if(auto var = std::make_unique<juce::DynamicObject>())
+                                 auto var = std::make_unique<juce::DynamicObject>();
+                                 auto const position = juce::Desktop::getInstance().getMousePosition();
+                                 var->setProperty("x", position.x);
+                                 var->setProperty("y", position.y - 40);
+                                 auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                                 if(trackAcsrRef.has_value())
                                  {
-                                     auto const position = juce::Desktop::getInstance().getMousePosition();
-                                     var->setProperty("x", position.x);
-                                     var->setProperty("y", position.y - 40);
-                                     auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
-                                     if(trackAcsrRef.has_value())
-                                     {
-                                         trackAcsr->get().sendSignal(Track::SignalType::showTable, var.release(), NotificationType::synchronous);
-                                     }
+                                     trackAcsrRef.value().get().sendSignal(Track::SignalType::showTable, var.release(), NotificationType::synchronous);
                                  }
                              });
             }
@@ -85,13 +83,11 @@ Group::Thumbnail::Thumbnail(Director& director)
                          {
                              return;
                          }
-                         if(auto var = std::make_unique<juce::DynamicObject>())
-                         {
-                             auto const position = juce::Desktop::getInstance().getMousePosition();
-                             var->setProperty("x", position.x);
-                             var->setProperty("y", position.y - 40);
-                             mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
-                         }
+                         auto var = std::make_unique<juce::DynamicObject>();
+                         auto const position = juce::Desktop::getInstance().getMousePosition();
+                         var->setProperty("x", position.x);
+                         var->setProperty("y", position.y - 40);
+                         mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
                      });
         auto const layout = mAccessor.getAttr<AttrType::layout>();
         for(auto const& identifier : layout)
@@ -106,16 +102,14 @@ Group::Thumbnail::Thumbnail(Director& director)
                                  {
                                      return;
                                  }
-                                 if(auto var = std::make_unique<juce::DynamicObject>())
+                                 auto var = std::make_unique<juce::DynamicObject>();
+                                 auto const position = juce::Desktop::getInstance().getMousePosition();
+                                 var->setProperty("x", position.x);
+                                 var->setProperty("y", position.y - 40);
+                                 auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                                 if(trackAcsrRef.has_value())
                                  {
-                                     auto const position = juce::Desktop::getInstance().getMousePosition();
-                                     var->setProperty("x", position.x);
-                                     var->setProperty("y", position.y - 40);
-                                     auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
-                                     if(trackAcsrRef.has_value())
-                                     {
-                                         trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                                     }
+                                     trackAcsrRef.value().get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
                                  }
                              });
             }
