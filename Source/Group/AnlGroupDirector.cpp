@@ -123,7 +123,7 @@ bool Group::Director::isPerformingAction() const
 void Group::Director::startAction(bool includeTracks)
 {
     MiscDebug("Group::Director", "startAction");
-    anlWeakAssert(mIsPerformingAction == false);
+    MiscWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged(true));
@@ -143,7 +143,7 @@ void Group::Director::startAction(bool includeTracks)
 void Group::Director::endAction(bool includeTracks, ActionState state, juce::String const& name)
 {
     MiscDebug("Group::Director", "endAction");
-    anlWeakAssert(mIsPerformingAction == true);
+    MiscWeakAssert(mIsPerformingAction == true);
     mIsPerformingAction = false;
     if(!hasChanged(includeTracks))
     {

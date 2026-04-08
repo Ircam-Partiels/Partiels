@@ -80,7 +80,7 @@ void Track::Scroller::resized()
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, bounds);
     for(auto const& verticalRange : verticalRanges)
     {
-        anlWeakAssert(verticalRange.first < mMouseScrollers.size());
+        MiscWeakAssert(verticalRange.first < mMouseScrollers.size());
         if(verticalRange.first < mMouseScrollers.size())
         {
             auto& scoller = mMouseScrollers[verticalRange.first];

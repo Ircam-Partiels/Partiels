@@ -227,7 +227,7 @@ auto XmlParser::fromXml<Plugin::Key>(juce::XmlElement const& xml, juce::Identifi
     -> Plugin::Key
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -260,7 +260,7 @@ auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Id
     -> Plugin::Parameter
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -313,7 +313,7 @@ auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Ident
     -> Plugin::Output
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -358,7 +358,7 @@ auto XmlParser::fromXml<Plugin::OutputExtra>(juce::XmlElement const& xml, juce::
     -> Plugin::OutputExtra
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -403,7 +403,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     -> Plugin::Description
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -447,7 +447,7 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     -> Plugin::State
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -497,7 +497,7 @@ auto XmlParser::fromXml<Plugin::WebReference>(juce::XmlElement const& xml, juce:
 Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         return {};

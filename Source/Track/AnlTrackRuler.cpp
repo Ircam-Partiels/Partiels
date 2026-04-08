@@ -118,7 +118,7 @@ void Track::Ruler::resized()
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
     for(auto const& verticalRange : verticalRanges)
     {
-        anlWeakAssert(verticalRange.first < mRulers.size());
+        MiscWeakAssert(verticalRange.first < mRulers.size());
         if(verticalRange.first < mRulers.size())
         {
             mRulers[verticalRange.first]->setVisible(true);

@@ -521,7 +521,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                                                                      }
                                                                                  });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mTrackListeners.size() <= acsr.getNumAcsrs<AcsrType::tracks>());
+                MiscWeakAssert(mTrackListeners.size() <= acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
@@ -534,7 +534,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mGroupListeners.size() <= acsr.getNumAcsrs<AcsrType::groups>());
+                MiscWeakAssert(mGroupListeners.size() <= acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:
@@ -550,14 +550,14 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
             case AcsrType::tracks:
             {
                 mTrackListeners.erase(mTrackListeners.begin() + static_cast<long>(index));
-                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
+                MiscWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
                 setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
             }
             break;
             case AcsrType::groups:
             {
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
-                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                MiscWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
                 setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
             }
             break;
@@ -1311,14 +1311,14 @@ juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File c
     }
     else
     {
-        anlStrongAssert(options.useTextFormat());
+        MiscStrongAssert(options.useTextFormat());
         if(!options.useTextFormat())
         {
             MiscDebug("Exporter", "Invalid format");
             return juce::Result::fail(juce::translate("Invalid format"));
         }
         auto const documentHasTrack = Tools::hasTrackAcsr(accessor, identifier);
-        anlStrongAssert(documentHasTrack);
+        MiscStrongAssert(documentHasTrack);
         if(!documentHasTrack)
         {
             MiscDebug("Exporter", "Invalid track");
@@ -1397,7 +1397,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     -> Document::Exporter::Options
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;

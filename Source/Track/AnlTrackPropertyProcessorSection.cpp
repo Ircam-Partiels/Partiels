@@ -171,7 +171,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 for(auto const& parameter : description.parameters)
                 {
                     auto property = Plugin::Tools::createProperty(parameter, applyValue);
-                    anlWeakAssert(property != nullptr);
+                    MiscWeakAssert(property != nullptr);
                     if(property != nullptr)
                     {
                         addAndMakeVisible(property.get());
@@ -357,7 +357,7 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                          [=, this]()
                          {
                              auto state = mAccessor.getAttr<AttrType::state>();
-                             anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
+                             MiscWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
                              state.parameters[parameter.identifier] = std::clamp(value, parameter.minValue, parameter.maxValue);
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
@@ -560,7 +560,7 @@ void Track::PropertyProcessorSection::changePreset(int presetId)
     askToModifyProcessor([=, this](bool result)
                          {
                              auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
-                             anlWeakAssert(index < programs.size());
+                             MiscWeakAssert(index < programs.size());
                              auto const isValid = result && index < programs.size();
                              if(isValid)
                              {
@@ -571,7 +571,7 @@ void Track::PropertyProcessorSection::changePreset(int presetId)
                          [=, this]()
                          {
                              auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
-                             anlWeakAssert(index < programs.size());
+                             MiscWeakAssert(index < programs.size());
                              if(index >= programs.size())
                              {
                                  mDirector.endAction(ActionState::abort, juce::translate("Apply track processor preset"));
@@ -673,7 +673,7 @@ void Track::PropertyProcessorSection::updateState()
             }
             else
             {
-                anlWeakAssert(false && "property unsupported");
+                MiscWeakAssert(false && "property unsupported");
             }
         }
     }

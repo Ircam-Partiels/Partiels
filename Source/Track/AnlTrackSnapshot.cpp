@@ -339,7 +339,7 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
         auto toImageRange = [](ZoomRange const& globalRange, ZoomRange const& visibleRange, int imageSize)
         {
             auto const globalLength = globalRange.getLength();
-            anlStrongAssert(globalLength > 0.0);
+            MiscStrongAssert(globalLength > 0.0);
             if(globalLength <= 0.0)
             {
                 return juce::Range<float>();

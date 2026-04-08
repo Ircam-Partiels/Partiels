@@ -181,7 +181,7 @@ juce::Component const* Group::StretchableSection::getPlot(juce::String const& id
             return &it->second->getPlot();
         }
     }
-    anlWeakAssert(false);
+    MiscWeakAssert(false);
     return nullptr;
 }
 

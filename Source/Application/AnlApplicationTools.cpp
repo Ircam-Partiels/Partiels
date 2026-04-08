@@ -85,7 +85,7 @@ void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentif
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     for(auto const& trackIdentifier : copy)
     {
-        anlWeakAssert(Document::Tools::isTrackInGroup(documentAcsr, trackIdentifier));
+        MiscWeakAssert(Document::Tools::isTrackInGroup(documentAcsr, trackIdentifier));
         if(Document::Tools::isTrackInGroup(documentAcsr, trackIdentifier))
         {
             auto& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier);

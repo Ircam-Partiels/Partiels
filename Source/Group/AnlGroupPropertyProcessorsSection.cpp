@@ -187,7 +187,7 @@ void Group::PropertyProcessorsSection::applyParameterValue(Plugin::Parameter con
                                   auto it = state.parameters.find(parameter.identifier);
                                   if(it != state.parameters.end())
                                   {
-                                      anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
+                                      MiscWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
                                       it->second = std::min(std::max(value, parameter.minValue), parameter.maxValue);
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
@@ -573,7 +573,7 @@ void Group::PropertyProcessorsSection::updateParameters()
             if(mParameterProperties.count(parameter.identifier) == 0_z)
             {
                 auto property = Plugin::Tools::createProperty(parameter, changeValue);
-                anlWeakAssert(property != nullptr);
+                MiscWeakAssert(property != nullptr);
                 if(property != nullptr)
                 {
                     addAndMakeVisible(property.get());
@@ -668,7 +668,7 @@ void Group::PropertyProcessorsSection::updateState()
         }
         else
         {
-            anlWeakAssert(false && "property unsupported");
+            MiscWeakAssert(false && "property unsupported");
         }
     }
 }

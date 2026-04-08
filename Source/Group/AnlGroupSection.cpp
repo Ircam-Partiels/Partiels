@@ -144,7 +144,7 @@ void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
 {
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
-    anlWeakAssert(obj != nullptr && source != nullptr);
+    MiscWeakAssert(obj != nullptr && source != nullptr);
     auto* parent = findParentComponentOfClass<StretchableSection>();
     if(obj == nullptr || source == nullptr || source->findParentComponentOfClass<StretchableSection>() == parent)
     {
@@ -173,7 +173,7 @@ void Group::Section::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
 void Group::Section::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
     auto* source = dragSourceDetails.sourceComponent.get();
-    anlWeakAssert(source != nullptr);
+    MiscWeakAssert(source != nullptr);
     if(source != nullptr)
     {
         source->setAlpha(1.0f);
@@ -189,7 +189,7 @@ void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
 
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
-    anlWeakAssert(obj != nullptr && source != nullptr);
+    MiscWeakAssert(obj != nullptr && source != nullptr);
     if(obj == nullptr || source == nullptr)
     {
         return;

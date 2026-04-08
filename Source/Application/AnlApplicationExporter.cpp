@@ -118,7 +118,7 @@ void Application::ExporterContent::exportToFile()
                                   {
                                       return;
                                   }
-                                  anlWeakAssert(!mProcess.valid());
+                                  MiscWeakAssert(!mProcess.valid());
                                   if(mProcess.valid())
                                   {
                                       return;
@@ -157,7 +157,7 @@ void Application::ExporterContent::handleAsyncUpdate()
 
     mLoadingIcon.setActive(false);
     juce::MouseCursor::hideWaitCursor();
-    anlWeakAssert(mProcess.valid());
+    MiscWeakAssert(mProcess.valid());
     if(!mProcess.valid())
     {
         return;

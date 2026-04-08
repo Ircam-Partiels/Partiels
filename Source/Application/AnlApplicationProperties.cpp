@@ -26,7 +26,7 @@ Application::Properties::Properties()
 
     if(getFile("").getParentDirectory().createDirectory().failed())
     {
-        anlStrongAssert(false && "cannot create parent directory");
+        MiscStrongAssert(false && "cannot create parent directory");
     }
 
     loadFromFile(PropertyType::Application);
@@ -54,7 +54,7 @@ Application::Properties::Properties()
                                 }
                                 else
                                 {
-                                    anlDebug("Application::Properties", juce::String("Web plugin list download failed: ERROR").replace("ERROR", result.getErrorMessage()));
+                                    MiscDebug("Application::Properties", juce::String("Web plugin list download failed: ERROR").replace("ERROR", result.getErrorMessage()));
                                 }
                             });
 }
@@ -71,7 +71,7 @@ Application::Properties::~Properties()
 
 void Application::Properties::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    anlWeakAssert(source == std::addressof(Instance::get().getAudioDeviceManager()));
+    MiscWeakAssert(source == std::addressof(Instance::get().getAudioDeviceManager()));
     if(source == std::addressof(Instance::get().getAudioDeviceManager()))
     {
         saveToFile(PropertyType::AudioSetup);
@@ -90,15 +90,15 @@ juce::File Application::Properties::getFile(juce::StringRef const& fileName)
 
 void Application::Properties::saveToFile(PropertyType type)
 {
-    anlStrongAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    MiscStrongAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
     auto writeTo = [](std::unique_ptr<juce::XmlElement> xml, juce::StringRef const& fileName)
     {
-        anlStrongAssert(xml != nullptr);
+        MiscStrongAssert(xml != nullptr);
         if(xml != nullptr)
         {
             if(!xml->writeTo(getFile(fileName)))
             {
-                anlWeakAssert(false && "cannot write to file");
+                MiscWeakAssert(false && "cannot write to file");
             }
         }
     };
@@ -134,7 +134,7 @@ void Application::Properties::saveToFile(PropertyType type)
 
 void Application::Properties::loadFromFile(PropertyType type)
 {
-    anlStrongAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    MiscStrongAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
     switch(type)
     {
         case PropertyType::Application:

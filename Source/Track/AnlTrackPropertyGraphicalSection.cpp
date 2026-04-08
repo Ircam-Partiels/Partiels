@@ -509,7 +509,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 mPropertyValueRange.entry.setEnabled(isEnable);
                 if(isEnable)
                 {
-                    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
+                    MiscWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
                     auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
                     mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
                     mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);

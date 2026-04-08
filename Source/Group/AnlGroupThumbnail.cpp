@@ -270,7 +270,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StretchableSection>();
     auto* laf = dynamic_cast<LookAndFeel*>(&getLookAndFeel());
-    anlWeakAssert(dragContainer != nullptr && parent != nullptr && laf != nullptr);
+    MiscWeakAssert(dragContainer != nullptr && parent != nullptr && laf != nullptr);
     if(dragContainer != nullptr && laf != nullptr && !dragContainer->isDragAndDropActive() && section != nullptr && parent != nullptr)
     {
         auto const p = -event.getMouseDownPosition();

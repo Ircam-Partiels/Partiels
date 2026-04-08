@@ -20,7 +20,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
 {
     auto hasPluginColorMap = accessor.getAttr<AttrType::hasPluginColourMap>();
     std::unique_lock<std::mutex> lock(mRenderingMutex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
+    MiscStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
         return hasPluginColorMap;
@@ -51,7 +51,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
     auto const& output = accessor.getAttr<AttrType::description>().output;
     auto const height = static_cast<int>(output.hasFixedBinCount ? output.binCount : results.getNumBins().value_or(0_z));
     auto const width = static_cast<int>(results.getNumColumns().value_or(0_z));
-    anlWeakAssert(width > 0 && height > 0);
+    MiscWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
         if(onRenderingEnded != nullptr)
@@ -113,7 +113,7 @@ void Track::Graphics::handleAsyncUpdate()
     std::unique_lock<std::mutex> lock(mRenderingMutex);
     if(mRenderingProcess.joinable())
     {
-        anlWeakAssert(mRenderingState != ProcessState::available);
+        MiscWeakAssert(mRenderingState != ProcessState::available);
 
         auto expected = ProcessState::ended;
         if(mRenderingState.load() == ProcessState::running)
@@ -299,7 +299,7 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
         return {};
     }
 
-    anlStrongAssert(imageWidth > 0 && imageHeight > 0);
+    MiscStrongAssert(imageWidth > 0 && imageHeight > 0);
     if(imageWidth <= 0 || imageHeight <= 0 || info.numColumns <= 0 || info.numRows <= 0)
     {
         return {};

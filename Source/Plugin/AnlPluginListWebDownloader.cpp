@@ -167,7 +167,7 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::parse(juce::String 
 #ifdef JUCE_DEBUG
     for(auto const& library : libraries)
     {
-        anlDebug("PluginList::WebDownloader", "Library: " + library.first);
+        MiscDebug("PluginList::WebDownloader", "Library: " + library.first);
     }
 #endif
 
@@ -229,7 +229,7 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::parse(juce::String 
 #ifdef JUCE_DEBUG
     for(auto const& plugin : plugins)
     {
-        anlDebug("PluginList::WebDownloader", "Plugin: " + plugin.name);
+        MiscDebug("PluginList::WebDownloader", "Plugin: " + plugin.name);
     }
 #endif
 
@@ -270,13 +270,13 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::download(std::atomi
             stream = juce::URL(subUrl).createInputStream(options);
             if(stream != nullptr)
             {
-                anlDebug("PluginList::WebDownloader", "URL: " + subUrl);
+                MiscDebug("PluginList::WebDownloader", "URL: " + subUrl);
                 auto const descriptions = parse(stream->readEntireStreamAsString(), shouldQuit);
                 allDescriptions.insert(allDescriptions.end(), descriptions.cbegin(), descriptions.cend());
             }
             else
             {
-                anlDebug("PluginList::WebDownloader", "Failed to download plugin RDF from URL: " + subUrl);
+                MiscDebug("PluginList::WebDownloader", "Failed to download plugin RDF from URL: " + subUrl);
             }
         }
         if(shouldQuit)

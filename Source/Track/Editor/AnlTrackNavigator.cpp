@@ -122,7 +122,7 @@ void Track::Navigator::resized()
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, bounds);
     for(auto const& verticalRange : verticalRanges)
     {
-        anlWeakAssert(verticalRange.first < mVerticalRulers.size());
+        MiscWeakAssert(verticalRange.first < mVerticalRulers.size());
         if(verticalRange.first < mVerticalRulers.size())
         {
             auto& ruler = mVerticalRulers[verticalRange.first];

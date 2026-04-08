@@ -132,7 +132,7 @@ void Application::BatcherContent::handleAsyncUpdate()
 
     mLoadingIcon.setActive(false);
     juce::MouseCursor::hideWaitCursor();
-    anlWeakAssert(mProcess.valid());
+    MiscWeakAssert(mProcess.valid());
     if(!mProcess.valid())
     {
         return;
@@ -162,14 +162,14 @@ void Application::BatcherContent::handleAsyncUpdate()
 
 void Application::BatcherContent::process()
 {
-    anlWeakAssert(!mProcess.valid());
+    MiscWeakAssert(!mProcess.valid());
     if(mProcess.valid())
     {
         return;
     }
 
     auto const layouts = mAudioFileLayoutTable.getLayout();
-    anlWeakAssert(!layouts.empty());
+    MiscWeakAssert(!layouts.empty());
     if(layouts.empty())
     {
         return;

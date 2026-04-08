@@ -88,7 +88,7 @@ Application::AudioSettingsContent::AudioSettingsContent()
                                     return;
                                 }
                                 auto* currentDevice = audioDeviceManager.getCurrentAudioDevice();
-                                anlStrongAssert(currentDevice != nullptr);
+                                MiscStrongAssert(currentDevice != nullptr);
                                 if(currentDevice == nullptr)
                                 {
                                     Properties::askToRestoreDefaultAudioSettings(juce::translate("No audio device selected."));
@@ -258,7 +258,7 @@ void Application::AudioSettingsContent::resized()
 void Application::AudioSettingsContent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     auto& deviceManager = Instance::get().getAudioDeviceManager();
-    anlWeakAssert(source == std::addressof(deviceManager));
+    MiscWeakAssert(source == std::addressof(deviceManager));
     if(source != std::addressof(deviceManager))
     {
         return;
