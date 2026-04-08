@@ -13,6 +13,11 @@ Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audio
     mOutputBuffer.resize(static_cast<size_t>(audioFormatReader.numChannels));
 }
 
+size_t Plugin::Processor::CircularReader::getNumChannels() const
+{
+    return static_cast<size_t>(mAudioFormatReader.numChannels);
+}
+
 juce::int64 Plugin::Processor::CircularReader::getLengthInSamples() const
 {
     return mAudioFormatReader.lengthInSamples;
@@ -113,15 +118,19 @@ Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::ve
 {
 }
 
-bool Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& results)
+juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& results)
 {
-    anlStrongAssert(!mPlugins.empty());
-    if(mPlugins.empty() || std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
-                                       {
-                                           return plugin == nullptr;
-                                       }))
+    MiscStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty())
     {
-        return false;
+        return juce::Result::fail(juce::translate("The processor has no plugin to process the audio"));
+    }
+    if(std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
+                   {
+                       return plugin == nullptr;
+                   }))
+    {
+        return juce::Result::fail(juce::translate("The processor has a null plugin"));
     }
 
     auto const blockSize = mState.blockSize;
@@ -129,14 +138,43 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& resul
     anlStrongAssert(blockSize > 0 && stepSize > 0);
     if(blockSize <= 0 || stepSize <= 0)
     {
-        return false;
+        return juce::Result::fail(juce::translate("The processor has an invalid block or step size"));
+    }
+
+    auto numReaderChannels = mCircularReader.getNumChannels();
+    auto const maxChannels = mPlugins.at(0)->getMaxChannelCount();
+    for(auto& plugin : mPlugins)
+    {
+        if(auto* adapter = plugin->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
+        {
+            adapter->setWindowType(mState.windowType);
+        }
+
+        auto const descriptors = plugin->getParameterDescriptors();
+        for(auto const& parameter : mState.parameters)
+        {
+            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+                           {
+                               return descriptor.identifier == parameter.first;
+                           }))
+            {
+                plugin->setParameter(parameter.first, parameter.second);
+            }
+        }
+
+        auto const numChannels = std::min(maxChannels, numReaderChannels);
+        numReaderChannels -= numChannels;
+        if(!plugin->initialise(numChannels, mState.stepSize, mState.blockSize))
+        {
+            return juce::Result::fail(juce::translate("The processor failed to initialise the plugin"));
+        }
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
     anlStrongAssert(mFeature < descriptors.size());
     if(mFeature >= descriptors.size())
     {
-        return false;
+        return juce::Result::fail(juce::translate("The processor has an invalid feature index"));
     }
 
     results.resize(mPlugins.size());
@@ -160,12 +198,24 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& resul
             channelResults.reserve(size);
         }
     }
-    return true;
+    return juce::Result::ok();
 }
 
-bool Plugin::Processor::setPrecomputingResults(std::vector<std::vector<Result>> const& results)
+juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<Result>> const& results)
 {
-    anlWeakAssert(!mPlugins.empty());
+    MiscStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty())
+    {
+        return juce::Result::fail(juce::translate("The processor has no plugin to process the audio"));
+    }
+    if(std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
+                   {
+                       return plugin == nullptr;
+                   }))
+    {
+        return juce::Result::fail(juce::translate("The processor has a null plugin"));
+    }
+
     anlWeakAssert(results.empty() || results.size() == 1_z || results.size() == mPlugins.size());
     Vamp::Plugin::FeatureSet fs;
     if(results.size() == 1_z)
@@ -191,18 +241,22 @@ bool Plugin::Processor::setPrecomputingResults(std::vector<std::vector<Result>> 
             mPlugins[index]->setPreComputingFeatures(fs);
         }
     }
-    return results.empty() || results.size() == 1_z || results.size() == mPlugins.size();
+    return (results.empty() || results.size() == 1_z || results.size() == mPlugins.size()) ? juce::Result::ok() : juce::Result::fail(juce::translate("The precomputed results size is invalid"));
 }
 
-bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& results)
+std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& results)
 {
-    anlStrongAssert(!mPlugins.empty());
-    if(mPlugins.empty() || std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
-                                       {
-                                           return plugin == nullptr;
-                                       }))
+    MiscStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty())
     {
-        return false;
+        return std::make_tuple(juce::Result::fail(juce::translate("The processor has no plugin to process the audio")), false);
+    }
+    if(std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
+                   {
+                       return plugin == nullptr;
+                   }))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The processor has a null plugin")), false);
     }
 
     auto const feature = mFeature;
@@ -211,7 +265,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& 
     anlStrongAssert(blockSize > 0 && stepSize > 0);
     if(blockSize <= 0 || stepSize <= 0)
     {
-        return false;
+        return std::make_tuple(juce::Result::fail(juce::translate("The processor has an invalid block or step size")), false);
     }
 
     auto const position = mCircularReader.getPosition();
@@ -237,7 +291,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& 
                 }
             }
         }
-        return false;
+        return std::make_tuple(juce::Result::ok(), false);
     }
 
     auto const** block = mCircularReader.getNextBlock();
@@ -259,7 +313,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& 
         }
         block += mPlugins[index]->getMaxChannelCount();
     }
-    return true;
+    return std::make_tuple(juce::Result::ok(), true);
 }
 
 float Plugin::Processor::getAdvancement() const
@@ -311,7 +365,7 @@ Plugin::Output Plugin::Processor::getOutput() const
 
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
 {
-    auto plugins = Tools::createAndInitializePluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
+    auto plugins = Tools::createPluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
     if(plugins.empty())
     {
         return nullptr;

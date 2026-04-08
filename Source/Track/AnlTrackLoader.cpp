@@ -1372,7 +1372,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
             break;
     }
     advancement.store(0.9f);
-    auto results = Tools::convert(output, pluginResults, shouldAbort);
+    auto results = Tools::convert(output, pluginResults, [&]()
+                                  {
+                                      return !shouldAbort.load();
+                                  });
     advancement.store(1.0f);
     return {std::move(results)};
 }

@@ -361,10 +361,18 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
 
-    mProcessor.onAnalysisEnded = [&](Results const& results)
+    mProcessor.onAnalysisEnded = [&](juce::Result const& result, Results const& data)
     {
-        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
-        runRendering();
+        if(result.wasOk())
+        {
+            mAccessor.setAttr<AttrType::results>(data, NotificationType::synchronous);
+            runRendering();
+        }
+        else
+        {
+            mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, NotificationType::synchronous);
+            warmAboutPlugin(result.getErrorMessage());
+        }
     };
 
     mProcessor.onAnalysisAborted = [&]()
@@ -704,6 +712,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
     auto inputResults = input.isNotEmpty() ? mHierarchyManager.getAccessor(input).getAttr<AttrType::results>() : Results{};
     try
     {
+        mProcessor.stopAnalysis();
         auto const description = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
         if(description.has_value())
         {
