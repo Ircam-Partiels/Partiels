@@ -10,7 +10,7 @@ public:
     Chrono(juce::String const& domain);
     ~Chrono() = default;
 
-#ifdef DEBUG
+#if JUCE_DEBUG
     void start();
     void stop(char const* message);
 #else
@@ -24,7 +24,7 @@ public:
 
 private:
     juce::String const mDomain;
-#ifdef DEBUG
+#if JUCE_DEBUG
     juce::int64 mTime;
 #endif
 };

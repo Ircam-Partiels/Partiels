@@ -164,7 +164,7 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::parse(juce::String 
     {
         return {};
     }
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     for(auto const& library : libraries)
     {
         MiscDebug("PluginList::WebDownloader", "Library: " + library.first);
@@ -226,7 +226,7 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::parse(juce::String 
     {
         return {};
     }
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     for(auto const& plugin : plugins)
     {
         MiscDebug("PluginList::WebDownloader", "Plugin: " + plugin.name);

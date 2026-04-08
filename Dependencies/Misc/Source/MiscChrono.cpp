@@ -7,7 +7,7 @@ Chrono::Chrono(juce::String const& domain)
 {
 }
 
-#ifdef DEBUG
+#if JUCE_DEBUG
 void Chrono::start()
 {
     mTime = juce::Time::getHighResolutionTicks();

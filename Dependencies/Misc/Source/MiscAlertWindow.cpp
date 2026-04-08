@@ -5,7 +5,7 @@ MISC_FILE_BEGIN
 #if JUCE_MODAL_LOOPS_PERMITTED
 void AlertWindow::showMessage(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     auto getTypeAsText = [&]()
     {
         switch(type)
@@ -33,7 +33,7 @@ void AlertWindow::showMessage(MessageType const type, juce::String const& title,
 
 bool AlertWindow::showOkCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     auto getTypeAsText = [&]()
     {
         switch(type)
@@ -61,7 +61,7 @@ bool AlertWindow::showOkCancel(MessageType const type, juce::String const& title
 
 AlertWindow::Answer AlertWindow::showYesNoCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     auto getTypeAsText = [&]()
     {
         switch(type)

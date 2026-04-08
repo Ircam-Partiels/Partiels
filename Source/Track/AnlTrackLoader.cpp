@@ -335,7 +335,7 @@ void Track::Loader::handleAsyncUpdate()
     {
         if(mShouldAbort.exchange(false))
         {
-#ifdef DEBUG
+#if JUCE_DEBUG
             auto const vResults = mLoadingProcess.get();
             auto* results = std::get_if<Results>(&vResults);
             MiscWeakAssert(results != nullptr && results->isEmpty());
