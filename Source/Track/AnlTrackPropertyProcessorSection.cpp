@@ -171,13 +171,9 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 for(auto const& parameter : description.parameters)
                 {
                     auto property = Plugin::Tools::createProperty(parameter, applyValue);
-                    MiscWeakAssert(property != nullptr);
-                    if(property != nullptr)
-                    {
-                        addAndMakeVisible(property.get());
-                        property->setEnabled(hasPlugin);
-                        mParameterProperties[parameter.identifier] = std::move(property);
-                    }
+                    addAndMakeVisible(property.get());
+                    property->setEnabled(hasPlugin);
+                    mParameterProperties[parameter.identifier] = std::move(property);
                 }
 
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
@@ -282,11 +278,7 @@ void Track::PropertyProcessorSection::resized()
     setBounds(mPropertyInputTrack);
     for(auto& property : mParameterProperties)
     {
-        MiscWeakAssert(property.second != nullptr);
-        if(property.second != nullptr)
-        {
-            setBounds(*property.second.get());
-        }
+        setBounds(*property.second.get());
     }
     setBounds(mPropertyPreset);
     setBounds(mProgressBarAnalysis);
@@ -656,25 +648,14 @@ void Track::PropertyProcessorSection::updateState()
 
     for(auto const& parameter : state.parameters)
     {
-        auto it = mParameterProperties.find(parameter.first);
-        if(it != mParameterProperties.end() && it->second != nullptr)
+        auto propertyIt = mParameterProperties.find(parameter.first);
+        auto const parameterIt = std::find_if(description.parameters.cbegin(), description.parameters.cend(), [&](auto const& p)
+                                              {
+                                                  return p.identifier == parameter.first;
+                                              });
+        if(propertyIt != mParameterProperties.end() && parameterIt != description.parameters.cend())
         {
-            if(auto* propertyList = dynamic_cast<PropertyList*>(it->second.get()))
-            {
-                propertyList->entry.setSelectedItemIndex(static_cast<int>(std::floor(parameter.second)), silent);
-            }
-            else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(it->second.get()))
-            {
-                propertyNumber->entry.setValue(static_cast<double>(parameter.second), silent);
-            }
-            else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(it->second.get()))
-            {
-                propertyToggle->entry.setToggleState(parameter.second > 0.5f, silent);
-            }
-            else
-            {
-                MiscWeakAssert(false && "property unsupported");
-            }
+            Plugin::Tools::setPropertyValue(*propertyIt->second.get(), *parameterIt, {parameter.second}, silent);
         }
     }
 

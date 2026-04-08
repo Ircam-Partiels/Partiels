@@ -94,11 +94,7 @@ void Group::PropertyProcessorsSection::resized()
     setBounds(mPropertyStepSize);
     for(auto& property : mParameterProperties)
     {
-        MiscWeakAssert(property.second != nullptr);
-        if(property.second != nullptr)
-        {
-            setBounds(*property.second.get());
-        }
+        setBounds(*property.second.get());
     }
     setSize(getWidth(), bounds.getY());
 }
@@ -573,13 +569,9 @@ void Group::PropertyProcessorsSection::updateParameters()
             if(mParameterProperties.count(parameter.identifier) == 0_z)
             {
                 auto property = Plugin::Tools::createProperty(parameter, changeValue);
-                MiscWeakAssert(property != nullptr);
-                if(property != nullptr)
-                {
-                    addAndMakeVisible(property.get());
-                    property->setEnabled(hasPlugin);
-                    mParameterProperties[parameter.identifier] = std::move(property);
-                }
+                addAndMakeVisible(property.get());
+                property->setEnabled(hasPlugin);
+                mParameterProperties[parameter.identifier] = std::move(property);
             }
         }
     }
@@ -616,59 +608,27 @@ void Group::PropertyProcessorsSection::updateState()
                 values.insert(it->second);
             }
         }
-        if(auto* propertyList = dynamic_cast<PropertyList*>(parameter.second.get()))
+
+        auto propertyIt = mParameterProperties.find(parameter.first);
+        auto const parameterIt = [&]()
         {
-            if(values.empty())
+            for(auto const& trackAcsr : trackAcsrs)
             {
-                propertyList->setEnabled(!values.empty());
-                propertyList->entry.setText(juce::translate("No Value"), juce::NotificationType::dontSendNotification);
+                auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
+                auto const it = std::find_if(description.parameters.cbegin(), description.parameters.cend(), [&](auto const& p)
+                                             {
+                                                 return p.identifier == parameter.first;
+                                             });
+                if(it != description.parameters.cend())
+                {
+                    return std::make_optional(it);
+                }
             }
-            else if(values.size() == 1_z)
-            {
-                propertyList->entry.setSelectedItemIndex(static_cast<int>(std::floor(*values.cbegin())), juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                propertyList->entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
-            }
-        }
-        else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(parameter.second.get()))
+            return std::optional<std::vector<Plugin::Parameter>::const_iterator>{};
+        }();
+        if(propertyIt != mParameterProperties.end() && parameterIt.has_value())
         {
-            if(values.empty())
-            {
-                propertyNumber->setEnabled(!values.empty());
-                propertyNumber->entry.setText(juce::translate("No Value"), juce::NotificationType::dontSendNotification);
-            }
-            if(values.size() == 1_z)
-            {
-                propertyNumber->entry.setValue(static_cast<double>(*values.cbegin()), juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                propertyNumber->entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
-            }
-        }
-        else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(parameter.second.get()))
-        {
-            if(values.empty())
-            {
-                propertyToggle->entry.getProperties().remove("Multiple Values");
-                propertyToggle->setEnabled(!values.empty());
-            }
-            else if(values.size() == 1_z)
-            {
-                propertyToggle->entry.getProperties().remove("Multiple Values");
-                propertyToggle->entry.setToggleState(*values.cbegin() > 0.5f, juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                propertyToggle->entry.getProperties().set("Multiple Values", {true});
-                propertyToggle->entry.setToggleState(false, juce::NotificationType::dontSendNotification);
-            }
-        }
-        else
-        {
-            MiscWeakAssert(false && "property unsupported");
+            Plugin::Tools::setPropertyValue(*propertyIt->second.get(), *parameterIt.value(), values, juce::NotificationType::dontSendNotification);
         }
     }
 }
