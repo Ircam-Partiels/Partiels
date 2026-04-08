@@ -519,7 +519,7 @@ bool Track::Director::isPerformingAction() const
 void Track::Director::startAction()
 {
     MiscDebug("Track", "Director::startAction");
-    anlWeakAssert(mIsPerformingAction == false);
+    MiscWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged());
@@ -530,7 +530,7 @@ void Track::Director::startAction()
 void Track::Director::endAction(ActionState state, juce::String const& name)
 {
     MiscDebug("Track", "Director::endAction");
-    anlWeakAssert(mIsPerformingAction == true);
+    MiscWeakAssert(mIsPerformingAction == true);
     mIsPerformingAction = false;
     if(!hasChanged())
     {
@@ -638,7 +638,7 @@ void Track::Director::setGlobalValueRange(juce::Range<double> const& range, Noti
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
-    anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
+    MiscStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
     if(audioFormatReader == mAudioFormatReader)
     {
         return;
@@ -716,7 +716,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
         auto const description = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
         if(description.has_value())
         {
-            anlDebug("Track", "analysis launched");
+            MiscDebug("Track", "analysis launched");
             mAccessor.setAttr<AttrType::description>(description.value(), notification);
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
             startTimer(50);

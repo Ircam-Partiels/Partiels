@@ -169,7 +169,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     }
     else
     {
-        anlStrongAssert(false && "menu name is invalid");
+        MiscStrongAssert(false && "menu name is invalid");
     }
     return menu;
 }

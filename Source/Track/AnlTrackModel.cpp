@@ -103,7 +103,7 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     -> Track::ColourSet
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -152,7 +152,7 @@ auto XmlParser::fromXml<Track::LabelLayout>(juce::XmlElement const& xml, juce::I
     -> Track::LabelLayout
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -192,7 +192,7 @@ auto XmlParser::fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, ju
     -> Track::GraphicsSettings
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;

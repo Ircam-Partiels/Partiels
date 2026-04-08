@@ -227,7 +227,7 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const
     {
         return std::optional<Zoom::Range>();
     }
-    anlWeakAssert(std::isfinite(output.minValue) && std::isfinite(output.maxValue));
+    MiscWeakAssert(std::isfinite(output.minValue) && std::isfinite(output.maxValue));
     if(!std::isfinite(output.minValue) || !std::isfinite(output.maxValue))
     {
         return std::optional<Zoom::Range>();
@@ -373,7 +373,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
             markers.reserve(pluginResults.size());
             for(auto& result : channelResults)
             {
-                anlWeakAssert(result.hasTimestamp);
+                MiscWeakAssert(result.hasTimestamp);
                 if(result.hasTimestamp)
                 {
                     auto const time = rtToS(result.timestamp);
@@ -399,7 +399,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
             points.reserve(pluginResults.size());
             for(auto& result : channelResults)
             {
-                anlWeakAssert(result.hasTimestamp);
+                MiscWeakAssert(result.hasTimestamp);
                 if(result.hasTimestamp)
                 {
                     auto const time = rtToS(result.timestamp);
@@ -431,7 +431,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
             columns.reserve(pluginResults.size());
             for(auto& result : channelResults)
             {
-                anlWeakAssert(result.hasTimestamp);
+                MiscWeakAssert(result.hasTimestamp);
                 if(result.hasTimestamp)
                 {
                     auto const time = rtToS(result.timestamp);
@@ -464,7 +464,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
         columns.reserve(pluginResults.size());
         for(auto& result : channelResults)
         {
-            anlWeakAssert(result.hasTimestamp);
+            MiscWeakAssert(result.hasTimestamp);
             if(result.hasTimestamp)
             {
                 auto const time = rtToS(result.timestamp);

@@ -36,7 +36,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     numChannels += 1u;
                 }
             }
-            anlWeakAssert(mChannels.empty() || maxChannels > 0);
+            MiscWeakAssert(mChannels.empty() || maxChannels > 0);
             mBuffer.setSize(std::max(maxChannels, 1), 8192);
         }
 
@@ -110,7 +110,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         }
                         else
                         {
-                            anlWeakAssert(false && "unsupported layout");
+                            MiscWeakAssert(false && "unsupported layout");
                             return false;
                         }
 

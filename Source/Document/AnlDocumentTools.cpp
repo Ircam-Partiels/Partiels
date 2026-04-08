@@ -75,7 +75,7 @@ Track::Accessor const& Document::Tools::getTrackAcsr(Accessor const& accessor, j
                            {
                                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != trackAcsrs.cend());
+    MiscStrongAssert(it != trackAcsrs.cend());
     return it->get();
 }
 
@@ -86,7 +86,7 @@ Group::Accessor const& Document::Tools::getGroupAcsr(Accessor const& accessor, j
                            {
                                return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != groupAcsrs.cend());
+    MiscStrongAssert(it != groupAcsrs.cend());
     return it->get();
 }
 
@@ -97,7 +97,7 @@ Group::Accessor const& Document::Tools::getGroupAcsrForTrack(Accessor const& acc
                            {
                                return Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
                            });
-    anlStrongAssert(it != groupAcsrs.cend());
+    MiscStrongAssert(it != groupAcsrs.cend());
     return it->get();
 }
 
@@ -108,7 +108,7 @@ Track::Accessor& Document::Tools::getTrackAcsr(Accessor& accessor, juce::String 
                            {
                                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != trackAcsrs.end());
+    MiscStrongAssert(it != trackAcsrs.end());
     return it->get();
 }
 
@@ -119,7 +119,7 @@ Group::Accessor& Document::Tools::getGroupAcsr(Accessor& accessor, juce::String 
                            {
                                return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != groupAcsrs.end());
+    MiscStrongAssert(it != groupAcsrs.end());
     return it->get();
 }
 
@@ -130,7 +130,7 @@ Group::Accessor& Document::Tools::getGroupAcsrForTrack(Accessor& accessor, juce:
                            {
                                return Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
                            });
-    anlStrongAssert(it != groupAcsrs.end());
+    MiscStrongAssert(it != groupAcsrs.end());
     return it->get();
 }
 
@@ -139,7 +139,7 @@ size_t Document::Tools::getTrackPosition(Accessor const& accessor, juce::String 
     auto const& groupAcsr = getGroupAcsrForTrack(accessor, identifier);
     auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
     auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
-    anlStrongAssert(it != layout.cend());
+    MiscStrongAssert(it != layout.cend());
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
 
@@ -147,7 +147,7 @@ size_t Document::Tools::getGroupPosition(Accessor const& accessor, juce::String 
 {
     auto const& layout = accessor.getAttr<AttrType::layout>();
     auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
-    anlWeakAssert(it != layout.cend());
+    MiscWeakAssert(it != layout.cend());
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
 
@@ -744,7 +744,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                                                      }
                                                                                  });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mTrackListeners.size() <= acsr.getNumAcsrs<AcsrType::tracks>());
+                MiscWeakAssert(mTrackListeners.size() <= acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
@@ -758,7 +758,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mGroupListeners.size() <= acsr.getNumAcsrs<AcsrType::groups>());
+                MiscWeakAssert(mGroupListeners.size() <= acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:
@@ -775,13 +775,13 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AcsrType::tracks:
             {
                 mTrackListeners.erase(mTrackListeners.begin() + static_cast<long>(index));
-                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
+                MiscWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
             {
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
-                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                MiscWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:

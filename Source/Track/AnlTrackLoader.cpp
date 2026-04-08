@@ -300,7 +300,7 @@ Track::Loader::~Loader()
 void Track::Loader::loadAnalysis(FileDescription const& fd)
 {
     std::unique_lock<std::mutex> lock(mLoadingMutex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
+    MiscStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
         if(onLoadingFailed != nullptr)
@@ -338,7 +338,7 @@ void Track::Loader::handleAsyncUpdate()
 #ifdef DEBUG
             auto const vResults = mLoadingProcess.get();
             auto* results = std::get_if<Results>(&vResults);
-            anlWeakAssert(results != nullptr && results->isEmpty());
+            MiscWeakAssert(results != nullptr && results->isEmpty());
 #endif
             mChrono.stop("Loading file ended");
             if(onLoadingAborted != nullptr)
@@ -366,7 +366,7 @@ void Track::Loader::handleAsyncUpdate()
             }
             else
             {
-                anlWeakAssert(false && "invalid state");
+                MiscWeakAssert(false && "invalid state");
             }
         }
     }
@@ -386,7 +386,7 @@ void Track::Loader::abortLoading()
 {
     if(mLoadingProcess.valid())
     {
-        anlWeakAssert(mShouldAbort.load() == false);
+        MiscWeakAssert(mShouldAbort.load() == false);
         mShouldAbort.store(true);
         mLoadingProcess.get();
         cancelPendingUpdate();

@@ -200,7 +200,7 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     }
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* parent = findParentComponentOfClass<Section>();
-    anlWeakAssert(dragContainer != nullptr && parent != nullptr);
+    MiscWeakAssert(dragContainer != nullptr && parent != nullptr);
     if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
     {
         auto const p = -event.getMouseDownPosition();

@@ -57,8 +57,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mLogger = std::make_unique<Logger>(false);
     juce::Logger::setCurrentLogger(mLogger.get());
-    anlDebug("Application", "Begin...");
-    anlDebug("Application", "Command line '" + commandLine + "'");
+    MiscDebug("Application", "Begin...");
+    MiscDebug("Application", "Command line '" + commandLine + "'");
 
     mCommandLine = CommandLine::createAndRun(commandLine);
     if(mCommandLine != nullptr)
@@ -66,7 +66,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
 
-    anlDebug("Application", "Running with GUI");
+    MiscDebug("Application", "Running with GUI");
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
@@ -167,7 +167,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     juce::Desktop::getInstance().addDarkModeSettingListener(this);
 
-    anlDebug("Application", "Ready!");
+    MiscDebug("Application", "Ready!");
 
     juce::ArgumentList const args("Partiels", commandLine);
     mCommandFiles.clear();
@@ -187,7 +187,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 {
     if(mWindow == nullptr)
     {
-        anlDebug("Application", "Failed: not initialized.");
+        MiscDebug("Application", "Failed: not initialized.");
         return;
     }
     MiscDebug("Application", "Another instance started with command line '" + commandLine + "'");
@@ -209,7 +209,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
     }
     else
     {
-        anlDebug("Application", "Opening new file(s)...");
+        MiscDebug("Application", "Opening new file(s)...");
         openFiles(files);
     }
 }
@@ -218,7 +218,7 @@ void Application::Instance::systemRequestedQuit()
 {
     auto delaySystemRequestedQuit = [this]()
     {
-        anlDebug("Application", "Delay System Requested Quit...");
+        MiscDebug("Application", "Delay System Requested Quit...");
         juce::WeakReference<Instance> weakReference(this);
         juce::Timer::callAfterDelay(500, [=, this]()
                                     {
@@ -230,7 +230,7 @@ void Application::Instance::systemRequestedQuit()
                                     });
     };
 
-    anlDebug("Application", "Begin...");
+    MiscDebug("Application", "Begin...");
     if(mCommandLine != nullptr && mCommandLine->isRunning())
     {
         delaySystemRequestedQuit();
@@ -259,14 +259,14 @@ void Application::Instance::systemRequestedQuit()
                                                                {
                                                                    if(result == juce::FileBasedDocument::SaveResult::savedOk)
                                                                    {
-                                                                       anlDebug("Application", "Ready to Quit");
+                                                                       MiscDebug("Application", "Ready to Quit");
                                                                        quit();
                                                                    }
                                                                });
         }
         else
         {
-            anlDebug("Application", "Ready to Quit");
+            MiscDebug("Application", "Ready to Quit");
             quit();
         }
     };
@@ -303,7 +303,7 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
-    anlDebug("Application", "Begin...");
+    MiscDebug("Application", "Begin...");
     if(mCommandLine != nullptr)
     {
         juce::Logger::setCurrentLogger(nullptr);
@@ -352,7 +352,7 @@ void Application::Instance::shutdown()
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
 
-    anlDebug("Application", "Done");
+    MiscDebug("Application", "Done");
 
     juce::Logger::setCurrentLogger(nullptr);
     mLogger.reset();
@@ -453,7 +453,7 @@ void Application::Instance::newDocument()
 void Application::Instance::openDocumentFile(juce::File const& file)
 {
     auto const documentFileExtension = getExtensionForDocumentFile();
-    anlWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
+    MiscWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
     if(!file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
     {
         return;
@@ -476,7 +476,7 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
     for(auto const& file : files)
     {
         auto const fileExtension = file.getFileExtension().toLowerCase();
-        anlWeakAssert(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension));
+        MiscWeakAssert(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension));
         if(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension))
         {
             auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
@@ -678,7 +678,7 @@ void Application::Instance::openStartupFiles()
     if(!commandFiles.empty())
     {
         mDocumentFileBased->addChangeListener(this);
-        anlDebug("Application", "Opening new file(s)...");
+        MiscDebug("Application", "Opening new file(s)...");
         openFiles(commandFiles);
         mStartupFilesAreLoaded = true;
 
@@ -711,15 +711,15 @@ void Application::Instance::openStartupFiles()
                                              mDocumentFileBased->addChangeListener(this);
                                              if(previousFile.existsAsFile())
                                              {
-                                                 anlDebug("Application", "Reopening last document...");
+                                                 MiscDebug("Application", "Reopening last document...");
                                                  openDocumentFile(previousFile);
                                              }
                                          }
                                          else
                                          {
-                                             anlDebug("Application", "Restoring backup document...");
+                                             MiscDebug("Application", "Restoring backup document...");
                                              auto const loadResult = mDocumentFileBased->loadBackup(backupFile);
-                                             anlWeakAssert(!loadResult.failed());
+                                             MiscWeakAssert(!loadResult.failed());
                                              if(!loadResult.failed())
                                              {
                                                  mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
@@ -737,7 +737,7 @@ void Application::Instance::openStartupFiles()
         mDocumentFileBased->addChangeListener(this);
         if(previousFile.existsAsFile())
         {
-            anlDebug("Application", "Reopening last document...");
+            MiscDebug("Application", "Reopening last document...");
             openDocumentFile(previousFile);
         }
         if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())

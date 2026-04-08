@@ -37,7 +37,7 @@ Application::CommandLine::CommandLine()
          "",
          [this](juce::ArgumentList const& args)
          {
-             anlDebug("CommandLine", "Parsing arguments...");
+             MiscDebug("CommandLine", "Parsing arguments...");
              auto const audioFile = args.getExistingFileForOption("-i|--input");
              auto const templateFile = args.getExistingFileForOption("-t|--template");
              auto const outputFile = args.getFileForOption("-o|--output").withFileExtension(Instance::getExtensionForDocumentFile());
@@ -90,7 +90,7 @@ Application::CommandLine::CommandLine()
          [this](juce::ArgumentList const& args)
          {
              mShouldWait = false;
-             anlDebug("CommandLine", "Parsing arguments...");
+             MiscDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
 
              auto const outputDir = args.getFileForOption("-o|--output");
@@ -404,7 +404,7 @@ Application::CommandLine::CommandLine()
 
 Application::CommandLine::~CommandLine()
 {
-    anlWeakAssert(!isRunning());
+    MiscWeakAssert(!isRunning());
 }
 
 bool Application::CommandLine::isRunning() const
@@ -499,14 +499,14 @@ std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun
 {
     if(commandLine.isEmpty() || commandLine.startsWith("-NSDocumentRevisionsDebugMode"))
     {
-        anlDebug("Application", "Command line is empty or contains '-NSDocumentRevisionsDebugMode'");
+        MiscDebug("Application", "Command line is empty or contains '-NSDocumentRevisionsDebugMode'");
         return nullptr;
     }
 
     juce::ArgumentList const args("Partiels", commandLine);
     if(!args[0].isLongOption() && !args[0].isShortOption())
     {
-        anlDebug("Application", "Command line doesn't contains any option");
+        MiscDebug("Application", "Command line doesn't contains any option");
         return nullptr;
     }
 
@@ -518,7 +518,7 @@ std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun
 
     if(args[0].isLongOption("unit-tests"))
     {
-        anlDebug("Application", "Running as CLI - Unit Tests");
+        MiscDebug("Application", "Running as CLI - Unit Tests");
         auto const result = cli->invokeCatchingFailures([&]()
                                                         {
                                                             cli->runUnitTests();
@@ -528,7 +528,7 @@ std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun
     }
     else if(args[0].isLongOption("compare-files"))
     {
-        anlDebug("Application", "Running as CLI - Compare Files");
+        MiscDebug("Application", "Running as CLI - Compare Files");
         auto const result = cli->invokeCatchingFailures([&]()
                                                         {
                                                             cli->compareFiles(args);
@@ -538,7 +538,7 @@ std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun
     }
     else
     {
-        anlDebug("Application", "Running as CLI - Default");
+        MiscDebug("Application", "Running as CLI - Default");
         auto const result = cli->findAndRunCommand(args);
         if(!cli->isRunning())
         {

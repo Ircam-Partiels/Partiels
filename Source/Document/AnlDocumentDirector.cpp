@@ -112,7 +112,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AcsrType::tracks:
             {
                 auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-                anlStrongAssert(index <= mTracks.size() && index < trackAcsrs.size());
+                MiscStrongAssert(index <= mTracks.size() && index < trackAcsrs.size());
                 if(index > mTracks.size() || index >= trackAcsrs.size())
                 {
                     return;
@@ -182,7 +182,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AcsrType::groups:
             {
                 auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-                anlStrongAssert(index < groupAcsrs.size());
+                MiscStrongAssert(index < groupAcsrs.size());
                 if(index > mGroups.size() || index >= groupAcsrs.size())
                 {
                     return;
@@ -225,7 +225,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case AcsrType::tracks:
             {
-                anlStrongAssert(index < mTracks.size());
+                MiscStrongAssert(index < mTracks.size());
                 if(index >= mTracks.size())
                 {
                     return;
@@ -243,7 +243,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             break;
             case AcsrType::groups:
             {
-                anlStrongAssert(index < mGroups.size());
+                MiscStrongAssert(index < mGroups.size());
                 if(index >= mGroups.size())
                 {
                     return;
@@ -373,7 +373,7 @@ Group::Director& Document::Director::getGroupDirector(juce::String const& identi
                                auto const& groupAcsr = groupDirector->getAccessor();
                                return groupAcsr.template getAttr<Group::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != mGroups.end());
+    MiscStrongAssert(it != mGroups.end());
     return *it->get();
 }
 
@@ -384,7 +384,7 @@ Track::Director const& Document::Director::getTrackDirector(juce::String const& 
                                      auto const& trackAcsr = trackDirector->getAccessor();
                                      return trackAcsr.template getAttr<Track::AttrType::identifier>() == identifier;
                                  });
-    anlStrongAssert(it != mTracks.cend());
+    MiscStrongAssert(it != mTracks.cend());
     return *it->get();
 }
 
@@ -395,7 +395,7 @@ Track::Director& Document::Director::getTrackDirector(juce::String const& identi
                                auto const& trackAcsr = trackDirector->getAccessor();
                                return trackAcsr.template getAttr<Track::AttrType::identifier>() == identifier;
                            });
-    anlStrongAssert(it != mTracks.end());
+    MiscStrongAssert(it != mTracks.end());
     return *it->get();
 }
 
@@ -479,7 +479,7 @@ bool Document::Director::isPerformingAction() const
 void Document::Director::startAction()
 {
     MiscDebug("Document::Director", "startAction");
-    anlWeakAssert(mIsPerformingAction == false);
+    MiscWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(mAccessor.isEquivalentTo(mSavedState));
@@ -490,7 +490,7 @@ void Document::Director::startAction()
 void Document::Director::endAction(ActionState state, juce::String const& name)
 {
     MiscDebug("Document::Director", "endAction");
-    anlWeakAssert(mIsPerformingAction == true);
+    MiscWeakAssert(mIsPerformingAction == true);
     mIsPerformingAction = false;
     if(mAccessor.isEquivalentTo(mSavedState))
     {
@@ -799,11 +799,11 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
     // Ensures that there is also at least one group if there is one or more tracks
     {
         auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z);
+        MiscWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z);
         if(!trackAcsrs.empty() && mAccessor.getNumAcsrs<AcsrType::groups>() == 0_z)
         {
             auto const [addGroupResult, newGroupId] = addGroup(0, notification);
-            anlStrongAssert(addGroupResult.wasOk());
+            MiscStrongAssert(addGroupResult.wasOk());
             if(addGroupResult.failed())
             {
                 return references;
@@ -819,7 +819,7 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
         for(auto groupAcsr : groupAcsrs)
         {
             auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            MiscWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
             if(identifier.isEmpty())
             {
                 auto const newidentifier = createNextUuid();
@@ -839,7 +839,7 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
         for(auto trackAcsr : trackAcsrs)
         {
             auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            MiscWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
             if(identifier.isEmpty())
             {
                 auto const newidentifier = createNextUuid();
@@ -858,7 +858,7 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
 
     // Ensures that document's layout is valid
     {
-        anlWeakAssert(mAccessor.getNumAcsrs<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
+        MiscWeakAssert(mAccessor.getNumAcsrs<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
         // Remove layout
         auto layout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const identifier)
                                           {
@@ -887,13 +887,13 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
                                                          {
                                                              return !Tools::hasTrackAcsr(mAccessor, identifier) || !usedTracks.insert(identifier).second;
                                                          });
-            anlWeakAssert(groupAcsr.get().getAttr<Group::AttrType::layout>().size() == groupLayout.size());
+            MiscWeakAssert(groupAcsr.get().getAttr<Group::AttrType::layout>().size() == groupLayout.size());
             groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, notification);
         }
     }
 
     // Ensures that all tracks are in one group
-    anlStrongAssert(mAccessor.getNumAcsrs<AcsrType::groups>() > 0_z);
+    MiscStrongAssert(mAccessor.getNumAcsrs<AcsrType::groups>() > 0_z);
     if(mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z)
     {
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -906,7 +906,7 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
                                             {
                                                 return Group::Tools::hasTrackAcsr(groupAcsr.get(), trackIdentifier);
                                             });
-            anlWeakAssert(numGroupds == 1l);
+            MiscWeakAssert(numGroupds == 1l);
             if(numGroupds == 0l)
             {
                 auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
@@ -919,7 +919,7 @@ std::map<juce::String, juce::String> Document::Director::sanitize(NotificationTy
                                             {
                                                 return Group::Tools::hasTrackAcsr(groupAcsr.get(), trackIdentifier);
                                             });
-                anlStrongAssert(groupIt != groupAcsrs.end());
+                MiscStrongAssert(groupIt != groupAcsrs.end());
                 if(groupIt != groupAcsrs.end())
                 {
                     auto const groupLayout = copy_with_erased(groupIt->get().getAttr<Group::AttrType::layout>(), trackIdentifier);

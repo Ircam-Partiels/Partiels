@@ -547,7 +547,7 @@ juce::Component const* Document::Section::getPlot(juce::String const& identifier
     };
 
     auto const it = mGroupSections.find(getGroupIdentifier());
-    anlWeakAssert(it != mGroupSections.end());
+    MiscWeakAssert(it != mGroupSections.end());
     if(it != mGroupSections.end())
     {
         return it->second.get()->getPlot(identifier);
@@ -621,11 +621,11 @@ void Document::Section::updateLayout()
             if(Tools::hasGroupAcsr(mAccessor, identifier))
             {
                 auto groupSection = createGroupSection(identifier);
-                anlStrongAssert(groupSection != nullptr);
+                MiscStrongAssert(groupSection != nullptr);
                 if(groupSection != nullptr)
                 {
                     auto const result = mGroupSections.emplace(identifier, std::move(groupSection));
-                    anlStrongAssert(result.second);
+                    MiscStrongAssert(result.second);
                     if(result.second)
                     {
                         components.push_back(*result.first->second.get());

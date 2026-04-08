@@ -8,12 +8,6 @@ namespace Anl = Misc;
     {
 #define ANALYSE_FILE_END }
 
-#define anlWeakAssert MiscWeakAssert
-#define anlStrongAssert MiscStrongAssert
-
-#define anlDebug MiscDebug
-#define anlError MiscError
-
 ANALYSE_FILE_BEGIN
 
 namespace Utils

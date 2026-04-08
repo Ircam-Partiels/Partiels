@@ -499,7 +499,7 @@ void Application::ConverterContent::selectedRowColumnUpdated()
     auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
     if(row < 0 || column < 0)
     {
-        anlWeakAssert(false);
+        MiscWeakAssert(false);
         return;
     }
     mPropertyToJsonColumn.entry.setItemEnabled(1, row != 0);
@@ -516,7 +516,7 @@ void Application::ConverterContent::exportToSdif()
     auto const colName = mPropertyToSdifColName.entry.getText();
     if(frameName.isEmpty() || matrixName.isEmpty())
     {
-        anlWeakAssert(false);
+        MiscWeakAssert(false);
         return;
     }
 
@@ -573,7 +573,7 @@ void Application::ConverterContent::exportToJson()
     auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
     if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size() || selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
     {
-        anlWeakAssert(false);
+        MiscWeakAssert(false);
         return;
     }
 
@@ -581,7 +581,7 @@ void Application::ConverterContent::exportToJson()
     auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
     if(mEntries.count(frameIdentifier) == 0_z || mEntries.at(frameIdentifier).count(matrixIdentifier) == 0_z)
     {
-        anlWeakAssert(false);
+        MiscWeakAssert(false);
         return;
     }
 
@@ -589,7 +589,7 @@ void Application::ConverterContent::exportToJson()
     auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
     if(row < 0 || column < 0)
     {
-        anlWeakAssert(false);
+        MiscWeakAssert(false);
         return;
     }
 

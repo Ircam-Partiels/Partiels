@@ -30,9 +30,9 @@ double Plugin::Processor::CircularReader::getSampleRate() const
 
 bool Plugin::Processor::CircularReader::hasReachedEnd() const
 {
-    anlWeakAssert(mPosition >= static_cast<juce::int64>(0));
+    MiscWeakAssert(mPosition >= static_cast<juce::int64>(0));
     auto const offset = static_cast<juce::int64>(std::round(static_cast<double>(mBlocksize) / 2.0));
-    anlWeakAssert(mPosition <= mAudioFormatReader.lengthInSamples + offset);
+    MiscWeakAssert(mPosition <= mAudioFormatReader.lengthInSamples + offset);
     return mPosition >= mAudioFormatReader.lengthInSamples + offset;
 }
 
@@ -73,7 +73,7 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     if(bufferPosition + mStepSize > mBuffer.getNumSamples())
     {
         auto const bufferSource = bufferPosition - hopeSize;
-        anlStrongAssert(bufferSource != bufferPosition);
+        MiscStrongAssert(bufferSource != bufferPosition);
         if(bufferSource != bufferPosition)
         {
             for(int channel = 0; channel < numChannels; ++channel)
@@ -83,7 +83,7 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
         }
         mBuffer.clear(hopeSize, mBuffer.getNumSamples() - hopeSize);
         bufferPosition = hopeSize;
-        anlStrongAssert(bufferSize == static_cast<juce::int64>(mStepSize));
+        MiscStrongAssert(bufferSize == static_cast<juce::int64>(mStepSize));
     }
 
     juce::AudioBuffer<float> input(inputPointers, numChannels, bufferPosition, bufferSize);
@@ -135,7 +135,7 @@ juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>
 
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
-    anlStrongAssert(blockSize > 0 && stepSize > 0);
+    MiscStrongAssert(blockSize > 0 && stepSize > 0);
     if(blockSize <= 0 || stepSize <= 0)
     {
         return juce::Result::fail(juce::translate("The processor has an invalid block or step size"));
@@ -171,7 +171,7 @@ juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
-    anlStrongAssert(mFeature < descriptors.size());
+    MiscStrongAssert(mFeature < descriptors.size());
     if(mFeature >= descriptors.size())
     {
         return juce::Result::fail(juce::translate("The processor has an invalid feature index"));
@@ -216,7 +216,7 @@ juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<R
         return juce::Result::fail(juce::translate("The processor has a null plugin"));
     }
 
-    anlWeakAssert(results.empty() || results.size() == 1_z || results.size() == mPlugins.size());
+    MiscWeakAssert(results.empty() || results.size() == 1_z || results.size() == mPlugins.size());
     Vamp::Plugin::FeatureSet fs;
     if(results.size() == 1_z)
     {
@@ -262,7 +262,7 @@ std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vec
     auto const feature = mFeature;
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
-    anlStrongAssert(blockSize > 0 && stepSize > 0);
+    MiscStrongAssert(blockSize > 0 && stepSize > 0);
     if(blockSize <= 0 || stepSize <= 0)
     {
         return std::make_tuple(juce::Result::fail(juce::translate("The processor has an invalid block or step size")), false);
@@ -325,7 +325,7 @@ float Plugin::Processor::getAdvancement() const
 
 Plugin::Description Plugin::Processor::getDescription() const
 {
-    anlStrongAssert(!mPlugins.empty());
+    MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty() || mPlugins.at(0) == nullptr)
     {
         return {};
@@ -335,7 +335,7 @@ Plugin::Description Plugin::Processor::getDescription() const
 
 Plugin::Input Plugin::Processor::getInput() const
 {
-    anlStrongAssert(!mPlugins.empty());
+    MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty() || mPlugins.at(0) == nullptr)
     {
         return {};
@@ -352,14 +352,14 @@ Plugin::Input Plugin::Processor::getInput() const
 
 Plugin::Output Plugin::Processor::getOutput() const
 {
-    anlStrongAssert(!mPlugins.empty());
+    MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty() || mPlugins.at(0) == nullptr)
     {
         return {};
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
-    anlStrongAssert(descriptors.size() > mFeature);
+    MiscStrongAssert(descriptors.size() > mFeature);
     return descriptors.size() > mFeature ? descriptors.at(mFeature) : Plugin::Output{};
 }
 

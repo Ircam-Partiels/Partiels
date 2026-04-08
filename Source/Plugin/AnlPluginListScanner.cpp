@@ -5,14 +5,14 @@ ANALYSE_FILE_BEGIN
 Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
     }
 
     std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
+    MiscStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
         throw std::logic_error("plugin loader thread is already in used");
@@ -45,7 +45,7 @@ Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, floa
 std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> PluginList::Scanner::getPlugins(double sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
@@ -65,7 +65,7 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
                 for(size_t feature = 0; feature < outputs.size(); ++feature)
                 {
                     Plugin::Key const key{pluginKey, outputs[feature].identifier};
-                    anlWeakAssert(list.count(key) == 0_z);
+                    MiscWeakAssert(list.count(key) == 0_z);
                     if(list.count(key) > 0_z)
                     {
                         errors.add(pluginKey + ": duplicate key");
@@ -92,7 +92,7 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
 Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, double sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
@@ -109,7 +109,7 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
 Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key, double sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         return {};

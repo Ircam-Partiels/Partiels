@@ -136,7 +136,7 @@ auto XmlParser::fromXml<Track::Result::FileInfo>(juce::XmlElement const& xml, ju
     -> Track::Result::FileInfo
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;
@@ -169,7 +169,7 @@ auto XmlParser::fromXml<Track::Result::FileDescription>(juce::XmlElement const& 
     -> Track::Result::FileDescription
 {
     auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
+    MiscWeakAssert(child != nullptr);
     if(child == nullptr)
     {
         return defaultValue;

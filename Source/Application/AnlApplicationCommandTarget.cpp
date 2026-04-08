@@ -1689,7 +1689,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
         return;
     }
     auto const& fileBased = Instance::get().getDocumentFileBased();
-    anlStrongAssert(source == &fileBased);
+    MiscStrongAssert(source == &fileBased);
     if(source != &fileBased)
     {
         return;

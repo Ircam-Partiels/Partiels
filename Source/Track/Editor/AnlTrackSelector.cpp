@@ -82,7 +82,7 @@ void Track::Selector::resized()
     auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
     for(auto const& verticalRange : verticalRanges)
     {
-        anlWeakAssert(verticalRange.first < mSelectionBars.size());
+        MiscWeakAssert(verticalRange.first < mSelectionBars.size());
         if(verticalRange.first < mSelectionBars.size())
         {
             auto& bar = mSelectionBars[verticalRange.first];

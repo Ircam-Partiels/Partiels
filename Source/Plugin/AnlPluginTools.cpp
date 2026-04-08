@@ -58,13 +58,13 @@ std::unique_ptr<Ive::PluginWrapper> Plugin::Tools::createPluginWrapper(Key const
 {
     using namespace Vamp::HostExt;
     auto* pluginLoader = PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
     }
 
-    anlStrongAssert(!key.identifier.empty());
+    MiscStrongAssert(!key.identifier.empty());
     if(key.identifier.empty())
     {
         throw LoadingError("plugin key is not defined.");
@@ -82,28 +82,28 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrap
 {
     using namespace Vamp::HostExt;
     auto* pluginLoader = PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
+    MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
     }
 
-    anlStrongAssert(!key.identifier.empty());
+    MiscStrongAssert(!key.identifier.empty());
     if(key.identifier.empty())
     {
         throw LoadingError("plugin key is not defined.");
     }
-    anlStrongAssert(!key.feature.empty());
+    MiscStrongAssert(!key.feature.empty());
     if(key.feature.empty())
     {
         throw LoadingError("plugin feature is not defined.");
     }
-    anlStrongAssert(state.blockSize > 0);
+    MiscStrongAssert(state.blockSize > 0);
     if(state.blockSize == 0)
     {
         throw ParametersError("plugin block size is invalid");
     }
-    anlStrongAssert(state.stepSize > 0);
+    MiscStrongAssert(state.stepSize > 0);
     if(state.stepSize == 0)
     {
         throw ParametersError("plugin step size is invalid");

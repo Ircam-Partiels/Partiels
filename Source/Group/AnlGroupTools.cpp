@@ -490,7 +490,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                         mTrackListeners.insert(std::move(listener));
                     }
                 }
-                anlWeakAssert(mTrackListeners.size() == trackAcsrs.size());
+                MiscWeakAssert(mTrackListeners.size() == trackAcsrs.size());
             }
             break;
         }
