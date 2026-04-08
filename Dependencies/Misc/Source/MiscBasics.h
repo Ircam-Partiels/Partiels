@@ -49,7 +49,7 @@ constexpr std::size_t operator""_z(unsigned long long n)
 #define MiscStrongAssert(condition) juce::ignoreUnused(condition)
 #define MiscWeakAssert(condition) juce::ignoreUnused(condition)
 #else
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
 #define MiscStrongAssert(condition) assert(condition)
 #else
 #define MiscStrongAssert(condition) juce::ignoreUnused(condition)
@@ -57,7 +57,7 @@ constexpr std::size_t operator""_z(unsigned long long n)
 #define MiscWeakAssert jassert
 #endif
 
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
 #define MiscDebug(domain, message) Misc::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
 #define MiscError(domain, message) Misc::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
 #else

@@ -6,7 +6,7 @@
 MISC_FILE_BEGIN
 
 // clang-format off
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
 #ifdef MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT
 #define MiscModelAccessWeakAssert() std::unique_lock<std::recursive_mutex> sharedLock(sMutex, std::try_to_lock); MiscWeakAssert(sharedLock.owns_lock());
 #else
@@ -19,7 +19,7 @@ MISC_FILE_BEGIN
 
 namespace Model
 {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     // This mutex is used to ensure only that the models
     // are accessed by only one thread at a time
     static std::recursive_mutex sMutex;
@@ -213,7 +213,7 @@ namespace Model
         auto& getAcsr() noexcept
         {
             MiscModelAccessWeakAssert();
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             MiscWeakAssert(element_type::size_flags == 1);
 #endif
@@ -225,7 +225,7 @@ namespace Model
         auto const& getAcsr() const noexcept
         {
             MiscModelAccessWeakAssert();
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             MiscWeakAssert(element_type::size_flags == 1);
 #endif
@@ -237,7 +237,7 @@ namespace Model
         auto& getAcsr(size_t index) noexcept
         {
             MiscModelAccessWeakAssert();
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             MiscWeakAssert(element_type::size_flags == 0);
 #endif
@@ -249,7 +249,7 @@ namespace Model
         auto const& getAcsr(size_t index) const noexcept
         {
             MiscModelAccessWeakAssert();
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             MiscWeakAssert(element_type::size_flags == 0);
 #endif
@@ -515,7 +515,7 @@ namespace Model
                                  using element_type = typename std::remove_reference<decltype(d)>::type;
                                  if constexpr((element_type::flags & Flag::saveable) != 0)
                                  {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
                                      auto constexpr acsr_type = element_type::type;
                                      auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
                                      MiscWeakAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());

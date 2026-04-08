@@ -141,12 +141,12 @@ void Application::KeyMappingsContent::resized()
 Application::KeyMappingsPanel::KeyMappingsPanel()
 : HideablePanelTyped<KeyMappingsContent>(juce::translate("Key Mappings"))
 {
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
     addMouseListener(this, true);
 #endif
 }
 
-#ifdef JUCE_DEBUG
+#if JUCE_DEBUG
 void Application::KeyMappingsPanel::mouseDown(juce::MouseEvent const& event)
 {
     if(event.mods.isCommandDown())
