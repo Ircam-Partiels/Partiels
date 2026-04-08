@@ -22,13 +22,15 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
     auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
     if(!parameter.valueNames.empty())
     {
+        auto const minValue = parameter.minValue;
+        auto const quantizeStep = parameter.isQuantized && std::abs(parameter.quantizeStep) > std::numeric_limits<float>::epsilon() ? parameter.quantizeStep : 1.0f;
         return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
                                               {
                                                   if(applyChange == nullptr)
                                                   {
                                                       return;
                                                   }
-                                                  applyChange(parameter, static_cast<float>(index));
+                                                  applyChange(parameter, static_cast<float>(index) * quantizeStep + minValue);
                                               });
     }
     else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
@@ -52,6 +54,64 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                                 }
                                                 applyChange(parameter, static_cast<float>(value));
                                             });
+}
+
+void Plugin::Tools::setPropertyValue(juce::Component& property, Parameter const& parameter, std::set<float> const& values, juce::NotificationType notification)
+{
+
+    if(auto* propertyList = dynamic_cast<PropertyList*>(&property))
+    {
+        if(values.empty())
+        {
+            propertyList->entry.setText(juce::translate("No Value"), notification);
+        }
+        else if(values.size() == 1_z)
+        {
+            auto const minValue = parameter.minValue;
+            auto const quantizeStep = parameter.isQuantized && std::abs(parameter.quantizeStep) > std::numeric_limits<float>::epsilon() ? parameter.quantizeStep : 1.0f;
+            propertyList->entry.setSelectedItemIndex(static_cast<int>(std::round((*values.cbegin() - minValue) / quantizeStep)), notification);
+        }
+        else
+        {
+            propertyList->entry.setText(juce::translate("Multiple Values"), notification);
+        }
+    }
+    else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(&property))
+    {
+        if(values.empty())
+        {
+            propertyNumber->entry.setText(juce::translate("No Value"), notification);
+        }
+        else if(values.size() == 1_z)
+        {
+            propertyNumber->entry.setValue(static_cast<double>(*values.cbegin()), notification);
+        }
+        else
+        {
+            propertyNumber->entry.setText(juce::translate("Multiple Values"), notification);
+        }
+    }
+    else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(&property))
+    {
+        if(values.empty())
+        {
+            propertyToggle->entry.getProperties().remove("Multiple Values");
+        }
+        else if(values.size() == 1_z)
+        {
+            propertyToggle->entry.getProperties().remove("Multiple Values");
+            propertyToggle->entry.setToggleState(*values.cbegin() > 0.5f, notification);
+        }
+        else
+        {
+            propertyToggle->entry.getProperties().set("Multiple Values", {true});
+            propertyToggle->entry.setToggleState(false, notification);
+        }
+    }
+    else
+    {
+        MiscWeakAssert(false && "property unsupported");
+    }
 }
 
 std::unique_ptr<Ive::PluginWrapper> Plugin::Tools::createPluginWrapper(Key const& key, double readerSampleRate)
