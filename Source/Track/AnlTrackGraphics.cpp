@@ -52,7 +52,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
     auto const height = static_cast<int>(output.hasFixedBinCount ? output.binCount : results.getNumBins().value_or(0_z));
     auto const width = static_cast<int>(results.getNumColumns().value_or(0_z));
     MiscWeakAssert(width > 0 && height > 0);
-    if(width < 0 || height < 0)
+    if(width <= 0 || height <= 0)
     {
         if(onRenderingEnded != nullptr)
         {
