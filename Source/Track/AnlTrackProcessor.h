@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Plugin/AnlPluginProcessor.h"
 #include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -18,7 +19,7 @@ namespace Track
         bool isRunning() const;
         float getAdvancement() const;
 
-        std::function<void(Results const& results)> onAnalysisEnded = nullptr;
+        std::function<void(juce::Result const&, Results const&)> onAnalysisEnded = nullptr;
         std::function<void(void)> onAnalysisAborted = nullptr;
 
     private:
@@ -27,21 +28,13 @@ namespace Track
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
-        // clang-format off
-        enum class ProcessState
-        {
-              available
-            , aborted
-            , running
-            , ended
-        };
-        // clang-format on
+        using ProcessResult = std::tuple<juce::Result, Results>;
+        static ProcessResult runWaveformAnalysis(juce::AudioFormatReader& reader, std::function<bool(float)> callback);
+        static ProcessResult runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::function<bool(float)> callback);
 
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
-
-        std::atomic<ProcessState> mAnalysisState{ProcessState::available};
         std::atomic<bool> mShouldAbort{false};
-        std::future<Results> mAnalysisProcess;
+        std::future<std::tuple<juce::Result, Results>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         std::atomic<float> mAdvancement{0.0f};
         Chrono mChrono{"Track"};

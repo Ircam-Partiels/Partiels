@@ -347,14 +347,14 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     return getChannelVerticalRanges(std::move(bounds), acsr.getAttr<AttrType::channelsLayout>());
 }
 
-Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::atomic<bool> const& shouldAbort)
+Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::function<bool(void)> const& callback)
 {
     auto const rtToS = [](Vamp::RealTime const& rt)
     {
         return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
     };
 
-    if(shouldAbort)
+    if(callback != nullptr && !callback())
     {
         return {};
     }
@@ -365,7 +365,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
         results.reserve(pluginResults.size());
         for(auto& channelResults : pluginResults)
         {
-            if(shouldAbort)
+            if(callback != nullptr && !callback())
             {
                 return {};
             }
@@ -391,7 +391,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
         results.reserve(pluginResults.size());
         for(auto& channelResults : pluginResults)
         {
-            if(shouldAbort)
+            if(callback != nullptr && !callback())
             {
                 return {};
             }
@@ -423,7 +423,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
         results.reserve(pluginResults.size());
         for(auto& channelResults : pluginResults)
         {
-            if(shouldAbort)
+            if(callback != nullptr && !callback())
             {
                 return {};
             }
@@ -456,7 +456,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
     results.reserve(pluginResults.size());
     for(auto const& channelResults : pluginResults)
     {
-        if(shouldAbort)
+        if(callback != nullptr && !callback())
         {
             return {};
         }

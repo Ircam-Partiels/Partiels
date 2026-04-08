@@ -13,9 +13,9 @@ namespace Plugin
 
         ~Processor() = default;
 
-        bool prepareToAnalyze(std::vector<std::vector<Result>>& results);
-        bool setPrecomputingResults(std::vector<std::vector<Result>> const& results);
-        bool performNextAudioBlock(std::vector<std::vector<Result>>& results);
+        juce::Result prepareToAnalyze(std::vector<std::vector<Result>>& results);
+        juce::Result setPrecomputingResults(std::vector<std::vector<Result>> const& results);
+        std::tuple<juce::Result, bool> performNextAudioBlock(std::vector<std::vector<Result>>& results);
         float getAdvancement() const;
 
         Description getDescription() const;
@@ -29,6 +29,7 @@ namespace Plugin
             CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize);
             ~CircularReader() = default;
 
+            size_t getNumChannels() const;
             juce::int64 getLengthInSamples() const;
             double getSampleRate() const;
             bool hasReachedEnd() const;

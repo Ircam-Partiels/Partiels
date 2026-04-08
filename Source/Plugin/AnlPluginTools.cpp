@@ -78,7 +78,7 @@ std::unique_ptr<Ive::PluginWrapper> Plugin::Tools::createPluginWrapper(Key const
     return std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
 }
 
-std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitializePluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
+std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
 {
     using namespace Vamp::HostExt;
     auto* pluginLoader = PluginLoader::getInstance();
@@ -110,37 +110,6 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitial
     }
 
     std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins;
-    auto const addAndInitializeInstance = [&](std::unique_ptr<Ive::PluginWrapper>& plugin, size_t numChannels)
-    {
-        MiscWeakAssert(plugin != nullptr);
-        if(plugin == nullptr)
-        {
-            throw ParametersError("plugin invalid");
-        }
-        if(auto* adapter = plugin->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-        {
-            adapter->setWindowType(state.windowType);
-        }
-
-        auto const descriptors = plugin->getParameterDescriptors();
-        for(auto const& parameter : state.parameters)
-        {
-            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                           {
-                               return descriptor.identifier == parameter.first;
-                           }))
-            {
-                plugin->setParameter(parameter.first, parameter.second);
-            }
-        }
-
-        if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
-        {
-            throw ParametersError("plugin initialization failed");
-        }
-        plugins.push_back(std::move(plugin));
-    };
-
     auto const sampleRate = static_cast<float>(readerSampleRate);
     auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
     if(instance == nullptr)
@@ -153,7 +122,7 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createAndInitial
     {
         auto const numChannels = std::min(maxChannels, numReaderChannels);
         numReaderChannels -= numChannels;
-        addAndInitializeInstance(wrapper, numChannels);
+        plugins.push_back(std::move(wrapper));
         if(numReaderChannels > 0_z)
         {
             instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
