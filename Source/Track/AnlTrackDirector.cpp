@@ -126,11 +126,20 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             {
                 auto const& description = mAccessor.getAttr<AttrType::description>();
                 auto state = mAccessor.getAttr<AttrType::state>();
+                // Update the default values of the parameters if they are not already set
+                // to avoid overwriting user values when changing the plugin key for example
+                for(auto const& parameter : description.parameters)
+                {
+                    if(!state.parameters.count(parameter.identifier))
+                    {
+                        state.parameters[parameter.identifier] = parameter.defaultValue;
+                    }
+                }
                 if(description.inputDomain == Plugin::InputDomain::TimeDomain && description.defaultState.blockSize != 0_z && state.blockSize != description.defaultState.blockSize)
                 {
                     state.blockSize = description.defaultState.blockSize;
-                    mAccessor.setAttr<AttrType::state>(state, notification);
                 }
+                mAccessor.setAttr<AttrType::state>(state, notification);
                 sanitizeZooms(notification);
                 sanitizeExtraOutputs(notification);
             }
