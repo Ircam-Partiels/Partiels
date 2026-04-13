@@ -68,6 +68,8 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+    - name: Package
+      run: cpack --config ${{ github.workspace }}/build/CPackConfig.cmake
     - name: Artifact
       uses: actions/upload-artifact@v7.0.0
       with:
@@ -93,18 +95,20 @@ jobs:
         submodules: recursive
     - uses: mozilla-actions/sccache-action@v0.0.9
     - run: choco install imagemagick -fy -d
-    - run: choco install innosetup -fy -d
+    - run: choco install wixtoolset -fy -d
     - name: Configure
       run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.tag_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+    - name: Package
+      run: cpack --config ${{ github.workspace }}/build/CPackConfig.cmake -C ${{ env.build_type }}
     - name: Artifact
       uses: actions/upload-artifact@v7.0.0
       with:
         name: Partiels-Windows
-        path: ${{ github.workspace }}/build/Partiels-Windows.exe
+        path: ${{ github.workspace }}/build/Partiels-Windows.msi
     - name: Release
       uses: softprops/action-gh-release@v2
       if: ${{ env.is_tagged == 'true' }}
@@ -114,7 +118,7 @@ jobs:
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ github.workspace }}/build/Partiels-Release.md
-        files: ${{ github.workspace }}/build/Partiels-Windows.exe
+        files: ${{ github.workspace }}/build/Partiels-Windows.msi
   # Compiles, tests and packages the plugin for MacOS.
   MacOS:
     runs-on: macos-latest
@@ -125,10 +129,6 @@ jobs:
       with:
         submodules: recursive
     - uses: mozilla-actions/sccache-action@v0.0.9
-    - uses: actions/setup-node@v6
-      with:
-        node-version: 20
-    - run: npm install -g appdmg
     - run: brew install imagemagick
     - name: Prepare
       run: |
@@ -159,7 +159,7 @@ jobs:
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Test
       run: |
-        rm ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
+        rm -rf ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
         cp -r ${{ github.workspace }}/build/Partiels.xcarchive/Products/Applications/Partiels.app ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}
         ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Export
@@ -173,11 +173,11 @@ jobs:
         xcrun notarytool log $notaryid --keychain-profile "notary-installer"
         xcrun stapler staple "${{ github.workspace }}/build/Partiels.app"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels.app"
-    - name: Build Disk Image
+    - name: Package Disk Image
       run: |
-        appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
-        xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
-        xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+        rm -rf ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
+        cp -r "${{ github.workspace }}/build/Partiels.app" "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app"
+        cpack --config "${{ github.workspace }}/build/CPackConfig.cmake" -C ${{ env.build_type }}
     - name: Notarize Disk Image
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
