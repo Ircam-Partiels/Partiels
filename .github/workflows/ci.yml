@@ -74,7 +74,7 @@ jobs:
         name: Partiels-Linux
         path: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
       with:
         draft: true
@@ -106,7 +106,7 @@ jobs:
         name: Partiels-Windows
         path: ${{ github.workspace }}/build/Partiels-Windows.exe
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
       with:
         draft: true
@@ -192,7 +192,7 @@ jobs:
         name: Partiels-MacOS
         path: ${{ github.workspace }}/build/Partiels-MacOS.dmg
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
       with:
         draft: true
@@ -228,7 +228,7 @@ jobs:
         name: Partiels-Patchs
         path: ${{ github.workspace }}/build/Partiels-Patchs.zip
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
       with:
         draft: true
