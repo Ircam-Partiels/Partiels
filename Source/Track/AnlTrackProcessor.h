@@ -14,12 +14,12 @@ namespace Track
         Processor() = default;
         ~Processor() override;
 
-        std::optional<Plugin::Description> runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input);
+        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input);
         void stopAnalysis();
         bool isRunning() const;
         float getAdvancement() const;
 
-        std::function<void(juce::Result const&, Results const&)> onAnalysisEnded = nullptr;
+        std::function<void(juce::Result const&, Results const&, Plugin::Description const& description)> onAnalysisEnded = nullptr;
         std::function<void(void)> onAnalysisAborted = nullptr;
 
     private:
@@ -34,7 +34,7 @@ namespace Track
 
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         std::atomic<bool> mShouldAbort{false};
-        std::future<std::tuple<juce::Result, Results>> mAnalysisProcess;
+        std::future<std::tuple<juce::Result, Results, Plugin::Description>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         std::atomic<float> mAdvancement{0.0f};
         Chrono mChrono{"Track"};
