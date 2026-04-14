@@ -370,10 +370,11 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
 
-    mProcessor.onAnalysisEnded = [&](juce::Result const& result, Results const& data)
+    mProcessor.onAnalysisEnded = [&](juce::Result const& result, Results const& data, Plugin::Description const& description)
     {
         if(result.wasOk())
         {
+            mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
             mAccessor.setAttr<AttrType::results>(data, NotificationType::synchronous);
             runRendering();
         }
@@ -722,11 +723,10 @@ void Track::Director::runAnalysis(NotificationType const notification)
     try
     {
         mProcessor.stopAnalysis();
-        auto const description = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
-        if(description.has_value())
+        auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
+        if(result)
         {
             MiscDebug("Track", "analysis launched");
-            mAccessor.setAttr<AttrType::description>(description.value(), notification);
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
             startTimer(50);
             timerCallback();

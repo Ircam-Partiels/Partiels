@@ -16,39 +16,41 @@ void Track::Processor::stopAnalysis()
     abortAnalysis();
 }
 
-std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
     MiscWeakAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
         MiscError("Track", "Concurrent thread access!");
-        return {};
+        return false;
     }
     abortAnalysis();
 
     auto const key = accessor.getAttr<AttrType::key>();
     if(key.identifier.empty() || key.feature.empty())
     {
-        return {};
+        return false;
     }
     // This is a specific case that speed up the waveform analysis
     if(key.identifier == "partiels-vamp-plugins:partielswaveform" && key.feature == "peaks")
     {
         mChrono.start();
-        mAnalysisProcess = std::async(std::launch::async, [&, this]()
+        auto description = PluginList::Scanner::loadDescription(key, reader.sampleRate);
+        mAnalysisProcess = std::async(std::launch::async, [this, desc = std::move(description), &reader]()
                                       {
                                           MiscDebug("Track", "Processor thread launched");
                                           juce::Thread::setCurrentThreadName("Track::Processor::Process");
-                                          auto const result = runWaveformAnalysis(reader, [&, this](float advancement)
-                                                                                  {
-                                                                                      mAdvancement.store(advancement);
-                                                                                      return !mShouldAbort.load();
-                                                                                  });
+                                          auto result = runWaveformAnalysis(reader, [this](float advancement)
+                                                                            {
+                                                                                mAdvancement.store(advancement);
+                                                                                return !mShouldAbort.load();
+                                                                            });
+                                          auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), std::move(desc));
                                           triggerAsyncUpdate();
-                                          return result;
+                                          return fresult;
                                       });
-        return PluginList::Scanner::loadDescription(key, reader.sampleRate);
+        return true;
     }
 
     auto state = accessor.getAttr<AttrType::state>();
@@ -62,26 +64,28 @@ std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const&
     }
 
     auto processor = Plugin::Processor::create(key, state, reader);
+    MiscWeakAssert(processor != nullptr);
     if(processor == nullptr)
     {
-        throw std::runtime_error("allocation failed");
+        MiscError("Track", "Processor allocation failed!");
+        return false;
     }
 
-    auto description = processor->getDescription();
     mChrono.start();
-    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), in = std::move(input)]() -> std::tuple<juce::Result, Results>
+    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), in = std::move(input)]()
                                   {
                                       MiscDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
-                                      auto const result = runPluginAnalysis(*proc, in, [&, this](float advancement)
-                                                                            {
-                                                                                mAdvancement.store(advancement);
-                                                                                return !mShouldAbort.load();
-                                                                            });
+                                      auto result = runPluginAnalysis(*proc, in, [&, this](float advancement)
+                                                                      {
+                                                                          mAdvancement.store(advancement);
+                                                                          return !mShouldAbort.load();
+                                                                      });
+                                      auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), proc->getDescription());
                                       triggerAsyncUpdate();
-                                      return result;
+                                      return fresult;
                                   });
-    return description;
+    return true;
 }
 
 void Track::Processor::handleAsyncUpdate()
@@ -101,7 +105,7 @@ void Track::Processor::handleAsyncUpdate()
         if(onAnalysisEnded != nullptr)
         {
             mChrono.stop("Processor analysis ended");
-            onAnalysisEnded(std::get<0>(results), std::get<1>(results));
+            onAnalysisEnded(std::get<0>(results), std::get<1>(results), std::get<2>(results));
         }
         abortAnalysis();
     }
