@@ -178,6 +178,9 @@ jobs:
         appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+    - name: Package dSYM Archive
+      if: ${{ env.is_tagged == 'true' }}
+      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
@@ -191,6 +194,12 @@ jobs:
       with:
         name: Partiels-MacOS
         path: ${{ github.workspace }}/build/Partiels-MacOS.dmg
+    - name: Artifact
+      if: ${{ env.is_tagged == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: Partiels-MacOS-dSYM
+        path: ${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip
     - name: Release
       uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
@@ -200,7 +209,9 @@ jobs:
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ github.workspace }}/build/Partiels-Release.md
-        files: ${{ github.workspace }}/build/Partiels-MacOS.dmg
+        files: |
+          ${{ github.workspace }}/build/Partiels-MacOS.dmg
+          ${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip
   # Generates the documentation.
   Doc:
     runs-on: ubuntu-latest
