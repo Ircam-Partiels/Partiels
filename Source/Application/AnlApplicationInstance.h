@@ -57,6 +57,7 @@ namespace Application
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
         Osc::Sender& getOscSender();
+        Neuralyzer::Agent& getNeuralyzerAgent();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
@@ -112,6 +113,7 @@ namespace Application
         std::unique_ptr<Osc::MouseDispatcher> mOscMouseDispatcher;
         std::unique_ptr<Neuralyzer::Mcp::Dispatcher> mNeuralyzerMcpDispatcher;
         std::unique_ptr<Neuralyzer::Mcp::Server> mNeuralyzerMcpSever;
+        std::unique_ptr<Neuralyzer::Agent> mNeuralyzerAgent;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
