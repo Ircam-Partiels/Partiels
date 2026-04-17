@@ -65,7 +65,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         juce::Process::setDockIconVisible(false);
 #endif
         MiscDebug("Application", "Running as MCP host");
-        auto const result = Mcp::Host::run(mcpPort);
+        auto const result = Neuralyzer::Mcp::Host::run(mcpPort);
         Instance::get().setApplicationReturnValue(result ? 0 : -1);
         Instance::get().systemRequestedQuit();
         return;
@@ -81,6 +81,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
     }
 
     MiscDebug("Application", "Running with GUI");
+
+    Neuralyzer::Agent::initialize();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
@@ -108,7 +110,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
     mNeuralyzerMcpDispatcher = std::make_unique<Neuralyzer::Mcp::Dispatcher>();
-
+    mNeuralyzerAgent = std::make_unique<Neuralyzer::Agent>(*mNeuralyzerMcpDispatcher.get());
 
     checkPluginsQuarantine();
 
@@ -382,6 +384,7 @@ void Application::Instance::shutdown()
     mMainMenuModel.reset();
     mWindow.reset();
 
+    mNeuralyzerAgent.reset();
     mNeuralyzerMcpSever.reset();
     mNeuralyzerMcpDispatcher.reset();
     mOscMouseDispatcher.reset();
@@ -403,6 +406,8 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
+
+    Neuralyzer::Agent::release();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
@@ -651,6 +656,11 @@ PluginList::Scanner& Application::Instance::getPluginListScanner()
 Application::Osc::Sender& Application::Instance::getOscSender()
 {
     return *mOscSender.get();
+}
+
+Application::Neuralyzer::Agent& Application::Instance::getNeuralyzerAgent()
+{
+    return *mNeuralyzerAgent.get();
 }
 
 Document::Accessor& Application::Instance::getDocumentAccessor()
