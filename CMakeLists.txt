@@ -238,6 +238,8 @@ if(NOT PARTIELS_MANUAL_ONLY)
         set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
         set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
     endif()
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES")
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_COPY_PHASE_STRIP "NO")
     set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
 
