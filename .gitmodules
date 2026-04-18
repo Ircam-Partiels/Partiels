@@ -7,3 +7,6 @@
 [submodule "Dependencies/llama.cpp"]
 	path = Dependencies/llama.cpp
 	url = https://github.com/Ircam-Partiels/llama.cpp.git
+[submodule "Dependencies/md4c"]
+	path = Dependencies/md4c
+	url = https://github.com/Ircam-Partiels/md4c.git
