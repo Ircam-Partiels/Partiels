@@ -3,6 +3,7 @@
 #include "AnlAudioFileInfoPanel.h"
 #include "AnlAudioFileLayout.h"
 #include "AnlFileSearchPathTable.h"
+#include "AnlFormatter.h"
 #include "AnlHideablePanel.h"
 #include "AnlLoadingIcon.h"
 #include "AnlMouseScroller.h"
