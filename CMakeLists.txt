@@ -127,10 +127,12 @@ if(NOT PARTIELS_MANUAL_ONLY)
     option(LLAMA_BUILD_COMMON "llama: build common utils library" ON)
     option(LLAMA_HTTPLIB    "llama: httplib for downloading functionality" OFF)
     option(LLAMA_OPENSSL    "llama: use openssl to support HTTPS" OFF)
+    option(BUILD_MD2HTML_EXECUTABLE "Whether to compile the md2html executable" OFF)
 
     add_subdirectory(JUCE)
     add_subdirectory(Dependencies/llama.cpp)
     add_subdirectory(Dependencies/ircam-vamp-extension)
+    add_subdirectory(Dependencies/md4c)
     add_subdirectory(Dependencies/sdif)
     include(Dependencies/Misc/Misc.cmake)
     add_subdirectory(VampPlugins)
@@ -267,6 +269,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
     target_link_libraries(Partiels PRIVATE
         ive_host_static
         llama-common
+        md4c
         sdif
         MiscData
         TestResultsData
