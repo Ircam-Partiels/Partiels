@@ -104,13 +104,30 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mTrackPresetListAccessor = std::make_unique<Track::PresetList::Accessor>();
     mAudioReader = std::make_unique<AudioReader>();
     mProperties = std::make_unique<Properties>();
-    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), juce::translate("Open a document"), juce::translate("Save the document"));
     mDownloader = std::make_unique<Downloader>();
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
     mNeuralyzerMcpDispatcher = std::make_unique<Neuralyzer::Mcp::Dispatcher>();
     mNeuralyzerAgent = std::make_unique<Neuralyzer::Agent>(*mNeuralyzerMcpDispatcher.get());
+    mDocumentFileBased = std::make_unique<Document::FileBased>(
+        *mDocumentDirector.get(),
+        getExtensionForDocumentFile(),
+        getWildCardForDocumentFile(),
+        juce::translate("Open a document"),
+        juce::translate("Save the document"),
+        [this](juce::File const& documentFile)
+        {
+            auto const sessionContextFile = Neuralyzer::getNeuralyzerSessionFile(documentFile);
+            auto const sessionMessagesFile = sessionContextFile.withFileExtension(".messages.json");
+            return sessionContextFile.existsAsFile() && sessionMessagesFile.existsAsFile() ? mNeuralyzerAgent->loadState(sessionContextFile, sessionMessagesFile) : mNeuralyzerAgent->resetState();
+        },
+        [this](juce::File const& documentFile)
+        {
+            auto const sessionContextFile = Neuralyzer::getNeuralyzerSessionFile(documentFile);
+            auto const sessionMessagesFile = sessionContextFile.withFileExtension(".messages.json");
+            return mNeuralyzerAgent->saveState(sessionContextFile, sessionMessagesFile);
+        });
 
     checkPluginsQuarantine();
 

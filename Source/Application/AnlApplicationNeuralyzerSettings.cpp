@@ -7,38 +7,12 @@ ANALYSE_FILE_BEGIN
 
 namespace
 {
-    static juce::File resolveModelDirectory(juce::File const& root)
-    {
-#if JUCE_MAC
-        return root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("partielsmodels");
-#else
-        return root.getChildFile("Ircam").getChildFile("partielsmodels");
-#endif
-    }
-
-    static juce::File getDefaultModelDirectory()
-    {
-        auto const directory = resolveModelDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
-        auto const createResult = directory.createDirectory();
-        if(createResult.failed())
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::AlertIconType::WarningIcon)
-                                     .withTitle(juce::translate("Failed to download models"))
-                                     .withMessage(juce::translate("The model directory 'DIRPATH' cannot be created: ERROR").replace("DIRPATH", directory.getFullPathName()).replace("ERROR", createResult.getErrorMessage()))
-                                     .withButton(juce::translate("Ok"));
-            juce::AlertWindow::showAsync(options, nullptr);
-            return juce::File();
-        }
-        return directory;
-    }
-
     static std::vector<juce::File> getInstalledModels()
     {
         std::vector<juce::File> models;
         auto const addFilesFromDirectory = [&](juce::File const& root)
         {
-            auto const directory = resolveModelDirectory(root);
+            auto const directory = Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Models");
             auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
             for(auto const& model : listedModels)
             {
@@ -221,6 +195,17 @@ Application::Neuralyzer::SettingsContent::DownloadProcess::DownloadProcess(Setti
 , mCancelButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
 {
     auto const output = getDefaultModelDirectory();
+    auto const createResult = output.createDirectory();
+    if(createResult.failed())
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::AlertIconType::WarningIcon)
+                                 .withTitle(juce::translate("Failed to download models"))
+                                 .withMessage(juce::translate("The model directory 'DIRPATH' cannot be created: ERROR").replace("DIRPATH", output.getFullPathName()).replace("ERROR", createResult.getErrorMessage()))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+        return;
+    }
     auto const modelName = description.value("name", juce::String{});
     mModelFile = output.getChildFile(modelName + ".gguf");
     mAsyncProcess = std::async([this, description, output]()
@@ -418,7 +403,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                      })
 , mModelsDirectory(juce::translate("Models Directory"), juce::translate("Reveal the directory where models are stored"), []()
                    {
-                       resolveModelDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory)).revealToUser();
+                       getDefaultModelDirectory().revealToUser();
                    })
 {
     addAndMakeVisible(mModel);

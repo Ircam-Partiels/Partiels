@@ -10,10 +10,23 @@ Document::Accessor const& Document::FileBased::getDefaultAccessor()
 }
 
 Document::FileBased::FileBased(Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
+: FileBased(director, fileExtension, fileWildCard, openFileDialogTitle, saveFileDialogTitle, {}, {})
+{
+}
+
+Document::FileBased::FileBased(Director& director,
+                               juce::String const& fileExtension,
+                               juce::String const& fileWildCard,
+                               juce::String const& openFileDialogTitle,
+                               juce::String const& saveFileDialogTitle,
+                               StateCallback onDocumentLoaded,
+                               StateCallback onDocumentSaved)
 : juce::FileBasedDocument(fileExtension, fileWildCard, juce::translate(openFileDialogTitle), juce::translate(saveFileDialogTitle))
 , mDirector(director)
 , mAccessor(mDirector.getAccessor())
 , mFileExtension(fileExtension)
+, mOnDocumentLoaded(std::move(onDocumentLoaded))
+, mOnDocumentSaved(std::move(onDocumentSaved))
 {
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     mListener.onAttrChanged = [&]([[maybe_unused]] Accessor const& acsr, [[maybe_unused]] AttrType attribute)
@@ -142,6 +155,15 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
 
+    if(mOnDocumentLoaded != nullptr)
+    {
+        auto const callbackResult = mOnDocumentLoaded(file);
+        if(callbackResult.failed())
+        {
+            return callbackResult;
+        }
+    }
+
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
@@ -163,6 +185,16 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     auto const saveResult = saveTo(mAccessor, file);
     if(saveResult.wasOk())
     {
+        if(mOnDocumentSaved != nullptr)
+        {
+            auto const callbackResult = mOnDocumentSaved(file);
+            if(callbackResult.failed())
+            {
+                mDirector.endAction(ActionState::abort);
+                triggerAsyncUpdate();
+                return callbackResult;
+            }
+        }
         mDirector.endAction(ActionState::continueTransaction);
         mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
         triggerAsyncUpdate();

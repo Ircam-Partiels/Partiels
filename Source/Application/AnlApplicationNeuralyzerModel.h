@@ -70,6 +70,10 @@ namespace Application
             }
             // clang-format on
         };
+
+        juce::File resolveNeuralyzerDirectory(juce::File const& root);
+        juce::File getDefaultModelDirectory();
+        juce::File getNeuralyzerSessionFile(juce::File const& documentFile);
     } // namespace Neuralyzer
 } // namespace Application
 

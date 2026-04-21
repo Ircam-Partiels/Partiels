@@ -25,6 +25,29 @@ bool Application::Neuralyzer::ModelInfo::operator==(ModelInfo const& rhs) const 
            equals(repetitionPenalty, rhs.repetitionPenalty);
 }
 
+juce::File Application::Neuralyzer::resolveNeuralyzerDirectory(juce::File const& root)
+{
+#if JUCE_MAC
+    return root.getChildFile("Application Support").getChildFile("Ircam").getChildFile("Partiels").getChildFile("Neuralyzer");
+#else
+    return root.getChildFile("Ircam").getChildFile("Partiels").getChildFile("Neuralyzer");
+#endif
+}
+
+juce::File Application::Neuralyzer::getDefaultModelDirectory()
+{
+    auto const root = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
+    return Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Models");
+}
+
+juce::File Application::Neuralyzer::getNeuralyzerSessionFile(juce::File const& documentFile)
+{
+    auto const root = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
+    auto const directory = Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Sessions");
+    auto const hash = juce::String::toHexString(static_cast<juce::int64>(documentFile.getFullPathName().hashCode64()));
+    return directory.getChildFile(hash + ".session");
+}
+
 template <>
 void XmlParser::toXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Application::Neuralyzer::ModelInfo const& value)
 {

@@ -653,6 +653,7 @@ void Application::Neuralyzer::Chat::QueryEditor::filesDropped(juce::StringArray 
     {
         if(audioFormatsWildcard.containsIgnoreCase(juce::File(file).getFileExtension()))
         {
+            JUCE_COMPILER_WARNING("implement that");
         }
     }
 }

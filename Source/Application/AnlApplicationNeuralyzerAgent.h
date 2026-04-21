@@ -31,10 +31,11 @@ namespace Application
             juce::String getTemporaryResponse() const;
             float getContextCapacityUsage() const;
             ModelInfo getModelInfo() const;
+            bool isInitialized() const;
 
-            juce::Result loadState(juce::File state);
-            juce::Result saveState(juce::File state);
-            void resetState();
+            juce::Result loadState(juce::File contextState, juce::File messageState);
+            juce::Result saveState(juce::File contextState, juce::File messageState);
+            juce::Result resetState();
 
             void setShouldQuit(bool state);
             bool shouldQuit() const;

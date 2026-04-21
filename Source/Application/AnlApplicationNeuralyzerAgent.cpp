@@ -11,6 +11,67 @@ static void logCallback(enum ggml_log_level level, [[maybe_unused]] const char* 
     }
 }
 
+static void to_json(nlohmann::json& json, common_chat_msg const& message)
+{
+    json["role"] = message.role;
+    json["content"] = message.content;
+    json["reasoning_content"] = message.reasoning_content;
+    json["tool_name"] = message.tool_name;
+    json["tool_call_id"] = message.tool_call_id;
+
+    json["content_parts"] = nlohmann::json::array();
+    for(auto const& contentPart : message.content_parts)
+    {
+        nlohmann::json contentPartJson;
+        contentPartJson["type"] = contentPart.type;
+        contentPartJson["text"] = contentPart.text;
+        json["content_parts"].push_back(std::move(contentPartJson));
+    }
+
+    json["tool_calls"] = nlohmann::json::array();
+    for(auto const& toolCall : message.tool_calls)
+    {
+        nlohmann::json toolCallJson;
+        toolCallJson["name"] = toolCall.name;
+        toolCallJson["arguments"] = toolCall.arguments;
+        toolCallJson["id"] = toolCall.id;
+        json["tool_calls"].push_back(std::move(toolCallJson));
+    }
+}
+
+static void from_json(nlohmann::json const& json, common_chat_msg& message)
+{
+    message = common_chat_msg{};
+    message.role = json.at("role").get<std::string>();
+    message.content = json.value("content", std::string{});
+    message.reasoning_content = json.value("reasoning_content", std::string{});
+    message.tool_name = json.value("tool_name", std::string{});
+    message.tool_call_id = json.value("tool_call_id", std::string{});
+
+    if(json.contains("content_parts") && json.at("content_parts").is_array())
+    {
+        for(auto const& contentPartJson : json.at("content_parts"))
+        {
+            common_chat_msg_content_part contentPart;
+            contentPart.type = contentPartJson.value("type", std::string{});
+            contentPart.text = contentPartJson.value("text", std::string{});
+            message.content_parts.push_back(std::move(contentPart));
+        }
+    }
+
+    if(json.contains("tool_calls") && json.at("tool_calls").is_array())
+    {
+        for(auto const& toolCallJson : json.at("tool_calls"))
+        {
+            common_chat_tool_call toolCall;
+            toolCall.name = toolCallJson.value("name", std::string{});
+            toolCall.arguments = toolCallJson.value("arguments", std::string{});
+            toolCall.id = toolCallJson.value("id", std::string{});
+            message.tool_calls.push_back(std::move(toolCall));
+        }
+    }
+}
+
 void Application::Neuralyzer::Agent::initialize()
 {
     static std::once_flag initFlag;
@@ -230,6 +291,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     std::optional<common_chat_msg> preSystemMsg;
     if(mChatInputs.messages.empty())
     {
+        JUCE_COMPILER_WARNING("check if that replaced the original system prompt")
         chatInputs.tools = mChatInputs.tools;
         common_chat_msg systemMsg;
         systemMsg.role = "system";
@@ -469,7 +531,7 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Neuralyzer::Age
     return std::make_tuple(juce::Result::fail(juce::translate("Maximum number of iterations reached.")), finalResponses);
 }
 
-juce::Result Application::Neuralyzer::Agent::loadState(juce::File state)
+juce::Result Application::Neuralyzer::Agent::loadState(juce::File contextState, juce::File messageState)
 {
     std::unique_lock<std::mutex> callLock(mCallMutex);
     if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
@@ -479,9 +541,34 @@ juce::Result Application::Neuralyzer::Agent::loadState(juce::File state)
     }
     auto* context = mInitResult->context();
 
-    if(!state.existsAsFile())
+    if(!contextState.existsAsFile())
     {
-        return juce::Result::fail(juce::translate("The state file does not exist: FLNAME").replace("FLNAME", state.getFullPathName()));
+        return juce::Result::fail(juce::translate("The context state file does not exist: FLNAME").replace("FLNAME", contextState.getFullPathName()));
+    }
+    if(!messageState.existsAsFile())
+    {
+        return juce::Result::fail(juce::translate("The message state file does not exist: FLNAME").replace("FLNAME", messageState.getFullPathName()));
+    }
+
+    std::vector<common_chat_msg> restoredMessages;
+    try
+    {
+        auto const root = nlohmann::json::parse(messageState.loadFileAsString().toStdString());
+        if(!root.contains("messages") || !root.at("messages").is_array())
+        {
+            return juce::Result::fail(juce::translate("Invalid message state file format: FLNAME").replace("FLNAME", messageState.getFullPathName()));
+        }
+        for(auto const& messageJson : root.at("messages"))
+        {
+            common_chat_msg message;
+            from_json(messageJson, message);
+            restoredMessages.push_back(std::move(message));
+        }
+    }
+    catch(std::exception const& exception)
+    {
+        MiscDebug("Application::Neuralyzer::Agent", juce::String("Failed to parse message state file: ") + messageState.getFullPathName() + juce::String(" error: ") + exception.what());
+        return juce::Result::fail(juce::translate("Failed to parse message state file: FLNAME").replace("FLNAME", messageState.getFullPathName()));
     }
 
     // Set log callback to suppress unnecessary output
@@ -490,20 +577,22 @@ juce::Result Application::Neuralyzer::Agent::loadState(juce::File state)
     size_t nloaded = 0;
     auto const numCtx = llama_n_ctx(context);
     std::vector<llama_token> array(numCtx);
-    if(!llama_state_load_file(context, state.getFullPathName().toRawUTF8(), array.data(), array.size(), &nloaded))
+    if(!llama_state_load_file(context, contextState.getFullPathName().toRawUTF8(), array.data(), array.size(), &nloaded))
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file: " + state.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to load state from file: FLNAME").replace("FLNAME", state.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file: " + contextState.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to load state from file: FLNAME").replace("FLNAME", contextState.getFullPathName()));
     }
     if(nloaded == 0)
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file (no tokens loaded): " + state.getFullPathName());
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to load state from file (no tokens loaded): " + contextState.getFullPathName());
     }
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + state.getFullPathName());
+    mChatInputs.messages = std::move(restoredMessages);
+    updateContextCapacity();
+    MiscDebug("Application::Neuralyzer::Agent", juce::String("Loaded ") + juce::String(nloaded) + juce::String(" tokens from state file: ") + contextState.getFullPathName());
     return juce::Result::ok();
 }
 
-juce::Result Application::Neuralyzer::Agent::saveState(juce::File state)
+juce::Result Application::Neuralyzer::Agent::saveState(juce::File contextState, juce::File messageState)
 {
     std::unique_lock<std::mutex> callLock(mCallMutex);
     if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
@@ -512,21 +601,25 @@ juce::Result Application::Neuralyzer::Agent::saveState(juce::File state)
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
     auto* context = mInitResult->context();
-
-    if(state == juce::File())
+    if(contextState == juce::File())
     {
-        return juce::Result::fail(juce::translate("The state file is not set."));
+        return juce::Result::fail(juce::translate("The context state file is not set."));
+    }
+    if(messageState == juce::File())
+    {
+        return juce::Result::fail(juce::translate("The message state file is not set."));
     }
 
     // Ensure directory exists
-    auto const parentDir = state.getParentDirectory();
-    if(!parentDir.exists())
+    if(!contextState.getParentDirectory().createDirectory())
     {
-        if(!parentDir.createDirectory())
-        {
-            MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + parentDir.getFullPathName());
-            return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", parentDir.getFullPathName()));
-        }
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + contextState.getParentDirectory().getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", contextState.getParentDirectory().getFullPathName()));
+    }
+    if(!messageState.getParentDirectory().createDirectory())
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + messageState.getParentDirectory().getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", messageState.getParentDirectory().getFullPathName()));
     }
 
     // Set log callback to suppress unnecessary output
@@ -534,35 +627,54 @@ juce::Result Application::Neuralyzer::Agent::saveState(juce::File state)
 
     // Save KV cache state. We don't persist prompt tokens here (nullptr, 0) since
     // the KV cache is sufficient for restoring the model state.
-    auto const saved = llama_state_save_file(context, state.getFullPathName().toRawUTF8(), nullptr, 0);
+    auto const saved = llama_state_save_file(context, contextState.getFullPathName().toRawUTF8(), nullptr, 0);
     if(!saved)
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state to file: " + state.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", state.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state to file: " + contextState.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", contextState.getFullPathName()));
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache to state file: ") + state.getFullPathName());
+    nlohmann::json root;
+    root["version"] = 1;
+    root["messages"] = nlohmann::json::array();
+    for(auto const& message : mChatInputs.messages)
+    {
+        nlohmann::json messageJson;
+        to_json(messageJson, message);
+        root["messages"].push_back(std::move(messageJson));
+    }
+
+    if(!messageState.replaceWithText(juce::String(root.dump(2))))
+    {
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state metadata file: " + messageState.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to save state metadata file: FLNAME").replace("FLNAME", messageState.getFullPathName()));
+    }
+
+    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache and message history to files: ") + contextState.getFullPathName() + " " + messageState.getFullPathName());
     return juce::Result::ok();
 }
 
-void Application::Neuralyzer::Agent::resetState()
+juce::Result Application::Neuralyzer::Agent::resetState()
 {
     // Clear chat history and KV cache from system prompt onwards
     std::unique_lock<std::mutex> callLock(mCallMutex);
     if(mInitResult == nullptr || mInitResult->context() == nullptr)
     {
-        return;
+        MiscDebug("Application::Neuralyzer::Agent", "The model is not initialized");
+        return juce::Result::fail(juce::translate("The model is not initialized."));
     }
     MiscWeakAssert(mChatInputs.messages.size() > 2);
     if(mChatInputs.messages.size() <= 2)
     {
-        return;
+        MiscDebug("Application::Neuralyzer::Agent", "Not enough messages in history to reset state.");
+        return juce::Result::fail(juce::translate("Not enough messages in history to reset state."));
     }
     MiscStrongAssert(mChatInputs.messages.size() == mChatInputs.messages.size());
     auto* context = mInitResult->context();
     llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
     mChatInputs.messages.clear();
     updateContextCapacity();
+    return juce::Result::ok();
 }
 
 juce::Result Application::Neuralyzer::Agent::ensureContextSpace(size_t minNumRequiredTokens)
@@ -619,6 +731,11 @@ void Application::Neuralyzer::Agent::updateContextCapacity()
 float Application::Neuralyzer::Agent::getContextCapacityUsage() const
 {
     return mContextCapacityUsage.load();
+}
+
+bool Application::Neuralyzer::Agent::isInitialized() const
+{
+    return mInitResult != nullptr && mInitResult->context() != nullptr && mInitResult->sampler(0) != nullptr;
 }
 
 juce::String Application::Neuralyzer::Agent::getTemporaryResponse() const

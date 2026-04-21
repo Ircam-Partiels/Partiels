@@ -12,7 +12,10 @@ namespace Document
     , private juce::AsyncUpdater
     {
     public:
+        using StateCallback = std::function<juce::Result(juce::File const&)>;
+
         FileBased(Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
+        FileBased(Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle, StateCallback onDocumentLoaded, StateCallback onDocumentSaved);
         ~FileBased() override;
 
         Accessor const& getDefaultAccessor();
@@ -58,6 +61,8 @@ namespace Document
         juce::File mLastFile;
         Accessor mSavedStateAccessor;
         Accessor const mDefaultDdocument;
+        StateCallback mOnDocumentLoaded;
+        StateCallback mOnDocumentSaved;
     };
 } // namespace Document
 
