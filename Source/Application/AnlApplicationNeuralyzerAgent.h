@@ -18,6 +18,8 @@ namespace Application
         class Agent
         {
         public:
+            using Results = std::tuple<juce::Result, std::vector<juce::String>>;
+            
             static void initialize();
             static void release();
 
@@ -27,7 +29,7 @@ namespace Application
             Mcp::Dispatcher& getMcpDispatcher();
 
             juce::Result initialize(ModelInfo const& info, juce::String const& instructions);
-            std::tuple<juce::Result, std::vector<juce::String>> sendUserQuery(juce::String const& prompt, bool allowTools);
+            Results sendUserQuery(juce::String const& prompt, bool allowTools);
             juce::String getTemporaryResponse() const;
             float getContextCapacityUsage() const;
             ModelInfo getModelInfo() const;
@@ -56,8 +58,6 @@ namespace Application
             std::atomic<float> mContextCapacityUsage{0.0f};
             std::mutex mCallMutex;
             juce::String mInstructions;
-
-            static auto constexpr userRole = "user";
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Agent)
         };

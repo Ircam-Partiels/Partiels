@@ -300,7 +300,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
         preSystemMsg = std::move(systemMsg);
     }
     common_chat_msg userMsg;
-    userMsg.role = role;
+    userMsg.role = "user";
     userMsg.content = std::move(query);
     chatInputs.messages.push_back(userMsg);
     try
@@ -309,7 +309,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     }
     catch(std::exception const& e)
     {
-        MiscDebug("Application::Neuralyzer::Agent", e.what());
+        MiscDebug("Application::Neuralyzer::Agent", juce::String(juce::CharPointer_UTF8(e.what())));
         return createResults(juce::Result::fail(juce::translate("Failed to apply chat templates: ") + e.what()));
     }
     catch(...)
@@ -361,6 +361,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     {
         mChatInputs.messages.push_back(preSystemMsg.value());
     }
+    userMsg.role = role;
     mChatInputs.messages.push_back(userMsg);
 
     // Get the assistant response with streaming support.
@@ -448,7 +449,7 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Neuralyzer::Age
 
     auto* context = mInitResult->context();
     auto const numRequiredSpace = static_cast<size_t>(llama_n_ctx(context) / 4);
-
+    auto const* role = "user";
     for(int iteration = 0; iteration < maxIterations && mShouldQuit.load() == false; ++iteration)
     {
         // Manage context size before each iteration to prevent overflow
@@ -457,11 +458,12 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Neuralyzer::Age
         {
             MiscDebug("Application::Neuralyzer::Agent", "Context management warning: " + ctxResult.getErrorMessage().toStdString());
         }
-        auto const result = performQuery(userRole, currentQuery, allowTools);
+        auto const result = performQuery(role, currentQuery, allowTools);
+        finalResponses.push_back(std::get<1>(result));
         updateContextCapacity();
         if(std::get<0>(result).failed())
         {
-            finalResponses.push_back(std::get<1>(result));
+            role = "system";
             currentQuery = std::get<0>(result).getErrorMessage().toStdString();
             if(++numErrors >= maxErrors)
             {
@@ -470,7 +472,7 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Neuralyzer::Age
         }
         else
         {
-            finalResponses.push_back(std::get<1>(result));
+            role = "tool";
             auto const tpResult = Tools::parse(std::get<2>(result), std::get<1>(result));
             if(tpResult.first.wasOk() && tpResult.second.empty())
             {

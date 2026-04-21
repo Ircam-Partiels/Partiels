@@ -34,7 +34,7 @@ namespace Application
             };
             // clang-format on
 
-            using Results = std::tuple<juce::Result, std::vector<juce::String>>;
+            using Results = Agent::Results;
             using History = std::vector<std::tuple<MessageType, std::vector<juce::String>>>;
 
             // juce::AsyncUpdater
