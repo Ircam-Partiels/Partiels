@@ -93,19 +93,24 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTrackDispatcher = std::make_unique<Osc::TrackDispatcher>(getOscSender());
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
-    mWindow = std::make_unique<Window>();
-    mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
 
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        auto const updateMainMenu = [this]
+        auto const updateMainMenu = [this](bool refreshWindow = false)
         {
-            mMainMenuModel->menuItemsChanged();
+            if(mMainMenuModel != nullptr)
+            {
+                mMainMenuModel->menuItemsChanged();
 #ifdef JUCE_MAC
-            mMainMenuModel->updateAppleMenuItems();
+                mMainMenuModel->updateAppleMenuItems();
 #endif
+            }
+            if(refreshWindow && mWindow != nullptr)
+            {
+                mWindow->refreshInterface();
+            }
         };
         switch(attribute)
         {
@@ -123,8 +128,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             {
                 auto const file = acsr.getAttr<AttrType::currentTranslationFile>();
                 juce::LocalisedStrings::setCurrentMappings(std::make_unique<juce::LocalisedStrings>(file.existsAsFile() ? file : MainMenuModel::getSystemDefaultTranslationFile(), false).release());
-                updateMainMenu();
-                mWindow->refreshInterface();
+                updateMainMenu(true);
                 break;
             }
             case AttrType::autoUpdate:
@@ -142,7 +146,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 auto const windowState = acsr.getAttr<AttrType::windowState>();
                 auto const scale = acsr.getAttr<AttrType::desktopGlobalScaleFactor>();
                 juce::Desktop::getInstance().setGlobalScaleFactor(scale);
-                mMainMenuModel->menuItemsChanged();
+                updateMainMenu();
                 break;
             }
             case AttrType::colourMode:
@@ -164,6 +168,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
+
+    mWindow = std::make_unique<Window>();
+    mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
 
     juce::Desktop::getInstance().addDarkModeSettingListener(this);
 
@@ -848,7 +855,10 @@ void Application::Instance::updateLookAndFeel()
 {
     mLookAndFeel->setColourChart(getColourChart());
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
-    mMainMenuModel->menuItemsChanged();
+    if(mMainMenuModel != nullptr)
+    {
+        mMainMenuModel->menuItemsChanged();
+    }
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
         for(int i = 0; i < modalComponentManager->getNumModalComponents(); ++i)
