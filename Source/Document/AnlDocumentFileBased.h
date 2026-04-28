@@ -18,10 +18,12 @@ namespace Document
         Accessor const& getDefaultAccessor();
 
         juce::Result consolidate();
-
         juce::Result loadTemplate(juce::File const& file, bool adaptOnSampleRate);
         juce::Result loadBackup(juce::File const& file);
         juce::Result saveBackup(juce::File const& file);
+
+        std::function<void(juce::File const&)> onLoaded = nullptr;
+        std::function<void(juce::File const&)> onSaved = nullptr;
 
         static std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> parse(juce::File const& file);
         static juce::Result saveTo(Accessor& accessor, juce::File const& file);
