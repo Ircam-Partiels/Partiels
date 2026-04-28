@@ -141,7 +141,10 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
 
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
-
+    if(onLoaded != nullptr)
+    {
+        onLoaded(file);
+    }
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
@@ -165,6 +168,10 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     {
         mDirector.endAction(ActionState::continueTransaction);
         mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+        if(onSaved != nullptr)
+        {
+            onSaved(file);
+        }
         triggerAsyncUpdate();
         return saveResult;
     }
