@@ -1,5 +1,6 @@
 #include "AnlApplicationMainMenuModel.h"
 #include "AnlApplicationCommandTarget.h"
+#include "AnlApplicationFileManager.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
@@ -56,7 +57,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
             auto const name = fileName + (hasDuplicate ? " (" + recentFile.getParentDirectory().getFileName() + ")" : "");
             recentFilesMenu.addItem(name, isActive, !isActive, [=]()
                                     {
-                                        Instance::get().openDocumentFile(recentFile);
+                                        FileManager::openDocumentFile(recentFile);
                                     });
         }
 
