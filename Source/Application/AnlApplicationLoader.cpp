@@ -1,4 +1,5 @@
 #include "AnlApplicationLoader.h"
+#include "AnlApplicationFileManager.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
 
@@ -185,7 +186,7 @@ Application::LoaderContent::LoaderContent()
         auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
         if(!documentHasFile)
         {
-            Instance::get().openDocumentFile(file);
+            FileManager::openDocumentFile(file);
         }
         else
         {
@@ -446,7 +447,7 @@ void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files
     }();
     if(!std::get<0>(validFiles).empty())
     {
-        Instance::get().openFiles(std::get<0>(validFiles));
+        FileManager::openFiles(std::get<0>(validFiles));
     }
     else if(!std::get<1>(validFiles).empty())
     {
