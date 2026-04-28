@@ -2,6 +2,7 @@
 #include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
 #include "../Track/AnlTrackExporter.h"
+#include "AnlApplicationFileManager.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
 
@@ -800,7 +801,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     };
 
     auto& undoManager = Instance::get().getUndoManager();
-    auto& fileBased = Instance::get().getDocumentFileBased();
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& documentDir = Instance::get().getDocumentDirector();
     auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
@@ -812,7 +812,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     {
         case CommandIDs::documentNew:
         {
-            Instance::get().newDocument();
+            FileManager::newDocument();
             return true;
         }
         case CommandIDs::documentOpen:
@@ -832,50 +832,24 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                           {
                                               files.push_back(result);
                                           }
-                                          Instance::get().openFiles(files);
+                                          FileManager::openFiles(files);
                                       });
 
             return true;
         }
         case CommandIDs::documentSave:
         {
-            fileBased.saveAsync(true, true, nullptr);
+            FileManager::saveDocument();
             return true;
         }
         case CommandIDs::documentDuplicate:
         {
-            fileBased.saveAsInteractiveAsync(true, nullptr);
+            FileManager::saveDocumentAs();
             return true;
         }
         case CommandIDs::documentConsolidate:
         {
-            fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
-                                {
-                                    if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                    {
-                                        return;
-                                    }
-                                    auto const result = Instance::get().getDocumentFileBased().consolidate();
-                                    auto const fileName = Instance::get().getDocumentFileBased().getFile().getFullPathName();
-                                    if(result.wasOk())
-                                    {
-                                        auto const options = juce::MessageBoxOptions()
-                                                                 .withIconType(juce::AlertWindow::InfoIcon)
-                                                                 .withTitle(juce::translate("Document consolidated!"))
-                                                                 .withMessage(juce::translate("The document has been consolidated with the audio files and the analyses to FLNAME.").replace("FLNAME", fileName))
-                                                                 .withButton(juce::translate("Ok"));
-                                        juce::AlertWindow::showAsync(options, nullptr);
-                                    }
-                                    else
-                                    {
-                                        auto const options = juce::MessageBoxOptions()
-                                                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                                                 .withTitle(juce::translate("Document consolidation failed!"))
-                                                                 .withMessage(juce::translate("The document cannot be consolidated with the audio files and the analyses to FLNAME: ERROR.").replace("FLNAME", fileName).replace("ERROR", result.getErrorMessage()))
-                                                                 .withButton(juce::translate("Ok"));
-                                        juce::AlertWindow::showAsync(options, nullptr);
-                                    }
-                                });
+            FileManager::consolidateDocument();
             return true;
         }
 
