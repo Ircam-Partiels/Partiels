@@ -1,0 +1,32 @@
+{
+  "models": [
+    {
+      "name": "Ministral-3-14B-Instruct-2512-Q5_K_M",
+      "model": "https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512-GGUF/resolve/main/Ministral-3-14B-Instruct-2512-Q5_K_M.gguf"
+    },
+    {
+      "name": "Qwen3.5-9B-Q4_K_M",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf"
+    },
+    {
+      "name": "Qwen3.5-9B-UD-Q4_K_XL",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-UD-Q4_K_XL.gguf"
+    },
+    {
+      "name": "Qwen3.5-27B-Q4_K_M",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-27B-GGUF/resolve/main/Qwen3.5-27B-Q4_K_M.gguf"
+    },
+    {
+      "name": "Qwen3.5-27B-UD-Q4_K_XL",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-27B-GGUF/resolve/main/Qwen3.5-27B-UD-Q4_K_XL.gguf"
+    },
+    {
+      "name": "Qwen3.5-35B-A3B-Q4_K_M",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/main/Qwen3.5-35B-A3B-Q4_K_M.gguf"
+    },
+    {
+      "name": "Qwen3.5-35B-A3B-UD-Q4_K_XL",
+      "model": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/main/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
+    }
+  ]
+}
