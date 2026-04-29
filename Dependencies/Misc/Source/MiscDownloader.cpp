@@ -138,6 +138,11 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
             }
         }
         outputStream.flush();
+        if(totalLength > 0 && bytesSent < totalLength)
+        {
+            MiscDebug("Downloader", "Incomplete download from URL \"" + url.toString(true) + "\": received " + juce::String(bytesSent) + " of " + juce::String(totalLength) + " bytes.");
+            return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": incomplete download.").replace("URLPATH", url.toString(true)));
+        }
         if(callback != nullptr)
         {
             // Final progress notification; ignore return value because the download
