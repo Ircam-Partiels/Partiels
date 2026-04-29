@@ -563,22 +563,24 @@ juce::Result Application::Neuralyzer::Agent::performQuery(juce::String const& pr
             else if(tpResult.first.wasOk())
             {
                 auto const tcResult = Tools::call(mMcpDispatcher, tpResult.second);
+                currentQuery = tcResult.second + "\n\n";
                 if(tcResult.first.wasOk())
                 {
                     numErrors = 0;
-                    currentQuery = tcResult.second + "\nBased on these results, provide your final answer or call more tools if needed. If necessary, ensure your response is accurate based on the current state of the document.";
+                    currentQuery += "Based on these results, provide your final answer or call more tools if needed. If necessary, ensure your response is accurate based on the current state of the document.";
                 }
                 else
                 {
                     ++numErrors;
+                    currentQuery += "ERROR: " + tcResult.first.getErrorMessage().toStdString() + "\n\n";
                     if(numErrors < maxErrors - 1)
                     {
-                        currentQuery = juce::String("Warning: The previous tool call had error: ERROR. Be careful with further tool calls. Call one tool at a time and split complex tasks into smaller steps. Ensure the request is consistent with the actual state of the document").replace("ERROR", tcResult.first.getErrorMessage()).toStdString();
+                        currentQuery += "Warning: The previous tool call had error. Be careful with further tool calls. Call one tool at a time and split complex tasks into smaller steps. Ensure the request is consistent with the actual state of the document";
                     }
                     else if(numErrors == maxErrors - 1)
                     {
                         allowTools = false;
-                        currentQuery = "Warning: The previous tool calls had too many errors. Tools will be disabled for the next iteration. Please provide a final answer without calling tools.";
+                        currentQuery += "Warning: The previous tool calls had too many errors. Tools will be disabled for the next iteration. Please provide a final answer without calling tools.";
                     }
                     else
                     {
@@ -589,9 +591,10 @@ juce::Result Application::Neuralyzer::Agent::performQuery(juce::String const& pr
             else
             {
                 ++numErrors;
+                currentQuery += "ERROR: " + tpResult.first.getErrorMessage().toStdString() + "\n\n";
                 if(numErrors < maxErrors - 1)
                 {
-                    currentQuery = juce::String("Warning: The previous tool call had error: ERROR. Be careful with further tool calls. Call one tool at a time and split complex tasks into smaller steps. Ensure the tool calls are properly formatted according to the expected structure, the letter case is respected (lower case for JSON boolean), the JSON and/or XML formats are well-formatted.").replace("ERROR", tpResult.first.getErrorMessage()).toStdString();
+                    currentQuery = "Warning: The previous tool call had error. Be careful with further tool calls. Call one tool at a time and split complex tasks into smaller steps. Ensure the tool calls are properly formatted according to the expected structure.";
                 }
                 else if(numErrors == maxErrors - 1)
                 {
