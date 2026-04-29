@@ -116,8 +116,12 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
                               {
                                   if(saveResult.failed())
                                   {
-                                      return saveResult;
+                                      mCurrentAction.store(Action::startSession);
+                                      sendChangeMessage();
+                                      return mAgent.startSession();
                                   }
+                                  mCurrentAction.store(Action::loadSession);
+                                  sendChangeMessage();
                                   auto const loadResult = mAgent.loadSession();
                                   std::get<0>(tempSessionFiles).deleteFile();
                                   std::get<1>(tempSessionFiles).deleteFile();
