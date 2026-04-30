@@ -208,10 +208,10 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
 
     // Configure common_params for model and context initialization
     common_params params;
-    params.use_jinja = true;
     params.model.path = info.modelFile.getFullPathName().toStdString();
     auto const templateFile = info.modelFile.withFileExtension(".jinja");
     params.chat_template = templateFile.loadFileAsString().toStdString();
+    params.use_jinja = !params.chat_template.empty();
     params.n_ctx = info.contextSize.value_or(params.n_ctx);
     params.n_batch = info.batchSize.value_or(params.n_batch);
     params.sampling.min_p = info.minP.value_or(params.sampling.min_p);
