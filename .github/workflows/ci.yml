@@ -180,7 +180,7 @@ jobs:
         xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Package dSYM Archive
       if: ${{ env.is_tagged == 'true' }}
-      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
+      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
