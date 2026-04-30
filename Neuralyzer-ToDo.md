@@ -25,7 +25,8 @@
 - [ ] Add max model size
 - [x] Attach file to prompt and add MCP support to access files path and content
 - [x] Reset session should reload presaved tokens
-- [ ] Fix multiple tool calls at once
+- [x] Fix multiple tool calls at once
+- [ ] CHeck the template generation state for first prompts
 
 ### Sequence 1
 
