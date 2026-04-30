@@ -10,3 +10,6 @@
 [submodule "Dependencies/md4c"]
 	path = Dependencies/md4c
 	url = https://github.com/Ircam-Partiels/md4c.git
+[submodule "Dependencies/hnswlib"]
+	path = Dependencies/hnswlib
+	url = https://github.com/Ircam-Partiels/hnswlib.git
