@@ -131,6 +131,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     add_subdirectory(JUCE)
     add_subdirectory(Dependencies/llama.cpp)
+    add_subdirectory(Dependencies/hnswlib)
     add_subdirectory(Dependencies/ircam-vamp-extension)
     add_subdirectory(Dependencies/md4c)
     add_subdirectory(Dependencies/sdif)
@@ -252,7 +253,13 @@ if(NOT PARTIELS_MANUAL_ONLY)
     file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
     juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
-    file(GLOB PartielsNeuralyzerDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.jinja)
+    file(GLOB PartielsNeuralyzerDataSources
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.jinja
+        ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
+        ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md
+        ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
     juce_add_binary_data(AnlNeuralyzerData HEADER_NAME "AnlNeuralyzerData.h" NAMESPACE AnlNeuralyzerData SOURCES ${PartielsNeuralyzerDataSources})
 
     file(GLOB TestResultsDataSources
@@ -269,6 +276,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
     target_link_libraries(Partiels PRIVATE
         ive_host_static
         llama-common
+        hnswlib::hnswlib
         md4c
         sdif
         MiscData
