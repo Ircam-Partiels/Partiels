@@ -247,6 +247,32 @@ if(NOT PARTIELS_MANUAL_ONLY)
 
     set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 
+    find_program(PANDOC_EXE "pandoc")
+    if(NOT PANDOC_EXE)
+        message(FATAL_ERROR "pandoc is required to generate Neuralyzer RAG resources")
+    endif()
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+    set(PARTIELS_RAG_GENERATOR_SCRIPT ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-rag-json.py)
+    set(PARTIELS_RAG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/Rag)
+    set(PARTIELS_RAG_INPUTS ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md)
+    file(MAKE_DIRECTORY ${PARTIELS_RAG_OUTPUT_DIR})
+    foreach(PARTIELS_RAG_INPUT IN LISTS PARTIELS_RAG_INPUTS)
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} ${PARTIELS_RAG_GENERATOR_SCRIPT}
+                --pandoc ${PANDOC_EXE}
+                --output-dir ${PARTIELS_RAG_OUTPUT_DIR}
+                ${PARTIELS_RAG_INPUT}
+            RESULT_VARIABLE PARTIELS_RAG_GENERATE_RESULT
+            OUTPUT_VARIABLE PARTIELS_RAG_GENERATE_OUTPUT
+            ERROR_VARIABLE PARTIELS_RAG_GENERATE_ERROR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_STRIP_TRAILING_WHITESPACE)
+        if(NOT PARTIELS_RAG_GENERATE_RESULT EQUAL 0)
+            message(FATAL_ERROR "Failed to generate Neuralyzer RAG JSON for ${PARTIELS_RAG_INPUT}:\n${PARTIELS_RAG_GENERATE_OUTPUT}\n${PARTIELS_RAG_GENERATE_ERROR}")
+        endif()
+    endforeach()
+
     file(GLOB PartielsResourceDataSources
         ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
         ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo.png
@@ -261,14 +287,11 @@ if(NOT PARTIELS_MANUAL_ONLY)
     file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
     juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
-    file(GLOB PartielsNeuralyzerDataSources
-        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json
-        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md
-        ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.jinja
-        ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
-        ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Partiels-Manual.md
-        ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
+    file(GLOB PartielsNeuralyzerDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md)
     juce_add_binary_data(AnlNeuralyzerData HEADER_NAME "AnlNeuralyzerData.h" NAMESPACE AnlNeuralyzerData SOURCES ${PartielsNeuralyzerDataSources})
+
+    file(GLOB PartielsRagDataSources "${PARTIELS_RAG_OUTPUT_DIR}/*.json")
+    juce_add_binary_data(AnlRagData HEADER_NAME "AnlRagData.h" NAMESPACE AnlRagData SOURCES ${PartielsRagDataSources})
 
     file(GLOB TestResultsDataSources
         ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
@@ -293,6 +316,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
         AnlIconsData
         AnlCursorsData
         AnlNeuralyzerData
+        AnlRagData
         juce::juce_gui_extra
         juce::juce_audio_formats
         juce::juce_audio_devices

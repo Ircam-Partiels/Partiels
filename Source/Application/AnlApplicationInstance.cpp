@@ -2,6 +2,7 @@
 #include "AnlApplicationFileManager.h"
 #include "AnlApplicationTools.h"
 #include <AnlNeuralyzerData.h>
+#include <AnlRagData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -112,20 +113,39 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mOscTransportDispatcher = std::make_unique<Osc::TransportDispatcher>(getOscSender());
     mOscMouseDispatcher = std::make_unique<Osc::MouseDispatcher>(getOscSender());
     mNeuralyzerMcpDispatcher = std::make_unique<Neuralyzer::Mcp::Dispatcher>();
-    static auto const neuralyzerInstructions = juce::String(juce::CharPointer_UTF8(AnlNeuralyzerData::Instructions_md));
-    static auto const neuralyzerQuery = juce::String("Now, introduce yourself in one sentence.");
-    mNeuralyzerAgent = std::make_unique<Neuralyzer::BackgroundAgent>(*mNeuralyzerMcpDispatcher.get(), neuralyzerInstructions, neuralyzerQuery);
+    mNeuralyzerRagEngine = std::make_unique<Neuralyzer::Rag::Engine>();
+
+    auto ragStartup = [this]()
+    {
+        // Set all resources in the RAG engine
+        std::set<Neuralyzer::Rag::Resource> ragResources;
+        for(auto index = 0; index < AnlRagData::namedResourceListSize; ++index)
+        {
+            int size;
+            auto const* resourceContent = AnlRagData::getNamedResource(AnlRagData::namedResourceList[index], size);
+            auto const resourceList = nlohmann::json::parse(resourceContent).get<std::vector<Neuralyzer::Rag::Resource>>();
+            ragResources.insert(resourceList.begin(), resourceList.end());
+        }
+        auto const ragInitializationResult = mNeuralyzerRagEngine->initializeModel(Neuralyzer::getRagModelFile());
+        if(ragInitializationResult.failed())
+        {
+            MiscDebug("Application::Neuralyzer::Agent", "RAG initialization warning: " + ragInitializationResult.getErrorMessage());
+            return ragInitializationResult;
+        }
+        return mNeuralyzerRagEngine->setResources(std::move(ragResources));
+    };
+    mNeuralyzerAgent = std::make_unique<Neuralyzer::BackgroundAgent>(*mNeuralyzerMcpDispatcher.get(), std::move(ragStartup));
 
     mDocumentFileBased->onLoaded = [this](juce::File const& file)
     {
         auto const sessionFiles = Neuralyzer::getNeuralyzerSessionFile(file);
         if(file != juce::File{} && (std::get<0>(sessionFiles).existsAsFile() || std::get<1>(sessionFiles).existsAsFile()))
         {
-            getNeuralyzerAgent().loadSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
+            mNeuralyzerAgent->loadSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
         }
         else
         {
-            getNeuralyzerAgent().startSession();
+            mNeuralyzerAgent->startSession();
         }
     };
 
@@ -134,7 +154,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         if(file != juce::File{})
         {
             auto const sessionFiles = Neuralyzer::getNeuralyzerSessionFile(file);
-            getNeuralyzerAgent().saveSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
+            mNeuralyzerAgent->saveSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
         }
     };
 
@@ -196,6 +216,15 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 auto const file = acsr.getAttr<AttrType::currentTranslationFile>();
                 juce::LocalisedStrings::setCurrentMappings(std::make_unique<juce::LocalisedStrings>(file.existsAsFile() ? file : MainMenuModel::getSystemDefaultTranslationFile(), false).release());
                 updateMainMenu(true);
+                auto neuralyzerInstructions = juce::String(juce::CharPointer_UTF8(AnlNeuralyzerData::Instructions_md));
+                neuralyzerInstructions << "\n";
+                neuralyzerInstructions << "OS Name: " << juce::SystemStats::getOperatingSystemName() << "\n";
+                neuralyzerInstructions << "User Name: " << juce::SystemStats::getFullUserName() << "\n";
+                if(auto* mapping = juce::LocalisedStrings::getCurrentMappings())
+                {
+                    neuralyzerInstructions << "Language: " << mapping->getLanguageName() << "\n";
+                }
+                mNeuralyzerAgent->setInstructions(neuralyzerInstructions, juce::translate("Now, introduce yourself in one sentence."));
                 break;
             }
             case AttrType::autoUpdate:
@@ -535,6 +564,11 @@ Application::Osc::Sender& Application::Instance::getOscSender()
 Application::Neuralyzer::BackgroundAgent& Application::Instance::getNeuralyzerAgent()
 {
     return *mNeuralyzerAgent.get();
+}
+
+Application::Neuralyzer::Rag::Engine& Application::Instance::getNeuralyzerRagEngine()
+{
+    return *mNeuralyzerRagEngine.get();
 }
 
 Document::Accessor& Application::Instance::getDocumentAccessor()

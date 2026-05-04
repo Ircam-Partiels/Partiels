@@ -7,6 +7,7 @@
 #include "AnlApplicationMainMenuModel.h"
 #include "AnlApplicationModel.h"
 #include "AnlApplicationNeuralyzerBackgroundAgent.h"
+#include "AnlApplicationNeuralyzerRag.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationWindow.h"
 
@@ -53,6 +54,7 @@ namespace Application
         PluginList::Scanner& getPluginListScanner();
         Osc::Sender& getOscSender();
         Neuralyzer::BackgroundAgent& getNeuralyzerAgent();
+        Neuralyzer::Rag::Engine& getNeuralyzerRagEngine();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
@@ -108,6 +110,7 @@ namespace Application
         std::unique_ptr<Osc::MouseDispatcher> mOscMouseDispatcher;
         std::unique_ptr<Neuralyzer::Mcp::Dispatcher> mNeuralyzerMcpDispatcher;
         std::unique_ptr<Neuralyzer::Mcp::Server> mNeuralyzerMcpSever;
+        std::unique_ptr<Neuralyzer::Rag::Engine> mNeuralyzerRagEngine;
         std::unique_ptr<Neuralyzer::BackgroundAgent> mNeuralyzerAgent;
 
         std::unique_ptr<Window> mWindow;

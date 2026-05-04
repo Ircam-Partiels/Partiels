@@ -78,6 +78,7 @@ namespace Application
 
         juce::File resolveNeuralyzerDirectory(juce::File const& root);
         juce::File getDefaultModelDirectory();
+        juce::File getRagModelFile();
         std::pair<juce::File, juce::File> getNeuralyzerSessionFile(juce::File const& documentFile);
     } // namespace Neuralyzer
 } // namespace Application

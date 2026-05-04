@@ -173,7 +173,7 @@ void Application::Interface::RightBorder::resized()
 Application::Interface::DocumentContainer::DocumentContainer()
 : mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getTrackPresetListAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
-, mNeuralyzerChat(Instance::get().getApplicationAccessor().getAcsr<AcsrType::neuralyzer>(), Instance::get().getNeuralyzerAgent())
+, mNeuralyzerChat(Instance::get().getApplicationAccessor().getAcsr<AcsrType::neuralyzer>(), Instance::get().getNeuralyzerAgent(), Instance::get().getNeuralyzerRagEngine())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);
     mPluginListTable.onAddPlugins = [](std::vector<Plugin::Key> keys)

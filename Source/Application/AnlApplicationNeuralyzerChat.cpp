@@ -43,9 +43,10 @@ static bool isInterestedInFile(juce::String const& fileName)
 juce::File Application::Neuralyzer::Chat::mFullHistoryFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory)
                                                                  .getChildFile("neuralyzer-history.md");
 
-Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent)
+Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, Rag::Engine& ragEngine)
 : mAccessor(accessor)
 , mAgent(agent)
+, mRagEngine(ragEngine)
 , mSendButton(juce::ImageCache::getFromMemory(AnlIconsData::stop_png, AnlIconsData::stop_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::send_png, AnlIconsData::send_pngSize))
 , mSelectionStateButton(juce::ImageCache::getFromMemory(AnlIconsData::selection_png, AnlIconsData::selection_pngSize))
 , mAttachedFilesButton(juce::ImageCache::getFromMemory(AnlIconsData::attachment_png, AnlIconsData::attachment_pngSize))
@@ -259,7 +260,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent)
     mMenuButton.onClick = [this]()
     {
         juce::PopupMenu menu;
-        auto const canReset = mAgent.getModelInfo().valid() && mHistory.size() >= 2_z;
+        auto const canReset = mAgent.getModelInfo().valid();
         menu.addItem(juce::translate("Reset History"), canReset, false, [this]()
                      {
                          auto const options = juce::MessageBoxOptions()
@@ -275,7 +276,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent)
                                                           {
                                                               return;
                                                           }
-                                                          if(mAgent.getModelInfo().valid() && mHistory.size() >= 2_z)
+                                                          if(mAgent.getModelInfo().valid())
                                                           {
                                                               clearHistory();
                                                           }
@@ -590,18 +591,31 @@ void Application::Neuralyzer::Chat::sendUserQuery()
         return;
     }
 
-    auto queryForModel = query;
-    queryForModel << "\n\n---";
-    auto& documentAcsr = Application::Instance::get().getDocumentAccessor();
-    if(!mLastDocumentAccessorState.isEquivalentTo(documentAcsr))
+    juce::String queryForModel;
+    // Adds the RAG context to the query
+    // With normalized embeddings + inner-product space, lower distance means better match.
+    static constexpr float ragMaxDistance = 0.45f;
+    auto const contexts = mRagEngine.computeContext(query, ragMaxDistance);
+    if(!contexts.empty())
     {
-        queryForModel << "\n\nNote: The document may have changed since the last request.\n";
+        queryForModel << "Relevant documentation excerpts:\n";
+        for(auto const& context : contexts)
+        {
+            queryForModel << "\n";
+            queryForModel << "Source: " << context.document << "\n";
+            queryForModel << "Section: " << context.section << "\n";
+            // Remove all line breaks, tabs, etc. from the excerpt to avoid formatting issues in the model's response
+            queryForModel << "Excerpt: " << context.excerpt.replaceCharacters("\n\r\t", "   ") << "\n";
+        }
+        queryForModel << "\n";
     }
+
+    // Adds the selected items to the query
+    auto& documentAcsr = Application::Instance::get().getDocumentAccessor();
     auto const selectedItems = Document::Selection::getItems(documentAcsr);
-    auto const timeSelection = documentAcsr.getAcsr<Document::AcsrType::transport>().getAttr<Transport::AttrType::selection>();
     if(!std::get<0>(selectedItems).empty() || !std::get<1>(selectedItems).empty())
     {
-        queryForModel << "\n\nSelected item identifiers:\n";
+        queryForModel << "Item selected in the document (identifiers):\n";
         for(auto const& id : std::get<0>(selectedItems))
         {
             queryForModel << "- Group: " << id << "\n";
@@ -610,22 +624,39 @@ void Application::Neuralyzer::Chat::sendUserQuery()
         {
             queryForModel << "- Track: " << id << "\n";
         }
+        queryForModel << "\n";
     }
+
+    // Adds the time selection to the query
+    auto const timeSelection = documentAcsr.getAcsr<Document::AcsrType::transport>().getAttr<Transport::AttrType::selection>();
     if(!timeSelection.isEmpty())
     {
-        queryForModel << "\n\nTime selection:"
-                      << juce::String(timeSelection.getStart(), 3) << " - "
-                      << juce::String(timeSelection.getEnd(), 3)
-                      << "\n";
+        queryForModel << "Time selection:\n";
+        queryForModel << "- Start: " << juce::String(timeSelection.getStart(), 3) << "s\n";
+        queryForModel << "- End: " << juce::String(timeSelection.getEnd(), 3) << "s\n";
+        queryForModel << "\n";
     }
+
+    // Adds a note to the query if the document has changed
+    if(!mLastDocumentAccessorState.isEquivalentTo(documentAcsr))
+    {
+        queryForModel << "Note: The document may have changed since the last request.\n";
+        queryForModel << "\n";
+    }
+
+    // Adds the attached files to the query
     if(!mDroppedFilePaths.isEmpty())
     {
-        queryForModel << "\n\nAttached file paths:\n";
+        queryForModel << "Attached file paths:\n";
         for(auto const& fileName : mDroppedFilePaths)
         {
             queryForModel << "- " << fileName << "\n";
         }
+        queryForModel << "\n";
     }
+
+    // Adds the user request to the query
+    queryForModel << "User request:\n" + query;
 
     mQueryEditor.setText({}, true);
     mQueryEditor.resetHistoryIndex();
@@ -661,8 +692,8 @@ void Application::Neuralyzer::Chat::stopUserQuery()
 
 void Application::Neuralyzer::Chat::clearHistory()
 {
-    MiscWeakAssert(mAgent.getModelInfo().valid() && mHistory.size() >= 2_z);
-    if(!mAgent.getModelInfo().valid() || mHistory.size() < 2_z)
+    MiscWeakAssert(mAgent.getModelInfo().valid());
+    if(!mAgent.getModelInfo().valid())
     {
         return;
     }
@@ -711,7 +742,8 @@ void Application::Neuralyzer::Chat::updateHistory()
         }
         else if(message.first == MessageType::user && !mHistory.empty())
         {
-            mHistory.push_back({MessageType::user, message.second.upToLastOccurrenceOf("\n\n---", false, false)});
+            auto text = message.second.fromLastOccurrenceOf("User request:\n", false, false).upToLastOccurrenceOf("\n\n---", false, false);
+            mHistory.push_back({MessageType::user, std::move(text)});
         }
     }
     auto const addText = [&](auto const& role, auto const& request, auto const& colour)
@@ -750,6 +782,10 @@ void Application::Neuralyzer::Chat::timerCallback()
     {
         switch(currentAction)
         {
+            case BackgroundAgent::Action::setupSystem:
+            {
+                return juce::translate("Setup system");
+            }
             case BackgroundAgent::Action::initializeModel:
             {
                 return juce::translate("Initializing model");

@@ -14,7 +14,6 @@ namespace Application
     {
         namespace Tools
         {
-            std::string format(llama_model const& model, std::string assistantResponse);
             std::pair<juce::Result, std::vector<common_chat_tool_call>> parse(common_chat_params const& chatParams, std::string assistantResponse);
             std::pair<juce::Result, std::string> call(Mcp::Dispatcher& dispatcher, std::vector<common_chat_tool_call> const& toolCalls);
         } // namespace Tools

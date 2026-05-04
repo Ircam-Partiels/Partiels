@@ -1,4 +1,5 @@
 #include "AnlApplicationNeuralyzerAgent.h"
+#include "AnlApplicationNeuralyzerRag.h"
 #include "AnlApplicationNeuralyzerTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -311,6 +312,7 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
             mChatInputs.tools.push_back(std::move(tool));
         }
     }
+
     if(mShouldQuit.load())
     {
         MiscDebug("Application::Neuralyzer::Agent", "Model loading aborted by user.");
@@ -378,11 +380,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
             preSystemMsg = std::move(systemMsg);
         }
     }
-    // Some templates expect the user message to be the last one in the history,
-    // so we add it to the inputs before applying templates, and remove it afterwards
-    // if it was not originally there. We will add the user message back to the
-    // history after decoding the prompt so that it's included in the history for the
-    // generation and tool calling.
+
     common_chat_msg userMsg;
     userMsg.role = "user";
     userMsg.content = std::move(query);

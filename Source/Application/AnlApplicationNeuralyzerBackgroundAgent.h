@@ -16,6 +16,7 @@ namespace Application
             enum class Action
             {
                   none
+                , setupSystem
                 , initializeModel
                 , sendQuery
                 , startSession
@@ -25,7 +26,7 @@ namespace Application
             };
             // clang-format on
 
-            BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, juce::String const& instructions, juce::String const& firstQuery);
+            BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, std::function<juce::Result(void)> setupSystem);
             ~BackgroundAgent();
 
             // Getters that are safe to call from any thread (pass through to Agent)
@@ -36,6 +37,7 @@ namespace Application
 
             // Async operations - schedule work on the background thread.
             // initializeModel also loads or starts a session on completion.
+            void setInstructions(juce::String const& instructions, juce::String const& firstQuery);
             void initializeModel(ModelInfo const& info);
             void sendQuery(juce::String const& prompt);
             void startSession();

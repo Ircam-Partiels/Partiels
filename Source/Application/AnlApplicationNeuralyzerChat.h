@@ -2,6 +2,7 @@
 
 #include "../Document/AnlDocumentTools.h"
 #include "AnlApplicationNeuralyzerBackgroundAgent.h"
+#include "AnlApplicationNeuralyzerRag.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -16,7 +17,7 @@ namespace Application
         , private juce::ChangeListener
         {
         public:
-            Chat(Accessor& accessor, BackgroundAgent& agent);
+            Chat(Accessor& accessor, BackgroundAgent& agent, Rag::Engine& ragEngine);
             ~Chat() override;
 
             // juce::Component
@@ -83,6 +84,7 @@ namespace Application
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             BackgroundAgent& mAgent;
+            Rag::Engine& mRagEngine;
             History mHistory;
             juce::TextEditor mHistoryEditor;
             ColouredPanel mSeparator1;

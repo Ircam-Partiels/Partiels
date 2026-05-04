@@ -40,6 +40,12 @@ juce::File Application::Neuralyzer::getDefaultModelDirectory()
     return Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Models");
 }
 
+juce::File Application::Neuralyzer::getRagModelFile()
+{
+    auto const root = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
+    return Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Rag").getChildFile("bge-m3-Q4_K_M.gguf");
+}
+
 std::pair<juce::File, juce::File> Application::Neuralyzer::getNeuralyzerSessionFile(juce::File const& documentFile)
 {
     auto const root = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);

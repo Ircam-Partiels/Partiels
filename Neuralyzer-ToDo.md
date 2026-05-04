@@ -27,6 +27,9 @@
 - [x] Reset session should reload presaved tokens
 - [x] Fix multiple tool calls at once
 - [ ] CHeck the template generation state for first prompts
+- [ ] Remove python code
+- [ ] Add Rag resources to MCP
+- [ ] Make instruction and translation consistent 
 
 ### Sequence 1
 

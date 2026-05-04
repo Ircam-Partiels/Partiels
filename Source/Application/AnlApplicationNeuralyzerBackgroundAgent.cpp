@@ -3,17 +3,28 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, juce::String const& instructions, juce::String const& firstQuery)
+Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, std::function<juce::Result(void)> setupSystem)
 : mAgent(mcpDispatcher)
 {
-    mAgent.setInstructions(instructions, firstQuery);
     mAgent.setNotifyCallback([this]()
                              {
                                  sendChangeMessage();
                              });
-    mWorkerThread = std::thread([this]()
+    mWorkerThread = std::thread([this, setupSystemFn = std::move(setupSystem)]()
                                 {
+                                    mCurrentAction.store(Action::setupSystem);
+                                    sendChangeMessage();
                                     juce::Thread::setCurrentThreadName("Neuralyzer::BackgroundAgent");
+                                    if(setupSystemFn != nullptr)
+                                    {
+                                        auto result = setupSystemFn();
+                                        {
+                                            std::unique_lock<std::mutex> lock(mResultMutex);
+                                            mLastResult = result;
+                                        }
+                                    }
+                                    mCurrentAction.store(Action::none);
+                                    sendChangeMessage();
                                     while(true)
                                     {
                                         PendingAction pendingAction;
@@ -43,7 +54,7 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDi
                                             }
                                             catch(std::exception const& exception)
                                             {
-                                                return juce::Result::fail(juce::translate("Unhandled exception: ERROR").replace("ERROR", juce::String(exception.what())));
+                                                return juce::Result::fail(juce::translate("Unhandled exception: ERROR").replace("ERROR", juce::String(juce::CharPointer_UTF8(exception.what()))));
                                             }
                                             catch(...)
                                             {
@@ -94,6 +105,11 @@ float Application::Neuralyzer::BackgroundAgent::getContextCapacityUsage() const
 Application::Neuralyzer::ModelInfo Application::Neuralyzer::BackgroundAgent::getModelInfo() const
 {
     return mAgent.getModelInfo();
+}
+
+void Application::Neuralyzer::BackgroundAgent::setInstructions(juce::String const& instructions, juce::String const& firstQuery)
+{
+    mAgent.setInstructions(instructions, firstQuery);
 }
 
 void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& info)
