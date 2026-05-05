@@ -164,6 +164,7 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["version"] = description.version;
     j["category"] = description.category;
     j["details"] = description.details;
+    j["copyright"] = description.copyright;
     j["defaultState"] = description.defaultState;
     j["parameters"] = description.parameters;
     j["output"] = description.output;
@@ -183,6 +184,7 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.version = j.value("version", description.version);
     description.category = j.value("category", description.category);
     description.details = j.value("details", description.details);
+    description.copyright = j.value("copyright", description.copyright);
     description.defaultState = j.value("defaultState", description.defaultState);
     description.parameters = j.value("parameters", description.parameters);
     description.output = j.value("output", description.output);
@@ -386,6 +388,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     toXml(*child, "version", value.version);
     toXml(*child, "category", value.category);
     toXml(*child, "details", value.details);
+    toXml(*child, "copyright", value.copyright);
     toXml(*child, "defaultState", value.defaultState);
     toXml(*child, "parameters", value.parameters);
     toXml(*child, "output", value.output);
@@ -415,6 +418,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.version = fromXml(*child, "version", defaultValue.version);
     value.category = fromXml(*child, "category", defaultValue.category);
     value.details = fromXml(*child, "details", defaultValue.details);
+    value.copyright = fromXml(*child, "copyright", defaultValue.copyright);
     value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
@@ -526,11 +530,7 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     auto const categories = pluginLoader->getPluginCategory(key.identifier);
     description.category = categories.empty() ? "" : categories.front();
     description.details = plugin.getDescription();
-    if(!description.details.isEmpty())
-    {
-        description.details += "\n";
-    }
-    description.details += juce::String(plugin.getCopyright());
+    description.copyright = juce::String(plugin.getCopyright());
     auto const parameters = plugin.getParameterDescriptors();
     description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
 

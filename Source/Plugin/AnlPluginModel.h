@@ -146,6 +146,7 @@ namespace Plugin
         unsigned int version{0};                          //!< The version of the plugin
         juce::String category{};                          //!< The category of the plugin
         juce::String details{};                           //!< Further information about the plugin
+        juce::String copyright{};                         //!< The copyright of the plugin
 
         State defaultState;                      //!< The default state of the plugin
         std::vector<Parameter> parameters{};     //!< The parameters of the plugin
@@ -162,6 +163,7 @@ namespace Plugin
                    version == rhs.version &&
                    category == rhs.category &&
                    details == rhs.details &&
+                   copyright == rhs.copyright &&
                    defaultState == rhs.defaultState &&
                    parameters == rhs.parameters &&
                    output == rhs.output &&
