@@ -1,6 +1,30 @@
 [
     {
         "key": {
+            "feature": "markers",
+            "identifier": "partiels-vamp-plugins:partielsnewtrack"
+        }
+    },
+    {
+        "key": {
+            "feature": "points",
+            "identifier": "partiels-vamp-plugins:partielsnewtrack"
+        }
+    },
+    {
+        "key": {
+            "feature": "energies",
+            "identifier": "partiels-vamp-plugins:partielsspectrogram"
+        }
+    },
+    {
+        "key": {
+            "feature": "peaks",
+            "identifier": "partiels-vamp-plugins:partielswaveform"
+        }
+    },
+    {
+        "key": {
             "feature": "amplitude",
             "identifier": "vamp-example-plugins:amplitudefollower"
         }

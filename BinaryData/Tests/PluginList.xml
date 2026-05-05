@@ -2,6 +2,18 @@
 
 <plugins>
   <plugin>
+    <key identifier="partiels-vamp-plugins:partielsnewtrack" feature="markers"/>
+  </plugin>
+  <plugin>
+    <key identifier="partiels-vamp-plugins:partielsnewtrack" feature="points"/>
+  </plugin>
+  <plugin>
+    <key identifier="partiels-vamp-plugins:partielsspectrogram" feature="energies"/>
+  </plugin>
+  <plugin>
+    <key identifier="partiels-vamp-plugins:partielswaveform" feature="peaks"/>
+  </plugin>
+  <plugin>
     <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
   </plugin>
   <plugin>
