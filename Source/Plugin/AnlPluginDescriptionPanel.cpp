@@ -70,7 +70,7 @@ void Plugin::DescriptionPanel::setDescription(Description const& description)
     mPropertyPluginMaker.entry.setText(description.maker, juce::NotificationType::dontSendNotification);
     mPropertyPluginVersion.entry.setText(juce::String(description.version), juce::NotificationType::dontSendNotification);
     mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, juce::NotificationType::dontSendNotification);
-    juce::StringArray details{juce::String(description.output.description), description.details};
+    juce::StringArray details{juce::String(description.output.description), description.details, description.copyright};
     details.removeEmptyStrings();
     mPropertyPluginDetails.setText(details.joinIntoString("\n"), juce::NotificationType::dontSendNotification);
     resized();
