@@ -1,7 +1,7 @@
   <plugin>
     <key identifier="partiels-vamp-plugins:partielsnewtrack" feature="markers"/>
     <description name="New Track" inputDomain="0" maker="Factory" version="1"
-                 category="" details="Add an empty track." copyright="Partiels factory plugin.">
+                 category="Other" details="Add an empty track." copyright="Partiels factory plugin.">
       <defaultState blockSize="256" stepSize="0" windowType="3"/>
       <output identifier="markers" name="Marker" description="Marker" unit=""
               hasFixedBinCount="1" binCount="0" hasKnownExtents="0" minValue="0.0"
