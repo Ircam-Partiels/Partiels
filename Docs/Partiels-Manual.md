@@ -12,6 +12,8 @@
 
 ## Table of contents
 
+Table of contents for the main sections of the manual:
+
 * [1. Introduction](#1-introduction)
   * [1.1. Main Features](#11-main-features)
   * [1.2. Third-party](#12-third-party)
