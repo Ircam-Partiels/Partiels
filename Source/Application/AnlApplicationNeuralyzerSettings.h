@@ -17,11 +17,13 @@ namespace Application
 
             // juce::Component
             void resized() override;
-            void parentHierarchyChanged() override;
-            void visibilityChanged() override;
+            void broughtToFront() override;
             void handleCommandMessage(int commandId) override;
 
         private:
+            void showModelMenu();
+            void checkForUpdatedModels();
+
             class DownloadProcess
             : public juce::Component
             , private juce::AsyncUpdater
@@ -57,9 +59,15 @@ namespace Application
             };
 
             static auto constexpr gDownloadProcessMessageId = 0;
+            static auto constexpr gModelListUpdatedMessageId = 1;
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
+            PropertyList mBackend;
+            PropertyTextButton mModelsDirectory;
+            PropertyText mRemoteUrl;
+            PropertyNumber mRemotePort;
+            ColouredPanel mBackendSeparator;
             PropertyList mModel;
             PropertyNumber mContextSize;
             PropertyNumber mBatchSize;
@@ -69,9 +77,7 @@ namespace Application
             PropertyNumber mTopK;
             PropertyNumber mPresencePenalty;
             PropertyNumber mRepetitionPenalty;
-            ColouredPanel mSeparator;
-            PropertyTextButton mModelsDirectory;
-            TimerClock mTimerClock;
+            ColouredPanel mDownloadSeparator;
             std::vector<std::unique_ptr<DownloadProcess>> mDownloadProcesses;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsContent)
@@ -83,6 +89,9 @@ namespace Application
         public:
             SettingsPanel(Accessor& accessor);
             ~SettingsPanel() override;
+
+            // juce::Component
+            void broughtToFront() override;
 
         private:
             SettingsContent mContent;

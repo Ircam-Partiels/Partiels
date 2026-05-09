@@ -188,6 +188,71 @@ namespace
         }
         return {};
     }
+
+    static std::vector<juce::String> getRemoteModelIds(juce::URL const& serverUrl)
+    {
+        std::vector<juce::String> modelIds;
+        if(serverUrl.isEmpty())
+        {
+            return modelIds;
+        }
+
+        int statusCode = 0;
+        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                                 .withExtraHeaders("Content-Type: application/json")
+                                 .withStatusCode(&statusCode)
+                                 .withConnectionTimeoutMs(30000);
+        auto const stream = serverUrl.withNewSubPath("/api/v1/models").createInputStream(options);
+        if(stream == nullptr || statusCode < 200 || statusCode >= 300)
+        {
+            return modelIds;
+        }
+
+        auto const responseBody = stream->readEntireStreamAsString();
+        if(responseBody.isEmpty())
+        {
+            return modelIds;
+        }
+
+        try
+        {
+            auto const response = nlohmann::json::parse(responseBody.toStdString());
+            if(response.contains("data") && response.at("data").is_array())
+            {
+                for(auto const& modelJson : response.at("data"))
+                {
+                    if(modelJson.contains("id") && modelJson.at("id").is_string())
+                    {
+                        modelIds.push_back(juce::String(modelJson.at("id").get<std::string>()));
+                    }
+                }
+            }
+        }
+        catch(...)
+        {
+            return {};
+        }
+
+        std::sort(modelIds.begin(), modelIds.end(), [](juce::String const& lhs, juce::String const& rhs)
+                  {
+                      return lhs.toLowerCase() < rhs.toLowerCase();
+                  });
+        modelIds.erase(std::unique(modelIds.begin(), modelIds.end(), [](juce::String const& lhs, juce::String const& rhs)
+                                   {
+                                       return lhs.toLowerCase() == rhs.toLowerCase();
+                                   }),
+                       modelIds.end());
+        return modelIds;
+    }
+
+    static juce::String toDisplayString(juce::String const& modelId)
+    {
+        auto const names = modelId.fromLastOccurrenceOf("/", false, false).replace("-", " ").trim();
+        auto words = juce::StringArray::fromTokens(names, " ", "");
+        words.trim();
+        words.removeEmptyStrings();
+        return words.joinIntoString(" ");
+    }
 } // namespace
 
 Application::Neuralyzer::SettingsContent::DownloadProcess::DownloadProcess(SettingsContent& owner, nlohmann::json description)
@@ -328,6 +393,36 @@ void Application::Neuralyzer::SettingsContent::DownloadProcess::timerCallback()
 
 Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
 : mAccessor(accessor)
+, mBackend(juce::translate("Backend"), juce::translate("The backend used to run the Neuralyzer"), "", {juce::translate("Local"), juce::translate("Remote")}, [&](size_t index)
+           {
+               auto const backend = magic_enum::enum_cast<ModelBackend>(static_cast<int>(index)).value_or(ModelBackend::local);
+               mAccessor.setAttr<AttrType::modelBackend>(backend, NotificationType::synchronous);
+           })
+, mModelsDirectory(juce::translate("Models Directory"), juce::translate("Reveal the directory where models are stored"), []()
+                   {
+                       getDefaultModelDirectory().revealToUser();
+                   })
+, mRemoteUrl(juce::translate("Server URL"), juce::translate("The URL of the remote LM Studio server (scheme and host, e.g. http://localhost)"), [&](juce::String text)
+             {
+                 auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+                 auto const port = modelInfo.modelUrl.getPort();
+                 auto const newUrl = juce::URL(juce::URL(text).getDomain() + ":" + juce::String(port));
+                 if(newUrl.isWellFormed())
+                 {
+                     modelInfo.modelUrl = newUrl;
+                     mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+                 }
+             })
+, mRemotePort(juce::translate("Server Port"), juce::translate("The port of the remote LM Studio server"), "", {1.0, 65535.0}, 1.0, [&](double value)
+              {
+                  auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+                  auto const newUrl = juce::URL(modelInfo.modelUrl.getDomain() + ":" + juce::String(static_cast<int>(value)));
+                  if(newUrl.isWellFormed())
+                  {
+                      modelInfo.modelUrl = newUrl;
+                      mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+                  }
+              })
 , mModel(juce::translate("Model"), juce::translate("The model used by the Neuralyzer"), "", {}, nullptr)
 , mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {static_cast<double>(minContextSize), static_cast<double>(maxContextSize)}, 1.0, [&](double value)
                {
@@ -401,15 +496,17 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                          mAccessor.setAttr<AttrType::effectiveState>(effectiveState, NotificationType::synchronous);
                          mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
                      })
-, mModelsDirectory(juce::translate("Models Directory"), juce::translate("Reveal the directory where models are stored"), []()
-                   {
-                       getDefaultModelDirectory().revealToUser();
-                   })
 {
-    addAndMakeVisible(mModel);
+    addAndMakeVisible(mBackend);
+    addAndMakeVisible(mModelsDirectory);
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
+    addAndMakeVisible(mRemoteUrl);
+    addAndMakeVisible(mRemotePort);
+    addAndMakeVisible(mBackendSeparator);
+    mBackendSeparator.setSize(1, 1);
 
+    addAndMakeVisible(mModel);
     addAndMakeVisible(mContextSize);
     mContextSize.entry.setOptionalSupported(true, juce::translate("Default"));
     addAndMakeVisible(mBatchSize);
@@ -427,102 +524,9 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     addAndMakeVisible(mRepetitionPenalty);
     mRepetitionPenalty.entry.setOptionalSupported(true, juce::translate("Default"));
 
-    addAndMakeVisible(mSeparator);
-    mSeparator.setSize(1, 1);
-
-    addAndMakeVisible(mModelsDirectory);
-
     mModel.entry.onShowPopup = [this]()
     {
-        juce::PopupMenu menu;
-        auto installedModels = getInstalledModels();
-        auto const currentModel = mAccessor.getAttr<AttrType::modelInfo>().modelFile;
-        // Add default models
-        for(auto const& defaultModel : getDefaultModelsInfo())
-        {
-            if(defaultModel.contains("name") && defaultModel.at("name").is_string())
-            {
-                auto const modelName = juce::String(defaultModel.at("name").get<std::string>()).toLowerCase();
-                auto const localModelIt = std::find_if(installedModels.begin(), installedModels.end(), [&](auto const& installedModel)
-                                                       {
-                                                           return installedModel.getFileNameWithoutExtension().toLowerCase() == modelName;
-                                                       });
-                if(localModelIt == installedModels.end())
-                {
-                    static const auto downloadIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x8c\x90"); // 🌐
-                    auto const isNotDownloading = std::none_of(mDownloadProcesses.cbegin(), mDownloadProcesses.cend(), [&](auto const& process)
-                                                               {
-                                                                   return process->getModelFile().getFileNameWithoutExtension().toLowerCase() == modelName;
-                                                               });
-                    menu.addItem(modelName + juce::String(downloadIndicator), isNotDownloading, false, [=, this]()
-                                 {
-                                     auto process = std::make_unique<DownloadProcess>(*this, defaultModel);
-                                     if(process->isRunning())
-                                     {
-                                         addAndMakeVisible(*process);
-                                         mDownloadProcesses.push_back(std::move(process));
-                                         resized();
-                                     }
-                                 });
-                }
-                else
-                {
-                    auto const model = *localModelIt;
-                    menu.addItem(modelName, true, model == currentModel, [=, this]()
-                                 {
-                                     mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                                     mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
-                                 });
-                    installedModels.erase(localModelIt);
-                }
-            }
-        }
-
-        if(menu.getNumItems() > 0 && !installedModels.empty())
-        {
-            menu.addSeparator();
-        }
-        for(auto const& model : installedModels)
-        {
-            menu.addItem(model.getFileNameWithoutExtension().toLowerCase(), true, model == currentModel, [=, this]()
-                         {
-                             mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
-                         });
-        }
-
-        auto& lf = getLookAndFeel();
-        menu.setLookAndFeel(&lf);
-        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mModel.entry).withDeletionCheck(*this), [this](int)
-                           {
-                               mModel.entry.hidePopup();
-                           });
-    };
-
-    mTimerClock.callback = [this]()
-    {
-        auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-        auto const installedModels = getInstalledModels();
-        auto const it = std::find(installedModels.cbegin(), installedModels.cend(), modelInfo.modelFile);
-        if(it != installedModels.cend() && it->existsAsFile())
-        {
-            mModel.entry.setText(it->getFileNameWithoutExtension().toLowerCase(), juce::NotificationType::dontSendNotification);
-        }
-        else if(modelInfo.modelFile == juce::File{})
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
-        else if(!modelInfo.modelFile.existsAsFile())
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
-            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-        }
+        showModelMenu();
     };
 
     mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attr)
@@ -532,7 +536,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
             case AttrType::modelInfo:
             case AttrType::effectiveState:
             {
-                mTimerClock.callback();
                 auto const setEntryValue = [&](auto& entry, auto const& value, auto const& defaultValue)
                 {
                     if(value.has_value())
@@ -557,6 +560,8 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 };
                 auto const modelInfo = acsr.getAttr<AttrType::modelInfo>();
                 auto const defaultState = acsr.getAttr<AttrType::effectiveState>();
+                mRemoteUrl.entry.setText(modelInfo.modelUrl.getDomain(), juce::NotificationType::dontSendNotification);
+                mRemotePort.entry.setValue(static_cast<double>(modelInfo.modelUrl.getPort()), juce::NotificationType::dontSendNotification);
                 setEntryValue(mContextSize.entry, modelInfo.contextSize, defaultState.contextSize);
                 setEntryValue(mBatchSize.entry, modelInfo.batchSize, defaultState.batchSize);
                 setEntryValue(mMinP.entry, modelInfo.minP, defaultState.minP);
@@ -567,17 +572,175 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 setEntryValue(mRepetitionPenalty.entry, modelInfo.repetitionPenalty, defaultState.repetitionPenalty);
                 break;
             }
+            case AttrType::modelBackend:
+            {
+                auto const backend = acsr.getAttr<AttrType::modelBackend>();
+                auto const index = magic_enum::enum_index(backend).value_or(0_z);
+                mBackend.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
+                mRemoteUrl.setVisible(backend == ModelBackend::remote);
+                mRemotePort.setVisible(backend == ModelBackend::remote);
+                mBatchSize.setVisible(backend == ModelBackend::local);
+                mPresencePenalty.setVisible(backend == ModelBackend::local);
+                mModelsDirectory.setVisible(backend == ModelBackend::local);
+                resized();
+                break;
+            }
         }
+        postCommandMessage(gModelListUpdatedMessageId);
     };
 
     setSize(300, 200);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mTimerClock.startTimer(500);
+}
+
+void Application::Neuralyzer::SettingsContent::showModelMenu()
+{
+    juce::PopupMenu menu;
+    auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+    auto const backend = mAccessor.getAttr<AttrType::modelBackend>();
+    if(backend == ModelBackend::remote)
+    {
+        auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
+        for(auto const& modelId : remoteModelIds)
+        {
+            auto const isCurrent = modelId == modelInfo.modelId;
+            menu.addItem(toDisplayString(modelId), true, isCurrent, [=, this]()
+                         {
+                             mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo{modelId}, NotificationType::synchronous);
+                         });
+        }
+    }
+    else
+    {
+        auto installedModels = getInstalledModels();
+        auto const currentModel = modelInfo.modelFile;
+        // Add default models
+        for(auto const& defaultModel : getDefaultModelsInfo())
+        {
+            if(defaultModel.contains("name") && defaultModel.at("name").is_string())
+            {
+                auto const modelName = juce::String(defaultModel.at("name").get<std::string>());
+                auto const displayName = toDisplayString(modelName);
+                auto const localModelIt = std::find_if(installedModels.begin(), installedModels.end(), [&](auto const& installedModel)
+                                                       {
+                                                           return installedModel.getFileNameWithoutExtension().toLowerCase() == modelName.toLowerCase();
+                                                       });
+                if(localModelIt == installedModels.end())
+                {
+                    static const auto downloadIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x8c\x90"); // 🌐
+                    auto const isNotDownloading = std::none_of(mDownloadProcesses.cbegin(), mDownloadProcesses.cend(), [&](auto const& process)
+                                                               {
+                                                                   return process->getModelFile().getFileNameWithoutExtension().toLowerCase() == modelName.toLowerCase();
+                                                               });
+                    menu.addItem(displayName + juce::String(downloadIndicator), isNotDownloading, false, [=, this]()
+                                 {
+                                     auto process = std::make_unique<DownloadProcess>(*this, defaultModel);
+                                     if(process->isRunning())
+                                     {
+                                         addAndMakeVisible(*process);
+                                         mDownloadProcesses.push_back(std::move(process));
+                                         resized();
+                                     }
+                                 });
+                }
+                else
+                {
+                    auto const model = *localModelIt;
+                    menu.addItem(displayName, true, model == currentModel, [=, this]()
+                                 {
+                                     mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
+                                     mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
+                                 });
+                    installedModels.erase(localModelIt);
+                }
+            }
+        }
+
+        if(menu.getNumItems() > 0 && !installedModels.empty())
+        {
+            menu.addSeparator();
+        }
+        for(auto const& model : installedModels)
+        {
+            auto const displayName = toDisplayString(model.getFileNameWithoutExtension());
+            menu.addItem(displayName, true, model == currentModel, [=, this]()
+                         {
+                             mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
+                         });
+        }
+    }
+    auto& lf = getLookAndFeel();
+    menu.setLookAndFeel(&lf);
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mModel.entry).withDeletionCheck(*this), [this](int)
+                       {
+                           mModel.entry.hidePopup();
+                       });
+}
+
+void Application::Neuralyzer::SettingsContent::checkForUpdatedModels()
+{
+    if(!isShowing())
+    {
+        return;
+    }
+    auto const backend = mAccessor.getAttr<AttrType::modelBackend>();
+    auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
+    if(backend == ModelBackend::remote)
+    {
+        auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
+        auto const it = std::find(remoteModelIds.cbegin(), remoteModelIds.cend(), modelInfo.modelId);
+        if(it != remoteModelIds.cend() && !modelInfo.modelId.isEmpty())
+        {
+            auto const displayName = toDisplayString(modelInfo.modelId);
+            mModel.entry.setText(displayName, juce::NotificationType::dontSendNotification);
+        }
+        else if(modelInfo.modelId.isEmpty())
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        else if(!modelInfo.modelId.isEmpty())
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+    }
+    else
+    {
+        auto const installedModels = getInstalledModels();
+        auto const it = std::find(installedModels.cbegin(), installedModels.cend(), modelInfo.modelFile);
+        if(it != installedModels.cend() && it->existsAsFile())
+        {
+            auto const displayName = toDisplayString(it->getFileNameWithoutExtension());
+            mModel.entry.setText(displayName, juce::NotificationType::dontSendNotification);
+        }
+        else if(modelInfo.modelFile == juce::File{})
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        else if(!modelInfo.modelFile.existsAsFile())
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Model cannot be found"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
+            mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
+        }
+    }
 }
 
 Application::Neuralyzer::SettingsContent::~SettingsContent()
 {
-    mTimerClock.stopTimer();
     mAccessor.removeListener(mListener);
 }
 
@@ -591,6 +754,11 @@ void Application::Neuralyzer::SettingsContent::resized()
             component.setBounds(bounds.removeFromTop(component.getHeight()));
         }
     };
+    setBounds(mBackend);
+    setBounds(mModelsDirectory);
+    setBounds(mRemoteUrl);
+    setBounds(mRemotePort);
+    setBounds(mBackendSeparator);
     setBounds(mModel);
     setBounds(mContextSize);
     setBounds(mBatchSize);
@@ -600,8 +768,8 @@ void Application::Neuralyzer::SettingsContent::resized()
     setBounds(mTopK);
     setBounds(mPresencePenalty);
     setBounds(mRepetitionPenalty);
-    setBounds(mSeparator);
-    setBounds(mModelsDirectory);
+    mDownloadSeparator.setVisible(!mDownloadProcesses.empty());
+    setBounds(mDownloadSeparator);
     for(auto const& process : mDownloadProcesses)
     {
         setBounds(*process.get());
@@ -623,17 +791,17 @@ void Application::Neuralyzer::SettingsContent::handleCommandMessage(int commandI
             resized();
             break;
         }
+        case gModelListUpdatedMessageId:
+        {
+            checkForUpdatedModels();
+            break;
+        }
     }
 }
 
-void Application::Neuralyzer::SettingsContent::parentHierarchyChanged()
+void Application::Neuralyzer::SettingsContent::broughtToFront()
 {
-    mTimerClock.callback();
-}
-
-void Application::Neuralyzer::SettingsContent::visibilityChanged()
-{
-    mTimerClock.callback();
+    postCommandMessage(gModelListUpdatedMessageId);
 }
 
 Application::Neuralyzer::SettingsPanel::SettingsPanel(Accessor& accessor)
@@ -646,4 +814,10 @@ Application::Neuralyzer::SettingsPanel::~SettingsPanel()
 {
     setContent("", nullptr);
 }
+
+void Application::Neuralyzer::SettingsPanel::broughtToFront()
+{
+    mContent.broughtToFront();
+}
+
 ANALYSE_FILE_END

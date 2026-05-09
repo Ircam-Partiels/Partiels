@@ -51,7 +51,7 @@ std::pair<juce::Result, std::vector<common_chat_tool_call>> Application::Neuraly
     }
 }
 
-std::pair<juce::Result, std::string> Application::Neuralyzer::Tools::call(Mcp::Dispatcher& dispatcher, std::vector<common_chat_tool_call> const& toolCalls, nlohmann::json const& context)
+std::pair<juce::Result, std::string> Application::Neuralyzer::Tools::call(Mcp::Dispatcher& dispatcher, std::vector<common_chat_tool_call> const& toolCalls)
 {
     std::string message = "Tool execution results:\n\n";
     auto result = juce::Result::ok();
@@ -63,14 +63,13 @@ std::pair<juce::Result, std::string> Application::Neuralyzer::Tools::call(Mcp::D
         request["method"] = "tools/call";
         request["params"]["name"] = toolCall.name;
         request["params"]["arguments"] = toolCall.arguments.empty() ? nlohmann::json::object() : nlohmann::json::parse(toolCall.arguments);
-        request["params"]["context"] = context;
 
         message += "[Tool Call ID: " + toolCall.id + "]\n";
         message += "Tool: " + toolCall.name + "\n";
 
         try
         {
-            auto const dispatcherResponse = dispatcher.handle(request);
+            auto const dispatcherResponse = dispatcher.callTools(request);
             if(dispatcherResponse.contains("error"))
             {
                 result = juce::Result::fail("One or more tool calls failed");

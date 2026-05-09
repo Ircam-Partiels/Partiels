@@ -74,7 +74,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     {
         auto const hasQuery = mQueryEditor.getText().trim().isNotEmpty();
         auto const isRunningQuery = mAgent.getCurrentAction() != BackgroundAgent::Action::none;
-        auto const isInitialized = mAgent.getModelInfo().valid();
+        auto const isInitialized = mAgent.getModelInfo().isValid();
         auto const canSendUserQuery = isInitialized && hasQuery && !isRunningQuery;
         if(canSendUserQuery)
         {
@@ -85,7 +85,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     {
         auto const hasQuery = mQueryEditor.getText().trim().isNotEmpty();
         auto const isRunningQuery = mAgent.getCurrentAction() == BackgroundAgent::Action::sendQuery;
-        auto const isInitialized = mAgent.getModelInfo().valid();
+        auto const isInitialized = mAgent.getModelInfo().isValid();
         auto const canSendOrStopUserQuery = isInitialized && (isRunningQuery || hasQuery);
         mSendButton.setEnabled(canSendOrStopUserQuery);
     };
@@ -165,7 +165,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     mMenuButton.onClick = [this]()
     {
         juce::PopupMenu menu;
-        auto const canReset = mAgent.getModelInfo().valid();
+        auto const canReset = mAgent.getModelInfo().isValid();
         menu.addItem(juce::translate("Reset History"), canReset, false, [this]()
                      {
                          auto const options = juce::MessageBoxOptions()
@@ -181,7 +181,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
                                                           {
                                                               return;
                                                           }
-                                                          if(mAgent.getModelInfo().valid())
+                                                          if(mAgent.getModelInfo().isValid())
                                                           {
                                                               clearHistory();
                                                           }
@@ -195,7 +195,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     };
     mSendButton.onClick = [this]()
     {
-        if(!mAgent.getModelInfo().valid() && mAgent.getCurrentAction() != BackgroundAgent::Action::initializeModel)
+        if(!mAgent.getModelInfo().isValid() && mAgent.getCurrentAction() != BackgroundAgent::Action::initializeModel)
         {
             askToConfigureNeuralyzer();
         }
@@ -243,9 +243,13 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     {
         switch(attr)
         {
+            case AttrType::modelBackend:
+            {
+                break;
+            }
             case AttrType::modelInfo:
             {
-                if(acsr.getAttr<AttrType::modelInfo>().valid())
+                if(acsr.getAttr<AttrType::modelInfo>().isValid())
                 {
                     initializeSystem();
                 }
@@ -272,7 +276,7 @@ void Application::Neuralyzer::Chat::mouseDown(juce::MouseEvent const& event)
 {
     if(event.eventComponent == &mQueryEditor)
     {
-        if(!mAgent.getModelInfo().valid() && !mAccessor.getAttr<AttrType::modelInfo>().valid())
+        if(!mAgent.getModelInfo().isValid() && !mAccessor.getAttr<AttrType::modelInfo>().isValid())
         {
             askToConfigureNeuralyzer();
         }
@@ -363,7 +367,7 @@ void Application::Neuralyzer::Chat::handleAsyncUpdate()
         {
             mStatusLabel.setText(juce::translate("Error: ERROR").replace("ERROR", result.getErrorMessage()), juce::dontSendNotification);
         }
-        else if(modelInfo.valid())
+        else if(modelInfo.isValid())
         {
             mStatusLabel.setText(juce::translate("Enter your query in natural language..."), juce::dontSendNotification);
         }
@@ -382,17 +386,17 @@ void Application::Neuralyzer::Chat::handleAsyncUpdate()
         startTimer(250);
     }
 
-    if(!modelInfo.valid() && mAgent.getCurrentAction() == BackgroundAgent::Action::none)
+    if(!modelInfo.isValid() && mAgent.getCurrentAction() == BackgroundAgent::Action::none)
     {
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Select a model in the settings panel."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     }
-    else if(modelInfo.valid())
+    else if(modelInfo.isValid())
     {
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Enter your query in natural language..."), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
     }
 
     mAccessor.setAttr<AttrType::effectiveState>(modelInfo, NotificationType::synchronous);
-    if(modelInfo.valid())
+    if(modelInfo.isValid())
     {
         mUsageLabel.setText(juce::String(static_cast<int>(mAgent.getContextCapacityUsage() * 100.0f)) + "%", juce::dontSendNotification);
         juce::StringArray modelInfoParts;
@@ -432,8 +436,8 @@ void Application::Neuralyzer::Chat::handleAsyncUpdate()
 void Application::Neuralyzer::Chat::initializeSystem()
 {
     auto info = mAccessor.getAttr<AttrType::modelInfo>();
-    MiscWeakAssert(info.valid());
-    if(!info.valid())
+    MiscWeakAssert(info.isValid());
+    if(!info.isValid())
     {
         return;
     }
@@ -530,8 +534,8 @@ void Application::Neuralyzer::Chat::stopUserQuery()
 
 void Application::Neuralyzer::Chat::clearHistory()
 {
-    MiscWeakAssert(mAgent.getModelInfo().valid());
-    if(!mAgent.getModelInfo().valid())
+    MiscWeakAssert(mAgent.getModelInfo().isValid());
+    if(!mAgent.getModelInfo().isValid())
     {
         return;
     }

@@ -121,7 +121,7 @@ namespace Application::Neuralyzer::Mcp
         }
     }
 
-    static nlohmann::json callTools(nlohmann::json const& request)
+    static nlohmann::json performToolsCall(nlohmann::json const& request, nlohmann::json const& context)
     {
         MiscDebug("Application::Neuralyzer::Mcp::Dispatcher", "Received MCP tools/call");
         if(!request.contains("params") || !request.at("params").is_object())
@@ -504,17 +504,13 @@ namespace Application::Neuralyzer::Mcp
         if(toolName == "get_attached_files")
         {
             nlohmann::json files = nlohmann::json::array();
-            if(methodParams.contains("context") && methodParams.at("context").is_object())
+            if(context.is_object() && context.contains("files") && context.at("files").is_array())
             {
-                auto const& context = methodParams.at("context");
-                if(context.contains("files") && context.at("files").is_array())
+                for(auto const& file : context.at("files"))
                 {
-                    for(auto const& file : context.at("files"))
+                    if(file.is_string())
                     {
-                        if(file.is_string())
-                        {
-                            files.push_back(file);
-                        }
+                        files.push_back(file);
                     }
                 }
             }
@@ -2509,7 +2505,7 @@ namespace Application::Neuralyzer::Mcp
     static ColourParsingUnitTest colourParsingUnitTest;
 } // namespace Application::Neuralyzer::Mcp
 
-nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::handle(nlohmann::json const& request)
+nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callTools(nlohmann::json const& request)
 {
     if(!request.contains("method") || !request.at("method").is_string())
     {
@@ -2567,7 +2563,7 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::handle(nlohmann::json c
                                        {
                                            try
                                            {
-                                               response = callTools(request);
+                                               response = performToolsCall(request, mContext);
                                            }
                                            catch(std::exception const& e)
                                            {
@@ -2577,6 +2573,11 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::handle(nlohmann::json c
         return response;
     }
     return createError("Unknown method: " + method);
+}
+
+void Application::Neuralyzer::Mcp::Dispatcher::setContext(nlohmann::json const& params)
+{
+    mContext = params;
 }
 
 Application::Neuralyzer::Mcp::Connection::Connection(Dispatcher& dispatcher)
@@ -2615,7 +2616,7 @@ void Application::Neuralyzer::Mcp::Connection::messageReceived(juce::MemoryBlock
         MiscDebug("Application::Neuralyzer::Mcp::Connection", "MCP client received message: " + text);
 
         // Dispatch the request and send back the dumped JSON response
-        auto const result = mDispatcher.handle(request);
+        auto const result = mDispatcher.callTools(request);
         nlohmann::json response;
         response["result"] = result;
         response["id"] = request.value("id", -1);

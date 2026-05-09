@@ -7,6 +7,11 @@ Application::Neuralyzer::ModelInfo::ModelInfo(juce::File const& file)
 {
 }
 
+Application::Neuralyzer::ModelInfo::ModelInfo(juce::String const& model)
+: modelId(model)
+{
+}
+
 bool Application::Neuralyzer::ModelInfo::operator==(ModelInfo const& rhs) const noexcept
 {
     static auto const equals = [](std::optional<float> const& lhsf, std::optional<float> const& rhsf)
@@ -15,6 +20,8 @@ bool Application::Neuralyzer::ModelInfo::operator==(ModelInfo const& rhs) const 
     };
 
     return modelFile == rhs.modelFile &&
+           modelUrl == rhs.modelUrl &&
+           modelId == rhs.modelId &&
            contextSize == rhs.contextSize &&
            batchSize == rhs.batchSize &&
            equals(minP, rhs.minP) &&
@@ -52,12 +59,12 @@ juce::File Application::Neuralyzer::getRagRerankerModelFile()
     return Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Rag").getChildFile("bge-reranker-v2-m3-Q4_K_M.gguf");
 }
 
-std::pair<juce::File, juce::File> Application::Neuralyzer::getNeuralyzerSessionFile(juce::File const& documentFile)
+juce::File Application::Neuralyzer::getNeuralyzerSessionFile(juce::File const& documentFile)
 {
     auto const root = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
     auto const directory = Application::Neuralyzer::resolveNeuralyzerDirectory(root).getChildFile("Sessions");
     auto const hash = juce::String::toHexString(static_cast<juce::int64>(documentFile.getFullPathName().hashCode64()));
-    return std::make_pair(directory.getChildFile(hash + ".session"), directory.getChildFile(hash + ".messages.json"));
+    return directory.getChildFile(hash + ".messages.json");
 }
 
 template <>
@@ -65,6 +72,8 @@ void XmlParser::toXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement& xml,
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
     toXml(*child, "modelFile", value.modelFile);
+    toXml(*child, "modelUrl", value.modelUrl);
+    toXml(*child, "modelId", value.modelId);
     toXml(*child, "contextSize", value.contextSize);
     toXml(*child, "batchSize", value.batchSize);
     toXml(*child, "minP", value.minP);
@@ -88,6 +97,8 @@ auto XmlParser::fromXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement con
     }
     Application::Neuralyzer::ModelInfo value;
     value.modelFile = fromXml(*child, "modelFile", defaultValue.modelFile);
+    value.modelUrl = fromXml(*child, "modelUrl", defaultValue.modelUrl);
+    value.modelId = fromXml(*child, "modelId", defaultValue.modelId);
     value.contextSize = fromXml(*child, "contextSize", defaultValue.contextSize);
     value.batchSize = fromXml(*child, "batchSize", defaultValue.batchSize);
     value.minP = fromXml(*child, "minP", defaultValue.minP);

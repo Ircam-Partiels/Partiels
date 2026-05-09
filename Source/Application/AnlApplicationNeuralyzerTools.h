@@ -15,7 +15,7 @@ namespace Application
         namespace Tools
         {
             std::pair<juce::Result, std::vector<common_chat_tool_call>> parse(common_chat_params const& chatParams, std::string assistantResponse);
-            std::pair<juce::Result, std::string> call(Mcp::Dispatcher& dispatcher, std::vector<common_chat_tool_call> const& toolCalls, nlohmann::json const& context);
+            std::pair<juce::Result, std::string> call(Mcp::Dispatcher& dispatcher, std::vector<common_chat_tool_call> const& toolCalls);
         } // namespace Tools
     } // namespace Neuralyzer
 } // namespace Application

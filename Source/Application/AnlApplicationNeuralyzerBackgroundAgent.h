@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlApplicationNeuralyzerAgent.h"
+#include "AnlApplicationNeuralyzerAgentLocal.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -29,11 +29,16 @@ namespace Application
             BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, std::function<juce::Result(void)> setupSystem);
             ~BackgroundAgent();
 
-            // Getters that are safe to call from any thread (pass through to Agent)
+            // Getters that are pass through to Agent - safe to call from any thread
             Agent::History getHistory() const;
             juce::String getTemporaryResponse() const;
             float getContextCapacityUsage() const;
             ModelInfo getModelInfo() const;
+
+            // State inspection - safe to call from any thread
+            bool hasPendingAction() const;
+            Action getCurrentAction() const;
+            juce::Result getLastResult() const;
 
             // Async operations - schedule work on the background thread.
             // initializeModel also loads or starts a session on completion.
@@ -41,17 +46,13 @@ namespace Application
             void initializeModel(ModelInfo const& info);
             void sendQuery(juce::String const& prompt, nlohmann::json const& mcpToolsContext);
             void startSession();
-            void loadSession(juce::File const contextFile, juce::File const messageFile);
-            void saveSession(juce::File const contextFile, juce::File const messageFile);
+            void loadSession(juce::File const sessionFile);
+            void saveSession(juce::File const sessionFile);
             void cancelQuery();
 
-            // State inspection
-            bool hasPendingAction() const;
-            Action getCurrentAction() const;
-            juce::Result getLastResult() const;
-
         private:
-            Agent mAgent;
+            Mcp::Dispatcher& mMcpDispatcher;
+            AgentLocal mAgent;
 
             struct PendingAction
             {

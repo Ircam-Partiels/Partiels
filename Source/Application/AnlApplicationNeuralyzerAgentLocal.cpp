@@ -1,4 +1,4 @@
-#include "AnlApplicationNeuralyzerAgent.h"
+#include "AnlApplicationNeuralyzerAgentLocal.h"
 #include "AnlApplicationNeuralyzerRag.h"
 #include "AnlApplicationNeuralyzerTools.h"
 
@@ -75,7 +75,7 @@ static void from_json(nlohmann::json const& json, common_chat_msg& message)
     }
 }
 
-void Application::Neuralyzer::Agent::initialize()
+void Application::Neuralyzer::AgentLocal::initialize()
 {
     static std::once_flag initFlag;
     std::call_once(initFlag, []()
@@ -83,7 +83,7 @@ void Application::Neuralyzer::Agent::initialize()
                        MiscDebug("Application::Neuralyzer::Agent", "Global Initialize...");
                        llama_log_set([](enum ggml_log_level, [[maybe_unused]] char const* text, void*)
                                      {
-                                         MiscDebug("Application::Neuralyzer::Agent::Init", text);
+                                         MiscDebug("Application::Neuralyzer::AgentLocal::Init", text);
                                      },
                                      nullptr);
                        llama_backend_init();
@@ -92,7 +92,7 @@ void Application::Neuralyzer::Agent::initialize()
                    });
 }
 
-void Application::Neuralyzer::Agent::release()
+void Application::Neuralyzer::AgentLocal::release()
 {
     static std::once_flag releaseFlag;
     std::call_once(releaseFlag, []()
@@ -108,12 +108,12 @@ void Application::Neuralyzer::Agent::release()
                    });
 }
 
-Application::Neuralyzer::Agent::Agent(Mcp::Dispatcher& mcpDispatcher)
+Application::Neuralyzer::AgentLocal::AgentLocal(Mcp::Dispatcher& mcpDispatcher)
 : mMcpDispatcher(mcpDispatcher)
 {
 }
 
-Application::Neuralyzer::Agent::~Agent()
+Application::Neuralyzer::AgentLocal::~AgentLocal()
 {
     llama_log_set(logCallback, nullptr);
     mInitResult.reset();
@@ -121,13 +121,13 @@ Application::Neuralyzer::Agent::~Agent()
     mChatInputs = common_chat_templates_inputs{};
 }
 
-void Application::Neuralyzer::Agent::setNotifyCallback(std::function<void()> callback)
+void Application::Neuralyzer::AgentLocal::setNotifyCallback(std::function<void()> callback)
 {
     std::unique_lock<std::mutex> lock(mNotifyMutex);
     mNotifyCallback = std::move(callback);
 }
 
-void Application::Neuralyzer::Agent::notifyStateChanged()
+void Application::Neuralyzer::AgentLocal::notifyStateChanged()
 {
     std::function<void()> callback;
     {
@@ -140,37 +140,24 @@ void Application::Neuralyzer::Agent::notifyStateChanged()
     }
 }
 
-Application::Neuralyzer::Mcp::Dispatcher& Application::Neuralyzer::Agent::getMcpDispatcher()
+Application::Neuralyzer::Mcp::Dispatcher& Application::Neuralyzer::AgentLocal::getMcpDispatcher()
 {
     return mMcpDispatcher;
 }
 
-void Application::Neuralyzer::Agent::setFirstQuery(juce::String const& firstQuery)
+void Application::Neuralyzer::AgentLocal::setFirstQuery(juce::String const& firstQuery)
 {
     std::unique_lock<std::mutex> instructionsLock(mInstructionsMutex);
     mFirstQuery = firstQuery;
 }
 
-juce::String Application::Neuralyzer::Agent::getFirstQuery() const
+juce::String Application::Neuralyzer::AgentLocal::getFirstQuery() const
 {
     std::unique_lock<std::mutex> instructionsLock(mInstructionsMutex);
     return mFirstQuery;
 }
 
-void Application::Neuralyzer::Agent::setSessionFiles(juce::File const& contextFile, juce::File const& messageFile)
-{
-    std::unique_lock<std::mutex> sessionLock(mSessionMutex);
-    mSessionContextFile = contextFile;
-    mSessionMessageFile = messageFile;
-}
-
-std::pair<juce::File, juce::File> Application::Neuralyzer::Agent::getSessionFiles() const
-{
-    std::unique_lock<std::mutex> sessionLock(mSessionMutex);
-    return std::make_pair(mSessionContextFile, mSessionMessageFile);
-}
-
-juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& info)
+juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo const& info)
 {
     // Set log callback to suppress unnecessary output
     llama_log_set(logCallback, nullptr);
@@ -217,7 +204,7 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
     params.load_progress_callback_user_data = static_cast<void*>(this);
     params.load_progress_callback = [](float, void* data) -> bool
     {
-        return !reinterpret_cast<Agent*>(data)->mShouldQuit.load();
+        return !reinterpret_cast<AgentLocal*>(data)->mShouldQuit.load();
     };
 
     // Initialize model, context and sampler as a single lifetime-managed object.
@@ -235,7 +222,7 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
 
     llama_set_abort_callback(mInitResult->context(), [](void* data)
                              {
-                                 return reinterpret_cast<Agent*>(data)->mShouldQuit.load();
+                                 return reinterpret_cast<AgentLocal*>(data)->mShouldQuit.load();
                              },
                              static_cast<void*>(this));
 
@@ -285,7 +272,7 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
 
         nlohmann::json request;
         request["method"] = "tools/list";
-        auto const response = mMcpDispatcher.handle(request);
+        auto const response = mMcpDispatcher.callTools(request);
         if(!response.contains("tools") || !response.at("tools").is_array())
         {
             MiscDebug("Application::Neuralyzer::Agent", juce::String("Parsing error: ") + response.dump());
@@ -328,7 +315,7 @@ juce::Result Application::Neuralyzer::Agent::initializeModel(ModelInfo const& in
     return juce::Result::ok();
 }
 
-std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyzer::Agent::performMessage(std::string const& role, std::string query, bool allowTools)
+std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyzer::AgentLocal::performMessage(std::string const& role, std::string query, bool allowTools)
 {
     auto const createResults = [](juce::Result result, std::string message = {}, common_chat_params params = {})
     {
@@ -370,7 +357,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
             systemMsg.role = "system";
             nlohmann::json request;
             request["method"] = "initialize";
-            auto const response = mMcpDispatcher.handle(request);
+            auto const response = mMcpDispatcher.callTools(request);
             systemMsg.content = response.value("instructions", std::string{});
             systemMsg.content += "\nOS Name: " + juce::SystemStats::getOperatingSystemName().toStdString() + "\n";
             if(auto* mapping = juce::LocalisedStrings::getCurrentMappings())
@@ -506,7 +493,7 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     return createResults(juce::Result::ok(), msg.content, std::move(params));
 }
 
-juce::Result Application::Neuralyzer::Agent::performQuery(juce::String const& prompt, bool allowTools, nlohmann::json const& mcpToolsContext)
+juce::Result Application::Neuralyzer::AgentLocal::performQuery(juce::String const& prompt, bool allowTools)
 {
     {
         std::unique_lock<std::mutex> lock(mTemporaryMutex);
@@ -561,7 +548,7 @@ juce::Result Application::Neuralyzer::Agent::performQuery(juce::String const& pr
             }
             else if(tpResult.first.wasOk())
             {
-                auto const tcResult = Tools::call(mMcpDispatcher, tpResult.second, mcpToolsContext);
+                auto const tcResult = Tools::call(mMcpDispatcher, tpResult.second);
                 currentQuery = tcResult.second + "\n\n";
                 if(tcResult.first.wasOk())
                 {
@@ -617,47 +604,42 @@ juce::Result Application::Neuralyzer::Agent::performQuery(juce::String const& pr
     return juce::Result::fail(juce::translate("Maximum number of iterations reached."));
 }
 
-juce::Result Application::Neuralyzer::Agent::sendQuery(juce::String const& prompt, nlohmann::json const& mcpToolsContext)
+juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& prompt)
 {
-    return performQuery(prompt, true, mcpToolsContext);
+    return performQuery(prompt, true);
 }
 
-juce::Result Application::Neuralyzer::Agent::startSession()
+juce::Result Application::Neuralyzer::AgentLocal::startSession()
 {
     auto resetResult = clearContextMemory();
-    return resetResult.wasOk() ? performQuery(getFirstQuery(), false, {}) : resetResult;
+    return resetResult.wasOk() ? performQuery(getFirstQuery(), false) : resetResult;
 }
 
-juce::Result Application::Neuralyzer::Agent::loadSession()
-{
-    return loadContextFromFile();
-}
-
-juce::Result Application::Neuralyzer::Agent::saveSession()
-{
-    return saveContextToFile();
-}
-
-juce::Result Application::Neuralyzer::Agent::loadContextFromFile()
+juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& sessionFile)
 {
     if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
     {
         MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
-    auto const [contextFile, messageFile] = getSessionFiles();
-    if(messageFile.getSize() <= 0)
+
+    if(sessionFile == juce::File{})
     {
-        return juce::Result::fail(juce::translate("No session files found."));
+        return juce::Result::fail(juce::translate("No session file provided."));
     }
+    if(sessionFile.getSize() <= 0)
+    {
+        return juce::Result::fail(juce::translate("The session file is empty."));
+    }
+    auto const contextFile = sessionFile.withFileExtension(".ctx");
 
     std::vector<common_chat_msg> restoredMessages;
     try
     {
-        auto const root = nlohmann::json::parse(messageFile.loadFileAsString().toStdString());
+        auto const root = nlohmann::json::parse(sessionFile.loadFileAsString().toStdString());
         if(!root.contains("messages") || !root.at("messages").is_array())
         {
-            return juce::Result::fail(juce::translate("Invalid message state file format: FLNAME").replace("FLNAME", messageFile.getFullPathName()));
+            return juce::Result::fail(juce::translate("Invalid message state file format: FLNAME").replace("FLNAME", sessionFile.getFullPathName()));
         }
         for(auto const& messageJson : root.at("messages"))
         {
@@ -668,8 +650,8 @@ juce::Result Application::Neuralyzer::Agent::loadContextFromFile()
     }
     catch(std::exception const& exception)
     {
-        MiscDebug("Application::Neuralyzer::Agent", juce::String("Failed to parse message state file: ") + messageFile.getFullPathName() + juce::String(" error: ") + exception.what());
-        return juce::Result::fail(juce::translate("Failed to parse message state file: FLNAME").replace("FLNAME", messageFile.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", juce::String("Failed to parse message state file: ") + sessionFile.getFullPathName() + juce::String(" error: ") + exception.what());
+        return juce::Result::fail(juce::translate("Failed to parse message state file: FLNAME").replace("FLNAME", sessionFile.getFullPathName()));
     }
 
     size_t nloaded = 0;
@@ -743,18 +725,18 @@ juce::Result Application::Neuralyzer::Agent::loadContextFromFile()
     return juce::Result::ok();
 }
 
-juce::Result Application::Neuralyzer::Agent::saveContextToFile()
+juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& sessionFile)
 {
     if(mInitResult == nullptr || mInitResult->context() == nullptr || mInitResult->sampler(0) == nullptr)
     {
         MiscDebug("Application::Neuralyzer::Agent", "Not initialized");
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
-    auto [contextFile, messageFile] = getSessionFiles();
-    if(contextFile == juce::File{} || messageFile == juce::File{})
+    if(sessionFile == juce::File{})
     {
-        return juce::Result::fail(juce::translate("No session files found."));
+        return juce::Result::fail(juce::translate("No session file provided."));
     }
+    auto const contextFile = sessionFile.withFileExtension(".ctx");
 
     // Ensure directory exists
     if(!contextFile.getParentDirectory().createDirectory())
@@ -762,10 +744,10 @@ juce::Result Application::Neuralyzer::Agent::saveContextToFile()
         MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + contextFile.getParentDirectory().getFullPathName());
         return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", contextFile.getParentDirectory().getFullPathName()));
     }
-    if(!messageFile.getParentDirectory().createDirectory())
+    if(!sessionFile.getParentDirectory().createDirectory())
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + messageFile.getParentDirectory().getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", messageFile.getParentDirectory().getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to create directory: " + sessionFile.getParentDirectory().getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", sessionFile.getParentDirectory().getFullPathName()));
     }
 
     // Set log callback to suppress unnecessary output
@@ -796,17 +778,17 @@ juce::Result Application::Neuralyzer::Agent::saveContextToFile()
         root["messages"].push_back(std::move(messageJson));
     }
 
-    if(!messageFile.replaceWithText(juce::String(root.dump(2))))
+    if(!sessionFile.replaceWithText(juce::String(root.dump(2))))
     {
-        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state metadata file: " + messageFile.getFullPathName());
-        return juce::Result::fail(juce::translate("Failed to save state metadata file: FLNAME").replace("FLNAME", messageFile.getFullPathName()));
+        MiscDebug("Application::Neuralyzer::Agent", "Failed to save state metadata file: " + sessionFile.getFullPathName());
+        return juce::Result::fail(juce::translate("Failed to save state metadata file: FLNAME").replace("FLNAME", sessionFile.getFullPathName()));
     }
 
-    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache and message history to files: ") + contextFile.getFullPathName() + " " + messageFile.getFullPathName());
+    MiscDebug("Application::Neuralyzer::Agent", juce::String("Saved KV cache and message history to files: ") + contextFile.getFullPathName() + " " + sessionFile.getFullPathName());
     return juce::Result::ok();
 }
 
-juce::Result Application::Neuralyzer::Agent::clearContextMemory()
+juce::Result Application::Neuralyzer::AgentLocal::clearContextMemory()
 {
     // Clear chat history and KV cache from system prompt onwards
     if(mInitResult == nullptr || mInitResult->context() == nullptr)
@@ -825,7 +807,7 @@ juce::Result Application::Neuralyzer::Agent::clearContextMemory()
     return juce::Result::ok();
 }
 
-Application::Neuralyzer::Agent::History Application::Neuralyzer::Agent::getHistory() const
+Application::Neuralyzer::AgentLocal::History Application::Neuralyzer::AgentLocal::getHistory() const
 {
     History history;
     std::unique_lock<std::mutex> lock(mHistoryMutex);
@@ -839,7 +821,7 @@ Application::Neuralyzer::Agent::History Application::Neuralyzer::Agent::getHisto
     return history;
 }
 
-juce::Result Application::Neuralyzer::Agent::manageContentMemory(size_t minNumRequiredTokens)
+juce::Result Application::Neuralyzer::AgentLocal::manageContentMemory(size_t minNumRequiredTokens)
 {
     if(mInitResult == nullptr || mInitResult->context() == nullptr)
     {
@@ -896,7 +878,7 @@ juce::Result Application::Neuralyzer::Agent::manageContentMemory(size_t minNumRe
     return std::get<0>(followUpResult);
 }
 
-void Application::Neuralyzer::Agent::updateContextMemoryUsage()
+void Application::Neuralyzer::AgentLocal::updateContextMemoryUsage()
 {
     if(mInitResult == nullptr || mInitResult->context() == nullptr)
     {
@@ -908,12 +890,12 @@ void Application::Neuralyzer::Agent::updateContextMemoryUsage()
     mContextMemoryUsage.store(static_cast<float>(static_cast<double>(ctxUsed) / static_cast<double>(ctxCapacity)));
 }
 
-float Application::Neuralyzer::Agent::getContextCapacityUsage() const
+float Application::Neuralyzer::AgentLocal::getContextCapacityUsage() const
 {
     return mContextMemoryUsage.load();
 }
 
-juce::String Application::Neuralyzer::Agent::getTemporaryResponse() const
+juce::String Application::Neuralyzer::AgentLocal::getTemporaryResponse() const
 {
     std::unique_lock<std::mutex> lock(mTemporaryMutex);
     auto response = mTempResponse;
@@ -921,17 +903,17 @@ juce::String Application::Neuralyzer::Agent::getTemporaryResponse() const
     return juce::String(response);
 }
 
-void Application::Neuralyzer::Agent::setShouldQuit(bool state)
+void Application::Neuralyzer::AgentLocal::setShouldQuit(bool state)
 {
     mShouldQuit.store(state);
 }
 
-bool Application::Neuralyzer::Agent::shouldQuit() const
+bool Application::Neuralyzer::AgentLocal::shouldQuit() const
 {
     return mShouldQuit.load();
 }
 
-Application::Neuralyzer::ModelInfo Application::Neuralyzer::Agent::getModelInfo() const
+Application::Neuralyzer::ModelInfo Application::Neuralyzer::AgentLocal::getModelInfo() const
 {
     std::lock_guard<std::mutex> lock(mModelInfoMutex);
     return mModelInfo;

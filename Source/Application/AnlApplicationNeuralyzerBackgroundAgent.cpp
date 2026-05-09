@@ -4,7 +4,8 @@
 ANALYSE_FILE_BEGIN
 
 Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, std::function<juce::Result(void)> setupSystem)
-: mAgent(mcpDispatcher)
+: mMcpDispatcher(mcpDispatcher)
+, mAgent(mcpDispatcher)
 {
     mAgent.setNotifyCallback([this]()
                              {
@@ -117,13 +118,12 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
     PendingAction pending{Action::initializeModel,
                           [this, info]() -> juce::Result
                           {
-                              static auto const tempSessionFiles = getNeuralyzerSessionFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralyzersession.ptldoc"));
+                              static auto const tempSessionFile = getNeuralyzerSessionFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralyzersession.ptldoc"));
                               auto const saveResult = [&]()
                               {
                                   if(mAgent.getModelInfo().isValid())
                                   {
-                                      mAgent.setSessionFiles(std::get<0>(tempSessionFiles), std::get<1>(tempSessionFiles));
-                                      return mAgent.saveSession();
+                                      return mAgent.saveSession(tempSessionFile);
                                   }
                                   return juce::Result::ok();
                               }();
@@ -138,10 +138,7 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
                                   }
                                   mCurrentAction.store(Action::loadSession);
                                   sendChangeMessage();
-                                  auto const loadResult = mAgent.loadSession();
-                                  std::get<0>(tempSessionFiles).deleteFile();
-                                  std::get<1>(tempSessionFiles).deleteFile();
-                                  return loadResult;
+                                  return mAgent.loadSession(tempSessionFile);
                               }
                               return initializeResult;
                           }};
@@ -169,7 +166,8 @@ void Application::Neuralyzer::BackgroundAgent::sendQuery(juce::String const& pro
     PendingAction pending{Action::sendQuery,
                           [this, prompt, mcpToolsContext]() -> juce::Result
                           {
-                              return mAgent.sendQuery(prompt, mcpToolsContext);
+                              mMcpDispatcher.setContext(mcpToolsContext);
+                              return mAgent.sendQuery(prompt);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     mPendingActions.push_back(std::move(pending));
@@ -197,13 +195,12 @@ void Application::Neuralyzer::BackgroundAgent::startSession()
     mPendingCondition.notify_one();
 }
 
-void Application::Neuralyzer::BackgroundAgent::loadSession(juce::File const contextFile, juce::File const messageFile)
+void Application::Neuralyzer::BackgroundAgent::loadSession(juce::File const sessionFile)
 {
     PendingAction pending{Action::loadSession,
                           [=, this]() -> juce::Result
                           {
-                              mAgent.setSessionFiles(contextFile, messageFile);
-                              return mAgent.loadSession();
+                              return mAgent.loadSession(sessionFile);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     if(!mPendingActions.empty() && (mPendingActions.back().action == Action::loadSession || mPendingActions.back().action == Action::startSession))
@@ -218,13 +215,12 @@ void Application::Neuralyzer::BackgroundAgent::loadSession(juce::File const cont
     mPendingCondition.notify_one();
 }
 
-void Application::Neuralyzer::BackgroundAgent::saveSession(juce::File const contextFile, juce::File const messageFile)
+void Application::Neuralyzer::BackgroundAgent::saveSession(juce::File const sessionFile)
 {
     PendingAction pending{Action::saveSession,
                           [=, this]() -> juce::Result
                           {
-                              mAgent.setSessionFiles(contextFile, messageFile);
-                              return mAgent.saveSession();
+                              return mAgent.saveSession(sessionFile);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     mPendingActions.push_back(std::move(pending));

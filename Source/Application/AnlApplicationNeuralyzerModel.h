@@ -15,9 +15,19 @@ namespace Application
         static auto constexpr minTopK = 0;
         static auto constexpr maxTopK = 200;
 
+        // clang-format off
+        enum class ModelBackend
+        {
+              local
+            , remote
+        };
+        // clang-format on
+
         struct ModelInfo
         {
             juce::File modelFile;
+            juce::String modelId;
+            juce::URL modelUrl{"http://localhost:1234"};
             std::optional<int32_t> contextSize;
             std::optional<int32_t> batchSize;
             std::optional<float> minP;
@@ -27,7 +37,9 @@ namespace Application
             std::optional<float> presencePenalty;
             std::optional<float> repetitionPenalty;
 
-            ModelInfo(juce::File const& file = {});
+            ModelInfo() = default;
+            explicit ModelInfo(juce::File const& file);
+            explicit ModelInfo(juce::String const& model);
 
             bool operator==(ModelInfo const& rhs) const noexcept;
 
@@ -38,12 +50,7 @@ namespace Application
 
             inline bool isValid() const
             {
-                return modelFile.existsAsFile();
-            }
-
-            inline bool valid() const
-            {
-                return isValid();
+                return modelFile.existsAsFile() || (modelUrl.isWellFormed() && modelId.isNotEmpty());
             }
         };
 
@@ -51,11 +58,13 @@ namespace Application
         enum class AttrType : size_t
         {
               modelInfo
+            , modelBackend
             , effectiveState
         };
         
         using AttrContainer = Model::Container
         < Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
+        , Model::Attr<AttrType::modelBackend, ModelBackend, Model::Flag::notifying>
         , Model::Attr<AttrType::effectiveState, ModelInfo, Model::Flag::notifying>
         >;
         // clang-format on
@@ -69,6 +78,7 @@ namespace Application
             Accessor()
             : Accessor(AttrContainer({
                                           {ModelInfo{}}
+                                        , {ModelBackend::local}
                                         , {ModelInfo{}}
                                     }))
             {
@@ -80,7 +90,7 @@ namespace Application
         juce::File getDefaultModelDirectory();
         juce::File getRagEmbeddingModelFile();
         juce::File getRagRerankerModelFile();
-        std::pair<juce::File, juce::File> getNeuralyzerSessionFile(juce::File const& documentFile);
+        juce::File getNeuralyzerSessionFile(juce::File const& documentFile);
     } // namespace Neuralyzer
 } // namespace Application
 

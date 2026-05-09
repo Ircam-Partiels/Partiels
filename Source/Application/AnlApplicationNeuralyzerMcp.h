@@ -25,7 +25,11 @@ namespace Application
                 Dispatcher() = default;
                 ~Dispatcher() = default;
 
-                nlohmann::json handle(nlohmann::json const& params);
+                nlohmann::json callTools(nlohmann::json const& params);
+                void setContext(nlohmann::json const& params);
+
+            private:
+                nlohmann::json mContext;
             };
 
             class Connection

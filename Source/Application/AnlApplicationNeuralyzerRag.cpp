@@ -249,7 +249,7 @@ juce::Result Application::Neuralyzer::Rag::Engine::initializeModels(juce::File e
 
     nlohmann::json listRequest;
     listRequest["method"] = "resources/list";
-    auto const listResults = mMcpDispatcher.handle(listRequest);
+    auto const listResults = mMcpDispatcher.callTools(listRequest);
     if(listResults.contains("resources") && listResults.at("resources").is_array())
     {
         for(auto const& resource : listResults.at("resources"))
@@ -257,7 +257,7 @@ juce::Result Application::Neuralyzer::Rag::Engine::initializeModels(juce::File e
             nlohmann::json readRequest;
             readRequest["method"] = "resources/read";
             readRequest["params"]["uri"] = resource.value("uri", std::string{});
-            auto const contentResult = mMcpDispatcher.handle(readRequest);
+            auto const contentResult = mMcpDispatcher.callTools(readRequest);
             if(contentResult.contains("contents") && contentResult.at("contents").is_array())
             {
                 auto const name = resource.value("name", juce::String{});
