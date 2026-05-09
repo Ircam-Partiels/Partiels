@@ -84,7 +84,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     MiscDebug("Application", "Running with GUI");
 
-    Neuralyzer::Agent::initialize();
+    Neuralyzer::AgentLocal::initialize();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
@@ -122,10 +122,10 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased->onLoaded = [this](juce::File const& file)
     {
-        auto const sessionFiles = Neuralyzer::getNeuralyzerSessionFile(file);
-        if(file != juce::File{} && (std::get<0>(sessionFiles).existsAsFile() || std::get<1>(sessionFiles).existsAsFile()))
+        auto const sessionFile = Neuralyzer::getNeuralyzerSessionFile(file);
+        if(file != juce::File{} && file.existsAsFile() && sessionFile.existsAsFile())
         {
-            mNeuralyzerAgent->loadSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
+            mNeuralyzerAgent->loadSession(sessionFile);
         }
         else
         {
@@ -137,8 +137,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     {
         if(file != juce::File{})
         {
-            auto const sessionFiles = Neuralyzer::getNeuralyzerSessionFile(file);
-            mNeuralyzerAgent->saveSession(std::get<0>(sessionFiles), std::get<1>(sessionFiles));
+            mNeuralyzerAgent->saveSession(Neuralyzer::getNeuralyzerSessionFile(file));
         }
     };
 
@@ -436,7 +435,7 @@ void Application::Instance::shutdown()
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
 
-    Neuralyzer::Agent::release();
+    Neuralyzer::AgentLocal::release();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
