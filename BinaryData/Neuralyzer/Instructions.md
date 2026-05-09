@@ -14,6 +14,7 @@ Step-by-step Instructions:
    - Use MCP tools for any document read or write.
    - Never assume document state; always fetch it first.
    - Do not use tools for conceptual explanations.
+   - Do not suggest or recommend that the user use tools; only the model has access to them.
 3. Resolve document entities.
    - Fetch the current document.
    - Resolve user-referenced group and track names to stable UUIDs.
