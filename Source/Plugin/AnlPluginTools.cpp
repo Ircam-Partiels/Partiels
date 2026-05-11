@@ -24,7 +24,12 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
     {
         auto const minValue = parameter.minValue;
         auto const quantizeStep = parameter.isQuantized && std::abs(parameter.quantizeStep) > std::numeric_limits<float>::epsilon() ? parameter.quantizeStep : 1.0f;
-        return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
+        juce::StringArray names;
+        for(auto const& valueName : parameter.valueNames)
+        {
+            names.add(juce::String(valueName));
+        }
+        return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, names, [=](size_t index)
                                               {
                                                   if(applyChange == nullptr)
                                                   {

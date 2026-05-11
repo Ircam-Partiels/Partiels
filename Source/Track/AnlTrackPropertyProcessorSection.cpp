@@ -5,18 +5,17 @@
 
 ANALYSE_FILE_BEGIN
 
-static std::vector<std::string> getWindowTypeNames()
+static juce::StringArray getWindowTypeNames()
 {
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto const& name : magic_enum::enum_names<Plugin::WindowType>())
     {
-        auto const windowName = std::string(name);
-        names.push_back(windowName.substr(0, windowName.find("Window")));
+        names.add(juce::String(std::string(name)).upToLastOccurrenceOf("Window", false, false));
     }
     return names;
 }
 
-static std::vector<std::string> getBlockSizeNames()
+static juce::StringArray getBlockSizeNames()
 {
     return {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
 }
@@ -57,13 +56,13 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                          auto const newValue = mPropertyBlockSize.entry.getText().getIntValue();
                          setBlockSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                      })
-, mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the track."), "x", std::vector<std::string>{}, [&](size_t index)
+, mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the track."), "x", {}, [&](size_t index)
                     {
                         juce::ignoreUnused(index);
                         auto const newValue = mPropertyStepSize.entry.getText().getIntValue();
                         setStepSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                     })
-, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used to prepare the preprocessing."), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used to prepare the preprocessing."), "", {}, [&]([[maybe_unused]] size_t index)
                       {
                           auto const listId = mPropertyInputTrack.entry.getSelectedId();
                           if(listId == 1)
@@ -80,7 +79,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                           }
                           updateState();
                       })
-, mPropertyPreset(juce::translate("Preset"), juce::translate("The processor preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+, mPropertyPreset(juce::translate("Preset"), juce::translate("The processor preset of the track"), "", {}, [&]([[maybe_unused]] size_t index)
                   {
                       auto const selectedId = mPropertyPreset.entry.getSelectedId();
                       switch(selectedId)

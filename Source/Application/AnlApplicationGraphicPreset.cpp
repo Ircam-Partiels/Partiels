@@ -3,40 +3,29 @@
 
 ANALYSE_FILE_BEGIN
 
-static std::vector<std::string> getColourMapNames()
+static juce::StringArray getColourMapNames()
 {
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto const& name : magic_enum::enum_names<Track::ColourMap>())
     {
-        names.push_back(std::string(name));
+        names.add(juce::String(std::string(name)));
     }
     return names;
 }
 
-static std::vector<std::string> getFontNames()
+static juce::StringArray getFontSizes()
 {
-    static auto typefaceNames = juce::Font::findAllTypefaceNames();
-    std::vector<std::string> names;
-    for(auto const& name : typefaceNames)
-    {
-        names.push_back(name.toStdString());
-    }
-    return names;
-}
-
-static std::vector<std::string> getFontSizes()
-{
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto size = 8; size <= 20; size += 2)
     {
-        names.push_back(std::to_string(size));
+        names.add(juce::String(size));
     }
     return names;
 }
 
-static std::vector<std::string> getLabelJustifications()
+static juce::StringArray getLabelJustifications()
 {
-    return {juce::translate("Top").toStdString(), juce::translate("Centred").toStdString(), juce::translate("Bottom").toStdString()};
+    return {juce::translate("Top"), juce::translate("Centred"), juce::translate("Bottom")};
 }
 
 Application::GraphicPresetContent::GraphicPresetContent()
@@ -69,7 +58,7 @@ Application::GraphicPresetContent::GraphicPresetContent()
                             setShadowColour(colour);
                         },
                         nullptr, nullptr)
-, mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
+, mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", juce::Font::findAllTypefaceNames(), [&]([[maybe_unused]] size_t index)
                     {
                         setFontName(mPropertyFontName.entry.getText());
                     })
