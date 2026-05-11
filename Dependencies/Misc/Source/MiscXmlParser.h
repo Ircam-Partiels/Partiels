@@ -271,6 +271,13 @@ namespace XmlParser
         -> juce::File;
 
     template <>
+    void toXml<juce::URL>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::URL const& value);
+
+    template <>
+    auto fromXml<juce::URL>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::URL const& defaultValue)
+        -> juce::URL;
+
+    template <>
     void toXml<juce::Font>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Font const& value);
 
     template <>

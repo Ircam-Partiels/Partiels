@@ -52,6 +52,19 @@ auto XmlParser::fromXml<juce::File>(juce::XmlElement const& xml, juce::Identifie
 }
 
 template <>
+void XmlParser::toXml<juce::URL>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::URL const& value)
+{
+    xml.setAttribute(attributeName, value.toString(true));
+}
+
+template <>
+auto XmlParser::fromXml<juce::URL>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::URL const& defaultValue)
+    -> juce::URL
+{
+    return {xml.getStringAttribute(attributeName, defaultValue.toString(true))};
+}
+
+template <>
 void XmlParser::toXml<juce::Font>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Font const& value)
 {
     xml.setAttribute(attributeName, value.toString());
