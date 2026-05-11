@@ -349,15 +349,22 @@ void VariableComboBox::showPopup()
     }
 }
 
-PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
+PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::StringArray const& values, std::function<void(size_t)> fn)
 : PropertyComponent<VariableComboBox>(name, tooltip)
 {
-    juce::StringArray items;
-    for(auto const& value : values)
+    if(suffix.isEmpty())
     {
-        items.add(juce::String(value) + suffix);
+        entry.addItemList(values, 1);
     }
-    entry.addItemList(items, 1);
+    else
+    {
+        auto valuesCopy = values;
+        for(auto& value : valuesCopy)
+        {
+            value += suffix;
+        }
+        entry.addItemList(valuesCopy, 1);
+    }
     entry.setJustificationType(juce::Justification::centredRight);
     entry.onChange = [=, this]()
     {

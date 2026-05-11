@@ -5,17 +5,17 @@
 
 ANALYSE_FILE_BEGIN
 
-static std::vector<std::string> getWindowTypeNames()
+static juce::StringArray getWindowTypeNames()
 {
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto const& name : magic_enum::enum_names<Plugin::WindowType>())
     {
-        names.push_back(std::string(name));
+        names.add(juce::String(std::string(name)).upToLastOccurrenceOf("Window", false, false));
     }
     return names;
 }
 
-static std::vector<std::string> getBlockSizeNames()
+static juce::StringArray getBlockSizeNames()
 {
     return {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
 }
@@ -31,12 +31,12 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                          juce::ignoreUnused(index);
                          setBlockSize(static_cast<size_t>(mPropertyBlockSize.entry.getText().getIntValue()));
                      })
-, mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the tracks of the group."), "x", std::vector<std::string>{}, [&](size_t index)
+, mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the tracks of the group."), "x", {}, [&](size_t index)
                     {
                         juce::ignoreUnused(index);
                         setStepSize(static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue()));
                     })
-, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used by the tracks of the group."), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used by the tracks of the group."), "", {}, [&]([[maybe_unused]] size_t index)
                       {
                           auto const listId = mPropertyInputTrack.entry.getSelectedId();
                           if(listId == 1)

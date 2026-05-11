@@ -154,7 +154,7 @@ class PropertyList
 : public PropertyComponent<VariableComboBox>
 {
 public:
-    PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
+    PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::StringArray const& values, std::function<void(size_t)> fn);
     ~PropertyList() override = default;
 };
 

@@ -219,30 +219,30 @@ static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets
     return presets;
 }
 
-static std::vector<std::string> getTimePresetName()
+static juce::StringArray getTimePresetName()
 {
     // clang-format off
     return
     {
-          juce::translate("Global").toStdString()
-        , juce::translate("Visible").toStdString()
-        , juce::translate("Selection").toStdString()
-        , juce::translate("Manual").toStdString()
+          juce::translate("Global")
+        , juce::translate("Visible")
+        , juce::translate("Selection")
+        , juce::translate("Manual")
     };
     // clang-format on
 }
 
-static std::vector<std::string> getColumnSeparatorNames()
+static juce::StringArray getColumnSeparatorNames()
 {
     // clang-format off
     return
     {
-          juce::translate("Comma (,)").toStdString()
-        , juce::translate("Space ( )").toStdString()
-        , juce::translate("Tab (\\t)").toStdString()
-        , juce::translate("Pipe (|)").toStdString()
-        , juce::translate("Slash (/)").toStdString()
-        , juce::translate("Colon (:)").toStdString()
+          juce::translate("Comma (,)")
+        , juce::translate("Space ( )")
+        , juce::translate("Tab (\\t)")
+        , juce::translate("Pipe (|)")
+        , juce::translate("Slash (/)")
+        , juce::translate("Colon (:)")
     };
     // clang-format on
 }
@@ -250,7 +250,7 @@ static std::vector<std::string> getColumnSeparatorNames()
 Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize)
 : mAccessor(accessor)
 , mShowAutoSize(showAutoSize)
-, mPropertyItem(juce::translate("Item"), juce::translate("The item to export"), "", std::vector<std::string>{""}, nullptr)
+, mPropertyItem(juce::translate("Item"), juce::translate("The item to export"), "", {""}, nullptr)
 , mPropertyTimePreset(juce::translate("Time Preset"), juce::translate("The preset of the time range to export"), "", getTimePresetName(), [this](size_t index)
                       {
                           auto options = mOptions;
@@ -269,13 +269,13 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat(juce::translate("Format"), juce::translate("Select the export format"), "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX (coll)", "SDIF"}, [this](size_t index)
+, mPropertyFormat(juce::translate("Format"), juce::translate("Select the export format"), "", {"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "REAPER", "PUREDATA (text)", "MAX (coll)", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Options::Format>(index);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertySizePreset(juce::translate("Image Size"), juce::translate("Select the size preset of the image"), "", std::vector<std::string>{}, [this](size_t index)
+, mPropertySizePreset(juce::translate("Image Size"), juce::translate("Select the size preset of the image"), "", {}, [this](size_t index)
                       {
                           auto options = mOptions;
                           options.useAutoSize = mShowAutoSize && index == 0_z;
@@ -356,7 +356,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                                     options.disableLabelEscaping = state;
                                     setOptions(options, juce::NotificationType::sendNotificationSync);
                                 })
-, mPropertyReaperType(juce::translate("Reaper Type"), juce::translate("The Reaper data type"), "", std::vector<std::string>{juce::translate("Marker").toStdString(), juce::translate("Region").toStdString()}, [this](size_t index)
+, mPropertyReaperType(juce::translate("Reaper Type"), juce::translate("The Reaper data type"), "", {juce::translate("Marker"), juce::translate("Region")}, [this](size_t index)
                       {
                           auto options = mOptions;
                           options.reaperType = magic_enum::enum_value<Document::Exporter::Options::ReaperType>(index);

@@ -15,7 +15,7 @@ Zoom::Grid::PropertyPanel::PropertyPanel()
                                  onChangeEnd(mAccessor);
                              }
                          })
-, mPropertyTickBase(juce::translate("Ruler Mode"), juce::translate("The mode of the ruler numeral system."), "", std::vector<std::string>{"1", "2", "3", "4", "5", "6"}, [&](size_t index)
+, mPropertyTickBase(juce::translate("Ruler Mode"), juce::translate("The mode of the ruler numeral system."), "", {"1", "2", "3", "4", "5", "6"}, [&](size_t index)
                     {
                         MiscWeakAssert(index < sGridBaseInfoArray.size());
                         if(index >= sGridBaseInfoArray.size())

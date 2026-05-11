@@ -5,40 +5,29 @@
 
 ANALYSE_FILE_BEGIN
 
-static std::vector<std::string> getColourMapNames()
+static juce::StringArray getColourMapNames()
 {
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto const& name : magic_enum::enum_names<Track::ColourMap>())
     {
-        names.push_back(std::string(name));
+        names.add(juce::String(std::string(name)));
     }
     return names;
 }
 
-static std::vector<std::string> getFontNames()
+static juce::StringArray getFontSizes()
 {
-    static auto typefaceNames = juce::Font::findAllTypefaceNames();
-    std::vector<std::string> names;
-    for(auto const& name : typefaceNames)
-    {
-        names.push_back(name.toStdString());
-    }
-    return names;
-}
-
-static std::vector<std::string> getFontSizes()
-{
-    std::vector<std::string> names;
+    juce::StringArray names;
     for(auto size = 8; size <= 20; size += 2)
     {
-        names.push_back(std::to_string(size));
+        names.add(juce::String(size));
     }
     return names;
 }
 
-static std::vector<std::string> getLabelJustifications()
+static juce::StringArray getLabelJustifications()
 {
-    return {juce::translate("Top").toStdString(), juce::translate("Centred").toStdString(), juce::translate("Bottom").toStdString()};
+    return {juce::translate("Top"), juce::translate("Centred"), juce::translate("Bottom")};
 }
 
 Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr)
@@ -151,7 +140,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                         {
                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
                         })
-, mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
+, mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", juce::Font::findAllTypefaceNames(), [&]([[maybe_unused]] size_t index)
                     {
                         mDirector.startAction();
                         auto const name = mPropertyFontName.entry.getText();
@@ -208,7 +197,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                              setLabelPosition(static_cast<float>(position));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change the position of the labels"));
                          })
-, mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
+, mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", {juce::translate("Default"), juce::translate("Results"), juce::translate("Manual")}, [&](size_t index)
                           {
                               switch(index)
                               {
@@ -282,7 +271,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                            mAccessor.setAttr<AttrType::showInGroup>(state, NotificationType::synchronous);
                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change the visibility of the track in the group overlay view"));
                        })
-, mPropertyPreset(juce::translate("Preset"), juce::translate("The graphic preset of the track"), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+, mPropertyPreset(juce::translate("Preset"), juce::translate("The graphic preset of the track"), "", {}, [&]([[maybe_unused]] size_t index)
                   {
                       auto const selectedId = mPropertyPreset.entry.getSelectedId();
                       switch(selectedId)

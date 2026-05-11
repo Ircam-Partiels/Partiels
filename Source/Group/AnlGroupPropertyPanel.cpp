@@ -47,7 +47,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                             {
                                 mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
                             })
-, mPropertyReferenceTrack(juce::translate("Group Track Reference"), juce::translate("The track used for the edition and the navigation"), "", std::vector<std::string>{""}, [this](size_t index)
+, mPropertyReferenceTrack(juce::translate("Group Track Reference"), juce::translate("The track used for the edition and the navigation"), "", juce::StringArray{""}, [this](size_t index)
                           {
                               mDirector.startAction(false);
                               auto const layout = mAccessor.getAttr<AttrType::layout>();
