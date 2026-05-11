@@ -63,7 +63,7 @@ namespace Application
         };
         
         using AttrContainer = Model::Container
-        < Model::Attr<AttrType::agentBackend, AgentBackend, Model::Flag::notifying>
+        < Model::Attr<AttrType::agentBackend, AgentBackend, Model::Flag::basic>
         , Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
         , Model::Attr<AttrType::effectiveState, ModelInfo, Model::Flag::notifying>
         >;

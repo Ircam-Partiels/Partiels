@@ -44,6 +44,10 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
 {
     auto copy = info;
     auto const fullModelUrl = copy.modelUrl.withNewSubPath("/api/v1/models");
+    if(!fullModelUrl.isWellFormed())
+    {
+        return juce::Result::fail(juce::translate("Invalid model URL: ") + copy.modelUrl.toString(true));
+    }
     auto const modelId = copy.modelId;
 
     {
