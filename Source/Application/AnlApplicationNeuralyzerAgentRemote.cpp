@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-static std::tuple<juce::Result, juce::String> sendRequest(juce::URL const& url, juce::String const& jsonBody)
+static std::tuple<juce::Result, juce::String> sendPostRequest(juce::URL const& url, juce::String const& jsonBody)
 {
     int statusCode = 0;
     auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
@@ -11,6 +11,27 @@ static std::tuple<juce::Result, juce::String> sendRequest(juce::URL const& url, 
                        .withConnectionTimeoutMs(30000);
 
     auto stream = url.withPOSTData(jsonBody).createInputStream(options);
+    if(stream == nullptr)
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to connect to remote server at URL").replace("URL", url.toString(true))), juce::String{});
+    }
+    auto const responseBody = stream->readEntireStreamAsString();
+    if(statusCode < 200 || statusCode >= 300)
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("remote server returned HTTP CODE: MSG").replace("CODE", juce::String(statusCode)).replace("MSG", responseBody.substring(0, 300))), juce::String{});
+    }
+    return std::make_tuple(juce::Result::ok(), responseBody);
+}
+
+static std::tuple<juce::Result, juce::String> sendGetRequest(juce::URL const& url)
+{
+    int statusCode = 0;
+    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                       .withExtraHeaders("Content-Type: application/json")
+                       .withStatusCode(&statusCode)
+                       .withConnectionTimeoutMs(30000);
+
+    auto stream = url.createInputStream(options);
     if(stream == nullptr)
     {
         return std::make_tuple(juce::Result::fail(juce::translate("Failed to connect to remote server at URL").replace("URL", url.toString(true))), juce::String{});
@@ -43,12 +64,10 @@ juce::String Application::Neuralyzer::AgentRemote::getFirstQuery() const
 juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo const& info)
 {
     auto copy = info;
-    auto const fullModelUrl = copy.modelUrl.withNewSubPath("/api/v1/models");
-    if(!fullModelUrl.isWellFormed())
+    if(!copy.modelUrl.isWellFormed())
     {
         return juce::Result::fail(juce::translate("Invalid model URL: ") + copy.modelUrl.toString(true));
     }
-    auto const modelId = copy.modelId;
 
     {
         std::unique_lock<std::mutex> sessionLock(mSessionMutex);
@@ -58,24 +77,47 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
         mContextCapacityUsage.store(0.0f);
     }
 
-    // Fetch model information from remote server to get actual context size
-    auto const result = sendRequest(fullModelUrl, juce::String(""));
-    if(std::get<0>(result).failed())
+    // Fetch model information from remote server (OpenAI API)
+    nlohmann::json response;
+    auto const modelListUrl = copy.modelUrl.withNewSubPath("/v1/models");
+    if(!modelListUrl.isWellFormed())
     {
-        MiscDebug("Application::Neuralyzer::AgentRemote", "Failed to retrieve model info: " + std::get<0>(result).getErrorMessage().toStdString());
-        return std::get<0>(result);
+        return juce::Result::fail(juce::translate("Invalid model list URL: ") + modelListUrl.toString(true));
     }
-    auto const response = [&]()
+
+    auto const modelResult = sendGetRequest(modelListUrl);
+    if(std::get<0>(modelResult).failed())
     {
-        try
+        MiscDebug("Application::Neuralyzer::AgentRemote", "Failed to retrieve model info: " + std::get<0>(modelResult).getErrorMessage().toStdString());
+        return std::get<0>(modelResult);
+    }
+
+    try
+    {
+        response = nlohmann::json::parse(std::get<1>(modelResult).toStdString());
+        if(!response.contains("data") || !response.at("data").is_array())
         {
-            return nlohmann::json::parse(std::get<1>(result).toStdString());
+            return juce::Result::fail(juce::translate("Invalid model list response format"));
         }
-        catch(...)
+    }
+    catch(...)
+    {
+        return juce::Result::fail(juce::translate("Failed to parse model list response"));
+    }
+
+    if(copy.modelId.isEmpty())
+    {
+        for(auto const& modelJson : response.at("data"))
         {
-            return nlohmann::json::object();
+            if(modelJson.contains("id") && modelJson.at("id").is_string())
+            {
+                copy.modelId = juce::String(modelJson.at("id").get<std::string>());
+                break;
+            }
         }
-    }();
+    }
+
+    auto const modelId = copy.modelId;
     if(response.contains("data") && response.at("data").is_array())
     {
         auto const modelIt = std::find_if(response.at("data").cbegin(), response.at("data").cend(), [&modelId](auto const& modelJson)
@@ -106,6 +148,7 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
             assignOptionalFloatIfMissing(copy.topP, "top_p");
             assignOptionalIntIfMissing(copy.topK, "top_k");
             assignOptionalFloatIfMissing(copy.repetitionPenalty, "repeat_penalty");
+            assignOptionalFloatIfMissing(copy.presencePenalty, "presence_penalty");
         }
     }
 
@@ -114,7 +157,7 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
         mModelInfo = copy;
     }
 
-    MiscDebug("Application::Neuralyzer::AgentRemote", "Initialized with model: " + modelId + " at " + fullModelUrl.toString(true));
+    MiscDebug("Application::Neuralyzer::AgentRemote", "Initialized with model: " + modelId + " at " + modelListUrl.toString(true));
     return juce::Result::ok();
 }
 
@@ -145,19 +188,67 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
         return juce::Result::fail(juce::translate("Remote server model not initialized"));
     }
 
-    auto const fullChatUrl = info.modelUrl.withNewSubPath("/api/v1/chat");
-    if(!fullChatUrl.isWellFormed())
+    if(!info.modelUrl.isWellFormed())
     {
-        return juce::Result::fail(juce::translate("Invalid chat URL: ") + fullChatUrl.toString(true));
+        return juce::Result::fail(juce::translate("Invalid chat URL base: ") + info.modelUrl.toString(true));
     }
 
-    // Build request under session lock, then release before HTTP call
-    nlohmann::json request;
-    request["model"] = info.modelId;
-    if(info.minP.has_value())
+    nlohmann::json messages = nlohmann::json::array();
     {
-        request["min_p"] = info.minP.value();
+        std::unique_lock<std::mutex> sessionLock(mSessionMutex);
+
+        for(auto const& [type, content] : mHistory)
+        {
+            nlohmann::json msg;
+            switch(type)
+            {
+                case MessageType::system:
+                {
+                    msg["role"] = "system";
+                    break;
+                }
+                case MessageType::user:
+                {
+                    msg["role"] = "user";
+                    break;
+                }
+                case MessageType::assistant:
+                {
+                    msg["role"] = "assistant";
+                    break;
+                }
+                case MessageType::tool:
+                {
+                    msg["role"] = "tool";
+                    break;
+                }
+            }
+
+            msg["content"] = content.toStdString();
+            messages.push_back(std::move(msg));
+        }
+
+        nlohmann::json userMsg;
+        userMsg["role"] = "user";
+        userMsg["content"] = prompt.toStdString();
+        messages.push_back(std::move(userMsg));
+
+        // Add user message to history
+        mHistory.push_back({MessageType::user, prompt});
     }
+
+    // OpenAI Chat Completions endpoint
+    auto const openAiUrl = info.modelUrl.withNewSubPath("/v1/chat/completions");
+    if(!openAiUrl.isWellFormed())
+    {
+        return juce::Result::fail(juce::translate("Invalid chat URL: ") + openAiUrl.toString(true));
+    }
+
+    nlohmann::json request;
+    request["model"] = info.modelId.toStdString();
+    request["messages"] = messages;
+    request["stream"] = false;
+    request["max_tokens"] = 8000;
     if(info.temperature.has_value())
     {
         request["temperature"] = info.temperature.value();
@@ -166,96 +257,16 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
     {
         request["top_p"] = info.topP.value();
     }
-    if(info.topK.has_value())
+    if(info.presencePenalty.has_value())
     {
-        request["top_k"] = info.topK.value();
-    }
-    if(info.repetitionPenalty.has_value())
-    {
-        request["repeat_penalty"] = info.repetitionPenalty.value();
-    }
-    if(info.contextSize.has_value())
-    {
-        request["context_length"] = info.contextSize.value();
+        request["presence_penalty"] = info.presencePenalty.value();
     }
 
-    request["max_output_tokens"] = 8000;
-    request["stream"] = false;
-    request["store"] = true; // Enable response storage for stateful chats
-    {
-        std::unique_lock<std::mutex> sessionLock(mSessionMutex);
-
-        // First message: include full history for context
-        if(mLastResponseId.isEmpty())
-        {
-            // Build full message array only for first message
-            nlohmann::json messages = nlohmann::json::array();
-
-            // Add full history for initial context
-            for(auto const& [type, content] : mHistory)
-            {
-                nlohmann::json msg;
-                switch(type)
-                {
-                    case MessageType::system:
-                    {
-                        msg["role"] = "system";
-                        break;
-                    }
-                    case MessageType::user:
-                    {
-                        msg["role"] = "user";
-                        break;
-                    }
-                    case MessageType::assistant:
-                    {
-                        msg["role"] = "assistant";
-                        break;
-                    }
-                    case MessageType::tool:
-                    {
-                        msg["role"] = "tool";
-                        break;
-                    }
-                }
-
-                msg["content"] = content.toStdString();
-                messages.push_back(std::move(msg));
-            }
-
-            // Add current user message
-            nlohmann::json userMsg;
-            userMsg["role"] = "user";
-            userMsg["content"] = prompt.toStdString();
-            messages.push_back(std::move(userMsg));
-
-            request["input"] = messages;
-        }
-        else
-        {
-            // Stateful chat: send only the new user message
-            request["input"] = prompt.toStdString();
-            request["previous_response_id"] = mLastResponseId.toStdString();
-        }
-
-        // Add user message to history
-        mHistory.push_back({MessageType::user, prompt});
-    }
-
-    // Add Partiels as ephemeral MCP server
-    request["integrations"] = nlohmann::json::array();
-    nlohmann::json mcpIntegration;
-    mcpIntegration["type"] = "ephemeral_mcp";
-    mcpIntegration["server_label"] = "Partiels";
-    mcpIntegration["server_url"] = "http://localhost:3939";
-    request["integrations"].push_back(std::move(mcpIntegration));
-
-    // Send request (no lock held)
-    auto const result = sendRequest(fullChatUrl, juce::String(request.dump()));
+    auto const result = sendPostRequest(openAiUrl, juce::String(request.dump()));
 
     if(std::get<0>(result).failed())
     {
-        MiscDebug("Application::Neuralyzer::AgentRemote", "Send request failed: " + std::get<0>(result).getErrorMessage().toStdString());
+        MiscDebug("Application::Neuralyzer::AgentRemote", "Send request failed on OpenAI endpoint: " + std::get<0>(result).getErrorMessage().toStdString());
         return std::get<0>(result);
     }
 
@@ -263,23 +274,42 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
     try
     {
         auto const response = nlohmann::json::parse(std::get<1>(result).toStdString());
-        if(!response.contains("output") || !response.at("output").is_array())
-        {
-            return juce::Result::fail(juce::translate("Invalid response format from remote server"));
-        }
 
         std::string assistantResponse;
-        for(auto const& output : response.at("output"))
+
+        if(response.contains("choices") && response.at("choices").is_array() && !response.at("choices").empty())
         {
-            if(output.value("type", std::string{}) == "message")
+            auto const& choice = response.at("choices").at(0);
+            if(choice.contains("message") && choice.at("message").is_object())
             {
-                assistantResponse += output.value("content", std::string{});
+                auto const& message = choice.at("message");
+                if(message.contains("content") && message.at("content").is_string())
+                {
+                    assistantResponse += message.at("content").get<std::string>();
+                }
+                else if(message.contains("content") && message.at("content").is_array())
+                {
+                    for(auto const& part : message.at("content"))
+                    {
+                        if(part.is_string())
+                        {
+                            assistantResponse += part.get<std::string>();
+                        }
+                        else if(part.is_object() && part.contains("text") && part.at("text").is_string())
+                        {
+                            assistantResponse += part.at("text").get<std::string>();
+                        }
+                    }
+                }
             }
-            else if(output.value("type", std::string{}) == "tool_call")
+            else if(choice.contains("text") && choice.at("text").is_string())
             {
-                // Tool calls are handled by remote server via Partiels MCP server
-                MiscDebug("Application::Neuralyzer::AgentRemote", "Tool call: " + juce::String(output.value("tool", std::string{})));
+                assistantResponse += choice.at("text").get<std::string>();
             }
+        }
+        else
+        {
+            return juce::Result::fail(juce::translate("Invalid response format from remote server"));
         }
 
         {
@@ -287,22 +317,20 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
             mHistory.push_back({MessageType::assistant, juce::String(assistantResponse)});
             mTempResponse = assistantResponse;
 
-            // Store response_id for next stateful chat request
-            if(response.contains("response_id"))
+            mLastResponseId.clear();
+
+            int inputTokens = 0;
+            int outputTokens = 0;
+            if(response.contains("usage") && response.at("usage").is_object())
             {
-                mLastResponseId = juce::String(response.at("response_id").get<std::string>());
+                inputTokens = response.at("usage").value("prompt_tokens", 0);
+                outputTokens = response.at("usage").value("completion_tokens", 0);
             }
 
-            // Update context usage estimate
-            if(response.contains("stats") && response.at("stats").contains("input_tokens"))
+            if(info.contextSize.has_value() && info.contextSize.value() > 0)
             {
-                auto const inputTokens = response.at("stats").value("input_tokens", 0);
-                auto const outputTokens = response.at("stats").value("total_output_tokens", 0);
-                if(info.contextSize.has_value() && info.contextSize.value() > 0)
-                {
-                    auto const contextSize = static_cast<float>(info.contextSize.value());
-                    mContextCapacityUsage.store(static_cast<float>(inputTokens + outputTokens) / contextSize);
-                }
+                auto const contextSize = static_cast<float>(info.contextSize.value());
+                mContextCapacityUsage.store(static_cast<float>(inputTokens + outputTokens) / contextSize);
             }
         }
 
