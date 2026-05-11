@@ -243,7 +243,7 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
     {
         switch(attr)
         {
-            case AttrType::modelBackend:
+            case AttrType::agentBackend:
             {
                 break;
             }

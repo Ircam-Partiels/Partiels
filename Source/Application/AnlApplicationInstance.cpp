@@ -84,8 +84,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     MiscDebug("Application", "Running with GUI");
 
-    Neuralyzer::AgentLocal::initialize();
-
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
     mLookAndFeel = std::make_unique<LookAndFeel>();
@@ -434,8 +432,6 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
-
-    Neuralyzer::AgentLocal::release();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();

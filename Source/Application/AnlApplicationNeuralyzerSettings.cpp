@@ -395,14 +395,14 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
 : mAccessor(accessor)
 , mBackend(juce::translate("Backend"), juce::translate("The backend used to run the Neuralyzer"), "", {juce::translate("Local"), juce::translate("Remote")}, [&](size_t index)
            {
-               auto const backend = magic_enum::enum_cast<ModelBackend>(static_cast<int>(index)).value_or(ModelBackend::local);
-               mAccessor.setAttr<AttrType::modelBackend>(backend, NotificationType::synchronous);
+               auto const backend = magic_enum::enum_cast<AgentBackend>(static_cast<int>(index)).value_or(AgentBackend::local);
+               mAccessor.setAttr<AttrType::agentBackend>(backend, NotificationType::synchronous);
            })
 , mModelsDirectory(juce::translate("Models Directory"), juce::translate("Reveal the directory where models are stored"), []()
                    {
                        getDefaultModelDirectory().revealToUser();
                    })
-, mRemoteUrl(juce::translate("Server URL"), juce::translate("The URL of the remote LM Studio server (scheme and host, e.g. http://localhost)"), [&](juce::String text)
+, mRemoteUrl(juce::translate("Server URL"), juce::translate("The URL of the remote server (scheme and host, e.g. http://localhost)"), [&](juce::String text)
              {
                  auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
                  auto const port = modelInfo.modelUrl.getPort();
@@ -413,7 +413,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                      mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
                  }
              })
-, mRemotePort(juce::translate("Server Port"), juce::translate("The port of the remote LM Studio server"), "", {1.0, 65535.0}, 1.0, [&](double value)
+, mRemotePort(juce::translate("Server Port"), juce::translate("The port of the remote server"), "", {1.0, 65535.0}, 1.0, [&](double value)
               {
                   auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
                   auto const newUrl = juce::URL(modelInfo.modelUrl.getDomain() + ":" + juce::String(static_cast<int>(value)));
@@ -572,16 +572,16 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 setEntryValue(mRepetitionPenalty.entry, modelInfo.repetitionPenalty, defaultState.repetitionPenalty);
                 break;
             }
-            case AttrType::modelBackend:
+            case AttrType::agentBackend:
             {
-                auto const backend = acsr.getAttr<AttrType::modelBackend>();
+                auto const backend = acsr.getAttr<AttrType::agentBackend>();
                 auto const index = magic_enum::enum_index(backend).value_or(0_z);
                 mBackend.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
-                mRemoteUrl.setVisible(backend == ModelBackend::remote);
-                mRemotePort.setVisible(backend == ModelBackend::remote);
-                mBatchSize.setVisible(backend == ModelBackend::local);
-                mPresencePenalty.setVisible(backend == ModelBackend::local);
-                mModelsDirectory.setVisible(backend == ModelBackend::local);
+                mRemoteUrl.setVisible(backend == AgentBackend::remote);
+                mRemotePort.setVisible(backend == AgentBackend::remote);
+                mBatchSize.setVisible(backend == AgentBackend::local);
+                mPresencePenalty.setVisible(backend == AgentBackend::local);
+                mModelsDirectory.setVisible(backend == AgentBackend::local);
                 resized();
                 break;
             }
@@ -597,8 +597,8 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
 {
     juce::PopupMenu menu;
     auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-    auto const backend = mAccessor.getAttr<AttrType::modelBackend>();
-    if(backend == ModelBackend::remote)
+    auto const backend = mAccessor.getAttr<AttrType::agentBackend>();
+    if(backend == AgentBackend::remote)
     {
         auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
         for(auto const& modelId : remoteModelIds)
@@ -685,9 +685,9 @@ void Application::Neuralyzer::SettingsContent::checkForUpdatedModels()
     {
         return;
     }
-    auto const backend = mAccessor.getAttr<AttrType::modelBackend>();
+    auto const backend = mAccessor.getAttr<AttrType::agentBackend>();
     auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-    if(backend == ModelBackend::remote)
+    if(backend == AgentBackend::remote)
     {
         auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
         auto const it = std::find(remoteModelIds.cbegin(), remoteModelIds.cend(), modelInfo.modelId);

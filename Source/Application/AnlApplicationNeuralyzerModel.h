@@ -16,7 +16,7 @@ namespace Application
         static auto constexpr maxTopK = 200;
 
         // clang-format off
-        enum class ModelBackend
+        enum class AgentBackend
         {
               local
             , remote
@@ -57,14 +57,14 @@ namespace Application
         // clang-format off
         enum class AttrType : size_t
         {
-              modelInfo
-            , modelBackend
+              agentBackend
+            , modelInfo
             , effectiveState
         };
         
         using AttrContainer = Model::Container
-        < Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
-        , Model::Attr<AttrType::modelBackend, ModelBackend, Model::Flag::notifying>
+        < Model::Attr<AttrType::agentBackend, AgentBackend, Model::Flag::notifying>
+        , Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
         , Model::Attr<AttrType::effectiveState, ModelInfo, Model::Flag::notifying>
         >;
         // clang-format on
@@ -77,8 +77,8 @@ namespace Application
             // clang-format off
             Accessor()
             : Accessor(AttrContainer({
-                                          {ModelInfo{}}
-                                        , {ModelBackend::local}
+                                          {AgentBackend::local}
+                                        , {ModelInfo{}}
                                         , {ModelInfo{}}
                                     }))
             {

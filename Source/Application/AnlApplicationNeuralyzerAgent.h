@@ -30,6 +30,7 @@ namespace Application
             virtual juce::String getFirstQuery() const = 0;
 
             virtual juce::Result initializeModel(ModelInfo const& info) = 0;
+            virtual juce::Result resetModel() = 0;
             virtual juce::Result sendQuery(juce::String const& prompt) = 0;
             virtual juce::Result startSession() = 0;
             virtual juce::Result loadSession(juce::File const& sessionFile) = 0;

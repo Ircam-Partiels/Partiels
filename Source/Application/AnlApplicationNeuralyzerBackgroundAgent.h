@@ -1,6 +1,9 @@
 #pragma once
 
+#include "AnlApplicationNeuralyzerAgent.h"
+#include "AnlApplicationNeuralyzerMcp.h"
 #include "AnlApplicationNeuralyzerAgentLocal.h"
+#include "AnlApplicationNeuralyzerAgentRemote.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -42,6 +45,7 @@ namespace Application
 
             // Async operations - schedule work on the background thread.
             // initializeModel also loads or starts a session on completion.
+            void setAgentBackend(AgentBackend backend);
             void setFirstQuery(juce::String const& firstQuery);
             void initializeModel(ModelInfo const& info);
             void sendQuery(juce::String const& prompt, nlohmann::json const& mcpToolsContext);
@@ -52,7 +56,9 @@ namespace Application
 
         private:
             Mcp::Dispatcher& mMcpDispatcher;
-            AgentLocal mAgent;
+            std::atomic<AgentBackend> mBackend;
+            AgentLocal mAgentLocal;
+            AgentRemote mAgentRemote;
 
             struct PendingAction
             {

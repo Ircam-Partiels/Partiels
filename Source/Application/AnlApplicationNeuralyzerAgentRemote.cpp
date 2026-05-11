@@ -13,12 +13,12 @@ static std::tuple<juce::Result, juce::String> sendRequest(juce::URL const& url, 
     auto stream = url.withPOSTData(jsonBody).createInputStream(options);
     if(stream == nullptr)
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to connect to LM Studio at URL").replace("URL", url.toString(true))), juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to connect to remote server at URL").replace("URL", url.toString(true))), juce::String{});
     }
     auto const responseBody = stream->readEntireStreamAsString();
     if(statusCode < 200 || statusCode >= 300)
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("LM Studio returned HTTP CODE: MSG").replace("CODE", juce::String(statusCode)).replace("MSG", responseBody.substring(0, 300))), juce::String{});
+        return std::make_tuple(juce::Result::fail(juce::translate("remote server returned HTTP CODE: MSG").replace("CODE", juce::String(statusCode)).replace("MSG", responseBody.substring(0, 300))), juce::String{});
     }
     return std::make_tuple(juce::Result::ok(), responseBody);
 }
@@ -54,7 +54,7 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
         mContextCapacityUsage.store(0.0f);
     }
 
-    // Fetch model information from LM Studio to get actual context size
+    // Fetch model information from remote server to get actual context size
     auto const result = sendRequest(fullModelUrl, juce::String(""));
     if(std::get<0>(result).failed())
     {
@@ -114,6 +114,22 @@ juce::Result Application::Neuralyzer::AgentRemote::initializeModel(ModelInfo con
     return juce::Result::ok();
 }
 
+juce::Result Application::Neuralyzer::AgentRemote::resetModel()
+{
+    {
+        std::unique_lock<std::mutex> configLock(mConfigMutex);
+        mModelInfo = ModelInfo{};
+    }
+    {
+        std::unique_lock<std::mutex> sessionLock(mSessionMutex);
+        mHistory.clear();
+        mTempResponse.clear();
+        mLastResponseId.clear();
+        mContextCapacityUsage.store(0.0f);
+    }
+    return juce::Result::ok();
+}
+
 juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const& prompt)
 {
     std::unique_lock<std::mutex> configLock(mConfigMutex);
@@ -122,7 +138,7 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
 
     if(info.modelUrl.isEmpty() || info.modelId.isEmpty())
     {
-        return juce::Result::fail(juce::translate("LM Studio model not initialized"));
+        return juce::Result::fail(juce::translate("Remote server model not initialized"));
     }
 
     auto const fullChatUrl = info.modelUrl.withNewSubPath("/api/v1/chat");
@@ -241,7 +257,7 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
         auto const response = nlohmann::json::parse(std::get<1>(result).toStdString());
         if(!response.contains("output") || !response.at("output").is_array())
         {
-            return juce::Result::fail(juce::translate("Invalid response format from LM Studio"));
+            return juce::Result::fail(juce::translate("Invalid response format from remote server"));
         }
 
         std::string assistantResponse;
@@ -253,7 +269,7 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
             }
             else if(output.value("type", std::string{}) == "tool_call")
             {
-                // Tool calls are handled by LM Studio via Partiels MCP server
+                // Tool calls are handled by remote server via Partiels MCP server
                 MiscDebug("Application::Neuralyzer::AgentRemote", "Tool call: " + juce::String(output.value("tool", std::string{})));
             }
         }
@@ -289,7 +305,7 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
     }
     catch(std::exception const& e)
     {
-        return juce::Result::fail(juce::translate("Failed to parse LM Studio response: ") + juce::String(e.what()));
+        return juce::Result::fail(juce::translate("Failed to parse remote server response: ") + juce::String(e.what()));
     }
 }
 

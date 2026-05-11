@@ -315,6 +315,23 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     return juce::Result::ok();
 }
 
+juce::Result Application::Neuralyzer::AgentLocal::resetModel()
+{
+    mInitResult.reset();
+    mChatTemplates = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(mHistoryMutex);
+        mChatInputs = common_chat_templates_inputs{};
+        notifyStateChanged();
+    }
+    mContextMemoryUsage.store(0.0f);
+    {
+        std::lock_guard<std::mutex> lock(mModelInfoMutex);
+        mModelInfo = {};
+    }
+    return juce::Result::ok();
+}
+
 std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyzer::AgentLocal::performMessage(std::string const& role, std::string query, bool allowTools)
 {
     auto const createResults = [](juce::Result result, std::string message = {}, common_chat_params params = {})

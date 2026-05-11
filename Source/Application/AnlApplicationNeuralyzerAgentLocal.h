@@ -32,6 +32,7 @@ namespace Application
             juce::String getFirstQuery() const override;
 
             juce::Result initializeModel(ModelInfo const& info) override;
+            juce::Result resetModel() override;
             juce::Result sendQuery(juce::String const& prompt) override;
             juce::Result startSession() override;
             juce::Result loadSession(juce::File const& sessionFile) override;
