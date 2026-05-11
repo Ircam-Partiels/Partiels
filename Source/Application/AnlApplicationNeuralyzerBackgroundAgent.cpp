@@ -5,12 +5,17 @@ ANALYSE_FILE_BEGIN
 
 Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDispatcher, std::function<juce::Result(void)> setupSystem)
 : mMcpDispatcher(mcpDispatcher)
-, mAgent(mcpDispatcher)
+, mAgentLocal(mcpDispatcher)
 {
-    mAgent.setNotifyCallback([this]()
+    mAgentLocal.setNotifyCallback([this]()
                              {
                                  sendChangeMessage();
                              });
+    mAgentRemote.setNotifyCallback([this]()
+                              {
+                                  sendChangeMessage();
+                              });
+    AgentLocal::initialize();
     mWorkerThread = std::thread([this, setupSystemFn = std::move(setupSystem)]()
                                 {
                                     mCurrentAction.store(Action::setupSystem);
@@ -44,7 +49,16 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDi
                                         }
 
                                         mCurrentAction.store(pendingAction.action);
-                                        mAgent.setShouldQuit(false);
+                                        mAgentLocal.setShouldQuit(false);
+                                        mAgentRemote.setShouldQuit(false);
+                                        if(mBackend.load() == AgentBackend::local)
+                                        {
+                                            mAgentRemote.resetModel();
+                                        }
+                                        else
+                                        {
+                                            mAgentLocal.resetModel();
+                                        }
                                         sendChangeMessage();
                                         MiscDebug("Neuralyzer::BackgroundAgent", "Action: " + std::string(magic_enum::enum_name(pendingAction.action)));
                                         auto result = [&]
@@ -75,7 +89,8 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDi
 
 Application::Neuralyzer::BackgroundAgent::~BackgroundAgent()
 {
-    mAgent.setShouldQuit(true);
+    mAgentLocal.setShouldQuit(true);
+    mAgentRemote.setShouldQuit(true);
     mShouldExit.store(true);
     {
         std::unique_lock<std::mutex> lock(mPendingMutex);
@@ -86,31 +101,58 @@ Application::Neuralyzer::BackgroundAgent::~BackgroundAgent()
     {
         mWorkerThread.join();
     }
+    mAgentLocal.resetModel();
+    mAgentRemote.resetModel();
+    AgentLocal::release();
+}
+
+Application::Neuralyzer::Agent& Application::Neuralyzer::BackgroundAgent::getCurrentAgent()
+{
+    if(mBackend.load() == AgentBackend::local)
+    {
+        return mAgentLocal;
+    }
+    return mAgentRemote;
+}
+
+Application::Neuralyzer::Agent const& Application::Neuralyzer::BackgroundAgent::getCurrentAgent() const
+{
+    if(mBackend.load() == AgentBackend::local)
+    {
+        return mAgentLocal;
+    }
+    return mAgentRemote;
 }
 
 Application::Neuralyzer::Agent::History Application::Neuralyzer::BackgroundAgent::getHistory() const
 {
-    return mAgent.getHistory();
+    return getCurrentAgent().getHistory();
 }
 
 juce::String Application::Neuralyzer::BackgroundAgent::getTemporaryResponse() const
 {
-    return mAgent.getTemporaryResponse();
+    return getCurrentAgent().getTemporaryResponse();
 }
 
 float Application::Neuralyzer::BackgroundAgent::getContextCapacityUsage() const
 {
-    return mAgent.getContextCapacityUsage();
+    return getCurrentAgent().getContextCapacityUsage();
 }
 
 Application::Neuralyzer::ModelInfo Application::Neuralyzer::BackgroundAgent::getModelInfo() const
 {
-    return mAgent.getModelInfo();
+    return getCurrentAgent().getModelInfo();
+}
+
+void Application::Neuralyzer::BackgroundAgent::setAgentBackend(AgentBackend backend)
+{
+    mBackend.store(backend);
 }
 
 void Application::Neuralyzer::BackgroundAgent::setFirstQuery(juce::String const& firstQuery)
 {
-    mAgent.setFirstQuery(firstQuery);
+    mAgentLocal.setFirstQuery(firstQuery);
+    mAgentRemote.setFirstQuery(firstQuery);
 }
 
 void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& info)
@@ -119,26 +161,27 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
                           [this, info]() -> juce::Result
                           {
                               static auto const tempSessionFile = getNeuralyzerSessionFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralyzersession.ptldoc"));
+                              auto& agent = getCurrentAgent();
                               auto const saveResult = [&]()
                               {
-                                  if(mAgent.getModelInfo().isValid())
+                                  if(agent.getModelInfo().isValid())
                                   {
-                                      return mAgent.saveSession(tempSessionFile);
+                                      return agent.saveSession(tempSessionFile);
                                   }
                                   return juce::Result::ok();
                               }();
-                              auto const initializeResult = mAgent.initializeModel(info);
+                              auto const initializeResult = agent.initializeModel(info);
                               if(initializeResult.wasOk())
                               {
                                   if(saveResult.failed())
                                   {
                                       mCurrentAction.store(Action::startSession);
                                       sendChangeMessage();
-                                      return mAgent.startSession();
+                                      return agent.startSession();
                                   }
                                   mCurrentAction.store(Action::loadSession);
                                   sendChangeMessage();
-                                  return mAgent.loadSession(tempSessionFile);
+                                  return agent.loadSession(tempSessionFile);
                               }
                               return initializeResult;
                           }};
@@ -147,7 +190,8 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
     {
         // A model load is already running: abort it so the new request starts promptly.
         // The worker resets mShouldQuit to false before executing the next action.
-        mAgent.setShouldQuit(true);
+        mAgentLocal.setShouldQuit(true);
+        mAgentRemote.setShouldQuit(true);
     }
     if(!mPendingActions.empty() && mPendingActions.back().action == Action::initializeModel)
     {
@@ -167,7 +211,7 @@ void Application::Neuralyzer::BackgroundAgent::sendQuery(juce::String const& pro
                           [this, prompt, mcpToolsContext]() -> juce::Result
                           {
                               mMcpDispatcher.setContext(mcpToolsContext);
-                              return mAgent.sendQuery(prompt);
+                              return getCurrentAgent().sendQuery(prompt);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     mPendingActions.push_back(std::move(pending));
@@ -180,7 +224,7 @@ void Application::Neuralyzer::BackgroundAgent::startSession()
     PendingAction pending{Action::startSession,
                           [=, this]() -> juce::Result
                           {
-                              return mAgent.startSession();
+                              return getCurrentAgent().startSession();
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     if(!mPendingActions.empty() && (mPendingActions.back().action == Action::startSession || mPendingActions.back().action == Action::loadSession))
@@ -200,7 +244,7 @@ void Application::Neuralyzer::BackgroundAgent::loadSession(juce::File const sess
     PendingAction pending{Action::loadSession,
                           [=, this]() -> juce::Result
                           {
-                              return mAgent.loadSession(sessionFile);
+                              return getCurrentAgent().loadSession(sessionFile);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     if(!mPendingActions.empty() && (mPendingActions.back().action == Action::loadSession || mPendingActions.back().action == Action::startSession))
@@ -220,7 +264,7 @@ void Application::Neuralyzer::BackgroundAgent::saveSession(juce::File const sess
     PendingAction pending{Action::saveSession,
                           [=, this]() -> juce::Result
                           {
-                              return mAgent.saveSession(sessionFile);
+                              return getCurrentAgent().saveSession(sessionFile);
                           }};
     std::unique_lock<std::mutex> lock(mPendingMutex);
     mPendingActions.push_back(std::move(pending));
@@ -231,11 +275,18 @@ void Application::Neuralyzer::BackgroundAgent::saveSession(juce::File const sess
 void Application::Neuralyzer::BackgroundAgent::cancelQuery()
 {
     std::unique_lock<std::mutex> lock(mPendingMutex);
-    if(mAgent.getModelInfo().isValid() && mCurrentAction.load() == Action::sendQuery)
+    if(mCurrentAction.load() == Action::sendQuery)
     {
         // Signal the running action to abort. The worker thread resets
         // mShouldQuit to false before starting the next action.
-        mAgent.setShouldQuit(true);
+        if(mAgentLocal.getModelInfo().isValid())
+        {
+            mAgentLocal.setShouldQuit(true);
+        }
+        if(mAgentRemote.getModelInfo().isValid())
+        {
+            mAgentRemote.setShouldQuit(true);
+        }
     }
     mPendingActions.erase(std::remove_if(mPendingActions.begin(), mPendingActions.end(),
                                          [](auto const& pa)

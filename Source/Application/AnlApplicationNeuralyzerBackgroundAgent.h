@@ -55,6 +55,9 @@ namespace Application
             void cancelQuery();
 
         private:
+            Agent& getCurrentAgent();
+            Agent const& getCurrentAgent() const;
+            
             Mcp::Dispatcher& mMcpDispatcher;
             std::atomic<AgentBackend> mBackend;
             AgentLocal mAgentLocal;

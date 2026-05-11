@@ -245,6 +245,11 @@ Application::Neuralyzer::Chat::Chat(Accessor& accessor, BackgroundAgent& agent, 
         {
             case AttrType::agentBackend:
             {
+                mAgent.setAgentBackend(acsr.getAttr<AttrType::agentBackend>());
+                if(acsr.getAttr<AttrType::modelInfo>().isValid())
+                {
+                    initializeSystem();
+                }
                 break;
             }
             case AttrType::modelInfo:
