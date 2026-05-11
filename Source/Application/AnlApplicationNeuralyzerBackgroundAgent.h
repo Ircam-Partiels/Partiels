@@ -1,9 +1,9 @@
 #pragma once
 
 #include "AnlApplicationNeuralyzerAgent.h"
-#include "AnlApplicationNeuralyzerMcp.h"
 #include "AnlApplicationNeuralyzerAgentLocal.h"
 #include "AnlApplicationNeuralyzerAgentRemote.h"
+#include "AnlApplicationNeuralyzerMcp.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -57,7 +57,7 @@ namespace Application
         private:
             Agent& getCurrentAgent();
             Agent const& getCurrentAgent() const;
-            
+
             Mcp::Dispatcher& mMcpDispatcher;
             std::atomic<AgentBackend> mBackend;
             AgentLocal mAgentLocal;

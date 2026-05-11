@@ -66,7 +66,6 @@ namespace Application
             PropertyList mBackend;
             PropertyTextButton mModelsDirectory;
             PropertyText mRemoteUrl;
-            PropertyNumber mRemotePort;
             ColouredPanel mBackendSeparator;
             PropertyList mModel;
             PropertyNumber mContextSize;

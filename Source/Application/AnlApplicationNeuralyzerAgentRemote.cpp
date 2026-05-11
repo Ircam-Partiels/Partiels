@@ -146,6 +146,10 @@ juce::Result Application::Neuralyzer::AgentRemote::sendQuery(juce::String const&
     }
 
     auto const fullChatUrl = info.modelUrl.withNewSubPath("/api/v1/chat");
+    if(!fullChatUrl.isWellFormed())
+    {
+        return juce::Result::fail(juce::translate("Invalid chat URL: ") + fullChatUrl.toString(true));
+    }
 
     // Build request under session lock, then release before HTTP call
     nlohmann::json request;
@@ -396,6 +400,10 @@ juce::Result Application::Neuralyzer::AgentRemote::saveSession(juce::File const&
     {
         std::unique_lock<std::mutex> sessionLock(mSessionMutex);
         historyCopy = mHistory;
+    }
+    if(historyCopy.empty())
+    {
+        return juce::Result::fail(juce::translate("No messages to save in session"));
     }
 
     try

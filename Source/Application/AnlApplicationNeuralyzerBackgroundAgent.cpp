@@ -8,13 +8,13 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Mcp::Dispatcher& mcpDi
 , mAgentLocal(mcpDispatcher)
 {
     mAgentLocal.setNotifyCallback([this]()
-                             {
-                                 sendChangeMessage();
-                             });
+                                  {
+                                      sendChangeMessage();
+                                  });
     mAgentRemote.setNotifyCallback([this]()
-                              {
-                                  sendChangeMessage();
-                              });
+                                   {
+                                       sendChangeMessage();
+                                   });
     AgentLocal::initialize();
     mWorkerThread = std::thread([this, setupSystemFn = std::move(setupSystem)]()
                                 {
@@ -160,7 +160,7 @@ void Application::Neuralyzer::BackgroundAgent::initializeModel(ModelInfo const& 
     PendingAction pending{Action::initializeModel,
                           [this, info]() -> juce::Result
                           {
-                              static auto const tempSessionFile = getNeuralyzerSessionFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralyzersession.ptldoc"));
+                              auto const tempSessionFile = getNeuralyzerSessionFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("neuralyzersession.ptldoc"));
                               auto& agent = getCurrentAgent();
                               auto const saveResult = [&]()
                               {

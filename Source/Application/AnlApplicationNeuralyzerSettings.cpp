@@ -189,12 +189,12 @@ namespace
         return {};
     }
 
-    static std::vector<juce::String> getRemoteModelIds(juce::URL const& serverUrl)
+    static std::map<juce::String, juce::String> getRemoteModels(juce::URL const& serverUrl)
     {
-        std::vector<juce::String> modelIds;
+        std::map<juce::String, juce::String> models;
         if(serverUrl.isEmpty())
         {
-            return modelIds;
+            return models;
         }
 
         int statusCode = 0;
@@ -205,44 +205,41 @@ namespace
         auto const stream = serverUrl.withNewSubPath("/api/v1/models").createInputStream(options);
         if(stream == nullptr || statusCode < 200 || statusCode >= 300)
         {
-            return modelIds;
+            MiscWeakAssert(false);
+            return models;
         }
 
         auto const responseBody = stream->readEntireStreamAsString();
         if(responseBody.isEmpty())
         {
-            return modelIds;
+            return models;
         }
 
-        try
+        auto const response = [&]() -> nlohmann::json
         {
-            auto const response = nlohmann::json::parse(responseBody.toStdString());
-            if(response.contains("data") && response.at("data").is_array())
+            try
             {
-                for(auto const& modelJson : response.at("data"))
+                return nlohmann::json::parse(responseBody.toStdString());
+            }
+            catch(...)
+            {
+                return {};
+            }
+        }();
+
+        if(response.contains("models") && response.at("models").is_array())
+        {
+            for(auto const& modelJson : response.at("models"))
+            {
+                if(modelJson.contains("key") && modelJson.at("key").is_string())
                 {
-                    if(modelJson.contains("id") && modelJson.at("id").is_string())
-                    {
-                        modelIds.push_back(juce::String(modelJson.at("id").get<std::string>()));
-                    }
+                    auto const id = juce::String(modelJson.at("key").get<std::string>());
+                    auto const name = juce::String(modelJson.value("display_name", id));
+                    models[id] = name;
                 }
             }
         }
-        catch(...)
-        {
-            return {};
-        }
-
-        std::sort(modelIds.begin(), modelIds.end(), [](juce::String const& lhs, juce::String const& rhs)
-                  {
-                      return lhs.toLowerCase() < rhs.toLowerCase();
-                  });
-        modelIds.erase(std::unique(modelIds.begin(), modelIds.end(), [](juce::String const& lhs, juce::String const& rhs)
-                                   {
-                                       return lhs.toLowerCase() == rhs.toLowerCase();
-                                   }),
-                       modelIds.end());
-        return modelIds;
+        return models;
     }
 
     static juce::String toDisplayString(juce::String const& modelId)
@@ -402,27 +399,12 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                    {
                        getDefaultModelDirectory().revealToUser();
                    })
-, mRemoteUrl(juce::translate("Server URL"), juce::translate("The URL of the remote server (scheme and host, e.g. http://localhost)"), [&](juce::String text)
+, mRemoteUrl(juce::translate("Server URL"), juce::translate("The URL of the remote server (scheme and host, e.g. http://localhost:1234)"), [&](juce::String text)
              {
                  auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                 auto const port = modelInfo.modelUrl.getPort();
-                 auto const newUrl = juce::URL(juce::URL(text).getDomain() + ":" + juce::String(port));
-                 if(newUrl.isWellFormed())
-                 {
-                     modelInfo.modelUrl = newUrl;
-                     mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
-                 }
+                 modelInfo.modelUrl = juce::URL(text);
+                 mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
              })
-, mRemotePort(juce::translate("Server Port"), juce::translate("The port of the remote server"), "", {1.0, 65535.0}, 1.0, [&](double value)
-              {
-                  auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                  auto const newUrl = juce::URL(modelInfo.modelUrl.getDomain() + ":" + juce::String(static_cast<int>(value)));
-                  if(newUrl.isWellFormed())
-                  {
-                      modelInfo.modelUrl = newUrl;
-                      mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
-                  }
-              })
 , mModel(juce::translate("Model"), juce::translate("The model used by the Neuralyzer"), "", {}, nullptr)
 , mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {static_cast<double>(minContextSize), static_cast<double>(maxContextSize)}, 1.0, [&](double value)
                {
@@ -502,7 +484,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     mModel.entry.setTextWhenNothingSelected(juce::translate("Select a model"));
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
     addAndMakeVisible(mRemoteUrl);
-    addAndMakeVisible(mRemotePort);
     addAndMakeVisible(mBackendSeparator);
     mBackendSeparator.setSize(1, 1);
 
@@ -560,8 +541,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 };
                 auto const modelInfo = acsr.getAttr<AttrType::modelInfo>();
                 auto const defaultState = acsr.getAttr<AttrType::effectiveState>();
-                mRemoteUrl.entry.setText(modelInfo.modelUrl.getDomain(), juce::NotificationType::dontSendNotification);
-                mRemotePort.entry.setValue(static_cast<double>(modelInfo.modelUrl.getPort()), juce::NotificationType::dontSendNotification);
+                mRemoteUrl.entry.setText(modelInfo.modelUrl.toString(true), juce::NotificationType::dontSendNotification);
                 setEntryValue(mContextSize.entry, modelInfo.contextSize, defaultState.contextSize);
                 setEntryValue(mBatchSize.entry, modelInfo.batchSize, defaultState.batchSize);
                 setEntryValue(mMinP.entry, modelInfo.minP, defaultState.minP);
@@ -578,7 +558,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 auto const index = magic_enum::enum_index(backend).value_or(0_z);
                 mBackend.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
                 mRemoteUrl.setVisible(backend == AgentBackend::remote);
-                mRemotePort.setVisible(backend == AgentBackend::remote);
                 mBatchSize.setVisible(backend == AgentBackend::local);
                 mPresencePenalty.setVisible(backend == AgentBackend::local);
                 mModelsDirectory.setVisible(backend == AgentBackend::local);
@@ -600,14 +579,14 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
     auto const backend = mAccessor.getAttr<AttrType::agentBackend>();
     if(backend == AgentBackend::remote)
     {
-        auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
-        for(auto const& modelId : remoteModelIds)
+        auto const remoteModels = getRemoteModels(modelInfo.modelUrl);
+        for(auto const& remoteModel : remoteModels)
         {
-            auto const isCurrent = modelId == modelInfo.modelId;
-            menu.addItem(toDisplayString(modelId), true, isCurrent, [=, this]()
+            auto const isCurrent = remoteModel.first == modelInfo.modelId;
+            menu.addItem(toDisplayString(remoteModel.second), true, isCurrent, [=, this]()
                          {
                              mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo{modelId}, NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo{remoteModel.first}, NotificationType::synchronous);
                          });
         }
     }
@@ -689,11 +668,11 @@ void Application::Neuralyzer::SettingsContent::checkForUpdatedModels()
     auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
     if(backend == AgentBackend::remote)
     {
-        auto const remoteModelIds = getRemoteModelIds(modelInfo.modelUrl);
-        auto const it = std::find(remoteModelIds.cbegin(), remoteModelIds.cend(), modelInfo.modelId);
+        auto const remoteModelIds = getRemoteModels(modelInfo.modelUrl);
+        auto const it = remoteModelIds.find(modelInfo.modelId);
         if(it != remoteModelIds.cend() && !modelInfo.modelId.isEmpty())
         {
-            auto const displayName = toDisplayString(modelInfo.modelId);
+            auto const displayName = toDisplayString(it->second);
             mModel.entry.setText(displayName, juce::NotificationType::dontSendNotification);
         }
         else if(modelInfo.modelId.isEmpty())
@@ -757,7 +736,6 @@ void Application::Neuralyzer::SettingsContent::resized()
     setBounds(mBackend);
     setBounds(mModelsDirectory);
     setBounds(mRemoteUrl);
-    setBounds(mRemotePort);
     setBounds(mBackendSeparator);
     setBounds(mModel);
     setBounds(mContextSize);

@@ -770,6 +770,16 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
     // Set log callback to suppress unnecessary output
     llama_log_set(logCallback, nullptr);
 
+    std::vector<common_chat_msg> messages;
+    {
+        std::unique_lock<std::mutex> lock(mHistoryMutex);
+        messages = mChatInputs.messages;
+    }
+    if(messages.empty())
+    {
+        return juce::Result::fail(juce::translate("No messages to save in session."));
+    }
+
     // Save KV cache state. We don't persist prompt tokens here (nullptr, 0) since
     // the KV cache is sufficient for restoring the model state.
     auto* context = mInitResult->context();
@@ -783,11 +793,6 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
     nlohmann::json root;
     root["version"] = 1;
     root["messages"] = nlohmann::json::array();
-    std::vector<common_chat_msg> messages;
-    {
-        std::unique_lock<std::mutex> lock(mHistoryMutex);
-        messages = mChatInputs.messages;
-    }
     for(auto const& message : messages)
     {
         nlohmann::json messageJson;
