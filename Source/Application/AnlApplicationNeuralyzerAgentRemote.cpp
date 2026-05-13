@@ -427,13 +427,33 @@ std::tuple<juce::Result, std::vector<common_chat_tool_call>> Application::Neural
         return createError(juce::translate("Operation aborted."));
     }
 
-    JUCE_COMPILER_WARNING("to cjeck")
     int inputTokens = 0;
     int outputTokens = 0;
     if(response.contains("usage") && response.at("usage").is_object())
     {
-        inputTokens = response.at("usage").value("prompt_tokens", 0);
-        outputTokens = response.at("usage").value("completion_tokens", 0);
+        auto const& usage = response.at("usage");
+        // Support both OpenAI-style (prompt_tokens/completion_tokens) and Anthropic-style (input_tokens/output_tokens)
+        if(usage.contains("prompt_tokens"))
+        {
+            inputTokens = usage.value("prompt_tokens", 0);
+        }
+        else
+        {
+            inputTokens = usage.value("input_tokens", 0);
+        }
+        if(usage.contains("completion_tokens"))
+        {
+            outputTokens = usage.value("completion_tokens", 0);
+        }
+        else
+        {
+            outputTokens = usage.value("output_tokens", 0);
+        }
+        // Fallback: use total_tokens if individual counts are unavailable
+        if(inputTokens == 0 && outputTokens == 0)
+        {
+            inputTokens = usage.value("total_tokens", 0);
+        }
     }
 
     if(info.contextSize.has_value() && info.contextSize.value() > 0)

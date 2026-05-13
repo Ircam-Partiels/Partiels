@@ -551,13 +551,13 @@ juce::Result Application::Neuralyzer::AgentLocal::performQuery(juce::String cons
             role = "tool";
             // The model successfully generated a response, we parse the response for
             // tool calls and either call the tools or return the final answer.
+            common_chat_parser_params parserParams(chatParams);
+            if(!chatParams.parser.empty())
+            {
+                parserParams.parser.load(chatParams.parser);
+            }
             auto const [parsingError, toolCalls] = [&, inputMsg = assistantMsg]()
             {
-                common_chat_parser_params parserParams(chatParams);
-                if(!chatParams.parser.empty())
-                {
-                    parserParams.parser.load(chatParams.parser);
-                }
                 try
                 {
                     return std::make_tuple(std::string{}, common_chat_parse(inputMsg, false, parserParams).tool_calls);
