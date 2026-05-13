@@ -2,7 +2,8 @@
 
 nlohmann::json nlohmann::sax_parse_json_object(std::istream& stream, std::string const& key, std::size_t level)
 {
-    using dom_parser = detail::json_sax_dom_parser<json>;
+    using input_adapter_t = decltype(detail::input_adapter(stream));
+    using dom_parser = detail::json_sax_dom_parser<json, input_adapter_t>;
     class sax_object_parser
     : public dom_parser
     {
