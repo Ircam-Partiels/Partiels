@@ -62,7 +62,7 @@ public:
     ~FloatingWindowContainer() override = default;
 
     virtual void show();
-    virtual void showAt(juce::Point<int> const& pt);
+    virtual void showAt(juce::Point<float> const& pt);
     virtual void hide();
 
     void toFront();

@@ -62,28 +62,28 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
             bool perform() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
-                                                                                     {
-                                                                                         if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
-                                                                                         {
-                                                                                             std::get<0_z>(frame) = mNewTime;
-                                                                                             return true;
-                                                                                         }
-                                                                                         return false;
-                                                                                     });
+                return Modifier::updateFrame<Result::Data::Type::marker | Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                                                                                                     {
+                                                                                                         if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
+                                                                                                         {
+                                                                                                             std::get<0_z>(frame) = mNewTime;
+                                                                                                             return true;
+                                                                                                         }
+                                                                                                         return false;
+                                                                                                     });
             }
 
             bool undo() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
-                                                                                     {
-                                                                                         if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
-                                                                                         {
-                                                                                             std::get<0_z>(frame) = mCurrentTime;
-                                                                                             return true;
-                                                                                         }
-                                                                                         return false;
-                                                                                     });
+                return Modifier::updateFrame<Result::Data::Type::marker | Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                                                                                                     {
+                                                                                                         if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
+                                                                                                         {
+                                                                                                             std::get<0_z>(frame) = mCurrentTime;
+                                                                                                             return true;
+                                                                                                         }
+                                                                                                         return false;
+                                                                                                     });
             }
 
         private:
@@ -179,29 +179,29 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
-                                                                              {
-                                                                                  if(std::abs(std::get<1_z>(frame) - mNewDuration) > std::numeric_limits<double>::epsilon())
-                                                                                  {
-                                                                                      std::get<1_z>(frame) = mNewDuration;
-                                                                                      return true;
-                                                                                  }
-                                                                                  return false;
-                                                                              });
+                Modifier::updateFrame<Result::Data::Type::marker | Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                                                                                              {
+                                                                                                  if(std::abs(std::get<1_z>(frame) - mNewDuration) > std::numeric_limits<double>::epsilon())
+                                                                                                  {
+                                                                                                      std::get<1_z>(frame) = mNewDuration;
+                                                                                                      return true;
+                                                                                                  }
+                                                                                                  return false;
+                                                                                              });
                 return true;
             }
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
-                                                                              {
-                                                                                  if(std::abs(std::get<1_z>(frame) - mCurrentDuration) > std::numeric_limits<double>::epsilon())
-                                                                                  {
-                                                                                      std::get<1_z>(frame) = mCurrentDuration;
-                                                                                      return true;
-                                                                                  }
-                                                                                  return false;
-                                                                              });
+                Modifier::updateFrame<Result::Data::Type::marker | Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                                                                                              {
+                                                                                                  if(std::abs(std::get<1_z>(frame) - mCurrentDuration) > std::numeric_limits<double>::epsilon())
+                                                                                                  {
+                                                                                                      std::get<1_z>(frame) = mCurrentDuration;
+                                                                                                      return true;
+                                                                                                  }
+                                                                                                  return false;
+                                                                                              });
                 return true;
             }
 
@@ -298,29 +298,29 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
-                                                          {
-                                                              if(std::get<2_z>(frame) != mNewLabel)
-                                                              {
-                                                                  std::get<2_z>(frame) = mNewLabel;
-                                                                  return true;
-                                                              }
-                                                              return false;
-                                                          });
+                Modifier::updateFrame<Result::Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                                                                  {
+                                                                      if(std::get<2_z>(frame) != mNewLabel)
+                                                                      {
+                                                                          std::get<2_z>(frame) = mNewLabel;
+                                                                          return true;
+                                                                      }
+                                                                      return false;
+                                                                  });
                 return true;
             }
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
-                                                          {
-                                                              if(std::get<2_z>(frame) != mCurrentLabel)
-                                                              {
-                                                                  std::get<2_z>(frame) = mCurrentLabel;
-                                                                  return true;
-                                                              }
-                                                              return false;
-                                                          });
+                Modifier::updateFrame<Result::Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                                                                  {
+                                                                      if(std::get<2_z>(frame) != mCurrentLabel)
+                                                                      {
+                                                                          std::get<2_z>(frame) = mCurrentLabel;
+                                                                          return true;
+                                                                      }
+                                                                      return false;
+                                                                  });
                 return true;
             }
 
@@ -356,29 +356,29 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
-                                                         {
-                                                             if(mNewValue.has_value() != std::get<2_z>(frame).has_value() || (mNewValue.has_value() && std::abs(mNewValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
-                                                             {
-                                                                 std::get<2_z>(frame) = mNewValue;
-                                                                 return true;
-                                                             }
-                                                             return false;
-                                                         });
+                Modifier::updateFrame<Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
+                                                                 {
+                                                                     if(mNewValue.has_value() != std::get<2_z>(frame).has_value() || (mNewValue.has_value() && std::abs(mNewValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
+                                                                     {
+                                                                         std::get<2_z>(frame) = mNewValue;
+                                                                         return true;
+                                                                     }
+                                                                     return false;
+                                                                 });
                 return true;
             }
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
-                                                         {
-                                                             if(mCurrentValue.has_value() != std::get<2_z>(frame).has_value() || (mCurrentValue.has_value() && std::abs(mCurrentValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
-                                                             {
-                                                                 std::get<2_z>(frame) = mCurrentValue;
-                                                                 return true;
-                                                             }
-                                                             return false;
-                                                         });
+                Modifier::updateFrame<Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                                                                 {
+                                                                     if(mCurrentValue.has_value() != std::get<2_z>(frame).has_value() || (mCurrentValue.has_value() && std::abs(mCurrentValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
+                                                                     {
+                                                                         std::get<2_z>(frame) = mCurrentValue;
+                                                                         return true;
+                                                                     }
+                                                                     return false;
+                                                                 });
                 return true;
             }
 
@@ -562,11 +562,11 @@ Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoom
                     switch(frameType.value())
                     {
                         case FrameType::label:
-                            return Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                            return Modifier::updateFrame<Result::Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
                         case FrameType::value:
-                            return Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                            return Modifier::updateFrame<Result::Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
                         case FrameType::vector:
-                            return Modifier::updateFrame<Data::Type::column>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                            return Modifier::updateFrame<Result::Data::Type::column>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
                     }
                 }
                 return false;

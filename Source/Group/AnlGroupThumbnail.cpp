@@ -167,8 +167,8 @@ Group::Thumbnail::Thumbnail(Director& director)
         {
             case SignalType::showProperties:
             {
-                auto const x = static_cast<int>(value.getProperty("x", 0.0));
-                auto const y = static_cast<int>(value.getProperty("y", 0.0));
+                auto const x = static_cast<float>(value.getProperty("x", 0.0));
+                auto const y = static_cast<float>(value.getProperty("y", 0.0));
                 mPropertyWindowContainer.showAt({x, y});
             }
             break;
