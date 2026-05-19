@@ -166,9 +166,8 @@ void Tooltip::BubbleWindow::timerCallback()
         auto const font = juce::Font(juce::FontOptions(13.0f)).withHorizontalScale(1.0f);
         auto const fontHeight = font.getHeight();
         auto const lines = juce::StringArray::fromLines(mTooltip);
-        auto const screenPosition = mouseSource.getScreenPosition().toInt();
-        auto const mousePosition = owner == nullptr ? screenPosition : owner->getLocalPoint(nullptr, screenPosition);
-        auto const targetArea = owner == nullptr ? desktop.getDisplays().getDisplayForPoint(mousePosition)->userArea : owner->getLocalBounds();
+        auto const mousePosition = owner == nullptr ? mouseSource.getScreenPosition() : owner->getLocalPoint(nullptr, mouseSource.getScreenPosition());
+        auto const targetArea = owner == nullptr ? desktop.getDisplays().getDisplayForPoint(mousePosition)->userBounds.toNearestInt() : owner->getLocalBounds();
         auto const maxHeight = std::min(static_cast<float>(targetArea.getHeight() - offset * 2), static_cast<float>(620 - offset * 2));
         auto const maxLines = static_cast<int>(std::floor(maxHeight / fontHeight));
         auto maxWidth = std::min(static_cast<float>(targetArea.getWidth() - offset * 2), static_cast<float>(480 - offset * 2));
@@ -201,8 +200,9 @@ void Tooltip::BubbleWindow::timerCallback()
         width += offset * 2;
         height += offset * 2;
 
-        auto const x = mousePosition.x > targetArea.getCentreX() ? mousePosition.x - (width + offset) : mousePosition.x + offset;
-        auto const y = mousePosition.y > targetArea.getCentreY() ? mousePosition.y - (height + offset) : mousePosition.y + offset + 1;
+        auto const mPos = mousePosition.roundToInt();
+        auto const x = mPos.x > targetArea.getCentreX() ? mPos.x - (width + offset) : mPos.x + offset;
+        auto const y = mPos.y > targetArea.getCentreY() ? mPos.y - (height + offset) : mPos.y + offset + 1;
         auto const bounds = juce::Rectangle<int>(x, y, width, height).constrainedWithin(targetArea);
         setBounds(bounds);
         if(owner == nullptr)
