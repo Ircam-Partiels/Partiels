@@ -1,6 +1,5 @@
 #include "AnlApplicationFileManager.h"
 #include "AnlApplicationInstance.h"
-#include "AnlApplicationNeuralyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 

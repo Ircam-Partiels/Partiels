@@ -1,4 +1,5 @@
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationFileManager.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -217,7 +218,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
     else
     {
         MiscDebug("Application", "Opening new file(s)...");
-        openFiles(files);
+        FileManager::openFiles(files);
     }
 }
 
@@ -258,26 +259,6 @@ void Application::Instance::systemRequestedQuit()
         }
     }
 
-    auto saveAndQuit = [this]()
-    {
-        if(mDocumentFileBased != nullptr)
-        {
-            mDocumentFileBased->saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult result)
-                                                               {
-                                                                   if(result == juce::FileBasedDocument::SaveResult::savedOk)
-                                                                   {
-                                                                       MiscDebug("Application", "Ready to Quit");
-                                                                       quit();
-                                                                   }
-                                                               });
-        }
-        else
-        {
-            MiscDebug("Application", "Ready to Quit");
-            quit();
-        }
-    };
-
     if(mDocumentAccessor != nullptr)
     {
         auto const trackAcsrs = mDocumentAccessor->getAcsrs<Document::AcsrType::tracks>();
@@ -295,17 +276,33 @@ void Application::Instance::systemRequestedQuit()
                                      .withButton(juce::translate("Quit"))
                                      .withButton(juce::translate("Cancel"));
 
-            juce::AlertWindow::showAsync(options, [=](int result)
+            juce::AlertWindow::showAsync(options, [this](int result)
                                          {
                                              if(result == 1)
                                              {
-                                                 saveAndQuit();
+                                                 if(mDocumentFileBased != nullptr)
+                                                 {
+                                                     FileManager::saveAndQuit();
+                                                 }
+                                                 else
+                                                 {
+                                                     MiscDebug("Application", "Ready to Quit");
+                                                     quit();
+                                                 }
                                              }
                                          });
             return;
         }
     }
-    saveAndQuit();
+    if(mDocumentFileBased != nullptr)
+    {
+        FileManager::saveAndQuit();
+    }
+    else
+    {
+        MiscDebug("Application", "Ready to Quit");
+        quit();
+    }
 }
 
 void Application::Instance::shutdown()
@@ -430,156 +427,6 @@ LookAndFeel::ColourChart Application::Instance::getColourChart()
     return {LookAndFeel::ColourChart::Mode::night};
 }
 
-void Application::Instance::newDocument()
-{
-    if(mDocumentAccessor->isEquivalentTo(mDocumentFileBased->getDefaultAccessor()))
-    {
-        return;
-    }
-    juce::WeakReference<Instance> weakReference(this);
-    mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
-                                                       {
-                                                           if(weakReference.get() == nullptr)
-                                                           {
-                                                               return;
-                                                           }
-                                                           if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                                           {
-                                                               return;
-                                                           }
-                                                           mUndoManager->clearUndoHistory();
-                                                           mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
-                                                           mDocumentFileBased->setFile({});
-                                                           if(auto* window = mWindow.get())
-                                                           {
-                                                               window->getInterface().hidePluginListTablePanel();
-                                                           }
-                                                       });
-}
-
-void Application::Instance::openDocumentFile(juce::File const& file)
-{
-    auto const documentFileExtension = getExtensionForDocumentFile();
-    MiscWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
-    if(!file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
-    {
-        return;
-    }
-    mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
-                                                       {
-                                                           if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                                           {
-                                                               return;
-                                                           }
-                                                           mUndoManager->clearUndoHistory();
-                                                           mDocumentFileBased->loadFrom(file, true);
-                                                       });
-}
-
-void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
-{
-    auto const audioFileWilcards = getWildCardForAudioFormats();
-    std::vector<AudioFileLayout> readerLayout;
-    for(auto const& file : files)
-    {
-        auto const fileExtension = file.getFileExtension().toLowerCase();
-        MiscWeakAssert(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension));
-        if(file.existsAsFile() && file.hasReadAccess() && audioFileWilcards.contains(fileExtension))
-        {
-            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
-            MiscWeakAssert(reader != nullptr);
-            if(reader != nullptr)
-            {
-                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
-                {
-                    readerLayout.push_back({file, static_cast<int>(channel)});
-                }
-            }
-        }
-    }
-    if(!readerLayout.empty())
-    {
-        mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
-                                                           {
-                                                               if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                                               {
-                                                                   return;
-                                                               }
-                                                               mUndoManager->clearUndoHistory();
-                                                               mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
-                                                               mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
-                                                               auto const templateFile = mApplicationAccessor->getAttr<AttrType::defaultTemplateFile>();
-                                                               if(templateFile != juce::File{})
-                                                               {
-                                                                   mDocumentFileBased->loadTemplate(templateFile, mApplicationAccessor->getAttr<AttrType::adaptationToSampleRate>());
-                                                               }
-                                                               mDocumentFileBased->setFile({});
-                                                           });
-    }
-    juce::StringArray remainingFiles;
-    for(auto const& file : files)
-    {
-        if(std::none_of(readerLayout.cbegin(), readerLayout.cend(), [&](auto const& afl)
-                        {
-                            return afl.file == file;
-                        }))
-        {
-            remainingFiles.add(file.getFullPathName());
-        }
-    }
-    if(!remainingFiles.isEmpty())
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("File(s) cannot be open!"))
-                                 .withMessage(juce::translate("The file(s) cannot be open by the application:\n FILEPATHS\nEnsure the file(s) exist(s) and you have read access.").replace("FILEPATHS", remainingFiles.joinIntoString("\n")))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
-    }
-}
-
-void Application::Instance::openFiles(std::vector<juce::File> const& files)
-{
-    auto const documentFileExtension = getExtensionForDocumentFile();
-    auto const documentFile = std::find_if(files.cbegin(), files.cend(), [&](auto const& file)
-                                           {
-                                               return file.existsAsFile() && file.hasFileExtension(documentFileExtension);
-                                           });
-    if(documentFile != files.cend())
-    {
-        openDocumentFile(*documentFile);
-        return;
-    }
-
-    std::vector<juce::File> audioFiles;
-    juce::StringArray array;
-    auto const audioFormatsWildCard = getWildCardForAudioFormats();
-    for(auto const& file : files)
-    {
-        auto const fileExtension = file.getFileExtension().toLowerCase();
-        if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFormatsWildCard.contains(fileExtension))
-        {
-            audioFiles.push_back(file);
-        }
-        else
-        {
-            array.add(file.getFullPathName());
-        }
-    }
-    if(!audioFiles.empty())
-    {
-        openAudioFiles(audioFiles);
-        return;
-    }
-
-    auto const options = juce::MessageBoxOptions()
-                             .withIconType(juce::AlertWindow::WarningIcon)
-                             .withTitle(juce::translate("File formats not supported!"))
-                             .withMessage(juce::translate("The formats of the files are not supported by the application:\n FILEPATHS").replace("FILEPATHS", array.joinIntoString("\n")))
-                             .withButton(juce::translate("Ok"));
-    juce::AlertWindow::showAsync(options, nullptr);
-}
-
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
     return *mApplicationAccessor.get();
@@ -650,10 +497,10 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
     if(source == mDocumentFileBased.get())
     {
         auto const result = mDocumentFileBased->saveBackup(getBackupFile());
+        MiscWeakAssert(result.wasOk());
         if(result.failed())
         {
             MiscDebug("Application::Instance", result.getErrorMessage());
-            MiscWeakAssert(false);
         }
     }
     else
@@ -686,7 +533,7 @@ void Application::Instance::openStartupFiles()
     {
         mDocumentFileBased->addChangeListener(this);
         MiscDebug("Application", "Opening new file(s)...");
-        openFiles(commandFiles);
+        FileManager::openFiles(commandFiles);
         mStartupFilesAreLoaded = true;
 
         if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())
@@ -719,7 +566,7 @@ void Application::Instance::openStartupFiles()
                                              if(previousFile.existsAsFile())
                                              {
                                                  MiscDebug("Application", "Reopening last document...");
-                                                 openDocumentFile(previousFile);
+                                                 FileManager::openDocumentFile(previousFile);
                                              }
                                          }
                                          else
@@ -745,7 +592,7 @@ void Application::Instance::openStartupFiles()
         if(previousFile.existsAsFile())
         {
             MiscDebug("Application", "Reopening last document...");
-            openDocumentFile(previousFile);
+            FileManager::openDocumentFile(previousFile);
         }
         if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())
         {
