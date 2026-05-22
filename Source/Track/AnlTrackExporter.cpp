@@ -434,7 +434,9 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
             auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
             for(size_t j = 0; j < extraOutputs.size(); ++j)
             {
-                binColumns.push_back("EXTRA" + std::to_string(j));
+                auto extraName = extraOutputs.at(j).name;
+                std::transform(extraName.begin(), extraName.end(), extraName.begin(), ::toupper);
+                binColumns.push_back(extraName.empty() ? "EXTRA" + std::to_string(j) : extraName);
             }
             addHeader(binColumns);
 
