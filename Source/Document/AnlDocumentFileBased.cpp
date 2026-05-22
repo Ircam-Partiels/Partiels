@@ -374,7 +374,7 @@ void Document::FileBased::changed()
     mAccessor.setAttr<AttrType::path>(getFile(), NotificationType::synchronous);
     if(getFile() == juce::File{})
     {
-        auto const state = mAccessor.isEquivalentTo(getDefaultAccessor());
+        auto const state = mAccessor.isEquivalentTo(getDefaultAccessor()) || mAccessor.isEquivalentTo(mSavedStateAccessor);
         setChangedFlag(!state);
     }
     else
