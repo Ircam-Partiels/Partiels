@@ -45,11 +45,6 @@ namespace Application
         static juce::String getWildCardForAudioFormats();
         static LookAndFeel::ColourChart getColourChart();
 
-        void newDocument();
-        void openDocumentFile(juce::File const& file);
-        void openAudioFiles(std::vector<juce::File> const& files);
-        void openFiles(std::vector<juce::File> const& files);
-
         Accessor& getApplicationAccessor();
         Window* getWindow();
 
