@@ -83,12 +83,11 @@ namespace Application
         {
         public:
             PluginListTablePanel(juce::Component& content);
+            ~PluginListTablePanel() override = default;
 
             // juce::Component
             void paint(juce::Graphics& g) override;
             void resized() override;
-            void colourChanged() override;
-            void parentHierarchyChanged() override;
 
         private:
             juce::Label mTitleLabel;
@@ -97,6 +96,26 @@ namespace Application
             ColouredPanel mTopSeparator;
             ColouredPanel mLeftSeparator;
             juce::Component& mContent;
+        };
+
+        class RightBorder
+        : public juce::Component
+        , private juce::ApplicationCommandManagerListener
+        {
+        public:
+            RightBorder();
+            ~RightBorder() override;
+
+            // juce::Component
+            void paint(juce::Graphics& g) override;
+            void resized() override;
+
+            Icon pluginListButton;
+
+        private:
+            // juce::ApplicationCommandManagerListener
+            void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
+            void applicationCommandListChanged() override;
         };
 
         class DocumentContainer
@@ -113,6 +132,7 @@ namespace Application
             Document::Section const& getDocumentSection() const;
             PluginList::Table& getPluginListTable();
 
+            void setRightPanelsVisible(bool const pluginListTableVisible);
             void showPluginListTablePanel();
             void hidePluginListTablePanel();
             void togglePluginListTablePanel();
@@ -126,10 +146,14 @@ namespace Application
             Document::Section mDocumentSection;
             LoaderContent mLoaderContent;
             Decorator mLoaderDecorator{mLoaderContent};
+            RightBorder mRightBorder;
+            ColouredPanel mRightSeparator;
             PluginList::Table mPluginListTable;
             PluginListTablePanel mPluginListTablePanel{mPluginListTable};
             bool mPluginListTableVisible{false};
-            static auto constexpr pluginListTableWidth = 240;
+            static auto constexpr rightPanelsWidth = 240;
+            static auto constexpr rightBorderWidth = 30;
+            static auto constexpr rightSeparatorWidth = 1;
         };
 
         Document::Accessor::Receiver mDocumentReceiver;
