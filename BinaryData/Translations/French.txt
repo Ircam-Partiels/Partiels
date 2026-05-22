@@ -17,6 +17,7 @@ countries: fr be
 "The start of the RANGENAME range" = "Le début de la plage RANGENAME"
 "End" = "Fin"
 "The end of the RANGENAME range" = "Fin de la plage RANGENAME"
+"Extra NUM" = "Extra NUM"
 "Time" = "Temps"
 "The input and output devices don't share a common sample rate!" = "Les périphériques d'entrée et de sortie ne partagent pas la même fréquence d'échantillonnage !"
 "Failed to initialise all requested devices." = "Échec de l'initialisation de tous les périphériques requis."
