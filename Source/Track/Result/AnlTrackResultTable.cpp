@@ -109,6 +109,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                     auto const name = description.extraOutputs.at(static_cast<size_t>(i - static_cast<int>(ColumnType::extra))).name;
                     header.addColumn(name.empty() ? juce::translate("Extra INDEX").replace("INDEX", juce::String(i + 1)) : name, i, 96, 84, -1, ColumnFlags::visible);
                 }
+                auto const valueName = description.output.name;
+                auto const valueColumnId = static_cast<int>(ColumnType::value);
                 auto const& results = acsr.getAttr<AttrType::results>();
                 auto const access = results.getReadAccess();
                 if(static_cast<bool>(access))
@@ -120,19 +122,19 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                         {
                             case Track::FrameType::label:
                             {
-                                header.setColumnName(static_cast<int>(ColumnType::value), "Label");
+                                header.setColumnName(valueColumnId, valueName.empty() ? juce::translate("Label") : valueName);
                                 setNumChannels(results.getMarkers());
                                 break;
                             }
                             case Track::FrameType::value:
                             {
-                                header.setColumnName(static_cast<int>(ColumnType::value), "Value");
+                                header.setColumnName(valueColumnId, valueName.empty() ? juce::translate("Value") : valueName);
                                 setNumChannels(results.getPoints());
                                 break;
                             }
                             case Track::FrameType::vector:
                             {
-                                header.setColumnName(static_cast<int>(ColumnType::value), "Values");
+                                header.setColumnName(valueColumnId, valueName.empty() ? juce::translate("Values") : valueName);
                                 setNumChannels(results.getColumns());
                                 break;
                             }
