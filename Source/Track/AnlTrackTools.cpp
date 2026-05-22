@@ -252,9 +252,10 @@ std::optional<Zoom::Range> Track::Tools::getExtraRange(Accessor const& accessor,
     {
         return {};
     }
-    if(extraOutputs.at(index).hasKnownExtents)
+    auto const& extraOutput = extraOutputs.at(index);
+    if(extraOutput.hasKnownExtents)
     {
-        return Zoom::Range{static_cast<double>(extraOutputs.at(index).minValue), static_cast<double>(extraOutputs.at(index).maxValue)};
+        return Zoom::Range{static_cast<double>(extraOutput.minValue), static_cast<double>(extraOutput.maxValue)};
     }
     auto const& results = accessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();

@@ -685,7 +685,9 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
         auto const& output = description.extraOutputs.at(index);
         auto const range = Tools::getExtraRange(mAccessor, index);
         auto const tooltip = Tools::getExtraTooltip(mAccessor, index);
-        auto const name = juce::translate("NAME Threshold").replace("NAME", output.name);
+        auto const vname = output.name.empty() ? juce::translate("Extra NUM").replace("NUM", juce::String(index))
+                                               : juce::String(output.name);
+        auto const name = juce::translate("NAME Threshold").replace("NAME", vname);
         auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
         auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
         auto const step = output.isQuantized ? output.quantizeStep : 0.0f;
@@ -705,7 +707,7 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             {
                 return;
             }
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", output.name));
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", vname));
         };
         auto const applyChange = [=, this](float newValue)
         {
@@ -726,6 +728,7 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
         auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f)}, step, startChange, applyChange, endChange, true);
+        property->setEnabled(range.has_value() && !range.value().isEmpty());
         addAndMakeVisible(property.get());
         mPropertyExtraThresholds.push_back(std::move(property));
     }
