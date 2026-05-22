@@ -289,7 +289,7 @@ countries: pt br
 "Proceed" = "Prosseguir"
 "Load File..." = "Carregar Arquivo..."
 "Audio Files Layout" = "Layout de Arquivos de Áudio"
-"Add Plugins..." = "Adicionar Plugins..."
+"Plugins" = "Plugins"
 "Key Mappings" = "Mapeamentos de Teclas"
 "or\nDrag & Drop\n(Document/Audio)" = "ou\nArrastar e Soltar\n(Documento/Áudio)"
 "Document: DOCWILDCARD\nAudio: AUDIOWILDCARD" = "Documento: DOCWILDCARD\nÁudio: AUDIOWILDCARD"
