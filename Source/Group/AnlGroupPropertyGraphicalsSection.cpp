@@ -985,13 +985,13 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto const trackId = trackAcsr.get().getAttr<Track::AttrType::identifier>();
         for(auto const& extraOutput : trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs)
         {
-            extraOutputsToTracks[extraOutput.name].emplace_back(trackId);
+            extraOutputsToTracks[extraOutput.identifier].emplace_back(trackId);
         }
     }
 
     for(auto const& extraOutputsToTrack : extraOutputsToTracks)
     {
-        auto const& outputName = extraOutputsToTrack.first;
+        auto const& outputIdentifier = extraOutputsToTrack.first;
         auto const& trackIdentifiers = extraOutputsToTrack.second;
         MiscWeakAssert(!trackIdentifiers.empty());
         if(trackIdentifiers.empty())
@@ -1010,7 +1010,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto const& extraOutputs = trackAcsr.getAttr<Track::AttrType::description>().extraOutputs;
         auto const it = std::find_if(extraOutputs.cbegin(), extraOutputs.cend(), [&](auto const& extraOutput)
                                      {
-                                         return extraOutput.name == outputName;
+                                         return extraOutput.identifier == outputIdentifier;
                                      });
         MiscWeakAssert(it != extraOutputs.cend());
         if(it == extraOutputs.cend())
@@ -1077,9 +1077,9 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
                 }
                 auto& cTrackAcsr = cTrackAcsrRef.value().get();
                 auto const& cExtraOutputs = cTrackAcsr.getAttr<Track::AttrType::description>().extraOutputs;
-                auto const cit = std::find_if(cExtraOutputs.cbegin(), cExtraOutputs.cend(), [&](auto const& extraOutput)
+                auto const cit = std::find_if(cExtraOutputs.cbegin(), cExtraOutputs.cend(), [=](auto const& extraOutput)
                                               {
-                                                  return extraOutput.name == outputName;
+                                                  return extraOutput.identifier == outputIdentifier;
                                               });
                 MiscWeakAssert(cit != cExtraOutputs.cend());
                 if(cit == cExtraOutputs.cend())
@@ -1098,7 +1098,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto property = std::make_unique<PropertySlider>(name, fullTooltip, it->unit, range, step, startChange, applyChange, endChange, true);
         property->setEnabled(srange.has_value() && !srange.value().isEmpty());
         addAndMakeVisible(property.get());
-        mPropertyExtraThresholds[outputName.toStdString()] = std::move(property);
+        mPropertyExtraThresholds[outputIdentifier] = std::move(property);
     }
     updateExtraThresholdStates();
 }
