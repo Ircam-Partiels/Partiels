@@ -255,9 +255,6 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
     auto const& extraThresholds = accessor.getAttr<AttrType::extraThresholds>();
 
-    stream << std::fixed;
-    stream << std::setprecision(10);
-
     auto state = false;
     auto lineIndex = 0;
     auto const addLine = [&]()
@@ -328,6 +325,9 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
     auto const escapeFloat = [](auto const& s)
     {
+        // Don't use the stream directly to avoid locale issues, especially with the decimal separator.
+        // Instead, use a separate stringstream that we can control the locale of if needed.
+        // But ignore the formatting of the stream (e.g. precision) // ss.copyfmt(stream); ss.imbue(stream.getloc());
         std::ostringstream ss;
         ss << s;
         return ss.str();
@@ -495,6 +495,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
+    stream << std::fixed;
+    stream << std::setprecision(10);
     auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
@@ -512,6 +514,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
+    stream << std::fixed;
+    stream << std::setprecision(10);
     auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
