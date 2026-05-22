@@ -42,7 +42,7 @@ bool Application::Interface::PluginSearchPathPanel::escapeKeyPressed()
 }
 
 Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)
-: mTitleLabel("Title", juce::translate("Add Plugins..."))
+: mTitleLabel("Title", juce::String::fromUTF8("\xf0\x9f\x94\x8c ") + juce::translate("Plugins")) // 🔌
 , mCloseButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
 , mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
 , mContent(content)
@@ -87,14 +87,46 @@ void Application::Interface::PluginListTablePanel::resized()
     mContent.setBounds(bounds);
 }
 
-void Application::Interface::PluginListTablePanel::colourChanged()
+Application::Interface::RightBorder::RightBorder()
+: pluginListButton(juce::ImageCache::getFromMemory(AnlIconsData::plugin_png, AnlIconsData::plugin_pngSize))
 {
-    setOpaque(findColour(juce::ResizableWindow::backgroundColourId).isOpaque());
+    pluginListButton.setToggleable(true);
+    pluginListButton.onClick = []()
+    {
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->getInterface().togglePluginListTablePanel();
+        }
+    };
+
+    addAndMakeVisible(pluginListButton);
+    Instance::get().getApplicationCommandManager().addListener(this);
+    applicationCommandListChanged();
 }
 
-void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
+Application::Interface::RightBorder::~RightBorder()
 {
-    colourChanged();
+    Instance::get().getApplicationCommandManager().removeListener(this);
+}
+
+void Application::Interface::RightBorder::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+void Application::Interface::RightBorder::resized()
+{
+    auto bounds = getLocalBounds();
+    pluginListButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
+}
+
+void Application::Interface::RightBorder::applicationCommandInvoked([[maybe_unused]] juce::ApplicationCommandTarget::InvocationInfo const& info)
+{
+}
+
+void Application::Interface::RightBorder::applicationCommandListChanged()
+{
+    pluginListButton.setTooltip(Utils::getCommandDescriptionWithKey(Instance::get().getApplicationCommandManager(), ApplicationCommandIDs::editNewTrack));
 }
 
 Application::Interface::DocumentContainer::DocumentContainer()
@@ -111,18 +143,10 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mDocumentSection);
     addChildComponent(mLoaderDecorator);
     addAndMakeVisible(mPluginListTablePanel);
+    addAndMakeVisible(mRightBorder);
+    addAndMakeVisible(mRightSeparator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
-
-    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font(juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 8.0, juce::Font::plain)).toString());
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
-    mDocumentSection.pluginListButton.onClick = []()
-    {
-        if(auto* window = Instance::get().getWindow())
-        {
-            window->getInterface().togglePluginListTablePanel();
-        }
-    };
 
     auto const showHideLoader = [this]()
     {
@@ -175,16 +199,22 @@ void Application::Interface::DocumentContainer::resized()
     mToolTipDisplay.setBounds(bounds.removeFromBottom(22));
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     auto& animator = juce::Desktop::getInstance().getAnimator();
-    animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
-    animator.cancelAnimation(std::addressof(mDocumentSection), false);
-    if(mPluginListTableVisible)
+    animator.cancelAnimation(&mPluginListTablePanel, false);
+    animator.cancelAnimation(&mDocumentSection, false);
+    mRightBorder.setBounds(bounds.removeFromRight(rightBorderWidth));
+    mRightSeparator.setBounds(bounds.removeFromRight(rightSeparatorWidth));
+    auto const setRightPanelBounds = [&](juce::Component& component, bool visible)
     {
-        mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));
-    }
-    else
-    {
-        mPluginListTablePanel.setBounds(bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth));
-    }
+        if(visible)
+        {
+            component.setBounds(bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth));
+        }
+        else
+        {
+            component.setBounds(bounds.withX(bounds.getWidth()).withWidth(rightPanelsWidth));
+        }
+    };
+    setRightPanelBounds(mPluginListTablePanel, mPluginListTableVisible);
     mDocumentSection.setBounds(bounds);
     Document::Section::getMainSectionBorderSize().subtractFrom(bounds);
     bounds.reduce(4, 4);
@@ -208,24 +238,41 @@ PluginList::Table& Application::Interface::DocumentContainer::getPluginListTable
     return mPluginListTable;
 }
 
+void Application::Interface::DocumentContainer::setRightPanelsVisible(bool const pluginListTableVisible)
+{
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23).withTrimmedRight(rightBorderWidth + rightSeparatorWidth);
+    auto const right = bounds.getRight();
+    auto const setPanelBounds = [&](juce::Component& component, bool visible, bool& previousState)
+    {
+        auto const panelBounds = [&]()
+        {
+            if(visible)
+            {
+                return bounds.removeFromRight(rightPanelsWidth).withWidth(rightPanelsWidth);
+            }
+            else
+            {
+                return bounds.withX(right).withWidth(rightPanelsWidth);
+            }
+        }();
+        animator.animateComponent(&component, panelBounds, 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+        previousState = visible;
+    };
+    setPanelBounds(mPluginListTablePanel, pluginListTableVisible, mPluginListTableVisible);
+    animator.animateComponent(&mDocumentSection, bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+}
+
 void Application::Interface::DocumentContainer::showPluginListTablePanel()
 {
-    mPluginListTableVisible = true;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x92"));
+    mRightBorder.pluginListButton.setToggleState(true, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(true);
 }
 
 void Application::Interface::DocumentContainer::hidePluginListTablePanel()
 {
-    mPluginListTableVisible = false;
-    auto& animator = juce::Desktop::getInstance().getAnimator();
-    auto const bounds = getLocalBounds().withTrimmedBottom(23);
-    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
-    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
-    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
+    mRightBorder.pluginListButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+    setRightPanelsVisible(false);
 }
 
 void Application::Interface::DocumentContainer::togglePluginListTablePanel()
