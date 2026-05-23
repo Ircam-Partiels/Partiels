@@ -1,8 +1,120 @@
 #include "AnlDocumentFileBased.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlDocumentExporter.h"
+#include <set>
 
 ANALYSE_FILE_BEGIN
+
+namespace
+{
+    void appendXmlDifferences(std::vector<juce::String>& differences, juce::XmlElement const& lhs, juce::XmlElement const& rhs, juce::String const& path)
+    {
+        auto const lhsTagName = lhs.getTagName();
+        auto const rhsTagName = rhs.getTagName();
+        auto const currentPath = path.isEmpty() ? lhsTagName : path;
+        if(lhsTagName != rhsTagName)
+        {
+            differences.push_back(currentPath + " : tag mismatch [" + lhsTagName + "] != [" + rhsTagName + "]");
+            return;
+        }
+
+        std::set<std::string> attributes;
+        for(auto index = 0; index < lhs.getNumAttributes(); ++index)
+        {
+            attributes.insert(lhs.getAttributeName(index).toStdString());
+        }
+        for(auto index = 0; index < rhs.getNumAttributes(); ++index)
+        {
+            attributes.insert(rhs.getAttributeName(index).toStdString());
+        }
+
+        for(auto const& attribute : attributes)
+        {
+            auto const lhsHasAttribute = lhs.hasAttribute(attribute);
+            auto const rhsHasAttribute = rhs.hasAttribute(attribute);
+            auto const attrPath = currentPath + "." + juce::String(attribute);
+            if(!lhsHasAttribute)
+            {
+                differences.push_back(attrPath + " : missing in current model, reference=[" + rhs.getStringAttribute(attribute) + "]");
+                continue;
+            }
+            if(!rhsHasAttribute)
+            {
+                differences.push_back(attrPath + " : missing in reference model, current=[" + lhs.getStringAttribute(attribute) + "]");
+                continue;
+            }
+            auto const lhsValue = lhs.getStringAttribute(attribute);
+            auto const rhsValue = rhs.getStringAttribute(attribute);
+            if(lhsValue != rhsValue)
+            {
+                differences.push_back(attrPath + " : current=[" + lhsValue + "] reference=[" + rhsValue + "]");
+            }
+        }
+
+        auto const lhsText = lhs.getAllSubText().trim();
+        auto const rhsText = rhs.getAllSubText().trim();
+        if(lhsText != rhsText)
+        {
+            differences.push_back(currentPath + " : text mismatch current=[" + lhsText + "] reference=[" + rhsText + "]");
+        }
+
+        auto const lhsNumChildren = lhs.getNumChildElements();
+        auto const rhsNumChildren = rhs.getNumChildElements();
+        if(lhsNumChildren != rhsNumChildren)
+        {
+            differences.push_back(currentPath + " : child count mismatch [" + juce::String(lhsNumChildren) + "] != [" + juce::String(rhsNumChildren) + "]");
+        }
+        for(auto index = 0; index < std::min(lhsNumChildren, rhsNumChildren); ++index)
+        {
+            auto const* lhsChild = lhs.getChildElement(index);
+            auto const* rhsChild = rhs.getChildElement(index);
+            if(lhsChild == nullptr || rhsChild == nullptr)
+            {
+                differences.push_back(currentPath + "[" + juce::String(index) + "] : null child element");
+                continue;
+            }
+            auto const childPath = currentPath + "." + lhsChild->getTagName() + "[" + juce::String(index) + "]";
+            appendXmlDifferences(differences, *lhsChild, *rhsChild, childPath);
+        }
+    }
+
+    void traceModelComparison(char const* name, Document::Accessor const& current, Document::Accessor const& reference, bool equivalent)
+    {
+#if JUCE_DEBUG
+        auto const traceFile = juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("partiels-model-comparison-trace.log");
+        std::vector<juce::String> differences;
+        auto currentXml = current.toXml("document");
+        auto referenceXml = reference.toXml("document");
+        if(currentXml == nullptr || referenceXml == nullptr)
+        {
+            differences.push_back("Cannot serialize models to XML for comparison trace.");
+        }
+        else
+        {
+            appendXmlDifferences(differences, *currentXml.get(), *referenceXml.get(), {});
+        }
+
+        juce::String content;
+        content << "=== " << juce::Time::getCurrentTime().toString(true, true, true, true) << " | " << name << " | equivalent=" << (equivalent ? "true" : "false") << " ===\n";
+        if(differences.empty())
+        {
+            content << "No XML differences found.\n";
+        }
+        else
+        {
+            for(auto const& difference : differences)
+            {
+                content << "- " << difference << "\n";
+            }
+        }
+        content << "\n";
+        [[maybe_unused]] auto const result = traceFile.appendText(content, false, false);
+        MiscDebug("Document::FileBased", "Model comparison trace: " + traceFile.getFullPathName());
+#else
+        juce::ignoreUnused(name, current, reference, equivalent);
+#endif
+    }
+} // namespace
 
 Document::Accessor const& Document::FileBased::getDefaultAccessor()
 {
@@ -374,13 +486,17 @@ void Document::FileBased::changed()
     mAccessor.setAttr<AttrType::path>(getFile(), NotificationType::synchronous);
     if(getFile() == juce::File{})
     {
-        auto const state = mAccessor.isEquivalentTo(getDefaultAccessor()) || mAccessor.isEquivalentTo(mSavedStateAccessor);
-        setChangedFlag(!state);
+        auto const defaultEquivalent = mAccessor.isEquivalentTo(getDefaultAccessor());
+        auto const savedEquivalent = mAccessor.isEquivalentTo(mSavedStateAccessor);
+        traceModelComparison("default", mAccessor, getDefaultAccessor(), defaultEquivalent);
+        traceModelComparison("saved", mAccessor, mSavedStateAccessor, savedEquivalent);
+        setChangedFlag(!(defaultEquivalent || savedEquivalent));
     }
     else
     {
-        auto const state = mAccessor.isEquivalentTo(mSavedStateAccessor);
-        setChangedFlag(!state);
+        auto const savedEquivalent = mAccessor.isEquivalentTo(mSavedStateAccessor);
+        traceModelComparison("saved-file", mAccessor, mSavedStateAccessor, savedEquivalent);
+        setChangedFlag(!savedEquivalent);
     }
 }
 
