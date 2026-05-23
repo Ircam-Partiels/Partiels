@@ -1,12 +1,21 @@
 #include "AnlDocumentFileBased.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlDocumentExporter.h"
-#include <set>
 
 ANALYSE_FILE_BEGIN
 
 namespace
 {
+    bool isModelComparisonTraceEnabled()
+    {
+#if JUCE_DEBUG
+        auto const traceEnv = juce::SystemStats::getEnvironmentVariable("PARTIELS_MODEL_COMPARISON_TRACE", {});
+        return traceEnv.equalsIgnoreCase("1") || traceEnv.equalsIgnoreCase("true") || traceEnv.equalsIgnoreCase("yes");
+#else
+        return false;
+#endif
+    }
+
     void appendXmlDifferences(std::vector<juce::String>& differences, juce::XmlElement const& lhs, juce::XmlElement const& rhs, juce::String const& path)
     {
         auto const lhsTagName = lhs.getTagName();
@@ -18,14 +27,14 @@ namespace
             return;
         }
 
-        std::set<std::string> attributes;
+        juce::StringArray attributes;
         for(auto index = 0; index < lhs.getNumAttributes(); ++index)
         {
-            attributes.insert(lhs.getAttributeName(index).toStdString());
+            attributes.addIfNotAlreadyThere(lhs.getAttributeName(index));
         }
         for(auto index = 0; index < rhs.getNumAttributes(); ++index)
         {
-            attributes.insert(rhs.getAttributeName(index).toStdString());
+            attributes.addIfNotAlreadyThere(rhs.getAttributeName(index));
         }
 
         for(auto const& attribute : attributes)
@@ -81,7 +90,11 @@ namespace
     void traceModelComparison(char const* name, Document::Accessor const& current, Document::Accessor const& reference, bool equivalent)
     {
 #if JUCE_DEBUG
-        auto const traceFile = juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("partiels-model-comparison-trace.log");
+        if(!isModelComparisonTraceEnabled())
+        {
+            return;
+        }
+        static auto const traceFile = juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("partiels-model-comparison-trace.log");
         std::vector<juce::String> differences;
         auto currentXml = current.toXml("document");
         auto referenceXml = reference.toXml("document");
@@ -108,7 +121,12 @@ namespace
             }
         }
         content << "\n";
-        [[maybe_unused]] auto const result = traceFile.appendText(content, false, false);
+        auto const writeResult = traceFile.appendText(content, false, false);
+        if(!writeResult)
+        {
+            MiscDebug("Document::FileBased", "Cannot write model comparison trace: " + traceFile.getFullPathName());
+            return;
+        }
         MiscDebug("Document::FileBased", "Model comparison trace: " + traceFile.getFullPathName());
 #else
         juce::ignoreUnused(name, current, reference, equivalent);
