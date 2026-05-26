@@ -33,15 +33,16 @@ std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
     {
         return std::make_tuple(juce::String{}, 0_z);
     }
-    else if(Document::Tools::hasGroupAcsr(documentAcsr, *selectedItem))
+    auto const& selectedIdentifier = selectedItem.value();
+    if(Document::Tools::hasGroupAcsr(documentAcsr, selectedIdentifier))
     {
-        return std::make_tuple(*selectedItem, 0_z);
+        return std::make_tuple(selectedIdentifier, 0_z);
     }
-    else if(Document::Tools::hasTrackAcsr(documentAcsr, *selectedItem))
+    if(Document::Tools::hasTrackAcsr(documentAcsr, selectedIdentifier))
     {
-        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *selectedItem);
+        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, selectedIdentifier);
         auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        auto const position = Document::Tools::getTrackPosition(documentAcsr, *selectedItem);
+        auto const position = Document::Tools::getTrackPosition(documentAcsr, selectedIdentifier);
         return std::make_tuple(groupIdentifier, position + 1_z);
     }
     MiscWeakAssert(false);
