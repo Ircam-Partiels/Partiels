@@ -1,6 +1,12 @@
 
 #include "AnlPluginModel.h"
 
+namespace Ive
+{
+    void to_json(nlohmann::json& j, PluginExtension::OutputExtraDescriptor const& outputExtra);
+    void from_json(nlohmann::json const& j, PluginExtension::OutputExtraDescriptor& outputExtra);
+} // namespace Ive
+
 ANALYSE_FILE_BEGIN
 
 bool Plugin::Output::operator==(Output const& rhs) const noexcept
@@ -571,3 +577,13 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
 }
 
 ANALYSE_FILE_END
+
+void Ive::to_json(nlohmann::json& j, Ive::PluginExtension::OutputExtraDescriptor const& outputExtra)
+{
+    Misc::Plugin::to_json(j, outputExtra);
+}
+
+void Ive::from_json(nlohmann::json const& j, Ive::PluginExtension::OutputExtraDescriptor& outputExtra)
+{
+    Misc::Plugin::from_json(j, outputExtra);
+}
