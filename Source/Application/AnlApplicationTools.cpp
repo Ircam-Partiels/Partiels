@@ -51,10 +51,12 @@ std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
 std::tuple<juce::Result, juce::String, size_t> Application::Tools::prepareForNewTracks(juce::String const& groupIdentifier, size_t const trackPosition)
 {
     auto& documentDir = Instance::get().getDocumentDirector();
+    // Sanitize the document to make sure the group identifier is up to date and valid before adding the track to it.
     auto references = documentDir.sanitize(NotificationType::synchronous);
     auto identifier = references.count(groupIdentifier) > 0_z ? references.at(groupIdentifier) : groupIdentifier;
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    if(identifier.isEmpty() && documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
+    // If there is no group, create a new one. The new track will then be added to this new group.
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
+    if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
     {
         auto const [result, newIdentifier] = documentDir.addGroup(0, NotificationType::synchronous);
         if(result.failed())
@@ -65,7 +67,18 @@ std::tuple<juce::Result, juce::String, size_t> Application::Tools::prepareForNew
         identifier = references.count(newIdentifier) > 0_z ? references.at(newIdentifier) : newIdentifier;
         return std::make_tuple(juce::Result::ok(), identifier, 0_z);
     }
-    return std::make_tuple(juce::Result::ok(), identifier, trackPosition);
+    // If the group does not exist, add the track to the first group.
+    if(!Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+    {
+        auto const& groupAcsr = documentAcsr.getAcsr<Document::AcsrType::groups>(0);
+        identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+        auto const trackCount = groupAcsr.getAttr<Group::AttrType::layout>().size();
+        return std::make_tuple(juce::Result::ok(), identifier, std::min(trackCount, trackPosition));
+    }
+    // Use the group and the track position
+    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
+    auto const trackCount = groupAcsr.getAttr<Group::AttrType::layout>().size();
+    return std::make_tuple(juce::Result::ok(), identifier, std::min(trackCount, trackPosition));
 }
 
 void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentifiers)
