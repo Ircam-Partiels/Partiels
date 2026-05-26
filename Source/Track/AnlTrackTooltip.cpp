@@ -110,13 +110,13 @@ namespace Track
             {
                 if(index < extraOutputs.size())
                 {
-                    auto const name = juce::String(extraOutputs.at(index).name);
-                    auto const unit = juce::String(extraOutputs.at(index).unit);
-                    lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4) + unit);
+                    auto const& extraOutput = extraOutputs.at(index);
+                    auto const name = extraOutput.name.empty() ? juce::translate("Extra INDEX").replace("INDEX", juce::String(index + 1_z)) : juce::String(extraOutput.name);
+                    lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4) + extraOutput.unit);
                 }
                 else
                 {
-                    auto const name = juce::translate("Extra INDEX").replace("INDEX", juce::String(index));
+                    auto const name = juce::translate("Extra INDEX").replace("INDEX", juce::String(index + 1_z));
                     lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4));
                 }
             }
