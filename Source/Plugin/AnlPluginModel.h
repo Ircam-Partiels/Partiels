@@ -64,25 +64,7 @@ namespace Plugin
     void to_json(nlohmann::json& j, Output const& output);
     void from_json(nlohmann::json const& j, Output& output);
 
-    struct OutputExtra
-    : public Ive::PluginExtension::OutputExtraDescriptor
-    {
-        using Ive::PluginExtension::OutputExtraDescriptor::OutputExtraDescriptor;
-        OutputExtra(Ive::PluginExtension::OutputExtraDescriptor const& d)
-        : Ive::PluginExtension::OutputExtraDescriptor(d)
-        {
-        }
-
-        bool operator==(OutputExtra const& rhd) const noexcept
-        {
-            return Ive::PluginExtension::OutputExtraDescriptor::operator==(rhd);
-        }
-        inline bool operator!=(OutputExtra const& rhd) const noexcept
-        {
-            return Ive::PluginExtension::OutputExtraDescriptor::operator!=(rhd);
-        }
-    };
-
+    using OutputExtra = Ive::PluginExtension::OutputExtraDescriptor;
     void to_json(nlohmann::json& j, OutputExtra const& outputExtra);
     void from_json(nlohmann::json const& j, OutputExtra& outputExtra);
 
