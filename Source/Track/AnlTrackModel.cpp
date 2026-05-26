@@ -2,6 +2,31 @@
 
 ANALYSE_FILE_BEGIN
 
+void Track::Accessor::setGraphicsSettings(GraphicsSettings const& value, NotificationType notification)
+{
+    auto copy = value;
+    // Clamp lineWidth to a minimum of 1.0f to ensure lines are always visible in rendering.
+    copy.lineWidth = std::max(copy.lineWidth, 1.0f);
+    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::graphicsSettings, GraphicsSettings>(copy, notification);
+}
+
+void Track::Accessor::setChannelsLayout(std::vector<bool> const& value, NotificationType notification)
+{
+    if(!value.empty() && std::none_of(value.cbegin(), value.cend(), [](auto const& state)
+                                      {
+                                          return state == true;
+                                      }))
+    {
+        auto copy = value;
+        copy[0_z] = true;
+        Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::channelsLayout, std::vector<bool>>(copy, notification);
+    }
+    else
+    {
+        Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::channelsLayout, std::vector<bool>>(value, notification);
+    }
+}
+
 std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement const& xml, int version)
 {
     auto copy = std::make_unique<juce::XmlElement>(xml);
