@@ -559,10 +559,7 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
 
     description.output = *outputIt;
     auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
-    for(auto const& descriptor : plugin.getOutputExtraDescriptors(outputIndex))
-    {
-        description.extraOutputs.emplace_back(descriptor);
-    }
+    description.extraOutputs = plugin.getOutputExtraDescriptors(outputIndex);
 
     auto const inputs = plugin.getInputDescriptors();
     auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
