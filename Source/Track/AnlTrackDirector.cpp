@@ -912,6 +912,15 @@ void Track::Director::sanitizeExtraOutputs(NotificationType const notification)
     auto const updateDescription = [&](auto const& data)
     {
         auto& extraOutputs = description.extraOutputs;
+        auto const maxSize = std::accumulate(data.cbegin(), data.cend(), extraOutputs.size(), [](auto const dcount, auto const& channelData)
+                                             {
+                                                 return std::max(std::accumulate(channelData.cbegin(), channelData.cend(), 0_z, [](auto const ccount, auto const& elemData)
+                                                                                 {
+                                                                                     return std::max(ccount, std::get<3>(elemData).size());
+                                                                                 }),
+                                                                 dcount);
+                                             });
+        extraOutputs.resize(maxSize);
         for(auto const& channelData : data)
         {
             for(auto const& elemData : channelData)
@@ -919,7 +928,6 @@ void Track::Director::sanitizeExtraOutputs(NotificationType const notification)
                 for(auto i = 0_z; i < std::get<3>(elemData).size(); ++i)
                 {
                     auto const value = std::get<3>(elemData).at(i);
-                    extraOutputs.resize(i + 1_z);
                     auto& extraOutput = extraOutputs[i];
                     if(std::exchange(extraOutput.hasKnownExtents, true))
                     {
