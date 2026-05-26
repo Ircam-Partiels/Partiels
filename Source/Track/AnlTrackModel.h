@@ -339,26 +339,11 @@ namespace Track
         {
             if constexpr(type == AttrType::graphicsSettings)
             {
-                auto copy = value;
-                // Clamp lineWidth to a minimum of 1.0f to ensure lines are always visible in rendering.
-                copy.lineWidth = std::max(copy.lineWidth, 1.0f);
-                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(copy, notification);
+                setGraphicsSettings(value, notification);
             }
             else if constexpr(type == AttrType::channelsLayout)
             {
-                if(!value.empty() && std::none_of(value.cbegin(), value.cend(), [](auto const& state)
-                                                  {
-                                                      return state == true;
-                                                  }))
-                {
-                    auto copy = value;
-                    copy[0_z] = true;
-                    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(copy, notification);
-                }
-                else
-                {
-                    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
-                }
+                setChannelsLayout(value, notification);
             }
             else
             {
@@ -367,6 +352,10 @@ namespace Track
         }
 
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
+
+    private:
+        void setGraphicsSettings(GraphicsSettings const& value, NotificationType notification);
+        void setChannelsLayout(std::vector<bool> const& value, NotificationType notification);
     };
 
     namespace PresetList
