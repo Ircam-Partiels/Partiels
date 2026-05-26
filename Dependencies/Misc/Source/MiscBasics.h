@@ -45,7 +45,7 @@ constexpr std::size_t operator""_z(unsigned long long n)
 #define MISC_FILE_END }
 // clang-format on
 
-#ifdef MISC_IGNORE_ASSERT
+#if MISC_IGNORE_ASSERT
 #define MiscStrongAssert(condition) juce::ignoreUnused(condition)
 #define MiscWeakAssert(condition) juce::ignoreUnused(condition)
 #else
