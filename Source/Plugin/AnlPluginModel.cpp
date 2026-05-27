@@ -11,13 +11,17 @@ ANALYSE_FILE_BEGIN
 
 bool Plugin::Output::operator==(Output const& rhs) const noexcept
 {
+    static auto const isEmpty = [](std::string const& str)
+    {
+        return str.empty();
+    };
     return identifier == rhs.identifier &&
            name == rhs.name &&
            description == rhs.description &&
            unit == rhs.unit &&
            hasFixedBinCount == rhs.hasFixedBinCount &&
            (!hasFixedBinCount || binCount == rhs.binCount) &&
-           binNames == rhs.binNames &&
+           (binNames == rhs.binNames || (std::all_of(binNames.cbegin(), binNames.cend(), isEmpty) && std::all_of(rhs.binNames.cbegin(), rhs.binNames.cend(), isEmpty))) &&
            hasKnownExtents == rhs.hasKnownExtents &&
            (!hasKnownExtents || std::abs(minValue - rhs.minValue) < std::numeric_limits<float>::epsilon()) &&
            (!hasKnownExtents || std::abs(maxValue - rhs.maxValue) < std::numeric_limits<float>::epsilon()) &&
