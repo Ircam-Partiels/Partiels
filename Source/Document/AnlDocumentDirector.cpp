@@ -471,6 +471,25 @@ void Document::Director::setPluginTable(PluginList::Table* table, std::function<
     }
 }
 
+void Document::Director::resetSavedState()
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    for(auto& track : mTracks)
+    {
+        if(track != nullptr)
+        {
+            track->resetSavedState();
+        }
+    }
+    for(auto& group : mGroups)
+    {
+        if(group != nullptr)
+        {
+            group->resetSavedState(false);
+        }
+    }
+}
+
 bool Document::Director::isPerformingAction() const
 {
     return mIsPerformingAction;
@@ -483,7 +502,7 @@ void Document::Director::startAction()
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(mAccessor.isEquivalentTo(mSavedState));
-        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+        resetSavedState();
     }
 }
 
@@ -501,8 +520,9 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
     : public juce::UndoableAction
     {
     public:
-        Action(Accessor& accessor, Accessor const& undoAcsr)
+        Action(Accessor& accessor, Accessor const& undoAcsr, std::function<void()> resetFn)
         : mAccessor(accessor)
+        , mResetFn(std::move(resetFn))
         {
             mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
             mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
@@ -513,22 +533,38 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
         bool perform() override
         {
             mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
         bool undo() override
         {
             mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
     private:
         Accessor& mAccessor;
+        std::function<void()> mResetFn;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
 
-    auto action = std::make_unique<Action>(mAccessor, mSavedState);
+    juce::WeakReference<Director> weakThis(this);
+    auto action = std::make_unique<Action>(mAccessor, mSavedState, [weakThis]()
+                                           {
+                                               if(weakThis != nullptr)
+                                               {
+                                                   weakThis->resetSavedState();
+                                               }
+                                           });
     switch(state)
     {
         case ActionState::abort:
@@ -548,7 +584,6 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
         }
         break;
     }
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
 std::tuple<juce::Result, juce::String> Document::Director::addTrack(juce::String const groupIdentifier, size_t position, NotificationType const notification)

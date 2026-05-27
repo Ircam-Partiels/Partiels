@@ -35,6 +35,7 @@ namespace Track
         std::function<Transport::Accessor&()> getSafeTransportZoomAccessorFn();
         void setSafeAccessorRetriever(SafeAccessorRetriever const& sav);
 
+        void resetSavedState();
         bool hasChanged() const;
         bool isPerformingAction() const;
         void startAction();

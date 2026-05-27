@@ -115,6 +115,20 @@ bool Group::Director::hasChanged(bool includeTracks) const
     return !mAccessor.isEquivalentTo(mSavedState);
 }
 
+void Group::Director::resetSavedState(bool includeTracks)
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    if(includeTracks)
+    {
+        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+        for(auto& trackAcr : trackAcrs)
+        {
+            auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+            trackDirector.resetSavedState();
+        }
+    }
+}
+
 bool Group::Director::isPerformingAction() const
 {
     return mIsPerformingAction;
@@ -127,7 +141,7 @@ void Group::Director::startAction(bool includeTracks)
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged(true));
-        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+        resetSavedState(false);
         if(includeTracks)
         {
             auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
@@ -163,8 +177,9 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
     : public juce::UndoableAction
     {
     public:
-        Action(std::function<Accessor&()> sar, Accessor const& undoAcsr)
+        Action(std::function<Accessor&()> sar, Accessor const& undoAcsr, std::function<void()> resetFn)
         : mSafeAccessorRetrieverFn(std::move(sar))
+        , mResetFn(std::move(resetFn))
         {
             mRedoAccessor.copyFrom(mSafeAccessorRetrieverFn(), NotificationType::synchronous);
             mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
@@ -175,52 +190,84 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
         bool perform() override
         {
             mSafeAccessorRetrieverFn().copyFrom(mRedoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
         bool undo() override
         {
             mSafeAccessorRetrieverFn().copyFrom(mUndoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
     private:
         std::function<Accessor&()> const mSafeAccessorRetrieverFn;
+        std::function<void()> mResetFn;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
 
-    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState);
+    juce::WeakReference<Director> weakThis(this);
+    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState, [weakThis, includeTracks]()
+                                           {
+                                               if(weakThis != nullptr)
+                                               {
+                                                   weakThis->resetSavedState(includeTracks);
+                                               }
+                                           });
     switch(state)
     {
         case ActionState::abort:
         {
             action->undo();
+            if(includeTracks)
+            {
+                auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+                for(auto& trackAcr : trackAcrs)
+                {
+                    auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+                    trackDirector.endAction(ActionState::abort);
+                }
+            }
         }
         break;
         case ActionState::newTransaction:
         {
             mUndoManager.beginNewTransaction(name);
             mUndoManager.perform(action.release());
+            if(includeTracks)
+            {
+                auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+                for(auto& trackAcr : trackAcrs)
+                {
+                    auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+                    trackDirector.endAction(ActionState::continueTransaction);
+                }
+            }
         }
         break;
         case ActionState::continueTransaction:
         {
             mUndoManager.perform(action.release());
+            if(includeTracks)
+            {
+                auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+                for(auto& trackAcr : trackAcrs)
+                {
+                    auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+                    trackDirector.endAction(ActionState::continueTransaction);
+                }
+            }
         }
         break;
     }
-
-    if(includeTracks)
-    {
-        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
-        for(auto& trackAcr : trackAcrs)
-        {
-            auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
-            trackDirector.endAction(ActionState::continueTransaction);
-        }
-    }
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
 std::function<Group::Accessor&()> Group::Director::getSafeAccessorFn()

@@ -21,6 +21,7 @@ namespace Group
         void updateTracks(NotificationType notification);
 
         bool isPerformingAction() const;
+        void resetSavedState(bool includeTracks);
         bool hasChanged(bool includeTracks) const;
         void startAction(bool includeTracks);
         void endAction(bool includeTracks, ActionState state, juce::String const& name = {});
@@ -45,6 +46,7 @@ namespace Group
         bool mIsPerformingAction{false};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
+        JUCE_DECLARE_WEAK_REFERENCEABLE(Director)
     };
 } // namespace Group
 
