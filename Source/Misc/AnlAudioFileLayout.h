@@ -35,6 +35,9 @@ struct AudioFileLayout
     }
 };
 
+void to_json(nlohmann::json& j, AudioFileLayout const& audioFileLayout);
+void from_json(nlohmann::json const& j, AudioFileLayout& audioFileLayout);
+
 namespace XmlParser
 {
     template <>
