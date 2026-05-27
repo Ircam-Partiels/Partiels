@@ -28,6 +28,18 @@ auto XmlParser::fromXml<AudioFileLayout>(juce::XmlElement const& xml, juce::Iden
     return value;
 }
 
+void to_json(nlohmann::json& j, AudioFileLayout const& audioFileLayout)
+{
+    j["file"] = audioFileLayout.file;
+    j["channel"] = audioFileLayout.channel;
+}
+
+void from_json(nlohmann::json const& j, AudioFileLayout& audioFileLayout)
+{
+    audioFileLayout.file = j.value("file", audioFileLayout.file);
+    audioFileLayout.channel = j.value("channel", audioFileLayout.channel);
+}
+
 AudioFileLayoutTable::Channel::Entry::Entry(size_t i, juce::String const& fileName)
 : index(i)
 {
