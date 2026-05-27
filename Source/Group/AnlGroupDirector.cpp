@@ -115,6 +115,20 @@ bool Group::Director::hasChanged(bool includeTracks) const
     return !mAccessor.isEquivalentTo(mSavedState);
 }
 
+void Group::Director::resetSavedState(bool includeTracks)
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    if(includeTracks)
+    {
+        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+        for(auto& trackAcr : trackAcrs)
+        {
+            auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+            trackDirector.resetSavedState();
+        }
+    }
+}
+
 bool Group::Director::isPerformingAction() const
 {
     return mIsPerformingAction;
@@ -127,7 +141,7 @@ void Group::Director::startAction(bool includeTracks)
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged(true));
-        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+        resetSavedState(false);
         if(includeTracks)
         {
             auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
@@ -220,7 +234,7 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
             trackDirector.endAction(ActionState::continueTransaction);
         }
     }
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    resetSavedState(includeTracks);
 }
 
 std::function<Group::Accessor&()> Group::Director::getSafeAccessorFn()

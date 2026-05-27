@@ -21,6 +21,7 @@ namespace Group
         void updateTracks(NotificationType notification);
 
         bool isPerformingAction() const;
+        void resetSavedState(bool includeTracks);
         bool hasChanged(bool includeTracks) const;
         void startAction(bool includeTracks);
         void endAction(bool includeTracks, ActionState state, juce::String const& name = {});

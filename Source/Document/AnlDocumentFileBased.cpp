@@ -140,6 +140,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     var->setProperty("y", viewport.getY());
     mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
 
+    mDirector.resetSavedState();
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     if(onLoaded != nullptr)
     {

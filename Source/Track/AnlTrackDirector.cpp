@@ -516,6 +516,11 @@ void Track::Director::setSafeAccessorRetriever(SafeAccessorRetriever const& sav)
     mSafeAccessorRetriever = sav;
 }
 
+void Track::Director::resetSavedState()
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+}
+
 bool Track::Director::hasChanged() const
 {
     return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());
@@ -533,7 +538,7 @@ void Track::Director::startAction()
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged());
-        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+        resetSavedState();
     }
 }
 
@@ -620,7 +625,7 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
         }
         break;
     }
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    resetSavedState();
 }
 
 void Track::Director::setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification)
