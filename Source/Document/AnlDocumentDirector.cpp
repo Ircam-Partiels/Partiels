@@ -571,7 +571,7 @@ std::tuple<juce::Result, juce::String> Document::Director::addTrack(juce::String
 
     auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
     auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
-    MiscStrongAssert(position <= layout.size());
+    MiscWeakAssert(position <= layout.size());
     position = std::min(position, layout.size());
     layout.insert(layout.begin() + static_cast<long>(position), identifier);
     groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::synchronous);
