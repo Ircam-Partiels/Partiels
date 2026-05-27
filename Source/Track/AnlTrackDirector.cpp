@@ -516,6 +516,11 @@ void Track::Director::setSafeAccessorRetriever(SafeAccessorRetriever const& sav)
     mSafeAccessorRetriever = sav;
 }
 
+void Track::Director::resetSavedState()
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+}
+
 bool Track::Director::hasChanged() const
 {
     return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());
@@ -533,7 +538,7 @@ void Track::Director::startAction()
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged());
-        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+        resetSavedState();
     }
 }
 
@@ -551,8 +556,9 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     : public juce::UndoableAction
     {
     public:
-        Action(std::function<Accessor&()> fn, Accessor const& undoAcsr)
+        Action(std::function<Accessor&()> fn, Accessor const& undoAcsr, std::function<void()> resetFn)
         : mGetSafeAccessor(fn)
+        , mResetFn(std::move(resetFn))
         {
             MiscWeakAssert(mGetSafeAccessor != nullptr);
             if(mGetSafeAccessor != nullptr)
@@ -573,6 +579,10 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
             }
             auto& accessor = mGetSafeAccessor();
             accessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
@@ -591,16 +601,28 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
                 accessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
             }
             accessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            if(mResetFn != nullptr)
+            {
+                mResetFn();
+            }
             return true;
         }
 
     private:
         std::function<Accessor&()> mGetSafeAccessor;
+        std::function<void()> mResetFn;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
 
-    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState);
+    juce::WeakReference<Director> weakThis(this);
+    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState, [weakThis]()
+                                           {
+                                               if(weakThis != nullptr)
+                                               {
+                                                   weakThis->resetSavedState();
+                                               }
+                                           });
     switch(state)
     {
         case ActionState::abort:
@@ -620,7 +642,6 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
         }
         break;
     }
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
 void Track::Director::setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification)
