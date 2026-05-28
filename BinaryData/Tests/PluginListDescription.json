@@ -18,9 +18,7 @@
             "name": "Amplitude Follower",
             "output": {
                 "binCount": 1,
-                "binNames": [
-                    ""
-                ],
+                "binNames": [],
                 "description": "The peak tracked amplitude for the current processing block",
                 "hasDuration": false,
                 "hasFixedBinCount": true,
