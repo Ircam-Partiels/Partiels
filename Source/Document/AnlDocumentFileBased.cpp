@@ -373,16 +373,15 @@ void Document::FileBased::handleAsyncUpdate()
 void Document::FileBased::changed()
 {
     mAccessor.setAttr<AttrType::path>(getFile(), NotificationType::synchronous);
-    if(getFile() == juce::File{})
+    auto const hasFile = getFile() != juce::File{};
+    auto const state = mAccessor.isEquivalentTo(hasFile ? mSavedStateAccessor : getDefaultAccessor());
+    setChangedFlag(!state);
+#if JUCE_DEBUG
+    if(!state)
     {
-        auto const state = mAccessor.isEquivalentTo(getDefaultAccessor());
-        setChangedFlag(!state);
+        MiscDebug("Document::FileBased", mAccessor.getDiff(mSavedStateAccessor).dump());
     }
-    else
-    {
-        auto const state = mAccessor.isEquivalentTo(mSavedStateAccessor);
-        setChangedFlag(!state);
-    }
+#endif
 }
 
 std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> Document::FileBased::parse(juce::File const& file)

@@ -621,6 +621,64 @@ namespace Model
             return result;
         }
 
+        // @brief Get the diff with another accessor as json
+        nlohmann::json getDiff(Accessor const& accessor) const
+        {
+            nlohmann::json json;
+            detail::for_each(accessor.mAttributes, [&](auto const& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::comparable) != 0)
+                                 {
+                                     auto constexpr attr_type = element_type::type;
+                                     auto const result = isEquivalentTo(getAttr<attr_type>(), d.value);
+                                     if(!result)
+                                     {
+                                         nlohmann::json ajson;
+                                         ajson["name"] = std::string(magic_enum::enum_name(element_type::type));
+                                         ajson["source"] = getAttr<attr_type>();
+                                         ajson["other"] = d.value;
+                                         json["attribute"].push_back(std::move(ajson));
+                                     }
+                                 }
+                             });
+
+            detail::for_each(accessor.mAccessors, [&](auto const& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::comparable) != 0)
+                                 {
+                                     auto constexpr acsr_type = element_type::type;
+                                     auto const cacsrs = getAcsrs<acsr_type>();
+                                     auto const oacsrs = accessor.getAcsrs<acsr_type>();
+                                     if(cacsrs.size() != oacsrs.size())
+                                     {
+                                         nlohmann::json ajson;
+                                         ajson["name"] = std::string(magic_enum::enum_name(element_type::type));
+                                         ajson["source_size"] = cacsrs.size();
+                                         ajson["other_size"] = oacsrs.size();
+                                         json["accessor"].push_back(std::move(ajson));
+                                     }
+                                     else
+                                     {
+                                         auto const numAcsrs = cacsrs.size();
+                                         for(auto index = 0_z; index < numAcsrs; ++index)
+                                         {
+                                             if(!cacsrs.at(index).get().isEquivalentTo(oacsrs.at(index).get()))
+                                             {
+                                                 nlohmann::json ajson;
+                                                 ajson["name"] = std::string(magic_enum::enum_name(element_type::type));
+                                                 ajson["index"] = index;
+                                                 ajson["diff"] = cacsrs.at(index).get().getDiff(oacsrs.at(index).get());
+                                                 json["accessor"].push_back(std::move(ajson));
+                                             }
+                                         }
+                                     }
+                                 }
+                             });
+            return json;
+        }
+
         struct Listener
         {
             Listener(juce::String const n)

@@ -141,6 +141,12 @@ void Group::Director::startAction(bool includeTracks)
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged(true));
+#if JUCE_DEBUG
+        if(hasChanged(true))
+        {
+            MiscDebug("Group::Director", mAccessor.getDiff(mSavedState).dump());
+        }
+#endif
         resetSavedState(false);
         if(includeTracks)
         {

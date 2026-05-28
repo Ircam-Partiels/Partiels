@@ -538,6 +538,12 @@ void Track::Director::startAction()
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged());
+#if JUCE_DEBUG
+        if(hasChanged())
+        {
+            MiscDebug("Track::Director", mAccessor.getDiff(mSavedState).dump());
+        }
+#endif
         resetSavedState();
     }
 }
