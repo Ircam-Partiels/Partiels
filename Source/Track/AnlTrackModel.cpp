@@ -2,6 +2,25 @@
 
 ANALYSE_FILE_BEGIN
 
+void Track::Accessor::setDescription(Plugin::Description const& value, NotificationType notification)
+{
+    // The Vamp host generates empty bin names if the bin count is not null to ensure backward compatibility.
+    // In this case, we clear the bin names to avoid confusion, as they don't provide any useful information.
+    if(std::all_of(value.output.binNames.cbegin(), value.output.binNames.cend(), [](auto const& str)
+                   {
+                       return str.empty();
+                   }))
+    {
+        auto copy = value;
+        copy.output.binNames.clear();
+        Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::description, Plugin::Description>(copy, notification);
+    }
+    else
+    {
+        Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::description, Plugin::Description>(value, notification);
+    }
+}
+
 void Track::Accessor::setGraphicsSettings(GraphicsSettings const& value, NotificationType notification)
 {
     auto copy = value;

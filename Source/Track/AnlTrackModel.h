@@ -337,7 +337,11 @@ namespace Track
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            if constexpr(type == AttrType::graphicsSettings)
+            if constexpr(type == AttrType::description)
+            {
+                setDescription(value, notification);
+            }
+            else if constexpr(type == AttrType::graphicsSettings)
             {
                 setGraphicsSettings(value, notification);
             }
@@ -354,6 +358,7 @@ namespace Track
         std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
 
     private:
+        void setDescription(Plugin::Description const& value, NotificationType notification);
         void setGraphicsSettings(GraphicsSettings const& value, NotificationType notification);
         void setChannelsLayout(std::vector<bool> const& value, NotificationType notification);
     };
