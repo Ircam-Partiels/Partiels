@@ -562,6 +562,15 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     }
 
     description.output = *outputIt;
+    // The Vamp host generates empty bin names if the bin count is not null to ensure backward compatibility.
+    // In this case, we clear the bin names to avoid confusion, as they don't provide any useful information.
+    if(std::all_of(description.output.binNames.cbegin(), description.output.binNames.cend(), [](auto const& str)
+                   {
+                       return str.empty();
+                   }))
+    {
+        description.output.binNames.clear();
+    }
     auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
     description.extraOutputs = plugin.getOutputExtraDescriptors(outputIndex);
 
