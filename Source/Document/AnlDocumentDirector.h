@@ -33,6 +33,7 @@ namespace Document
         [[nodiscard]] std::map<juce::String, juce::String> sanitize(NotificationType const notification);
 
         void resetSavedState();
+        bool hasChanged() const;
         bool isPerformingAction() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
