@@ -141,6 +141,12 @@ void Group::Director::startAction(bool includeTracks)
     if(!std::exchange(mIsPerformingAction, true))
     {
         MiscWeakAssert(!hasChanged(true));
+#if JUCE_DEBUG
+        if(hasChanged(true))
+        {
+            MiscDebug("Group::Director", mAccessor.getDiff(mSavedState).dump());
+        }
+#endif
         resetSavedState(false);
         if(includeTracks)
         {
@@ -215,11 +221,13 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
     };
 
     juce::WeakReference<Director> weakThis(this);
-    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState, [weakThis, includeTracks]()
+    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState, [weakThis]()
                                            {
                                                if(weakThis != nullptr)
                                                {
-                                                   weakThis->resetSavedState(includeTracks);
+                                                   // No need to reset the saved state of tracks because it will be managed
+                                                   // by the track directors
+                                                   weakThis->resetSavedState(false);
                                                }
                                            });
     switch(state)

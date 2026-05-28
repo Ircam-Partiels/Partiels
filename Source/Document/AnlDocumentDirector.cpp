@@ -490,6 +490,11 @@ void Document::Director::resetSavedState()
     }
 }
 
+bool Document::Director::hasChanged() const
+{
+    return !mAccessor.isEquivalentTo(mSavedState);
+}
+
 bool Document::Director::isPerformingAction() const
 {
     return mIsPerformingAction;
@@ -501,7 +506,13 @@ void Document::Director::startAction()
     MiscWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
-        MiscWeakAssert(mAccessor.isEquivalentTo(mSavedState));
+        MiscWeakAssert(!hasChanged());
+#if JUCE_DEBUG
+        if(hasChanged())
+        {
+            MiscDebug("Document::Director", mAccessor.getDiff(mSavedState).dump());
+        }
+#endif
         resetSavedState();
     }
 }
@@ -511,7 +522,7 @@ void Document::Director::endAction(ActionState state, juce::String const& name)
     MiscDebug("Document::Director", "endAction");
     MiscWeakAssert(mIsPerformingAction == true);
     mIsPerformingAction = false;
-    if(mAccessor.isEquivalentTo(mSavedState))
+    if(!hasChanged())
     {
         return;
     }
