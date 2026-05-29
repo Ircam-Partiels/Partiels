@@ -1112,7 +1112,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
 
     for(auto const& propertyExtraThreshold : mPropertyExtraThresholds)
     {
-        auto const& outputName = propertyExtraThreshold.first;
+        auto const& outputIdentifier = propertyExtraThreshold.first;
         auto const& property = propertyExtraThreshold.second;
         MiscWeakAssert(property != nullptr);
         if(property != nullptr)
@@ -1123,7 +1123,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
                 auto const& extraOutputs = trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs;
                 auto const it = std::find_if(extraOutputs.cbegin(), extraOutputs.cend(), [&](auto const& extraOutput)
                                              {
-                                                 return extraOutput.name == outputName;
+                                                 return extraOutput.identifier == outputIdentifier;
                                              });
                 if(it != extraOutputs.cend())
                 {
