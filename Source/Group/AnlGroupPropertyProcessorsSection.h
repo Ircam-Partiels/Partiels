@@ -24,6 +24,7 @@ namespace Group
         void setBlockSize(size_t const blockSize);
         void setStepSize(size_t const stepSize);
         void setInputTrack(juce::String const& identifier);
+        void setUseInputResultsExtraThresholds(bool state);
 
         void updateContent();
         void updateWindowType();
@@ -40,6 +41,7 @@ namespace Group
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
         PropertyList mPropertyInputTrack;
+        PropertyToggle mPropertyUseInputResultsExtraThresholds;
         std::map<int, juce::String> mPropertyInputTrackList;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
 

@@ -56,6 +56,10 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                               }
                           }
                       })
+, mPropertyUseInputResultsExtraThresholds(juce::translate("Apply Extra Thresholds"), juce::translate("Apply extra threshold filters to input results before preprocessing."), [this](bool state)
+                                          {
+                                              setUseInputResultsExtraThresholds(state);
+                                          })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -65,7 +69,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                  {
                      updateState();
                  },
-                 {Track::AttrType::state})
+                 {Track::AttrType::state, Track::AttrType::useInputResultsExtraThresholds})
 {
     mPropertyBlockSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyBlockSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
@@ -76,6 +80,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
     addAndMakeVisible(mPropertyBlockSize);
     addAndMakeVisible(mPropertyStepSize);
     addAndMakeVisible(mPropertyInputTrack);
+    addAndMakeVisible(mPropertyUseInputResultsExtraThresholds);
 }
 
 void Group::PropertyProcessorsSection::resized()
@@ -89,6 +94,7 @@ void Group::PropertyProcessorsSection::resized()
         }
     };
     setBounds(mPropertyInputTrack);
+    setBounds(mPropertyUseInputResultsExtraThresholds);
     setBounds(mPropertyWindowType);
     setBounds(mPropertyBlockSize);
     setBounds(mPropertyStepSize);
@@ -340,6 +346,39 @@ void Group::PropertyProcessorsSection::setInputTrack(juce::String const& identif
                               updateInputTrack();
                           },
                           supportsInputTrack);
+}
+
+void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool state)
+{
+    askToModifyProcessors([this](bool result)
+                          {
+                              if(result)
+                              {
+                                  mDirector.startAction(true);
+                              }
+                              else
+                              {
+                                  updateState();
+                              }
+                              return result;
+                          },
+                          [=, this]()
+                          {
+                              auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+                              for(auto& trackAcsr : trackAcsrs)
+                              {
+                                  if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+                                  {
+                                      trackAcsr.get().setAttr<Track::AttrType::useInputResultsExtraThresholds>(state, NotificationType::synchronous);
+                                  }
+                              }
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Toggle input extra thresholds"));
+                              updateState();
+                          },
+                          [](Track::Accessor const& trackAcsr)
+                          {
+                              return Track::Tools::supportsInputTrack(trackAcsr);
+                          });
 }
 
 void Group::PropertyProcessorsSection::updateContent()
@@ -596,6 +635,28 @@ void Group::PropertyProcessorsSection::updateParameters()
 void Group::PropertyProcessorsSection::updateState()
 {
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    juce::StringArray trackNames;
+    std::set<bool> inputResultsExtraThresholdStates;
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+        {
+            inputResultsExtraThresholdStates.insert(trackAcsr.get().getAttr<Track::AttrType::useInputResultsExtraThresholds>());
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+    mPropertyUseInputResultsExtraThresholds.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("Apply extra threshold filters to input results before preprocessing."));
+    mPropertyUseInputResultsExtraThresholds.setVisible(!inputResultsExtraThresholdStates.empty());
+    if(inputResultsExtraThresholdStates.size() == 1_z)
+    {
+        mPropertyUseInputResultsExtraThresholds.entry.setToggleState(*inputResultsExtraThresholdStates.cbegin(), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyUseInputResultsExtraThresholds.entry.setToggleState(false, juce::NotificationType::dontSendNotification);
+    }
+    mPropertyUseInputResultsExtraThresholds.entry.setAlpha(inputResultsExtraThresholdStates.size() > 1_z ? 0.5f : 1.0f);
+
     for(auto const& parameter : mParameterProperties)
     {
         std::set<float> values;
