@@ -478,7 +478,7 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
     return Results(std::move(results));
 }
 
-std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input const& input, Results const& results)
+std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input const& input, Results const& results, std::vector<std::optional<float>> const& extraThresholds)
 {
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
@@ -503,11 +503,14 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
                 {
                     auto& pluginChannel = pluginResults[channelIndex];
                     auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.resize(sourceChannel.size());
-                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                    pluginChannel.reserve(sourceChannel.size());
+                    for(auto const& sourceMarker : sourceChannel)
                     {
-                        auto const& sourceMarker = sourceChannel.at(markerIndex);
-                        auto& pluginMaker = pluginChannel[markerIndex];
+                        if(!Result::passThresholds(sourceMarker, extraThresholds))
+                        {
+                            continue;
+                        }
+                        auto& pluginMaker = pluginChannel.emplace_back();
                         pluginMaker.hasTimestamp = true;
                         pluginMaker.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceMarker));
                         pluginMaker.hasDuration = input.hasDuration;
@@ -533,11 +536,14 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
                 {
                     auto& pluginChannel = pluginResults[channelIndex];
                     auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.resize(sourceChannel.size());
-                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                    pluginChannel.reserve(sourceChannel.size());
+                    for(auto const& sourcePoint : sourceChannel)
                     {
-                        auto const& sourcePoint = sourceChannel.at(markerIndex);
-                        auto& pluginPoint = pluginChannel[markerIndex];
+                        if(!Result::passThresholds(sourcePoint, extraThresholds))
+                        {
+                            continue;
+                        }
+                        auto& pluginPoint = pluginChannel.emplace_back();
                         pluginPoint.hasTimestamp = true;
                         pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
                         pluginPoint.hasDuration = input.hasDuration;
@@ -566,11 +572,14 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
                 {
                     auto& pluginChannel = pluginResults[channelIndex];
                     auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.resize(sourceChannel.size());
-                    for(auto markerIndex = 0_z; markerIndex < sourceChannel.size(); ++markerIndex)
+                    pluginChannel.reserve(sourceChannel.size());
+                    for(auto const& sourceColumn : sourceChannel)
                     {
-                        auto const& sourceColumn = sourceChannel.at(markerIndex);
-                        auto& pluginColumn = pluginChannel[markerIndex];
+                        if(!Result::passThresholds(sourceColumn, extraThresholds))
+                        {
+                            continue;
+                        }
+                        auto& pluginColumn = pluginChannel.emplace_back();
                         pluginColumn.hasTimestamp = true;
                         pluginColumn.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceColumn));
                         pluginColumn.hasDuration = input.hasDuration;
