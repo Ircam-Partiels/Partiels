@@ -23,6 +23,7 @@ Track::Scroller::Scroller(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomValueMode:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::warnings:
             case AttrType::processing:

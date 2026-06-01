@@ -9,6 +9,12 @@ namespace Track
     class HierarchyManager
     {
     public:
+        enum class InputChangeType
+        {
+            results,
+            extraThresholds
+        };
+
         HierarchyManager() = default;
         virtual ~HierarchyManager() = default;
 
@@ -27,7 +33,7 @@ namespace Track
         struct Listener
         {
             std::function<void(HierarchyManager const&)> onHierarchyChanged = nullptr;
-            std::function<void(HierarchyManager const&, juce::String const&)> onResultsChanged = nullptr;
+            std::function<void(HierarchyManager const&, juce::String const&, InputChangeType)> onResultsChanged = nullptr;
         };
 
         void addHierarchyListener(Listener& listener, NotificationType notification);
@@ -35,7 +41,7 @@ namespace Track
 
     protected:
         void notifyHierarchyChanged(NotificationType notification);
-        void notifyResultsChanged(juce::String const& identifier, NotificationType notification);
+        void notifyResultsChanged(juce::String const& identifier, InputChangeType type, NotificationType notification);
 
     private:
         Notifier<Listener> mNotifier;

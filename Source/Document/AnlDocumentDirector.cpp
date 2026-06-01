@@ -153,7 +153,11 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     updateMarkers(localNotification);
                     mHierarchyManager.notifyHierarchyChanged(localNotification);
-                    mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), localNotification);
+                    mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), Track::HierarchyManager::InputChangeType::results, localNotification);
+                };
+                director->onExtraThresholdsUpdated = [this, ptr = director.get()](NotificationType localNotification)
+                {
+                    mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), Track::HierarchyManager::InputChangeType::extraThresholds, localNotification);
                 };
                 director->onChannelsLayoutUpdated = [this](NotificationType localNotification)
                 {

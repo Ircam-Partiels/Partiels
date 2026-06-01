@@ -38,6 +38,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::zoomValueMode:
             case AttrType::zoomAcsr:
             case AttrType::zoomLink:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:

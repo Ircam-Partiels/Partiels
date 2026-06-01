@@ -90,6 +90,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:

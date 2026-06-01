@@ -102,6 +102,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::grid:

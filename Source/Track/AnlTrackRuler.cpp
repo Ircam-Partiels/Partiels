@@ -23,6 +23,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::warnings:
             case AttrType::processing:
@@ -169,6 +170,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::focused:

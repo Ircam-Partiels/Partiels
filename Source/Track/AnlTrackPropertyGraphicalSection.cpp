@@ -456,6 +456,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 mPropertyShowInGroup.entry.setToggleState(acsr.getAttr<AttrType::showInGroup>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             {
                 updateExtraTheshold();

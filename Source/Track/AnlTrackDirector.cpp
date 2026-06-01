@@ -110,6 +110,11 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 runAnalysis(notification);
             }
             break;
+            case AttrType::useInputResultsExtraThresholds:
+            {
+                runAnalysis(notification);
+            }
+            break;
             case AttrType::state:
             {
                 auto const& description = mAccessor.getAttr<AttrType::description>();
@@ -264,10 +269,17 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::zoomValueMode:
-            case AttrType::extraThresholds:
             case AttrType::hasPluginColourMap:
             case AttrType::fileDescription:
                 break;
+            case AttrType::extraThresholds:
+            {
+                if(onExtraThresholdsUpdated != nullptr)
+                {
+                    onExtraThresholdsUpdated(notification);
+                }
+            }
+            break;
         }
     };
 
@@ -432,9 +444,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         timerCallback();
     };
 
-    mHierarchyListener.onResultsChanged = [this]([[maybe_unused]] HierarchyManager const& manager, juce::String const& identifier)
+    mHierarchyListener.onResultsChanged = [this]([[maybe_unused]] HierarchyManager const& manager, juce::String const& identifier, HierarchyManager::InputChangeType type)
     {
-        if(mAccessor.getAttr<AttrType::input>() == identifier)
+        if(mAccessor.getAttr<AttrType::input>() == identifier &&
+           (type == HierarchyManager::InputChangeType::results || mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>()))
         {
             runAnalysis(NotificationType::synchronous);
         }
@@ -747,10 +760,15 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
 
     auto inputResults = input.isNotEmpty() ? mHierarchyManager.getAccessor(input).getAttr<AttrType::results>() : Results{};
+    auto inputExtraThresholds = std::vector<std::optional<float>>{};
+    if(input.isNotEmpty() && mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>())
+    {
+        inputExtraThresholds = mHierarchyManager.getAccessor(input).getAttr<AttrType::extraThresholds>();
+    }
     try
     {
         mProcessor.stopAnalysis();
-        auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
+        auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults, std::move(inputExtraThresholds));
         if(result)
         {
             MiscDebug("Track", "analysis launched");

@@ -42,6 +42,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::graphicsSettings:
             case Track::AttrType::channelsLayout:
             case Track::AttrType::showInGroup:
+            case Track::AttrType::useInputResultsExtraThresholds:
             case Track::AttrType::extraThresholds:
             case Track::AttrType::zoomLogScale:
             case Track::AttrType::sampleRate:

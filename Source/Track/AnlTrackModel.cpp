@@ -126,6 +126,10 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
         // Add new graphicsSettings attribute
         XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
     }
+    if(version <= 0x20401 && copy->getChildByName("useInputResultsExtraThresholds") == nullptr)
+    {
+        XmlParser::toXml(*copy.get(), "useInputResultsExtraThresholds", false);
+    }
     return copy;
 }
 

@@ -35,6 +35,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::hasPluginColourMap:

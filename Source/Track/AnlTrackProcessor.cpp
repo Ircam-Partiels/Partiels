@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis();
 }
 
-bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input, std::vector<std::optional<float>> inputExtraThresholds)
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
     MiscWeakAssert(lock.owns_lock());
@@ -72,11 +72,11 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
     }
 
     mChrono.start();
-    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), in = std::move(input)]()
+    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), in = std::move(input), thresholds = std::move(inputExtraThresholds)]()
                                   {
                                       MiscDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
-                                      auto result = runPluginAnalysis(*proc, in, [&, this](float advancement)
+                                      auto result = runPluginAnalysis(*proc, in, thresholds, [&, this](float advancement)
                                                                       {
                                                                           mAdvancement.store(advancement);
                                                                           return !mShouldAbort.load();
@@ -256,7 +256,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
     return std::make_tuple(juce::Result::ok(), Track::Results(std::move(points)));
 }
 
-Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::function<bool(float)> callback)
+Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::vector<std::optional<float>> const& inputExtraThresholds, std::function<bool(float)> callback)
 {
     if(callback != nullptr && !callback(0.0f))
     {
@@ -269,7 +269,7 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
     {
         return std::make_tuple(prepareResult, Track::Results{});
     }
-    auto const inputs = Tools::convert(processor.getInput(), input);
+    auto const inputs = Tools::convert(processor.getInput(), input, inputExtraThresholds);
     auto precomputingResults = processor.setPrecomputingResults(inputs);
     if(precomputingResults.failed())
     {

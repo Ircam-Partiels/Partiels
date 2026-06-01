@@ -48,7 +48,7 @@ namespace Track
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
 
         Results convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::function<bool(void)> const& callback);
-        std::vector<std::vector<Plugin::Result>> convert(Plugin::Input const& input, Results const& results);
+        std::vector<std::vector<Plugin::Result>> convert(Plugin::Input const& input, Results const& results, std::vector<std::optional<float>> const& extraThresholds = {});
 
         std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);
         std::unique_ptr<juce::Component> createBinRangeEditor(Accessor& acsr);

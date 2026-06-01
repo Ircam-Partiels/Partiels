@@ -420,6 +420,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             case Track::AttrType::grid:
             case Track::AttrType::hasPluginColourMap:
                 break;
+            case Track::AttrType::useInputResultsExtraThresholds:
             case Track::AttrType::extraThresholds:
             {
                 juce::OSCMessage message("/" + Track::Tools::getEffectiveOscIdentifier(accessor));
