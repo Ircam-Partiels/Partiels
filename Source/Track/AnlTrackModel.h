@@ -216,6 +216,7 @@ namespace Track
         , description
         , key
         , input
+        , useInputResultsExtraThresholds
         , state
         , sampleRate
         
@@ -261,6 +262,7 @@ namespace Track
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::input, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::useInputResultsExtraThresholds, bool, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     , Model::Attr<AttrType::sampleRate, double, Model::Flag::notifying | Model::Flag::saveable>
     
@@ -308,6 +310,7 @@ namespace Track
                                  , {}
                                  , {}
                                  , {}
+                                 , {true}
                                  , {}
                                  , {48000.0}
                                  
