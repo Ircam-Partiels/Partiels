@@ -53,6 +53,7 @@ namespace Track
         std::function<void(NotificationType notification)> onNameUpdated = nullptr;
         std::function<void(NotificationType notification)> onInputUpdated = nullptr;
         std::function<void(NotificationType notification)> onResultsUpdated = nullptr;
+        std::function<void(NotificationType notification)> onExtraThresholdsUpdated = nullptr;
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
         std::function<void(NotificationType notification)> onFocusUpdated = nullptr;
 

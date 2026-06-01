@@ -37,13 +37,13 @@ void Track::HierarchyManager::notifyHierarchyChanged(NotificationType notificati
                      notification);
 }
 
-void Track::HierarchyManager::notifyResultsChanged(juce::String const& identifier, NotificationType notification)
+void Track::HierarchyManager::notifyResultsChanged(juce::String const& identifier, InputChangeType type, NotificationType notification)
 {
     mNotifier.notify([=, this](Listener& listener)
                      {
                          if(listener.onResultsChanged != nullptr)
                          {
-                             listener.onResultsChanged(*this, identifier);
+                             listener.onResultsChanged(*this, identifier, type);
                          }
                      },
                      notification);
