@@ -79,6 +79,10 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                           }
                           updateState();
                       })
+, mPropertyUseInputResultsExtraThresholds(juce::translate("Use Input Track Extra Thresholds"), juce::translate("Apply extra threshold filters to input results before preprocessing."), [this](bool state)
+                                          {
+                                              setUseInputResultsExtraThresholds(state);
+                                          })
 , mPropertyPreset(juce::translate("Preset"), juce::translate("The processor preset of the track"), "", {}, [&]([[maybe_unused]] size_t index)
                   {
                       auto const selectedId = mPropertyPreset.entry.getSelectedId();
@@ -155,7 +159,9 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 mPropertyBlockSize.setVisible(Tools::supportsBlockSize(acsr));
                 mPropertyStepSize.setVisible(Tools::supportsStepSize(acsr));
 
-                mPropertyInputTrack.setVisible(!description.input.identifier.empty() && hasPlugin && file.file == juce::File{});
+                auto const supportsInputTrack = Tools::supportsInputTrack(acsr);
+                mPropertyInputTrack.setVisible(supportsInputTrack && file.file == juce::File{});
+                mPropertyUseInputResultsExtraThresholds.setVisible(supportsInputTrack && file.file == juce::File{});
 
                 mParameterProperties.clear();
                 juce::WeakReference<juce::Component> weakReference(this);
@@ -199,6 +205,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 [[fallthrough]];
             }
             case AttrType::state:
+            case AttrType::useInputResultsExtraThresholds:
             {
                 updateState();
             }
@@ -243,6 +250,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
     addAndMakeVisible(mPropertyBlockSize);
     addAndMakeVisible(mPropertyStepSize);
     addAndMakeVisible(mPropertyInputTrack);
+    addAndMakeVisible(mPropertyUseInputResultsExtraThresholds);
     addAndMakeVisible(mPropertyPreset);
     addAndMakeVisible(mProgressBarAnalysis);
 
@@ -275,6 +283,7 @@ void Track::PropertyProcessorSection::resized()
     setBounds(mPropertyBlockSize);
     setBounds(mPropertyStepSize);
     setBounds(mPropertyInputTrack);
+    setBounds(mPropertyUseInputResultsExtraThresholds);
     for(auto& property : mParameterProperties)
     {
         setBounds(*property.second.get());
@@ -369,6 +378,23 @@ void Track::PropertyProcessorSection::setInputTrack(juce::String const& identifi
                          {
                              mAccessor.setAttr<AttrType::input>(identifier, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's input"));
+                         });
+}
+
+void Track::PropertyProcessorSection::setUseInputResultsExtraThresholds(bool state)
+{
+    askToModifyProcessor([this](bool result)
+                         {
+                             if(result)
+                             {
+                                 mDirector.startAction();
+                             }
+                             return result;
+                         },
+                         [=, this]()
+                         {
+                             mAccessor.setAttr<AttrType::useInputResultsExtraThresholds>(state, NotificationType::synchronous);
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Toggle input extra thresholds"));
                          });
 }
 
@@ -632,6 +658,7 @@ void Track::PropertyProcessorSection::updateState()
             }
         }
     }
+    mPropertyUseInputResultsExtraThresholds.entry.setToggleState(mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>(), silent);
 
     auto const state = mAccessor.getAttr<AttrType::state>();
     mPropertyWindowType.entry.setSelectedId(static_cast<int>(state.windowType) + 1, silent);
