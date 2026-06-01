@@ -14,7 +14,7 @@ namespace Track
         Processor() = default;
         ~Processor() override;
 
-        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input);
+        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input, std::vector<std::optional<float>> inputExtraThresholds = {});
         void stopAnalysis();
         bool isRunning() const;
         float getAdvancement() const;
@@ -30,7 +30,7 @@ namespace Track
 
         using ProcessResult = std::tuple<juce::Result, Results>;
         static ProcessResult runWaveformAnalysis(juce::AudioFormatReader& reader, std::function<bool(float)> callback);
-        static ProcessResult runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::function<bool(float)> callback);
+        static ProcessResult runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::vector<std::optional<float>> const& inputExtraThresholds, std::function<bool(float)> callback);
 
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         std::atomic<bool> mShouldAbort{false};
