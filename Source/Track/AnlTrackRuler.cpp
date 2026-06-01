@@ -18,6 +18,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::edit:
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomValueMode:
@@ -169,6 +170,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::grid:
             case AttrType::focused:

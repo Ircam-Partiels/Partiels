@@ -18,6 +18,7 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
             case AttrType::name:
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:
             case AttrType::results:

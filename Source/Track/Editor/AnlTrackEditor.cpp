@@ -57,6 +57,7 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::identifier:
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::fileDescription:
             case AttrType::state:
             case AttrType::height:

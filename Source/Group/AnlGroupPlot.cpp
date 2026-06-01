@@ -22,6 +22,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::fileDescription:
             case Track::AttrType::key:
             case Track::AttrType::input:
+            case Track::AttrType::useInputResultsExtraThresholds:
             case Track::AttrType::description:
             case Track::AttrType::state:
             case Track::AttrType::height:
