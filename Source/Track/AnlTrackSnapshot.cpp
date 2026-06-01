@@ -19,6 +19,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::identifier:
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:
             case AttrType::name:
@@ -394,6 +395,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::zoomAcsr:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::grid:

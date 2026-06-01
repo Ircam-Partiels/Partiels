@@ -403,6 +403,7 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             case Track::AttrType::description:
             case Track::AttrType::key:
             case Track::AttrType::input:
+            case Track::AttrType::useInputResultsExtraThresholds:
             case Track::AttrType::state:
             case Track::AttrType::sampleRate:
             case Track::AttrType::height:

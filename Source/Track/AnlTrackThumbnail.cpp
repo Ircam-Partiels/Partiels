@@ -75,6 +75,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             break;
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::state:
             case AttrType::fileDescription:
             case AttrType::results:

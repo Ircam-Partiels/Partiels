@@ -41,6 +41,7 @@ Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& pr
             break;
             case AttrType::key:
             case AttrType::input:
+            case AttrType::useInputResultsExtraThresholds:
             case AttrType::description:
             case AttrType::file:
             case AttrType::fileDescription:
