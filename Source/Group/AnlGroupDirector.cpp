@@ -58,6 +58,7 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             break;
         }
     };
+    resetSavedState(false);
 }
 
 Group::Director::~Director()

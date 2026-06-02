@@ -468,6 +468,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
     mHierarchyManager.addHierarchyListener(mHierarchyListener, NotificationType::synchronous);
 
     runAnalysis(NotificationType::synchronous);
+    resetSavedState();
 }
 
 Track::Director::~Director()
