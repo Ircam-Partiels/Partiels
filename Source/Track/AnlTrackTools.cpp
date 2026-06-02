@@ -541,6 +541,18 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
                     {
                         if(!Result::passThresholds(sourcePoint, extraThresholds))
                         {
+                            if(!pluginChannel.empty())
+                            {
+                                auto& pluginPoint = pluginChannel.emplace_back();
+                                pluginPoint.hasTimestamp = true;
+                                pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
+                                pluginPoint.hasDuration = input.hasDuration;
+                                if(input.hasDuration)
+                                {
+                                    pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
+                                }
+                                pluginPoint.values.clear();
+                            }
                             continue;
                         }
                         auto& pluginPoint = pluginChannel.emplace_back();
