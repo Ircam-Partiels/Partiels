@@ -343,6 +343,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         gridAcsr.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(10.0, notification);
     };
     gridAcsr.onAttrUpdated(Zoom::Grid::AttrType::tickReference, NotificationType::synchronous);
+    resetSavedState();
 }
 
 Document::Director::~Director()
