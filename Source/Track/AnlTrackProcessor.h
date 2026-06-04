@@ -23,7 +23,7 @@ namespace Track
         std::function<void(void)> onAnalysisAborted = nullptr;
 
     private:
-        void abortAnalysis();
+        void abortAnalysis(std::unique_lock<std::mutex>& lock);
 
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;

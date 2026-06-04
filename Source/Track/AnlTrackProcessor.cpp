@@ -7,13 +7,13 @@ ANALYSE_FILE_BEGIN
 Track::Processor::~Processor()
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
-    abortAnalysis();
+    abortAnalysis(lock);
 }
 
 void Track::Processor::stopAnalysis()
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
-    abortAnalysis();
+    abortAnalysis(lock);
 }
 
 bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input, std::vector<std::optional<float>> inputExtraThresholds)
@@ -25,7 +25,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
         MiscError("Track", "Concurrent thread access!");
         return false;
     }
-    abortAnalysis();
+    abortAnalysis(lock);
 
     auto const key = accessor.getAttr<AttrType::key>();
     if(key.identifier.empty() || key.feature.empty())
@@ -105,9 +105,11 @@ void Track::Processor::handleAsyncUpdate()
         if(onAnalysisEnded != nullptr)
         {
             mChrono.stop("Processor analysis ended");
+            lock.unlock();
             onAnalysisEnded(std::get<0>(results), std::get<1>(results), std::get<2>(results));
+            lock.lock();
         }
-        abortAnalysis();
+        mAdvancement.store(0.0f);
     }
 }
 
@@ -121,27 +123,28 @@ float Track::Processor::getAdvancement() const
     return mAdvancement.load();
 }
 
-void Track::Processor::abortAnalysis()
+void Track::Processor::abortAnalysis(std::unique_lock<std::mutex>& lock)
 {
-    std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
-    MiscWeakAssert(!lock.owns_lock());
-    if(lock.owns_lock())
+    if(!lock.owns_lock())
     {
         MiscError("Track", "The mutex should already be locked!");
         return;
     }
+
     mAdvancement.store(0.0f);
     if(mAnalysisProcess.valid())
     {
         mShouldAbort.store(true);
         mAnalysisProcess.get();
         cancelPendingUpdate();
+        mShouldAbort.store(false);
         if(onAnalysisAborted != nullptr)
         {
+            lock.unlock();
             onAnalysisAborted();
+            lock.lock();
         }
     }
-    mShouldAbort.store(false);
 }
 
 Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::AudioFormatReader& reader, std::function<bool(float)> callback)
