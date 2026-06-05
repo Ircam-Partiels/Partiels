@@ -30,6 +30,7 @@ namespace Plugin
             ~CircularReader() = default;
 
             size_t getNumChannels() const;
+            juce::int64 getOffsetInSamples() const;
             juce::int64 getLengthInSamples() const;
             double getSampleRate() const;
             bool hasReachedEnd() const;
@@ -39,6 +40,7 @@ namespace Plugin
         private:
             int const mBlocksize;
             int const mStepSize;
+            juce::int64 const mOffset;
             juce::AudioFormatReader& mAudioFormatReader;
             juce::AudioBuffer<float> mBuffer;
             int mBufferPosition{0};
