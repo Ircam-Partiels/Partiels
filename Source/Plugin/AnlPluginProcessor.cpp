@@ -6,9 +6,10 @@ ANALYSE_FILE_BEGIN
 Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize)
 : mBlocksize(static_cast<int>(blockSize))
 , mStepSize(static_cast<int>(stepSize))
+, mOffset(static_cast<juce::int64>(std::round(static_cast<double>(blockSize) / 2.0)))
 , mAudioFormatReader(audioFormatReader)
 , mBuffer(static_cast<int>(audioFormatReader.numChannels), mBlocksize * 2)
-, mReaderPosition(-static_cast<juce::int64>(std::round(static_cast<double>(blockSize) / 2.0)))
+, mReaderPosition(-mOffset)
 {
     mOutputBuffer.resize(static_cast<size_t>(audioFormatReader.numChannels));
 }
@@ -28,12 +29,16 @@ double Plugin::Processor::CircularReader::getSampleRate() const
     return mAudioFormatReader.sampleRate;
 }
 
+juce::int64 Plugin::Processor::CircularReader::getOffsetInSamples() const
+{
+    return mOffset;
+}
+
 bool Plugin::Processor::CircularReader::hasReachedEnd() const
 {
     MiscWeakAssert(mPosition >= static_cast<juce::int64>(0));
-    auto const offset = static_cast<juce::int64>(std::round(static_cast<double>(mBlocksize) / 2.0));
-    MiscWeakAssert(mPosition <= mAudioFormatReader.lengthInSamples + offset);
-    return mPosition >= mAudioFormatReader.lengthInSamples + offset;
+    MiscWeakAssert(mPosition <= mAudioFormatReader.lengthInSamples + mOffset);
+    return mPosition >= mAudioFormatReader.lengthInSamples + mOffset;
 }
 
 juce::int64 Plugin::Processor::CircularReader::getPosition() const
@@ -46,8 +51,7 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     auto* const* inputPointers = mBuffer.getArrayOfWritePointers();
     auto const numChannels = mBuffer.getNumChannels();
 
-    auto const offset = static_cast<juce::int64>(std::round(static_cast<double>(mBlocksize) / 2.0));
-    auto const maxLength = mAudioFormatReader.lengthInSamples + offset;
+    auto const maxLength = mAudioFormatReader.lengthInSamples + mOffset;
     mPosition = std::min(mPosition + static_cast<juce::int64>(mStepSize), maxLength);
 
     if(mStepSize >= mBlocksize)
@@ -65,7 +69,7 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     }
 
     // Expected number of samples to read (equivalent to the step except for the first call if the block size is greater)
-    auto const bufferSize = std::max(static_cast<int>(static_cast<juce::int64>(mBlocksize) - (mReaderPosition + offset)), mStepSize);
+    auto const bufferSize = std::max(static_cast<int>(static_cast<juce::int64>(mBlocksize) - (mReaderPosition + mOffset)), mStepSize);
     // The number of sample that can be used from the previous block
     auto const hopeSize = std::max(mBlocksize - bufferSize, 0);
 
@@ -447,7 +451,7 @@ public:
             CircularReader circularReader(reader, blockSize, stepSize);
             float const** output = nullptr;
             juce::int64 position = static_cast<juce::int64>(0);
-            auto const offset = static_cast<juce::int64>(std::round(static_cast<float>(blockSize) / 2.0f));
+            auto const offset = circularReader.getOffsetInSamples();
             while(!circularReader.hasReachedEnd())
             {
                 position = circularReader.getPosition();
