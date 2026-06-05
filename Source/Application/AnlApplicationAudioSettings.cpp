@@ -386,10 +386,15 @@ void Application::AudioSettingsContent::changeListenerCallback(juce::ChangeBroad
             {
                 for(auto input = 0_z; input < routing.size(); ++input)
                 {
-                    auto& ouputs = routing[input];
-                    auto const active = (ouputs.size() < numOutputs && input < numOutputs && std::count(ouputs.cbegin(), ouputs.cend(), true) == 0l) || (input < ouputs.size() && ouputs.at(input));
-                    ouputs.resize(numOutputs, false);
-                    ouputs[input] = active;
+                    auto& outputs = routing[input];
+                    auto const lastNumOutput = outputs.size();
+                    outputs.resize(numOutputs, false);
+                    if(input < outputs.size())
+                    {
+                        auto const isActive = input < outputs.size() && outputs.at(input);
+                        auto const shouldActive = lastNumOutput < outputs.size() && input < outputs.size() && std::count(outputs.cbegin(), outputs.cend(), true) == 0l;
+                        outputs[input] = isActive || shouldActive;
+                    }
                 }
             }
             accessor.setAttr<AttrType::routingMatrix>(routing, NotificationType::synchronous);
