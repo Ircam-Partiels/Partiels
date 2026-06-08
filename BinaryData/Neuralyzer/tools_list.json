@@ -1262,6 +1262,52 @@
           }
         }
       }
+    },
+    {
+      "name": "fetch_web_page",
+      "description": "Fetch the content of a web page from the internet by its URL. Use this to consult online documentation, manuals, tutorials or other web resources. Returns the page content as readable plain text by default, or raw HTML.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The absolute http or https URL of the web page to fetch"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["text", "html"],
+            "description": "Return the page as readable plain text (default) or raw HTML",
+            "default": "text"
+          },
+          "maxLength": {
+            "type": "integer",
+            "description": "Maximum number of characters to return; the content is truncated beyond this length (defaults to 100000)",
+            "default": 100000
+          }
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The fetched URL"
+          },
+          "format": {
+            "type": "string",
+            "description": "The format of the returned content (text or html)"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether the content was truncated to maxLength"
+          },
+          "content": {
+            "type": "string",
+            "description": "The fetched page content"
+          }
+        }
+      }
     }
   ]
 }

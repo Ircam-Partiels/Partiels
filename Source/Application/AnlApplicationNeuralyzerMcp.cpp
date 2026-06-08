@@ -5,6 +5,8 @@
 #include "AnlApplicationTools.h"
 #include <AnlNeuralyzerData.h>
 
+#include <regex>
+
 ANALYSE_FILE_BEGIN
 
 nlohmann::json Application::Neuralyzer::Mcp::createError(std::string const& what)
@@ -119,6 +121,152 @@ namespace Application::Neuralyzer::Mcp
         {
             description["output"].erase("binNames");
         }
+    }
+
+    // Converts an HTML document to readable plain text: removes script/style blocks
+    // and comments, turns block-level tags into line breaks, strips the remaining
+    // tags, decodes a few common HTML entities and normalises whitespace.
+    static std::string htmlToPlainText(std::string html)
+    {
+        try
+        {
+            static std::regex const scriptStyle(R"(<(script|style)\b[^>]*>[\s\S]*?</\1>)", std::regex::icase | std::regex::optimize);
+            html = std::regex_replace(html, scriptStyle, " ");
+            static std::regex const comments(R"(<!--[\s\S]*?-->)", std::regex::optimize);
+            html = std::regex_replace(html, comments, " ");
+            static std::regex const blocks(R"(<\s*(br\s*/?|/p|/div|/h[1-6]|/li|/tr|/table|/section|/article|/header|/footer)\s*>)", std::regex::icase | std::regex::optimize);
+            html = std::regex_replace(html, blocks, "\n");
+            static std::regex const tags(R"(<[^>]+>)", std::regex::optimize);
+            html = std::regex_replace(html, tags, " ");
+            static std::regex const spaces(R"([ \t\f\v]+)", std::regex::optimize);
+            html = std::regex_replace(html, spaces, " ");
+        }
+        catch(std::exception const&)
+        {
+            // If the regex engine fails (e.g. on extremely large input) fall back to the raw string.
+        }
+
+        juce::String text = juce::String::fromUTF8(html.c_str());
+        text = text.replace("&nbsp;", " ")
+                   .replace("&amp;", "&")
+                   .replace("&lt;", "<")
+                   .replace("&gt;", ">")
+                   .replace("&quot;", "\"")
+                   .replace("&#39;", "'")
+                   .replace("&apos;", "'");
+
+        // Trim each line and collapse runs of blank lines.
+        auto const lines = juce::StringArray::fromLines(text);
+        juce::StringArray cleaned;
+        auto blankCount = 0;
+        for(auto const& rawLine : lines)
+        {
+            auto const line = rawLine.trim();
+            if(line.isEmpty())
+            {
+                if(++blankCount > 1)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                blankCount = 0;
+            }
+            cleaned.add(line);
+        }
+        return cleaned.joinIntoString("\n").trim().toStdString();
+    }
+
+    // Fetches a web page over http(s). This runs off the message thread because the
+    // network request is blocking and would otherwise freeze the UI; unlike the other
+    // tools it does not access the document model, so it is safe to call directly.
+    static nlohmann::json performWebFetch(nlohmann::json const& request)
+    {
+        MiscDebug("Application::Neuralyzer::Mcp::Dispatcher", "Received MCP web fetch");
+        if(!request.contains("params") || !request.at("params").is_object())
+        {
+            return createError("The 'params' field is required and must be an object.");
+        }
+        auto const& methodParams = request.at("params");
+        if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+        {
+            return createError("The 'arguments' field is required and must be an object.");
+        }
+        auto const& arguments = methodParams.at("arguments");
+        if(!arguments.contains("url") || !arguments.at("url").is_string())
+        {
+            return createError("The 'url' argument is required and must be a string.");
+        }
+        if(arguments.contains("format") && !arguments.at("format").is_string())
+        {
+            return createError("The 'format' argument must be a string ('text' or 'html').");
+        }
+        if(arguments.contains("maxLength") && !arguments.at("maxLength").is_number_integer())
+        {
+            return createError("The 'maxLength' argument must be an integer.");
+        }
+
+        auto const urlString = juce::String(arguments.at("url").get<std::string>());
+        auto const format = juce::String(arguments.value("format", std::string("text"))).toLowerCase();
+        if(format != "text" && format != "html")
+        {
+            return createError("The 'format' argument must be either 'text' or 'html'.");
+        }
+        auto const maxLength = std::max(0, arguments.value("maxLength", 100000));
+
+        juce::URL const url(urlString);
+        auto const scheme = url.getScheme().toLowerCase();
+        if(!url.isWellFormed() || (scheme != "http" && scheme != "https"))
+        {
+            return createError("The 'url' argument must be a well-formed http or https URL.");
+        }
+
+        int statusCode = 0;
+        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                                 .withExtraHeaders("User-Agent: Partiels-Neuralyzer\r\nAccept: text/html,application/xhtml+xml,text/plain")
+                                 .withStatusCode(&statusCode)
+                                 .withConnectionTimeoutMs(15000)
+                                 .withNumRedirectsToFollow(5);
+        auto stream = url.createInputStream(options);
+        if(stream == nullptr)
+        {
+            return createError("Failed to connect to URL: " + urlString.toStdString());
+        }
+        auto const body = stream->readEntireStreamAsString();
+
+        nlohmann::json response;
+        response["content"] = nlohmann::json::array();
+        if(statusCode != 0 && (statusCode < 200 || statusCode >= 300))
+        {
+            response["isError"] = true;
+            nlohmann::json content;
+            content["type"] = "text";
+            content["text"] = "The server returned HTTP " + std::to_string(statusCode) + " when fetching " + urlString.toStdString();
+            response["content"].push_back(std::move(content));
+            return response;
+        }
+        response["isError"] = false;
+
+        juce::String resultText = (format == "html") ? body : juce::String(htmlToPlainText(body.toStdString()));
+        auto truncated = false;
+        if(maxLength > 0 && resultText.length() > maxLength)
+        {
+            resultText = resultText.substring(0, maxLength);
+            truncated = true;
+        }
+
+        nlohmann::json payload;
+        payload["url"] = urlString.toStdString();
+        payload["format"] = format.toStdString();
+        payload["truncated"] = truncated;
+        payload["content"] = resultText.toStdString();
+
+        nlohmann::json content;
+        content["type"] = "text";
+        content["text"] = payload.dump();
+        response["content"].push_back(std::move(content));
+        return response;
     }
 
     static nlohmann::json performToolsCall(nlohmann::json const& request, nlohmann::json const& context)
@@ -2558,6 +2706,22 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callTools(nlohmann::jso
     }
     if(method == "tools/call")
     {
+        // Network tools must run off the message thread (a blocking fetch would freeze
+        // the UI) and do not touch the document model, so handle them directly here
+        // instead of through the synchronous message-thread dispatch below.
+        if(request.contains("params") && request.at("params").is_object() &&
+           request.at("params").value("name", std::string{}) == "fetch_web_page")
+        {
+            try
+            {
+                return performWebFetch(request);
+            }
+            catch(std::exception const& e)
+            {
+                return createError(e.what());
+            }
+        }
+
         nlohmann::json response;
         juce::MessageManager::callSync([&]()
                                        {
