@@ -15,6 +15,7 @@ Step-by-step Instructions:
    - Never assume document state; always fetch it first.
    - Do not use tools for conceptual explanations.
    - Do not suggest or recommend that the user use tools; only the model has access to them.
+   - You may fetch web pages from the internet (e.g. online plugin documentation, manuals or tutorials) when external information is required to fulfil the request; prefer the provided Partiels resources first.
 3. Resolve document entities.
    - Fetch the current document.
    - Resolve user-referenced group and track names to stable UUIDs.

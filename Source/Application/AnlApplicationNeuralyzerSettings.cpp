@@ -559,7 +559,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 mBackend.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
                 mRemoteUrl.setVisible(backend == AgentBackend::remote);
                 mBatchSize.setVisible(backend == AgentBackend::local);
-                //mPresencePenalty.setVisible(backend == AgentBackend::local);
+                // mPresencePenalty.setVisible(backend == AgentBackend::local);
                 mModelsDirectory.setVisible(backend == AgentBackend::local);
                 resized();
                 break;
