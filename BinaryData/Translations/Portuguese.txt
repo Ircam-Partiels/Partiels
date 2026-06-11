@@ -958,7 +958,7 @@ countries: pt br
 "Failed to download the file from URL \"URLPATH\": premature end of stream." = "Falha ao baixar o arquivo da URL \"URLPATH\": fim prematuro do fluxo."
 "Failed to download the file from URL \"URLPATH\": incomplete download." = "Falha ao baixar o arquivo da URL \"URLPATH\": download incompleto."
 "Failed to download the file from URL \"URLPATH\": ERROR." = "Falha ao baixar o arquivo da URL \"URLPATH\": ERROR."
-"Failed to load plugin description for key \"PLUGINKEY\"." = "Falha ao carregar a descrição do plugin para a chave \"PLUGINKEY\"."
+"Failed to load plugin description for key {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}." = "Falha ao carregar a descrição do plugin para a chave {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}."
 "Failed to write to the file \"FILEPATH\"." = "Falha ao escrever no arquivo \"FILEPATH\"."
 "High Bin" = "Faixa Alta"
 "High Value" = "Valor Alto"
