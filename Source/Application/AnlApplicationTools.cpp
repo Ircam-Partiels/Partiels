@@ -134,7 +134,7 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
     }();
     if(name.isEmpty())
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to load plugin description for key \"PLUGINKEY\".").replace("PLUGINKEY", key.identifier + ":" + key.feature)), juce::String());
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to load plugin description for key {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}.").replace("PLUGINID", key.identifier).replace("PLUGINFEATURE", key.feature)), juce::String());
     }
 
     auto& documentDir = Instance::get().getDocumentDirector();
