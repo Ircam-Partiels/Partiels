@@ -159,34 +159,43 @@ jobs:
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Test
       run: |
-        rm ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
-        cp -r ${{ github.workspace }}/build/Partiels.xcarchive/Products/Applications/Partiels.app ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}
-        ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
+        rm -rf "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app"
+        cp -R "${{ github.workspace }}/build/Partiels.xcarchive/Products/Applications/Partiels.app" "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/"
+        ctest -C ${{ env.build_type }} -VV --test-dir "${{ github.workspace }}/build" --output-on-failure
     - name: Export
       run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
+    - name: Verify dSYM matches exported app
+      run: |
+        APP="${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels"
+        DSYM="${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM"
+        APP_UUID=$(dwarfdump --uuid "$APP" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "$DSYM" | awk '{print $2}')
+        echo "APP UUID : $APP_UUID"
+        echo "DSYM UUID: $DSYM_UUID"
+        test "$APP_UUID" = "$DSYM_UUID"
     - name: Notarize
       run: |
         ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.app" "${{ github.workspace }}/build/Partiels.zip"
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels.zip" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
         cat "${{ github.workspace }}/build/notarize.log"
         notaryid=$(awk '/^  id:/{sub(/^  id:/ , ""); print; exit}' "${{ github.workspace }}/build/notarize.log")
-        xcrun notarytool log $notaryid --keychain-profile "notary-installer"
+        xcrun notarytool log "$notaryid" --keychain-profile "notary-installer"
         xcrun stapler staple "${{ github.workspace }}/build/Partiels.app"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels.app"
     - name: Build Disk Image
       run: |
         appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
-        xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+        xcrun SetFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Package dSYM Archive
       if: ${{ env.is_tagged == 'true' }}
-      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
+      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
         cat "${{ github.workspace }}/build/notarize.log"
         notaryid=$(awk '/^  id:/{sub(/^  id:/ , ""); print; exit}' "${{ github.workspace }}/build/notarize.log")
-        xcrun notarytool log $notaryid --keychain-profile "notary-installer"
+        xcrun notarytool log "$notaryid" --keychain-profile "notary-installer"
         xcrun stapler staple "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Artifact
