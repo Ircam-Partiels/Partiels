@@ -164,6 +164,8 @@ jobs:
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
+    - name: Inspect archive contents
+      run: ls -R "${{ github.workspace }}/build/Partiels.xcarchive"
     - name: Test
       run: |
         rm ${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app
@@ -171,6 +173,13 @@ jobs:
         ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Export
       run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
+    - name: Verify dSYM matches exported app
+      run: |
+        APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" | awk '{print $2}')
+        echo "APP UUID : $APP_UUID"
+        echo "DSYM UUID: $DSYM_UUID"
+        test "$APP_UUID" = "$DSYM_UUID"
     - name: Notarize
       if: ${{ env.is_notarized == 'true' }}
       run: |
@@ -181,6 +190,13 @@ jobs:
         xcrun notarytool log $notaryid --keychain-profile "notary-installer"
         xcrun stapler staple "${{ github.workspace }}/build/Partiels.app"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels.app"
+    - name: Verify dSYM matches notarized app
+      run: |
+        APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" | awk '{print $2}')
+        echo "APP UUID : $APP_UUID"
+        echo "DSYM UUID: $DSYM_UUID"
+        test "$APP_UUID" = "$DSYM_UUID"
     - name: Build Disk Image
       run: |
         appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
