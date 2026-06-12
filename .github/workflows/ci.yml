@@ -157,6 +157,8 @@ jobs:
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
+    - name: Inspect archive contents
+      run: ls -R "${{ github.workspace }}/build/Partiels.xcarchive"
     - name: Test
       run: |
         rm -rf "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app"
@@ -167,7 +169,7 @@ jobs:
     - name: Verify dSYM matches exported app
       run: |
         APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
-        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" | awk '{print $2}')
         echo "APP UUID : $APP_UUID"
         echo "DSYM UUID: $DSYM_UUID"
         test "$APP_UUID" = "$DSYM_UUID"
@@ -183,7 +185,7 @@ jobs:
     - name: Verify dSYM matches notarized app
       run: |
         APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
-        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" | awk '{print $2}')
         echo "APP UUID : $APP_UUID"
         echo "DSYM UUID: $DSYM_UUID"
         test "$APP_UUID" = "$DSYM_UUID"
@@ -194,7 +196,7 @@ jobs:
         xcrun SetFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Package dSYM Archive
       if: ${{ env.is_tagged == 'true' }}
-      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
+      run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
