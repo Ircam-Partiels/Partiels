@@ -179,7 +179,6 @@ jobs:
         xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Package dSYM Archive
-      if: ${{ env.is_tagged == 'true' }}
       run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
       run: |
