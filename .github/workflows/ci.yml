@@ -166,10 +166,8 @@ jobs:
       run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
     - name: Verify dSYM matches exported app
       run: |
-        APP="${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels"
-        DSYM="${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM"
-        APP_UUID=$(dwarfdump --uuid "$APP" | awk '{print $2}')
-        DSYM_UUID=$(dwarfdump --uuid "$DSYM" | awk '{print $2}')
+        APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" | awk '{print $2}')
         echo "APP UUID : $APP_UUID"
         echo "DSYM UUID: $DSYM_UUID"
         test "$APP_UUID" = "$DSYM_UUID"
@@ -182,6 +180,13 @@ jobs:
         xcrun notarytool log "$notaryid" --keychain-profile "notary-installer"
         xcrun stapler staple "${{ github.workspace }}/build/Partiels.app"
         xcrun stapler validate "${{ github.workspace }}/build/Partiels.app"
+    - name: Verify dSYM matches notarized app
+      run: |
+        APP_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.app/Contents/MacOS/Partiels" | awk '{print $2}')
+        DSYM_UUID=$(dwarfdump --uuid "${{ github.workspace }}/build/Partiels.xcarchive/dSYMs/Partiels.app.dSYM" | awk '{print $2}')
+        echo "APP UUID : $APP_UUID"
+        echo "DSYM UUID: $DSYM_UUID"
+        test "$APP_UUID" = "$DSYM_UUID"
     - name: Build Disk Image
       run: |
         appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
