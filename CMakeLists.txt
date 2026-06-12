@@ -387,9 +387,17 @@ if(NOT PARTIELS_MANUAL_ONLY)
     endif()
 
     ### Translation Key Extraction ###
-    add_custom_target(PartielsExtractTranslationKeys COMMAND ${CMAKE_COMMAND} -DTRANSLATION_KEY_FILE="${CMAKE_CURRENT_BINARY_DIR}/Scripts/TranslationKeys.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysExtractor.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set(TRANSLATION_KEYS_FILE "${CMAKE_CURRENT_BINARY_DIR}/Scripts/TranslationKeys.txt")
+
+    add_custom_target(PartielsExtractTranslationKeys COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DQUOTED_KEY_LIST=ON -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysExtractor.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     add_dependencies(Partiels PartielsExtractTranslationKeys)
-    
+
+    add_custom_target(PartielsUpdateTranslationFrench COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DTRANS_FILE="${PARTIELS_BINARYDATA_DIRECTORY}/Translations/French.txt" -DOUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/Translations/French.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysUpdater.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    add_dependencies(PartielsUpdateTranslationFrench PartielsExtractTranslationKeys)
+
+    add_custom_target(PartielsUpdateTranslationPortuguese COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DTRANS_FILE="${PARTIELS_BINARYDATA_DIRECTORY}/Translations/Portuguese.txt" -DOUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/Translations/Portuguese.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysUpdater.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    add_dependencies(PartielsUpdateTranslationPortuguese PartielsExtractTranslationKeys)
+
 endif() # NOT PARTIELS_MANUAL_ONLY
 
 ### Manual ###
