@@ -5,16 +5,11 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      is_release:
-        description: 'Create a release'
+      is_notarized:
+        description: 'Whether to notarize the MacOS build'
         required: false
         type: boolean
-        default: false
-      version_name:
-        description: 'Version name for the release (e.g., 2.1.0-rc1)'
-        required: false
-        type: string
-        default: ''
+        default: true
       build_type:
         description: 'Build type'
         required: false
@@ -23,14 +18,14 @@ on:
           - Release
           - Debug
         default: Release
+  schedule:
+    - cron: '0 21 * * 0'
 
 env:
   # Build type: uses input if workflow_dispatch, otherwise checks for '[debug]' in commit message
   build_type: ${{ inputs.build_type || (contains(github.event.head_commit.message, '[debug]') && 'Debug' || 'Release') }}
-  # Checks whether to create a release: uses input if workflow_dispatch, otherwise checks if event is a tag
-  is_tagged: ${{ inputs.is_release == true || startsWith(github.ref, 'refs/tags/') }}
-  # The name of the version: uses input if workflow_dispatch, otherwise extracts from tag
-  tag_name: ${{ inputs.version_name || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}
+  # Is notarized: checks if the workflow is triggered by a pull request from a forked repository, and uses input if workflow_dispatch, otherwise defaults to true
+  is_notarized: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork && (github.event_name != 'workflow_dispatch' || inputs.is_notarized) }}
 
 jobs:
   # Checks source code formatting with clang before compiling.
@@ -63,7 +58,7 @@ jobs:
     - name: Prepare
       run: sudo apt update && sudo apt install build-essential libasound2-dev libjack-jackd2-dev ladspa-sdk libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libglu1-mesa-dev mesa-common-dev
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
     - name: Test
@@ -75,7 +70,7 @@ jobs:
         path: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
     - name: Release
       uses: softprops/action-gh-release@v3
-      if: ${{ env.is_tagged == 'true' }}
+      if: ${{ env.is_release == 'true' && env.is_notarized == 'true' }}
       with:
         draft: true
         prerelease: true
@@ -95,7 +90,7 @@ jobs:
     - run: choco install imagemagick -fy -d
     - run: choco install innosetup -fy -d
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.tag_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
+      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.version_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
     - name: Test
@@ -107,7 +102,7 @@ jobs:
         path: ${{ github.workspace }}/build/Partiels-Windows.exe
     - name: Release
       uses: softprops/action-gh-release@v3
-      if: ${{ env.is_tagged == 'true' }}
+      if: ${{ env.is_release == 'true' && env.is_notarized == 'true' }}
       with:
         draft: true
         prerelease: true
@@ -131,6 +126,7 @@ jobs:
     - run: npm install -g appdmg
     - run: brew install imagemagick
     - name: Prepare
+      if: ${{ env.is_notarized == 'true' }}
       run: |
         security create-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
         security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
@@ -148,9 +144,20 @@ jobs:
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
         cp Application_Partiels.provisionprofile ~/Library/MobileDevice/Provisioning\ Profiles/$ppuuid.provisionprofile
         rm ./Application_Partiels.provisionprofile
+    - name: Configure (no signing)
+      if: ${{ env.is_notarized == 'false' }}
+      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PARTIELS_PROVISIONPROFILE_NAME }}" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.tag_name }}
+      if: ${{ env.is_notarized == 'true' }}
+      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PARTIELS_PROVISIONPROFILE_NAME }}" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
+    - name: Build (no signing)
+      if: ${{ env.is_notarized == 'false' }}
+      run: |
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Build
+      if: ${{ env.is_notarized == 'true' }}
       run: |
         security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
         security set-keychain-settings -lut 7200 buildagent
@@ -165,6 +172,7 @@ jobs:
     - name: Export
       run: xcodebuild -exportArchive -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -exportPath "${{ github.workspace }}/build" -exportOptionsPlist "${{ github.workspace }}/BinaryData/Resource/macos-export-archive.plist"
     - name: Notarize
+      if: ${{ env.is_notarized == 'true' }}
       run: |
         ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels.app" "${{ github.workspace }}/build/Partiels.zip"
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels.zip" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
@@ -179,9 +187,9 @@ jobs:
         xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
     - name: Package dSYM Archive
-      if: ${{ env.is_tagged == 'true' }}
       run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
+      if: ${{ env.is_notarized == 'true' }}
       run: |
         xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.dmg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
         cat "${{ github.workspace }}/build/notarize.log"
@@ -195,14 +203,13 @@ jobs:
         name: Partiels-MacOS
         path: ${{ github.workspace }}/build/Partiels-MacOS.dmg
     - name: Artifact
-      if: ${{ env.is_tagged == 'true' }}
       uses: actions/upload-artifact@v7.0.1
       with:
         name: Partiels-MacOS-dSYM
         path: ${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip
     - name: Release
       uses: softprops/action-gh-release@v3
-      if: ${{ env.is_tagged == 'true' }}
+      if: ${{ env.is_release == 'true' && env.is_notarized == 'true' }}
       with:
         draft: true
         prerelease: true
@@ -223,7 +230,7 @@ jobs:
         node-version: 20
     - run: npm install -g git+https://github.com/elliotblackburn/mdpdf.git#3.0.4
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DPARTIELS_BUILD_TAG=${{ env.tag_name }} -DPARTIELS_MANUAL_ONLY=ON
+      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DPARTIELS_BUILD_TAG=${{ env.version_name }} -DPARTIELS_MANUAL_ONLY=ON
     - name: Build
       run: | 
         cmake --build ${{ github.workspace }}/build --target PartielsManual
@@ -240,7 +247,7 @@ jobs:
         path: ${{ github.workspace }}/build/Partiels-Patchs.zip
     - name: Release
       uses: softprops/action-gh-release@v3
-      if: ${{ env.is_tagged == 'true' }}
+      if: ${{ env.is_release == 'true' && env.is_notarized == 'true' }}
       with:
         draft: true
         prerelease: true
