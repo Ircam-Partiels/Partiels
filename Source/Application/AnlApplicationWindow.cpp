@@ -128,9 +128,19 @@ Application::CommandTarget const& Application::Window::getCommandTarget() const
 
 void Application::Window::refreshInterface()
 {
+    auto const isPluginListTablePanelVisible = mInterface != nullptr ? mInterface->isPluginListTablePanelVisible() : false;
+    auto const isNeuralyzerPanelVisible = mInterface != nullptr ? mInterface->isNeuralyzerPanelVisible() : false;
     mInterface = std::make_unique<Interface>();
     mCommandTargetInterface.addAndMakeVisible(mInterface.get());
     mCommandTargetInterface.resized();
+    if(isPluginListTablePanelVisible)
+    {
+        mInterface->showPluginListTablePanel();
+    }
+    if(isNeuralyzerPanelVisible)
+    {
+        mInterface->showNeuralyzerPanel();
+    }
 }
 
 void Application::Window::CommandTargetInterface::resized()
