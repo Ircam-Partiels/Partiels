@@ -1,0 +1,16 @@
+{
+  "title": "Partiels",
+  "icon": "macos-dmg-icon.icns",
+  "icon-size": 64,
+  "background": "macos-dmg-background.png",
+  "window": {
+    "position": { "x": 200, "y": 120},
+    "size": { "width": 600, "height": 410}
+  },
+  "contents": [
+    { "x": 432, "y": 94, "type": "link", "path": "/Applications" },
+    { "x": 166, "y": 94, "type": "file", "path": "../../build/Partiels.app" },
+    { "x": 392, "y": 280, "type": "file", "path": "About.txt" },
+    { "x": 512, "y": 280, "type": "file", "path": "ChangeLog.txt" }
+  ]
+}
