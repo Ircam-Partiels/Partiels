@@ -512,6 +512,7 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
 void Application::Instance::handleAsyncUpdate()
 {
     openStartupFiles();
+    std::abort();
 }
 
 juce::File Application::Instance::getBackupFile() const
