@@ -69,12 +69,9 @@ ctest -C Debug -VV --test-dir build # Note: The `-VV` flag is optional and provi
 
 > 💡 You can refer to the [GitHub Actions workflow](.github/workflows/ci.yml) for compilation instructions. 
 
-## Releases
+## Release versions
 
-Partiels uses GitHub Actions for continuous integration and automated releases. Releases can be created in two ways:
-
-### Automatic Release (Tag-based)
-
+Partiels uses GitHub Actions for continuous integration and automated releases.
 The release is created when a new tag is pushed (e.g., `2.1.0`). This is the preferred approach for final stable releases. The CI workflow automatically:
 - Builds the project in Release mode
 - Creates a draft release with the tag name
@@ -85,16 +82,14 @@ git tag 2.1.0
 git push origin 2.1.0
 ```
 
-### Manual Release (Workflow Dispatch)
+### Debug builds
 
-You can also manually trigger a release build from the GitHub Actions UI. This is the preferred approach for testing releases, allowing you to create releases without pushing tags and providing flexibility for testing builds.
+You can manually trigger a debug build from the GitHub Actions UI.
 
 1. Go to the [Actions tab](https://github.com/Ircam-Partiels/Partiels/actions/workflows/ci.yml)
 2. Click "Run workflow"
 3. Configure the workflow inputs:
-   - **Create a release**: Enable to create a GitHub release
-   - **Version name**: Specify the version (e.g., `2.1.0-rc1`)
-   - **Build type**: Choose `Release` or `Debug`
+   - **Build type**: Choose `Debug` (default `Release`)
 
 > 💡 The CI workflow also automatically detects `[debug]` in commit messages to build in Debug mode for regular commits.
 
