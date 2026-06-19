@@ -20,7 +20,7 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::file:
             case AttrType::fileDescription:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::description:
             case AttrType::results:

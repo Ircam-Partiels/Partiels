@@ -38,7 +38,7 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
             case AttrType::description:
             case AttrType::name:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:

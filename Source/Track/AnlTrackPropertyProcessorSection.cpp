@@ -62,23 +62,6 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                         auto const newValue = mPropertyStepSize.entry.getText().getIntValue();
                         setStepSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                     })
-, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used to prepare the preprocessing."), "", {}, [&]([[maybe_unused]] size_t index)
-                      {
-                          auto const listId = mPropertyInputTrack.entry.getSelectedId();
-                          if(listId == 1)
-                          {
-                              setInputTrack({});
-                          }
-                          else
-                          {
-                              auto it = mPropertyInputTrackList.find(listId);
-                              if(it != mPropertyInputTrackList.cend())
-                              {
-                                  setInputTrack(it->second);
-                              }
-                          }
-                          updateState();
-                      })
 , mPropertyUseInputResultsExtraThresholds(juce::translate("Use Input Track Extra Thresholds"), juce::translate("Apply extra threshold filters to input results before preprocessing."), [this](bool state)
                                           {
                                               setUseInputResultsExtraThresholds(state);
@@ -138,7 +121,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
         {
             case AttrType::identifier:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::description:
             case AttrType::file:
             {
@@ -159,12 +142,30 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 mPropertyBlockSize.setVisible(Tools::supportsBlockSize(acsr));
                 mPropertyStepSize.setVisible(Tools::supportsStepSize(acsr));
 
-                auto const supportsInputTrack = Tools::supportsInputTrack(acsr);
-                mPropertyInputTrack.setVisible(supportsInputTrack && file.file == juce::File{});
-                mPropertyUseInputResultsExtraThresholds.setVisible(supportsInputTrack && file.file == juce::File{});
+                juce::WeakReference<juce::Component> weakReference(this);
+                auto const hasFile = file.file != juce::File{};
+                mPropertyInputTracks.clear();
+                if(!hasFile)
+                {
+                    auto const applyTrack = [=, this](auto const& input, juce::String const& trackId)
+                    {
+                        if(weakReference.get() == nullptr)
+                        {
+                            return;
+                        }
+                        setInputTrack(input.identifier, trackId);
+                        updateState();
+                    };
+                    for(auto const& input : description.inputs)
+                    {
+                        auto property = std::make_unique<Plugin::InputProperty>(input, applyTrack);
+                        addAndMakeVisible(property.get());
+                        mPropertyInputTracks[input.identifier] = std::move(property);
+                    }
+                }
+                mPropertyUseInputResultsExtraThresholds.setVisible(!mPropertyInputTracks.empty() && !hasFile);
 
                 mParameterProperties.clear();
-                juce::WeakReference<juce::Component> weakReference(this);
                 auto const applyValue = [=, this](auto const& parameter, float value)
                 {
                     if(weakReference.get() == nullptr)
@@ -238,7 +239,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
 
     mHierarchyListener.onHierarchyChanged = [this]([[maybe_unused]] HierarchyManager const& hierarchyManager)
     {
-        if(!mAccessor.getAttr<AttrType::description>().input.identifier.empty())
+        if(!mAccessor.getAttr<AttrType::description>().inputs.empty())
         {
             updateState();
         }
@@ -249,7 +250,6 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
     addAndMakeVisible(mPropertyWindowType);
     addAndMakeVisible(mPropertyBlockSize);
     addAndMakeVisible(mPropertyStepSize);
-    addAndMakeVisible(mPropertyInputTrack);
     addAndMakeVisible(mPropertyUseInputResultsExtraThresholds);
     addAndMakeVisible(mPropertyPreset);
     addAndMakeVisible(mProgressBarAnalysis);
@@ -282,7 +282,10 @@ void Track::PropertyProcessorSection::resized()
     setBounds(mPropertyWindowType);
     setBounds(mPropertyBlockSize);
     setBounds(mPropertyStepSize);
-    setBounds(mPropertyInputTrack);
+    for(auto& property : mPropertyInputTracks)
+    {
+        setBounds(*property.second.get());
+    }
     setBounds(mPropertyUseInputResultsExtraThresholds);
     for(auto& property : mParameterProperties)
     {
@@ -364,7 +367,7 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                          });
 }
 
-void Track::PropertyProcessorSection::setInputTrack(juce::String const& identifier)
+void Track::PropertyProcessorSection::setInputTrack(juce::String const& inputIdentifier, juce::String const& trackIdentifier)
 {
     askToModifyProcessor([this](bool result)
                          {
@@ -376,7 +379,9 @@ void Track::PropertyProcessorSection::setInputTrack(juce::String const& identifi
                          },
                          [=, this]()
                          {
-                             mAccessor.setAttr<AttrType::input>(identifier, NotificationType::synchronous);
+                             auto inputs = mAccessor.getAttr<AttrType::inputs>();
+                             inputs[inputIdentifier] = trackIdentifier;
+                             mAccessor.setAttr<AttrType::inputs>(inputs, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's input"));
                          });
 }
@@ -622,41 +627,23 @@ void Track::PropertyProcessorSection::updateState()
     auto constexpr silent = juce::NotificationType::dontSendNotification;
     auto const description = mAccessor.getAttr<AttrType::description>();
 
-    if(mPropertyInputTrack.entry.isVisible())
+    auto const& identifier = mAccessor.getAttr<AttrType::identifier>();
+    for(auto& property : mPropertyInputTracks)
     {
         auto const& hierarchyManager = mDirector.getHierarchyManager();
-        auto const otherTracks = hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>());
-        mPropertyInputTrack.entry.clear(silent);
-        mPropertyInputTrackList.clear();
-        auto listId = 1;
-        mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
-        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
-        mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), listId++);
-        for(auto trackIt = otherTracks.crbegin(); trackIt != otherTracks.crend(); ++trackIt)
+        auto const otherTracks = hierarchyManager.getAvailableTracksFor(identifier, property.first);
+        juce::StringPairArray availableInputs;
+        for(auto const& otherTrack : otherTracks)
         {
-            if(!trackIt->group.isEmpty() && !trackIt->group.isEmpty())
+            if(otherTrack.identifier.isNotEmpty() && otherTrack.group.isNotEmpty() && otherTrack.name.isNotEmpty())
             {
-                mPropertyInputTrackList[listId] = trackIt->identifier;
-                mPropertyInputTrack.entry.addItem(trackIt->group + ": " + trackIt->name, listId++);
+                availableInputs.set(otherTrack.identifier, otherTrack.group + ": " + otherTrack.name);
             }
         }
-
-        auto const& input = mAccessor.getAttr<AttrType::input>();
-        if(input.isEmpty())
-        {
-            mPropertyInputTrack.entry.setSelectedId(1, silent);
-        }
-        else
-        {
-            auto const it = std::find_if(mPropertyInputTrackList.cbegin(), mPropertyInputTrackList.cend(), [&](auto const& pait)
-                                         {
-                                             return pait.second == input;
-                                         });
-            if(it != mPropertyInputTrackList.cend())
-            {
-                mPropertyInputTrack.entry.setSelectedId(it->first, silent);
-            }
-        }
+        auto const& inputs = mAccessor.getAttr<AttrType::inputs>();
+        auto const key = juce::String{property.first};
+        auto const selectedInput = inputs.count(key) > 0_z ? inputs.at(key) : juce::String{};
+        property.second->setInputs(availableInputs, juce::StringArray{selectedInput});
     }
     mPropertyUseInputResultsExtraThresholds.entry.setToggleState(mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>(), silent);
 

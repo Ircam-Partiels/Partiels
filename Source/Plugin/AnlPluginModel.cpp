@@ -179,10 +179,7 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["parameters"] = description.parameters;
     j["output"] = description.output;
     j["extraOutputs"] = description.extraOutputs;
-    if(!description.input.identifier.empty())
-    {
-        j["input"] = description.input;
-    }
+    j["inputs"] = description.inputs;
     j["programs"] = description.programs;
 }
 
@@ -199,7 +196,15 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.parameters = j.value("parameters", description.parameters);
     description.output = j.value("output", description.output);
     description.extraOutputs = j.value("extraOutputs", description.extraOutputs);
-    description.input = j.value("input", description.input);
+    if(j.contains("input"))
+    {
+        description.inputs.resize(std::max(description.inputs.size(), 1_z));
+        description.inputs.front() = j.value("input", description.inputs.front());
+    }
+    else
+    {
+        description.inputs = j.value("inputs", description.inputs);
+    }
     description.programs = j.value("programs", description.programs);
 }
 
@@ -403,10 +408,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     toXml(*child, "parameters", value.parameters);
     toXml(*child, "output", value.output);
     toXml(*child, "extraOutputs", value.extraOutputs);
-    if(!value.input.identifier.empty())
-    {
-        toXml(*child, "input", value.input);
-    }
+    toXml(*child, "inputs", value.inputs);
     toXml(*child, "programs", value.programs);
     xml.addChildElement(child.release());
 }
@@ -428,18 +430,30 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.version = fromXml(*child, "version", defaultValue.version);
     value.category = fromXml(*child, "category", defaultValue.category);
     value.details = fromXml(*child, "details", defaultValue.details);
-    value.copyright = fromXml(*child, "copyright", defaultValue.copyright);
+    if(child->getChildByName("copyright") == nullptr)
+    {
+        value.copyright = defaultValue.copyright;
+    }
+    else
+    {
+        value.copyright = fromXml(*child, "copyright", defaultValue.copyright);
+    }
     value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
     value.extraOutputs = fromXml(*child, "extraOutputs", defaultValue.extraOutputs);
-    if(child->getChildByName("input") != nullptr)
+    if(child->getChildByName("inputs") == nullptr)
     {
-        value.input = fromXml(*child, "input", defaultValue.input);
+        value.inputs = defaultValue.inputs;
+        if(child->getChildByName("input") != nullptr)
+        {
+            value.inputs.resize(std::max(value.inputs.size(), 1_z));
+            value.inputs.front() = fromXml(*child, "input", value.inputs.front());
+        }
     }
     else
     {
-        value.input = defaultValue.input;
+        value.inputs = fromXml(*child, "inputs", defaultValue.inputs);
     }
     value.programs = fromXml(*child, "programs", defaultValue.programs);
     return value;
@@ -573,15 +587,12 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     }
     auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
     description.extraOutputs = plugin.getOutputExtraDescriptors(outputIndex);
-
     auto const inputs = plugin.getInputDescriptors();
-    auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
-                                      {
-                                          return input.identifier == key.feature;
-                                      });
-    if(inputIt != inputs.cend())
+    description.inputs.clear();
+    description.inputs.reserve(inputs.size());
+    for(auto const& input : inputs)
     {
-        description.input = *inputIt;
+        description.inputs.push_back(input);
     }
     return description;
 }

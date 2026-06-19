@@ -87,7 +87,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             break;
             case AttrType::edit:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::fileDescription:
             case AttrType::description:
