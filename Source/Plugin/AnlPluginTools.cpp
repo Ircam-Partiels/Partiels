@@ -215,4 +215,50 @@ std::optional<size_t> Plugin::Tools::getFeatureIndex(Vamp::Plugin const& plugin,
     return static_cast<size_t>(std::distance(outputs.cbegin(), it));
 }
 
+Plugin::InputProperty::InputProperty(Plugin::Input const& input, std::function<void(Plugin::Input const&, juce::String const&)> fn)
+: PropertyList(juce::translate("INPUTNAME input track").replace("INPUTNAME", input.name), juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name), "", {}, [=, this](size_t index)
+               {
+                   if(fn != nullptr)
+                   {
+                       auto const numIds = static_cast<size_t>(mInputIds.size());
+                       if(index == 0_z || index - 1_z >= numIds)
+                       {
+                           fn(mInput, {});
+                       }
+                       else
+                       {
+                           fn(mInput, mInputIds.getReference(static_cast<int>(index - 1_z)));
+                       }
+                   }
+               })
+, mInput(input)
+{
+}
+
+void Plugin::InputProperty::setInputs(juce::StringPairArray const& availableInputs, juce::StringArray const& selectedInputs)
+{
+    mInputIds = availableInputs.getAllKeys();
+    entry.clear(juce::NotificationType::dontSendNotification);
+    entry.setEnabled(availableInputs.size() > 0);
+    entry.setTextWhenNothingSelected(juce::translate("Not found"));
+    entry.addItem(juce::translate("Undefined"), 1);
+    entry.addItemList(availableInputs.getAllValues(), 2);
+    auto inputCopy = selectedInputs;
+    inputCopy.removeEmptyStrings();
+    inputCopy.removeDuplicates(false);
+    if(inputCopy.isEmpty())
+    {
+        entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+    }
+    else if(inputCopy.size() > 1)
+    {
+        entry.setTextWhenNothingSelected(juce::translate("Multiple Values"));
+        entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        entry.setSelectedId(mInputIds.indexOf(inputCopy.getReference(0)) + 2, juce::NotificationType::dontSendNotification);
+    }
+}
+
 ANALYSE_FILE_END

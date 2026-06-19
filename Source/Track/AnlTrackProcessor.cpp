@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis(lock);
 }
 
-bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input, std::vector<std::optional<float>> inputExtraThresholds)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, InputStates inputStates)
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
     MiscWeakAssert(lock.owns_lock());
@@ -72,11 +72,11 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
     }
 
     mChrono.start();
-    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), in = std::move(input), thresholds = std::move(inputExtraThresholds)]()
+    mAnalysisProcess = std::async(std::launch::async, [this, proc = std::move(processor), inputs = std::move(inputStates)]()
                                   {
                                       MiscDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
-                                      auto result = runPluginAnalysis(*proc, in, thresholds, [&, this](float advancement)
+                                      auto result = runPluginAnalysis(*proc, inputs, [&, this](float advancement)
                                                                       {
                                                                           mAdvancement.store(advancement);
                                                                           return !mShouldAbort.load();
@@ -259,7 +259,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
     return std::make_tuple(juce::Result::ok(), Track::Results(std::move(points)));
 }
 
-Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, Results const& input, std::vector<std::optional<float>> const& inputExtraThresholds, std::function<bool(float)> callback)
+Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, InputStates const& inputStates, std::function<bool(float)> callback)
 {
     if(callback != nullptr && !callback(0.0f))
     {
@@ -272,8 +272,34 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
     {
         return std::make_tuple(prepareResult, Track::Results{});
     }
-    auto const inputs = Tools::convert(processor.getInput(), input, inputExtraThresholds);
-    auto precomputingResults = processor.setPrecomputingResults(inputs);
+
+    std::vector<std::vector<std::vector<Plugin::Result>>> inputData;
+    auto const inputs = processor.getInputs();
+    for(auto const& inputState : inputStates)
+    {
+        auto const it = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
+                                     {
+                                         return input.identifier == inputState.first;
+                                     });
+        if(it != inputs.cend())
+        {
+            auto const featureIndex = static_cast<size_t>(std::distance(inputs.cbegin(), it));
+            auto allData = Tools::convert(*it, inputState.second.first, inputState.second.second);
+            for(auto channelIndex = 0_z; channelIndex < allData.size(); ++channelIndex)
+            {
+                if(channelIndex >= inputData.size())
+                {
+                    inputData.resize(channelIndex + 1_z);
+                }
+                if(featureIndex >= inputData.at(channelIndex).size())
+                {
+                    inputData[channelIndex].resize(featureIndex + 1_z);
+                }
+                inputData[channelIndex][featureIndex] = std::move(allData[channelIndex]);
+            }
+        }
+    }
+    auto precomputingResults = processor.setPrecomputingResults(inputData);
     if(precomputingResults.failed())
     {
         return std::make_tuple(precomputingResults, Track::Results{});

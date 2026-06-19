@@ -30,6 +30,20 @@ namespace Plugin
         std::vector<std::unique_ptr<Ive::PluginWrapper>> createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate);
         std::optional<size_t> getFeatureIndex(Vamp::Plugin const& plugin, std::string const& feature);
     } // namespace Tools
+
+    class InputProperty
+    : public PropertyList
+    {
+    public:
+        InputProperty(Plugin::Input const& input, std::function<void(Plugin::Input const&, juce::String const&)> fn);
+        ~InputProperty() = default;
+
+        void setInputs(juce::StringPairArray const& availableInputs, juce::StringArray const& selectedInputs);
+
+    private:
+        Plugin::Input const mInput;
+        juce::StringArray mInputIds;
+    };
 } // namespace Plugin
 
 ANALYSE_FILE_END

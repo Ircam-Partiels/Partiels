@@ -30,9 +30,18 @@ bool Track::Tools::supportsStepSize(Accessor const& acsr)
     return hasPluginKey(acsr) && (description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z);
 }
 
-bool Track::Tools::supportsInputTrack(Accessor const& acsr)
+bool Track::Tools::supportsInputTracks(Accessor const& acsr)
 {
-    return hasPluginKey(acsr) && !acsr.getAttr<AttrType::description>().input.identifier.empty();
+    return hasPluginKey(acsr) && !acsr.getAttr<AttrType::description>().inputs.empty();
+}
+
+bool Track::Tools::supportsInputTrack(Accessor const& acsr, juce::String const& inputIdentifier)
+{
+    auto const& inputs = acsr.getAttr<AttrType::description>().inputs;
+    return hasPluginKey(acsr) && std::any_of(inputs.cbegin(), inputs.cend(), [&](auto const& input)
+                                             {
+                                                 return input.identifier == inputIdentifier;
+                                             });
 }
 
 std::optional<Track::FrameType> Track::Tools::getFrameType(Plugin::Output const& output)

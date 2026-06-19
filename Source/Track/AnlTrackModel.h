@@ -215,7 +215,7 @@ namespace Track
         , edit
         , description
         , key
-        , input
+        , inputs
         , useInputResultsExtraThresholds
         , state
         , sampleRate
@@ -261,7 +261,7 @@ namespace Track
     , Model::Attr<AttrType::edit, Edition, Model::Flag::notifying>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
-    , Model::Attr<AttrType::input, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::inputs, std::map<juce::String, juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::useInputResultsExtraThresholds, bool, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     , Model::Attr<AttrType::sampleRate, double, Model::Flag::notifying | Model::Flag::saveable>
@@ -362,6 +362,7 @@ namespace Track
 
     private:
         void setDescription(Plugin::Description const& value, NotificationType notification);
+        void setInputs(std::map<juce::String, juce::String> const& value, NotificationType notification);
         void setGraphicsSettings(GraphicsSettings const& value, NotificationType notification);
         void setChannelsLayout(std::vector<bool> const& value, NotificationType notification);
     };
