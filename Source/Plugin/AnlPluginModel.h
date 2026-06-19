@@ -134,7 +134,7 @@ namespace Plugin
         std::vector<Parameter> parameters{};     //!< The parameters of the plugin
         Output output{};                         //!< The output of the plugin
         std::vector<OutputExtra> extraOutputs;   //!< The extra outputs of the plugin
-        Input input{};                           //!< The input of the plugin
+        std::vector<Input> inputs;               //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
 
         inline bool operator==(Description const& rhs) const noexcept
@@ -150,7 +150,7 @@ namespace Plugin
                    parameters == rhs.parameters &&
                    output == rhs.output &&
                    extraOutputs == rhs.extraOutputs &&
-                   input == rhs.input &&
+                   inputs == rhs.inputs &&
                    programs == rhs.programs;
         }
 

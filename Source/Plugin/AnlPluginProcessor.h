@@ -14,12 +14,13 @@ namespace Plugin
         ~Processor() = default;
 
         juce::Result prepareToAnalyze(std::vector<std::vector<Result>>& results);
-        juce::Result setPrecomputingResults(std::vector<std::vector<Result>> const& results);
+        // [channels[features[results]]]
+        juce::Result setPrecomputingResults(std::vector<std::vector<std::vector<Result>>> const& results);
         std::tuple<juce::Result, bool> performNextAudioBlock(std::vector<std::vector<Result>>& results);
         float getAdvancement() const;
 
         Description getDescription() const;
-        Input getInput() const;
+        std::vector<Input> getInputs() const;
         Output getOutput() const;
 
     private:

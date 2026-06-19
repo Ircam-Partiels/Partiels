@@ -22,7 +22,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::fileDescription:
             case Track::AttrType::name:
             case Track::AttrType::key:
-            case Track::AttrType::input:
+            case Track::AttrType::inputs:
             case Track::AttrType::description:
             case Track::AttrType::state:
             case Track::AttrType::height:

@@ -205,7 +205,7 @@ juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>
     return juce::Result::ok();
 }
 
-juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<Result>> const& results)
+juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<std::vector<Result>>> const& results)
 {
     MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty())
@@ -221,10 +221,13 @@ juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<R
     }
 
     MiscWeakAssert(results.empty() || results.size() == 1_z || results.size() == mPlugins.size());
-    Vamp::Plugin::FeatureSet fs;
     if(results.size() == 1_z)
     {
-        fs[static_cast<int>(mFeature)] = results.at(0_z);
+        Vamp::Plugin::FeatureSet fs;
+        for(auto featureIndex = 0_z; featureIndex < results.at(0_z).size(); ++featureIndex)
+        {
+            fs[static_cast<int>(featureIndex)] = results.at(0_z).at(featureIndex);
+        }
         for(size_t index = 0; index < mPlugins.size(); ++index)
         {
             mPlugins[index]->setPreComputingFeatures(fs);
@@ -232,14 +235,19 @@ juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<R
     }
     else if(results.size() == mPlugins.size())
     {
-        for(size_t index = 0; index < mPlugins.size(); ++index)
+        for(size_t channelIndex = 0; channelIndex < mPlugins.size(); ++channelIndex)
         {
-            fs[static_cast<int>(mFeature)] = results.at(index);
-            mPlugins[index]->setPreComputingFeatures(fs);
+            Vamp::Plugin::FeatureSet fs;
+            for(auto featureIndex = 0_z; featureIndex < results.at(channelIndex).size(); ++featureIndex)
+            {
+                fs[static_cast<int>(featureIndex)] = results.at(channelIndex).at(featureIndex);
+            }
+            mPlugins[channelIndex]->setPreComputingFeatures(fs);
         }
     }
     else if(!results.empty())
     {
+        Vamp::Plugin::FeatureSet fs;
         for(size_t index = 0; index < mPlugins.size(); ++index)
         {
             mPlugins[index]->setPreComputingFeatures(fs);
@@ -337,7 +345,7 @@ Plugin::Description Plugin::Processor::getDescription() const
     return loadDescription(*mPlugins.at(0), mKey);
 }
 
-Plugin::Input Plugin::Processor::getInput() const
+std::vector<Plugin::Input> Plugin::Processor::getInputs() const
 {
     MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty() || mPlugins.at(0) == nullptr)
@@ -345,13 +353,14 @@ Plugin::Input Plugin::Processor::getInput() const
         return {};
     }
 
-    auto const output = getOutput();
     auto const descriptors = mPlugins.at(0)->getInputDescriptors();
-    auto const it = std::find_if(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                                 {
-                                     return descriptor.identifier == output.identifier;
-                                 });
-    return it != descriptors.cend() ? *it : Plugin::Input{};
+    std::vector<Plugin::Input> inputs;
+    inputs.reserve(descriptors.size());
+    for(auto const& descriptor : descriptors)
+    {
+        inputs.push_back(descriptor);
+    }
+    return inputs;
 }
 
 Plugin::Output Plugin::Processor::getOutput() const

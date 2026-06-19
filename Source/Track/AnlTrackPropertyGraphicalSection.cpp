@@ -464,7 +464,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
             case AttrType::edit:
             case AttrType::name:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:

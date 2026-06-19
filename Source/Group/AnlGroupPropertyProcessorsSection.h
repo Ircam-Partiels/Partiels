@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlGroupDirector.h"
 #include "AnlGroupTools.h"
 
@@ -23,14 +24,14 @@ namespace Group
         void setWindowType(Plugin::WindowType const& windowType);
         void setBlockSize(size_t const blockSize);
         void setStepSize(size_t const stepSize);
-        void setInputTrack(juce::String const& identifier);
+        void setInputTrack(juce::String const& inputIdentifier, juce::String const& trackIdentifier);
         void setUseInputResultsExtraThresholds(bool state);
 
         void updateContent();
         void updateWindowType();
         void updateBlockSize();
         void updateStepSize();
-        void updateInputTrack();
+        void updateInputTracks();
         void updateParameters();
         void updateState();
 
@@ -40,9 +41,8 @@ namespace Group
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
-        PropertyList mPropertyInputTrack;
+        std::map<std::string, std::unique_ptr<Plugin::InputProperty>> mPropertyInputTracks;
         PropertyToggle mPropertyUseInputResultsExtraThresholds;
-        std::map<int, juce::String> mPropertyInputTrackList;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
 
         LayoutNotifier mLayoutNotifier;

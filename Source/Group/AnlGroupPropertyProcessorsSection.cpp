@@ -36,26 +36,6 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                         juce::ignoreUnused(index);
                         setStepSize(static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue()));
                     })
-, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used by the tracks of the group."), "", {}, [&]([[maybe_unused]] size_t index)
-                      {
-                          auto const listId = mPropertyInputTrack.entry.getSelectedId();
-                          if(listId == 1)
-                          {
-                              setInputTrack({});
-                          }
-                          else
-                          {
-                              auto it = mPropertyInputTrackList.find(listId);
-                              if(it != mPropertyInputTrackList.cend())
-                              {
-                                  setInputTrack(it->second);
-                              }
-                              else
-                              {
-                                  updateInputTrack();
-                              }
-                          }
-                      })
 , mPropertyUseInputResultsExtraThresholds(juce::translate("Apply Extra Thresholds"), juce::translate("Apply extra threshold filters to input results before preprocessing."), [this](bool state)
                                           {
                                               setUseInputResultsExtraThresholds(state);
@@ -69,7 +49,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                  {
                      updateState();
                  },
-                 {Track::AttrType::state, Track::AttrType::useInputResultsExtraThresholds})
+                 {Track::AttrType::state, Track::AttrType::inputs, Track::AttrType::useInputResultsExtraThresholds})
 {
     mPropertyBlockSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyBlockSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
@@ -79,7 +59,6 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
     addAndMakeVisible(mPropertyWindowType);
     addAndMakeVisible(mPropertyBlockSize);
     addAndMakeVisible(mPropertyStepSize);
-    addAndMakeVisible(mPropertyInputTrack);
     addAndMakeVisible(mPropertyUseInputResultsExtraThresholds);
 }
 
@@ -93,7 +72,10 @@ void Group::PropertyProcessorsSection::resized()
             component.setBounds(bounds.removeFromTop(component.getHeight()));
         }
     };
-    setBounds(mPropertyInputTrack);
+    for(auto& property : mPropertyInputTracks)
+    {
+        setBounds(*property.second.get());
+    }
     setBounds(mPropertyUseInputResultsExtraThresholds);
     setBounds(mPropertyWindowType);
     setBounds(mPropertyBlockSize);
@@ -312,44 +294,14 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                           });
 }
 
-void Group::PropertyProcessorsSection::setInputTrack(juce::String const& identifier)
+void Group::PropertyProcessorsSection::setInputTrack(juce::String const& inputIdentifier, juce::String const& trackIdentifier)
 {
     auto const supportsInputTrack = [=, this](Track::Accessor const& acsr)
     {
         auto const& hierarchyManager = mDirector.getHierarchyManager();
-        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), identifier);
+        return trackIdentifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), inputIdentifier, trackIdentifier);
     };
 
-    askToModifyProcessors([this](bool result)
-                          {
-                              if(result)
-                              {
-                                  mDirector.startAction(true);
-                              }
-                              else
-                              {
-                                  updateInputTrack();
-                              }
-                              return result;
-                          },
-                          [=, this]()
-                          {
-                              auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
-                              for(auto& trackAcsr : trackAcsrs)
-                              {
-                                  if(supportsInputTrack(trackAcsr.get()))
-                                  {
-                                      trackAcsr.get().setAttr<Track::AttrType::input>(identifier, NotificationType::synchronous);
-                                  }
-                              }
-                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's input track"));
-                              updateInputTrack();
-                          },
-                          supportsInputTrack);
-}
-
-void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool state)
-{
     askToModifyProcessors([this](bool result)
                           {
                               if(result)
@@ -367,7 +319,40 @@ void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool st
                               auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
                               for(auto& trackAcsr : trackAcsrs)
                               {
-                                  if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+                                  if(supportsInputTrack(trackAcsr.get()))
+                                  {
+                                      auto inputs = trackAcsr.get().getAttr<Track::AttrType::inputs>();
+                                      inputs[inputIdentifier] = trackIdentifier;
+                                      trackAcsr.get().setAttr<Track::AttrType::inputs>(inputs, NotificationType::synchronous);
+                                  }
+                              }
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's input track"));
+                              updateState();
+                          },
+                          supportsInputTrack);
+}
+
+void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool state)
+{
+
+    askToModifyProcessors([this](bool result)
+                          {
+                              if(result)
+                              {
+                                  mDirector.startAction(true);
+                              }
+                              else
+                              {
+                                  updateState();
+                              }
+                              return result;
+                          },
+                          [=, this]()
+                          {
+                              auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+                              for(auto& trackAcsr : trackAcsrs)
+                              {
+                                  if(Track::Tools::supportsInputTracks(trackAcsr.get()))
                                   {
                                       trackAcsr.get().setAttr<Track::AttrType::useInputResultsExtraThresholds>(state, NotificationType::synchronous);
                                   }
@@ -377,7 +362,7 @@ void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool st
                           },
                           [](Track::Accessor const& trackAcsr)
                           {
-                              return Track::Tools::supportsInputTrack(trackAcsr);
+                              return Track::Tools::supportsInputTracks(trackAcsr);
                           });
 }
 
@@ -386,7 +371,7 @@ void Group::PropertyProcessorsSection::updateContent()
     updateWindowType();
     updateBlockSize();
     updateStepSize();
-    updateInputTrack();
+    updateInputTracks();
     updateParameters();
     updateState();
     resized();
@@ -508,74 +493,49 @@ void Group::PropertyProcessorsSection::updateStepSize()
     mPropertyBlockSize.entry.setEditableText(isTimeDomainOnly);
 }
 
-void Group::PropertyProcessorsSection::updateInputTrack()
+void Group::PropertyProcessorsSection::updateInputTracks()
 {
-    juce::StringArray trackNames;
-    std::set<juce::String> inputs;
-    std::set<juce::String> identifiers;
-    std::map<juce::String, Track::HierarchyManager::TrackInfo> otherTracks;
+    juce::WeakReference<juce::Component> weakReference(this);
+    auto const applyTrack = [=, this](auto const& input, juce::String const& trackId)
+    {
+        if(weakReference.get() == nullptr)
+        {
+            return;
+        }
+        setInputTrack(input.identifier, trackId);
+    };
 
-    auto const& hierarchyManager = mDirector.getHierarchyManager();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+
+    mPropertyInputTracks.clear();
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+        auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
+        for(auto const& input : description.inputs)
         {
-            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-            identifiers.insert(identifier);
-            inputs.insert(trackAcsr.get().getAttr<Track::AttrType::input>());
-            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
-            auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier);
-            for(auto const& inputTrack : inputTracks)
+            if(mPropertyInputTracks.count(input.identifier) == 0_z)
             {
-                otherTracks[inputTrack.identifier] = inputTrack;
+                auto property = std::make_unique<Plugin::InputProperty>(input, applyTrack);
+                addAndMakeVisible(property.get());
+                mPropertyInputTracks[input.identifier] = std::move(property);
             }
         }
     }
-    mPropertyInputTrack.setVisible(!inputs.empty());
-    if(inputs.empty())
-    {
-        return;
-    }
 
-    mPropertyInputTrack.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The input tracks used by the tracks of the group."));
-    mPropertyInputTrack.entry.clear(juce::NotificationType::dontSendNotification);
-    mPropertyInputTrackList.clear();
-    auto listId = 1;
-    mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
-    mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), listId++);
-    for(auto trackIt = otherTracks.crbegin(); trackIt != otherTracks.crend(); ++trackIt)
+    for(auto& input : mPropertyInputTracks)
     {
-        if(!trackIt->second.group.isEmpty() && !trackIt->second.group.isEmpty())
+        if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(input.second.get()))
         {
-            mPropertyInputTrackList[listId] = trackIt->second.identifier;
-            mPropertyInputTrack.entry.addItem(trackIt->second.group + ": " + trackIt->second.name, listId++);
-        }
-    }
-
-    if(inputs.size() == 1_z)
-    {
-        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
-        if(inputs.cbegin()->isEmpty())
-        {
-            mPropertyInputTrack.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            auto const it = std::find_if(mPropertyInputTrackList.cbegin(), mPropertyInputTrackList.cend(), [&](auto const& pait)
-                                         {
-                                             return pait.second == *inputs.cbegin();
-                                         });
-            if(it != mPropertyInputTrackList.cend())
+            juce::StringArray trackNames;
+            for(auto& trackAcsr : trackAcsrs)
             {
-                mPropertyInputTrack.entry.setSelectedId(it->first, juce::NotificationType::dontSendNotification);
+                if(Track::Tools::supportsInputTrack(trackAcsr.get(), input.first))
+                {
+                    trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+                }
             }
+            tooltipClient->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
         }
-    }
-    else
-    {
-        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Multiple Values"));
-        mPropertyStepSize.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
 }
 
@@ -599,7 +559,6 @@ void Group::PropertyProcessorsSection::updateParameters()
     mPropertyStepSize.setEnabled(hasPlugin);
 
     mParameterProperties.clear();
-    std::set<size_t> stepSizes;
     for(auto const& trackAcsr : trackAcsrs)
     {
         auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
@@ -639,7 +598,7 @@ void Group::PropertyProcessorsSection::updateState()
     std::set<bool> inputResultsExtraThresholdStates;
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+        if(Track::Tools::supportsInputTracks(trackAcsr.get()))
         {
             inputResultsExtraThresholdStates.insert(trackAcsr.get().getAttr<Track::AttrType::useInputResultsExtraThresholds>());
             trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
@@ -691,6 +650,35 @@ void Group::PropertyProcessorsSection::updateState()
         {
             Plugin::Tools::setPropertyValue(*propertyIt->second.get(), *parameterIt.value(), values, juce::NotificationType::dontSendNotification);
         }
+    }
+
+    auto const& hierarchyManager = mDirector.getHierarchyManager();
+    for(auto const& input : mPropertyInputTracks)
+    {
+        juce::StringPairArray availableInputs;
+        juce::StringArray selectedInputs;
+        for(auto const& trackAcsr : trackAcsrs)
+        {
+            if(Track::Tools::supportsInputTrack(trackAcsr.get(), input.first))
+            {
+                auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+                auto const otherTracks = hierarchyManager.getAvailableTracksFor(trackIdentifier, input.first);
+                for(auto const& otherTrack : otherTracks)
+                {
+                    if(otherTrack.identifier.isNotEmpty() && otherTrack.group.isNotEmpty() && otherTrack.name.isNotEmpty())
+                    {
+                        availableInputs.set(otherTrack.identifier, otherTrack.group + ": " + otherTrack.name);
+                    }
+                }
+                auto const& inputs = trackAcsr.get().getAttr<Track::AttrType::inputs>();
+                auto const key = juce::String{input.first};
+                if(inputs.count(key) > 0_z)
+                {
+                    selectedInputs.addIfNotAlreadyThere(inputs.at(key));
+                }
+            }
+        }
+        input.second->setInputs(availableInputs, selectedInputs);
     }
 }
 

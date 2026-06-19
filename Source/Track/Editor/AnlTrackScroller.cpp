@@ -19,7 +19,7 @@ Track::Scroller::Scroller(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::fileDescription:
             case AttrType::edit:
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::state:
             case AttrType::height:

@@ -21,6 +21,36 @@ void Track::Accessor::setDescription(Plugin::Description const& value, Notificat
     }
 }
 
+void Track::Accessor::setInputs(std::map<juce::String, juce::String> const& value, NotificationType notification)
+{
+    // Ensure inputs are consistent with description
+    auto inputs = value;
+    auto inputIt = inputs.begin();
+    auto const description = getAttr<AttrType::description>();
+    while(inputIt != inputs.end())
+    {
+        if(std::none_of(description.inputs.cbegin(), description.inputs.cend(), [&](auto const& input)
+                        {
+                            return juce::String{input.identifier} == inputIt->first;
+                        }))
+        {
+            inputIt = inputs.erase(inputIt);
+        }
+        else
+        {
+            ++inputIt;
+        }
+    }
+    for(auto const& input : description.inputs)
+    {
+        if(inputs.count(input.identifier) == 0_z)
+        {
+            inputs[input.identifier] = "";
+        }
+    }
+    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<AttrType::inputs, std::map<juce::String, juce::String>>(inputs, notification);
+}
+
 void Track::Accessor::setGraphicsSettings(GraphicsSettings const& value, NotificationType notification)
 {
     auto copy = value;
@@ -126,9 +156,22 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
         // Add new graphicsSettings attribute
         XmlParser::toXml(*copy.get(), "graphicsSettings", settings);
     }
-    if(version <= 0x20401 && copy->getChildByName("useInputResultsExtraThresholds") == nullptr)
+    if(version <= 0x20401)
     {
-        XmlParser::toXml(*copy.get(), "useInputResultsExtraThresholds", false);
+        if(copy->getChildByName("useInputResultsExtraThresholds") == nullptr)
+        {
+            XmlParser::toXml(*copy.get(), "useInputResultsExtraThresholds", false);
+        }
+        if(copy->getChildByName("inputs") == nullptr && copy->hasAttribute("input"))
+        {
+            auto const description = XmlParser::fromXml(*copy, "description", Plugin::Description{});
+            if(!description.inputs.empty())
+            {
+                std::map<juce::String, juce::String> inputs;
+                inputs[description.inputs.front().identifier] = copy->getStringAttribute("input");
+                XmlParser::toXml(*copy.get(), "inputs", inputs);
+            }
+        }
     }
     return copy;
 }
