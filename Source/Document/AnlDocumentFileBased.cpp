@@ -376,7 +376,7 @@ void Document::FileBased::changed()
     auto const& savedAccessor = getFile() != juce::File{} ? mSavedStateAccessor : getDefaultAccessor();
     auto const state = mAccessor.isEquivalentTo(savedAccessor);
     setChangedFlag(!state);
-#if JUCE_DEBUG
+#if PARTIELS_DEBUG_DIFF
     if(!state)
     {
         MiscDebug("Document::FileBased", mAccessor.getDiff(savedAccessor).dump());
