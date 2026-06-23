@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackProgressBar.h"
 
 ANALYSE_FILE_BEGIN
@@ -19,7 +20,7 @@ namespace Track
     private:
         void askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform);
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
-        void setInputTrack(juce::String const& identifier);
+        void setInputTrack(juce::String const& inputIdentifier, juce::String const& trackIdentifier);
         void setUseInputResultsExtraThresholds(bool state);
         void setWindowType(Plugin::WindowType const& windowType);
         void setBlockSize(size_t const blockSize);
@@ -43,9 +44,8 @@ namespace Track
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
-        PropertyList mPropertyInputTrack;
+        std::map<std::string, std::unique_ptr<Plugin::InputProperty>> mPropertyInputTracks;
         PropertyToggle mPropertyUseInputResultsExtraThresholds;
-        std::map<int, juce::String> mPropertyInputTrackList;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};

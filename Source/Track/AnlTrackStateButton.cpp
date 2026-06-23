@@ -40,7 +40,7 @@ Track::StateButton::StateButton(Director& director)
             }
             break;
             case AttrType::key:
-            case AttrType::input:
+            case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::description:
             case AttrType::state:

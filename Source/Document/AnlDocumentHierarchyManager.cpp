@@ -10,13 +10,13 @@ Document::HierarchyManager::HierarchyManager(Accessor& accessor)
 {
 }
 
-std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::getAvailableTracksFor(juce::String const& ownerIdentifier) const
+std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::getAvailableTracksFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier) const
 {
     if(!Tools::hasTrackAcsr(mAccessor, ownerIdentifier))
     {
         return {};
     }
-    if(!Track::Tools::supportsInputTrack(Tools::getTrackAcsr(mAccessor, ownerIdentifier)))
+    if(!Track::Tools::supportsInputTrack(Tools::getTrackAcsr(mAccessor, ownerIdentifier), inputIdentifier))
     {
         return {};
     }
@@ -31,7 +31,7 @@ std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::g
             for(auto const& trackAcsr : trackAcsrs)
             {
                 auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-                if(isTrackValidFor(ownerIdentifier, identifier))
+                if(isTrackValidFor(ownerIdentifier, inputIdentifier, identifier))
                 {
                     auto const trackName = trackAcsr.get().getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
@@ -43,7 +43,7 @@ std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::g
     return tracks;
 }
 
-bool Document::HierarchyManager::isTrackValidFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier) const
+bool Document::HierarchyManager::isTrackValidFor(juce::String const& ownerIdentifier, juce::String const& inputIdentifier, juce::String const& inputTrack) const
 {
     std::function<bool(Track::Accessor const&)> const hasValidInheritance = [&](Track::Accessor const& inputTrackAcsr)
     {
@@ -52,35 +52,36 @@ bool Document::HierarchyManager::isTrackValidFor(juce::String const& ownerIdenti
         {
             return false;
         }
-        auto const& subInputIdentifier = inputTrackAcsr.getAttr<Track::AttrType::input>();
-        if(subInputIdentifier.isNotEmpty() && Tools::hasTrackAcsr(mAccessor, subInputIdentifier))
-        {
-            return hasValidInheritance(Tools::getTrackAcsr(mAccessor, subInputIdentifier));
-        }
-        return true;
+        auto const& rootInputs = inputTrackAcsr.getAttr<Track::AttrType::inputs>();
+        return std::none_of(rootInputs.cbegin(), rootInputs.cend(), [&](auto const& rootInput)
+                            {
+                                auto const& prevInputIdentifier = rootInput.second;
+                                return prevInputIdentifier.isNotEmpty() && Tools::hasTrackAcsr(mAccessor, prevInputIdentifier) && !hasValidInheritance(Tools::getTrackAcsr(mAccessor, prevInputIdentifier));
+                            });
     };
 
-    if(!Tools::hasTrackAcsr(mAccessor, ownerIdentifier) || !Tools::hasTrackAcsr(mAccessor, inputIdentifier))
+    if(!Tools::hasTrackAcsr(mAccessor, ownerIdentifier) || !Tools::hasTrackAcsr(mAccessor, inputTrack))
     {
         return false;
     }
     auto const& ownerTrackAcsr = Tools::getTrackAcsr(mAccessor, ownerIdentifier);
-    if(!Track::Tools::supportsInputTrack(ownerTrackAcsr))
+    if(!Track::Tools::supportsInputTrack(ownerTrackAcsr, inputIdentifier))
     {
         return false;
     }
-    auto const ownerFrameType = Track::Tools::getFrameType(ownerTrackAcsr.getAttr<Track::AttrType::description>().input);
-    if(!ownerFrameType.has_value())
+    auto const& inputs = ownerTrackAcsr.getAttr<Track::AttrType::description>().inputs;
+    auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const input)
+                                      {
+                                          return input.identifier == inputIdentifier;
+                                      });
+    if(inputIt == inputs.cend())
     {
         return false;
     }
-    auto const& inputTrackAcsr = Tools::getTrackAcsr(mAccessor, inputIdentifier);
+    auto const expectedFrameType = Track::Tools::getFrameType(*inputIt);
+    auto const& inputTrackAcsr = Tools::getTrackAcsr(mAccessor, inputTrack);
     auto const inputFrameType = Track::Tools::getFrameType(inputTrackAcsr);
-    if(!inputFrameType.has_value())
-    {
-        return false;
-    }
-    if(inputFrameType.value() != ownerFrameType.value())
+    if(expectedFrameType.has_value() && (!inputFrameType.has_value() || inputFrameType.value() != expectedFrameType.value()))
     {
         return false;
     }
