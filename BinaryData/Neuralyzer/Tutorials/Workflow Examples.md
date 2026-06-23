@@ -50,6 +50,5 @@ A series of workflow examples.
 ## Analyze the musical/MIDI notes
 1. If no pitch track exists, create a Crepe - Pitch plugin track {"identifier": "ircamcrepe:crepe", "feature": "pitch"} (or ask the user to create a pitch track), get the summary of results (wait a few seconds if necessary) and adjust the confidence extra threshold (around 0.5) of the pitch track to exclude unwanted results
 2. If no marker track exists, create a Transient Detection - Marker plugin track {"identifier": "supervp:supervptransientdetection", "feature": "transientinfo"} (or ask the user to create a marker track), get the summary of results (wait a few seconds if necessary) and adjust the energy extra threshold (around 0.5) of the marker track to exclude unwanted results
-3. Get the raw results from the marker track (apply extra thresholds and allow large output if necessary)
-4. Get a summary of the pitch track results for the time interval (apply extra thresholds) corresponding to each marker (or between two consecutive markers if the duration around zero) and use the statistics (in hertz) to estimate the musical/MIDI notes (process all the intervals at once)
-5. Create an New Track - Marker  {"identifier": "partiels-vamp-plugins:partielsnewtrack", "feature": "markers"} and set the raw results of the track with CSV in the form "Time, Duration, Note" (with an optional score as extra output)
+3. Create a Combine - Statictics {"identifier": "partiels-vamp-plugins:transformermarker", "feature": "result"} and sets the pitch and marker tracks for the points and markers input tracks.
+4. Get a the raw track results and estimate the musical or MIDI notes.
