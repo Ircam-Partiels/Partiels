@@ -511,8 +511,8 @@ void Document::Director::startAction()
     MiscWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
+#if PARTIELS_DEBUG_DIFF
         MiscWeakAssert(!hasChanged());
-#if JUCE_DEBUG
         if(hasChanged())
         {
             MiscDebug("Document::Director", mAccessor.getDiff(mSavedState).dump());

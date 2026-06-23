@@ -10,6 +10,10 @@ namespace Anl = Misc;
 
 ANALYSE_FILE_BEGIN
 
+#if !JUCE_DEBUG
+#undef PARTIELS_DEBUG_DIFF
+#endif
+
 namespace Utils
 {
     template <class TargetClass>
