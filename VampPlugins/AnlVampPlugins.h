@@ -94,4 +94,49 @@ namespace AnlVampPlugin
     private:
         size_t mNumChannels{0_z};
     };
+
+    class Stats
+    : public Base
+    , public Ive::PluginExtension
+    {
+    public:
+        Stats(float sampleRate);
+        ~Stats() = default;
+
+        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
+
+        InputDomain getInputDomain() const override;
+        std::string getIdentifier() const override;
+        std::string getName() const override;
+        std::string getDescription() const override;
+        OutputList getOutputDescriptors() const override;
+
+        size_t getPreferredBlockSize() const override;
+
+        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
+        FeatureSet getRemainingFeatures() override;
+
+        ParameterList getParameterDescriptors() const override;
+        float getParameter(std::string paramid) const override;
+        void setParameter(std::string paramid, float newval) override;
+
+        // Ive::PluginExtension
+        InputList getInputDescriptors() const override;
+        void setPreComputingFeatures(FeatureSet const& fs) override;
+        OutputExtraList getOutputExtraDescriptors(size_t outputDescriptorIndex) const override;
+
+    private:
+        // clang-format off
+        enum class Operator
+        {
+              min
+            , max
+            , mean
+            , median
+        };
+        // clang-format on
+
+        bool mUseMarkersDurations{false};
+        FeatureList mResults;
+    };
 } // namespace AnlVampPlugin

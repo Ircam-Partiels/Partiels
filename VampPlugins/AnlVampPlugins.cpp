@@ -307,6 +307,273 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
     return featureSet;
 }
 
+/// Marker Stats
+
+AnlVampPlugin::Stats::Stats(float inputSampleRate)
+: Base(inputSampleRate)
+{
+}
+
+bool AnlVampPlugin::Stats::initialise(size_t channels, size_t, size_t)
+{
+    return channels == 1;
+}
+
+Vamp::Plugin::InputDomain AnlVampPlugin::Stats::getInputDomain() const
+{
+    return TimeDomain;
+}
+
+std::string AnlVampPlugin::Stats::getIdentifier() const
+{
+    return "transformermarker";
+}
+
+std::string AnlVampPlugin::Stats::getName() const
+{
+    return "Combine";
+}
+
+std::string AnlVampPlugin::Stats::getDescription() const
+{
+    return "The plugin generates the statistics of an input point track for each time segment given by an input marker track.";
+}
+
+Vamp::Plugin::OutputList AnlVampPlugin::Stats::getOutputDescriptors() const
+{
+    OutputDescriptor d;
+    d.identifier = "result";
+    d.name = "Statistics";
+    d.description = "The statistics of the input point track";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.minValue = -1.0f;
+    d.maxValue = 1.0f;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+    d.sampleRate = 0.0f;
+    d.hasDuration = true;
+    return {d};
+}
+
+Ive::PluginExtension::OutputExtraList AnlVampPlugin::Stats::getOutputExtraDescriptors(size_t outputDescriptorIndex) const
+{
+    OutputExtraList list;
+    if(outputDescriptorIndex != 0)
+    {
+        return list;
+    }
+    {
+        OutputExtraDescriptor d;
+        d.identifier = "min";
+        d.name = "Min.";
+        d.description = "The minimum value of the input points";
+        d.unit = "";
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
+        d.isQuantized = false;
+        d.quantizeStep = 0.0f;
+        list.push_back(std::move(d));
+    }
+    {
+        OutputExtraDescriptor d;
+        d.identifier = "max";
+        d.name = "Max.";
+        d.description = "The maximum value of the input points";
+        d.unit = "";
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
+        d.isQuantized = false;
+        d.quantizeStep = 0.0f;
+        list.push_back(std::move(d));
+    }
+    {
+        OutputExtraDescriptor d;
+        d.identifier = "median";
+        d.name = "Median.";
+        d.description = "The median value of the input points";
+        d.unit = "";
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
+        d.isQuantized = false;
+        d.quantizeStep = 0.0f;
+        list.push_back(std::move(d));
+    }
+    return list;
+}
+
+size_t AnlVampPlugin::Stats::getPreferredBlockSize() const
+{
+    return 64;
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Stats::process(const float* const*, Vamp::RealTime)
+{
+    return {};
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Stats::getRemainingFeatures()
+{
+    return {{0, mResults}};
+}
+
+Vamp::Plugin::ParameterList AnlVampPlugin::Stats::getParameterDescriptors() const
+{
+    ParameterList list;
+    {
+        ParameterDescriptor param;
+        param.identifier = "useduration";
+        param.name = "Use markers duration";
+        param.description = "Toggle the use of markers' durations";
+        param.unit = "";
+        param.minValue = 0;
+        param.maxValue = 1;
+        param.defaultValue = 0;
+        param.isQuantized = true;
+        param.quantizeStep = 1.0f;
+        list.push_back(std::move(param));
+    }
+    return list;
+}
+
+float AnlVampPlugin::Stats::getParameter(std::string paramid) const
+{
+    if(paramid == "useduration")
+    {
+        return mUseMarkersDurations ? 1.0f : 0.0f;
+    }
+    std::cerr << "Invalid parameter : " << paramid << "\n";
+    return 0.0f;
+}
+
+void AnlVampPlugin::Stats::setParameter(std::string paramid, float newval)
+{
+    if(paramid == "useduration")
+    {
+        mUseMarkersDurations = newval >= 0.5f ? true : false;
+    }
+    else
+    {
+        std::cerr << "Invalid parameter : " << paramid << "\n";
+    }
+}
+
+Ive::PluginExtension::InputList AnlVampPlugin::Stats::getInputDescriptors() const
+{
+    InputList list;
+    {
+        OutputDescriptor d;
+        d.identifier = "points";
+        d.name = "Points";
+        d.description = "The points to analyze by markers";
+        d.unit = "";
+        d.hasFixedBinCount = true;
+        d.binCount = 1;
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 0.0f;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(d);
+    }
+    {
+        OutputDescriptor d;
+        d.identifier = "markers";
+        d.name = "Markers";
+        d.description = "The markers used to split the points.";
+        d.unit = "";
+        d.hasFixedBinCount = true;
+        d.binCount = 0;
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 0.0f;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(d);
+    }
+    return list;
+}
+
+void AnlVampPlugin::Stats::setPreComputingFeatures(FeatureSet const& fs)
+{
+    auto const pointFeature = fs.find(0);
+    auto const markerFeature = fs.find(1);
+    if(pointFeature == fs.cend())
+    {
+        return;
+    }
+    auto const& points = pointFeature->second;
+    auto const& markers = markerFeature->second;
+    auto const useDuration = mUseMarkersDurations;
+    auto lastPoint = points.cbegin();
+    static auto const maxRt = Vamp::RealTime::fromSeconds(std::numeric_limits<double>::max());
+
+    auto const perform = [&, this](Vamp::RealTime const& start, Vamp::RealTime const& end)
+    {
+        auto const firstIt = std::lower_bound(lastPoint, points.cend(), start, [](auto const& f, auto const& t)
+                                              {
+                                                  return f.timestamp < t;
+                                              });
+        auto const secondIt = std::upper_bound(firstIt, points.cend(), end, [](auto const& t, auto const& f)
+                                               {
+                                                   return t < f.timestamp;
+                                               });
+
+        std::vector<float> sorted;
+        float sum = 0.0f;
+        sorted.reserve(static_cast<size_t>(std::distance(firstIt, secondIt)));
+        for(auto it = firstIt; it < secondIt; ++it)
+        {
+            if(!it->values.empty())
+            {
+                sorted.push_back(it->values.at(0));
+                sum += it->values.at(0);
+            }
+        }
+        if(!sorted.empty())
+        {
+            std::sort(sorted.begin(), sorted.end());
+            auto const min = sorted.front();
+            auto const max = sorted.back();
+            auto const mean = sum / static_cast<float>(sorted.size());
+            auto const medianIndex = std::min(static_cast<size_t>(std::floor(static_cast<double>(sorted.size()) / 2.0 + 0.5)), sorted.size() - 1);
+            auto const median = sorted.at(medianIndex);
+            Feature f;
+            f.hasTimestamp = true;
+            f.timestamp = start;
+            f.hasDuration = true;
+            f.duration = end - start;
+            f.values.push_back(mean);
+            f.values.push_back(min);
+            f.values.push_back(max);
+            f.values.push_back(median);
+            mResults.push_back(std::move(f));
+        }
+        lastPoint = secondIt;
+    };
+    if(markers.empty())
+    {
+        perform(Vamp::RealTime(), maxRt);
+    }
+    else
+    {
+        for(size_t markerIndex = 0; markerIndex < markers.size() && lastPoint != points.cend(); ++markerIndex)
+        {
+            auto const& marker = markers.at(markerIndex);
+            auto const start = marker.timestamp;
+            auto const end = useDuration ? start + marker.duration : (markerIndex + 1 < markers.size() ? markers.at(markerIndex + 1).timestamp : maxRt);
+            perform(start, end);
+        }
+    }
+}
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -334,6 +601,11 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
             }
+            case 3:
+            {
+                static Vamp::PluginAdapter<AnlVampPlugin::Stats> adaptater;
+                return adaptater.getDescriptor();
+            }
             default:
             {
                 return nullptr;
@@ -341,11 +613,22 @@ extern "C"
         }
     }
 
-    IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int)
+    IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int index)
     {
         if(version < 2)
         {
             return nullptr;
+        }
+        switch(index)
+        {
+            case 0:
+            {
+                return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::Stats>();
+            }
+            default:
+            {
+                return nullptr;
+            }
         }
         return nullptr;
     }
