@@ -39,11 +39,7 @@ if(NOT PARTIELS_MANUAL_ONLY)
     set(IFP_CLI ON CACHE STRING "" FORCE)
     set(IFP_TEST OFF CACHE STRING "" FORCE)
     set(IVE_PLUGIN_EXAMPLE ON CACHE STRING "" FORCE)
-
-    set(VAMP_SDK_PATH "" CACHE PATH "The path to the Vamp plugin SDK")
-    set(VAMP_SDK_TAG "d7ceb7d1d490674c93d334e5378108c4328e9e05" CACHE PATH "The tag of the Vamp plugin SDK")
-    set(VAMP_SDK_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/vamp-plugin-sdk-src.patch")
-
+    
     set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
     set(PARTIELS_CODESIGN_WINDOWS_KEYFILE "" CACHE PATH "The Windows (.pfx) certificate file")
     set(PARTIELS_CODESIGN_WINDOWS_KEYPASSWORD "" CACHE STRING "The password of the Windows (.pfx) certificate file")
@@ -87,23 +83,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
 ### Application ###
 if(NOT PARTIELS_MANUAL_ONLY)
-    if(NOT EXISTS ${VAMP_SDK_PATH})
-        include(FetchContent)
-        find_package(Git REQUIRED)
-        FetchContent_Declare(
-            vamp-plugin-sdk
-            GIT_REPOSITORY      https://github.com/vamp-plugins/vamp-plugin-sdk.git
-            GIT_TAG             ${VAMP_SDK_TAG}
-            PATCH_COMMAND       ${GIT_EXECUTABLE} reset --hard && ${GIT_EXECUTABLE} clean -fxd && ${GIT_EXECUTABLE} apply ${VAMP_SDK_PATCH}
-            UPDATE_DISCONNECTED TRUE
-            EXCLUDE_FROM_ALL
-        )
-        FetchContent_MakeAvailable(vamp-plugin-sdk)
-        set(VAMP_SDK_PATH ${vamp-plugin-sdk_SOURCE_DIR} CACHE PATH "The path to the Vamp plugin SDK" FORCE)
-
-        message(STATUS "Vamp Plugin SDK cloned in " ${VAMP_SDK_PATH})
-    endif()
-
+    set(VAMP_SDK_PATH "${CMAKE_SOURCE_DIR}/Dependencies/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
     add_subdirectory(JUCE)
     add_subdirectory(Dependencies/ircam-vamp-extension)
     add_subdirectory(Dependencies/sdif)
