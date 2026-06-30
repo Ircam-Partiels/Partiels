@@ -1111,6 +1111,7 @@ void Track::Director::timerCallback()
 
 void Track::Director::warmAboutPlugin(juce::String const& reason)
 {
+    MiscDebug("Track::Director", reason);
     auto const name = mAccessor.getAttr<AttrType::name>();
     auto const key = mAccessor.getAttr<AttrType::key>();
     auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
