@@ -4,18 +4,12 @@ ANALYSE_FILE_BEGIN
 
 Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
 {
+    std::unique_lock<std::mutex> lock(mMutex);
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
     MiscStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
         throw std::runtime_error("plugin loader is not available");
-    }
-
-    std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-    MiscStrongAssert(lock.owns_lock());
-    if(!lock.owns_lock())
-    {
-        throw std::logic_error("plugin loader thread is already in used");
     }
 
     auto const entry = std::make_tuple(key, sampleRate);
@@ -91,13 +85,6 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
 
 Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, double sampleRate)
 {
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    MiscStrongAssert(pluginLoader != nullptr);
-    if(pluginLoader == nullptr)
-    {
-        throw std::runtime_error("plugin loader is not available");
-    }
-
     auto* plugin = loadPlugin(key.identifier, static_cast<float>(sampleRate));
     if(plugin == nullptr)
     {
