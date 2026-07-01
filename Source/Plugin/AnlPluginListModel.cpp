@@ -35,12 +35,21 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 #endif
 }
 
-void PluginList::setEnvironment(Accessor const& accessor, juce::File const& blacklistFile)
+juce::File PluginList::getPackagePluginDirectory()
 {
-    if(auto* instance = Vamp::HostExt::PluginLoader::getInstance())
-    {
-        instance->setBlackListFile(blacklistFile.getFullPathName().toStdString());
-    }
+    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+    auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
+    auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
+    PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
+    return pluginPackage;
+#else
+    return exeFile.getSiblingFile("PlugIns");
+#endif
+}
+
+void PluginList::setEnvironment(Accessor const& accessor, bool usePluginPackageDirectory)
+{
 #if JUCE_MAC
     auto const quarantineMode = accessor.getAttr<AttrType::quarantineMode>();
     Vamp::HostExt::PluginLoader::setIgnoreQuanrantineLibs(quarantineMode == QuarantineMode::force || quarantineMode == QuarantineMode::ignore);
@@ -80,6 +89,10 @@ void PluginList::setEnvironment(Accessor const& accessor, juce::File const& blac
     {
         addToValue(file.getFullPathName().toStdString());
     }
+    if(usePluginPackageDirectory)
+    {
+        addToValue(getPackagePluginDirectory().getFullPathName().toStdString());
+    }
     if(value.empty())
     {
         value = ":";
@@ -90,6 +103,14 @@ void PluginList::setEnvironment(Accessor const& accessor, juce::File const& blac
 #elif JUCE_WINDOWS
     _putenv_s("VAMP_PATH", value.c_str());
 #endif
+}
+
+void PluginList::setBlackListFile(juce::File const& blacklistFile)
+{
+    if(auto* instance = Vamp::HostExt::PluginLoader::getInstance())
+    {
+        instance->setBlackListFile(blacklistFile.getFullPathName().toStdString());
+    }
 }
 
 juce::File PluginList::getBlackListFile()

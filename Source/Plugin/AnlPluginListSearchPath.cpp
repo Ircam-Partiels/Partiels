@@ -20,16 +20,6 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
 #endif
     };
 
-    auto const warnForChanges = []
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::InfoIcon)
-                                 .withTitle(juce::translate("The plugin search paths have been modified!"))
-                                 .withMessage(juce::translate("The plugin search paths have been modified. Restart the application in order to rescan the plugins."))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
-    };
-
     mFileSearchPathTable.onFileSearchPathChanged = [=]()
     {
         updateButtonsStates();
@@ -42,8 +32,9 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         mAccessor.setAttr<AttrType::quarantineMode>(mQuarantineMode, NotificationType::synchronous);
 #endif
         mAccessor.setAttr<AttrType::searchPath>(mFileSearchPathTable.getFileSearchPath(), NotificationType::synchronous);
+        PluginList::setEnvironment(mAccessor, true);
+        mAccessor.sendSignal(SignalType::rescan, {true}, NotificationType::synchronous);
         updateButtonsStates();
-        warnForChanges();
     };
 
     mResetButton.onClick = [=, this]()

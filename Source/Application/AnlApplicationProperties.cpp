@@ -29,6 +29,8 @@ Application::Properties::Properties()
         MiscStrongAssert(false && "cannot create parent directory");
     }
 
+    PluginList::setBlackListFile(getFile("plugin.blacklist"));
+
     loadFromFile(PropertyType::Application);
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
@@ -149,31 +151,13 @@ void Application::Properties::loadFromFile(PropertyType type)
         break;
         case PropertyType::PluginList:
         {
-            std::vector<juce::File> searchPath;
-            PluginList::Accessor copy;
+            auto& acsr = Instance::get().getPluginListAccessor();
             auto xml = juce::parseXML(getFile("plugin.settings"));
             if(xml != nullptr)
             {
-                auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
-                copy.copyFrom(acsr, NotificationType::synchronous);
-                searchPath = acsr.getAttr<PluginList::AttrType::searchPath>();
             }
-            auto const getPluginPackageDirectory = []()
-            {
-                auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
-#if JUCE_MAC
-                auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
-                auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
-                PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
-                return pluginPackage;
-#else
-                return exeFile.getSiblingFile("PlugIns");
-#endif
-            };
-            searchPath.insert(searchPath.begin(), getPluginPackageDirectory());
-            copy.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
-            PluginList::setEnvironment(copy, getFile("plugin.blacklist"));
+            PluginList::setEnvironment(acsr, true);
         }
         break;
         case PropertyType::AudioSetup:

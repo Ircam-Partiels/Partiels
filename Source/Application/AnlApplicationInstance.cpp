@@ -636,7 +636,7 @@ void Application::Instance::checkPluginsQuarantine()
                                      }
                                      if(result != 0 && PluginList::removeLibrariesFromQuarantine(files))
                                      {
-                                         Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {}, NotificationType::synchronous);
+                                         Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {true}, NotificationType::synchronous);
                                      }
                                      mIsPluginListReady = true;
                                  });

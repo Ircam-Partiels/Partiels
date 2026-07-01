@@ -9,7 +9,7 @@ namespace PluginList
     class Scanner
     {
     public:
-        std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> getPlugins(double sampleRate);
+        std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> getPlugins(double sampleRate, bool forceRescan);
         Plugin::Description getDescription(Plugin::Key const& key, double sampleRate);
 
         static Plugin::Description loadDescription(Plugin::Key const& key, double sampleRate);

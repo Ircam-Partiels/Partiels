@@ -760,8 +760,6 @@ countries: fr be
 "The version of the plugin" = "La version du plugin"
 "Category" = "Catégorie"
 "The category of the plugin" = "La catégorie du plugin"
-"The plugin search paths have been modified!" = "Les chemins de recherche du plugin ont été modifiés !"
-"The plugin search paths have been modified. Restart the application in order to rescan the plugins." = "Les chemins de recherche de plugins ont été modifiés. Redémarrer l'application afin de rescanner les plugins."
 "Use environment variable" = "Utiliser la variable d'environnement"
 "Clear FLNAME" = "Effacer FLNAME"
 "Clear all" = "Effacer tout"
