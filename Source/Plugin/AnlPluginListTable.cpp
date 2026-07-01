@@ -69,7 +69,8 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         {
             case SignalType::rescan:
             {
-                auto scanPlugins = [this]() -> decltype(mScanner.getPlugins(48000.0))
+                auto const forceRescan = static_cast<bool>(value);
+                auto scanPlugins = [&, this]() -> decltype(mScanner.getPlugins(48000.0, false))
                 {
                     auto showWarning = [](juce::String const& message)
                     {
@@ -82,7 +83,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                     };
                     try
                     {
-                        return mScanner.getPlugins(48000.0);
+                        return mScanner.getPlugins(48000.0, forceRescan);
                     }
                     catch(std::exception& e)
                     {
@@ -110,7 +111,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
             break;
         }
     };
-    mReceiver.onSignal(mAccessor, SignalType::rescan, {});
+    mReceiver.onSignal(mAccessor, SignalType::rescan, {false});
     mAccessor.addReceiver(mReceiver);
 
     setWantsKeyboardFocus(true);

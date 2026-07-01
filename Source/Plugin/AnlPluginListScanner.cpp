@@ -19,7 +19,7 @@ Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, floa
         return it->second.get();
     }
 
-    auto const pluginKeys = pluginLoader->listPlugins();
+    auto const pluginKeys = pluginLoader->listPlugins(false);
     if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), key) == pluginKeys.cend())
     {
         throw std::runtime_error("plugin key cannot be found");
@@ -36,7 +36,7 @@ Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, floa
     return pointer;
 }
 
-std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> PluginList::Scanner::getPlugins(double sampleRate)
+std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> PluginList::Scanner::getPlugins(double sampleRate, bool forceRescan)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
     MiscStrongAssert(pluginLoader != nullptr);
@@ -47,7 +47,7 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
 
     std::map<Plugin::Key, Plugin::Description> list;
     juce::StringArray errors;
-    auto const pluginKeys = pluginLoader->listPlugins();
+    auto const pluginKeys = pluginLoader->listPlugins(forceRescan);
     for(auto const& pluginKey : pluginKeys)
     {
         try
