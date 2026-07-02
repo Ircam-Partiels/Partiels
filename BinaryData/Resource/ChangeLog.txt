@@ -1,4 +1,41 @@
 
+- Add: Add support for multiple input tracks
+- Add: Add manual marker duration editing
+- Add: Add support for bundle format Vamp plugins
+- Add: Add a right-side button panel in the main interface
+- Add: Add copyright metadata support for plugins
+- Imp: Improve JSON and XML URL parsing support
+- Imp: Improve file download progress reporting
+- Imp: Improve plugin parameter support
+- Imp: Improve document file management
+- Imp: Improve CSV export precision and formatting
+- Imp: Improve support for multiple extra outputs
+- Imp: Improve track analysis management
+- Imp: Improve plugin initialization and asynchronous loading
+- Imp: Improve error message formatting
+- Imp: Improve debugging of document changes
+- Imp: Improve extra threshold filtering support
+- Imp: Improve translation workflow and tooling
+- Imp: Improve startup performance and reduce unnecessary window allocations
+- Imp: Improve code consistency, cleanup, and internal maintenance
+- Imp: Improve security and validation checks
+- Imp: Enable on-the-fly Vamp plugin reanalysis after loading
+- Imp: Update bundled plugin versions and dependencies
+- Fix: Potential crash when updating audio files
+- Fix: Assertion error while loading plugins
+- Fix: Major deadlock and several minor stability issues
+- Fix: Plugin description update regression
+- Fix: Download result handling for incomplete processes
+- Fix: Vertical zoom issues on groups
+- Fix: Undo/redo comparison state issues
+- Fix: Output bin name support
+- Fix: Extra threshold support in group properties
+- Fix: Numeric UI rounding issues
+- Fix: Missing and outdated translations
+- Fix: Command-line logger assertion issues
+
+v2.4.1
+
 - Imp: Code cleanup and minor fixes
 - Fix: Potential crash when refreshing the main window
 - Imp: Improve Copilot instructions
