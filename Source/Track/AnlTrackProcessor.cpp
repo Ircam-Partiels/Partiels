@@ -160,7 +160,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
 {
     if(callback != nullptr && !callback(0.0f))
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+        return createEmptyProcessResult(createError(juce::translate("Aborted")));
     }
 
     if(reader.lengthInSamples == 0)
@@ -189,7 +189,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
     juce::AudioBuffer<float> buffer(static_cast<int>(reader.numChannels), static_cast<int>(numSamples));
     if(callback != nullptr && !callback(0.1f))
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+        return createEmptyProcessResult(createError(juce::translate("Aborted")));
     }
 
     juce::int64 index = 0;
@@ -198,7 +198,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
         auto const adv = static_cast<float>(index) / static_cast<float>(reader.lengthInSamples) * 0.9f + 0.1f;
         if(callback != nullptr && !callback(adv))
         {
-            return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+            return createEmptyProcessResult(createError(juce::translate("Aborted")));
         }
 
         auto const remainingSize = reader.lengthInSamples - index;
@@ -206,7 +206,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
         if(!reader.read(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), index, static_cast<int>(blockSize)))
         {
 
-            return std::make_tuple(juce::Result::fail(juce::translate("Analysis failed to read audio data")), Track::Results{});
+            return createEmptyProcessResult(createError(juce::translate("Failed to read audio data")));
         }
 
         if(stepSize == 1_z)
@@ -263,25 +263,46 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
 
     if(callback != nullptr && !callback(1.0f))
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+        return createEmptyProcessResult(createError(juce::translate("Aborted")));
     }
     return std::make_tuple(juce::Result::ok(), Track::Results(std::move(points)));
 }
 
 Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, InputStates const& inputStates, std::function<bool(float)> callback)
 {
+    auto const tryProcess = [&](std::function<juce::Result(void)> fn) -> juce::Result
+    {
+        try
+        {
+            return fn();
+        }
+        catch(std::exception const& e)
+        {
+            return createError(e.what());
+        }
+        catch(...)
+        {
+            return createError(juce::translate("Unknown"));
+        }
+    };
+
     if(callback != nullptr && !callback(0.0f))
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+        return createEmptyProcessResult(createError(juce::translate("Aborted")));
     }
 
+    MiscDebug("Track::Processor", "Preparing analysis...");
     std::vector<std::vector<Plugin::Result>> results;
-    auto prepareResult = processor.prepareToAnalyze(results);
-    if(prepareResult.failed())
+    auto result = tryProcess([&]()
+                             {
+                                 return processor.prepareToAnalyze(results);
+                             });
+    if(result.failed())
     {
-        return std::make_tuple(prepareResult, Track::Results{});
+        return createEmptyProcessResult(std::move(result));
     }
 
+    MiscDebug("Track::Processor", "Setting inputs...");
     std::vector<std::vector<std::vector<Plugin::Result>>> inputData;
     auto const inputs = processor.getInputs();
     for(auto const& inputState : inputStates)
@@ -308,29 +329,32 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
             }
         }
     }
-    auto precomputingResults = processor.setPrecomputingResults(inputData);
-    if(precomputingResults.failed())
+
+    result = tryProcess([&]()
+                        {
+                            return processor.setPrecomputingResults(inputData);
+                        });
+    if(result.failed())
     {
-        return std::make_tuple(precomputingResults, Track::Results{});
+        return createEmptyProcessResult(std::move(result));
     }
-    MiscDebug("Track", "Processor prepared");
+    MiscDebug("Track::Processor", "Performing analysis...");
 
     auto performResult = processor.performNextAudioBlock(results);
     while(std::get<1>(performResult))
     {
         if(callback != nullptr && !callback(processor.getAdvancement()))
         {
-            return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+            return std::make_tuple(juce::Result::fail(juce::translate("Aborted")), Track::Results{});
         }
         performResult = processor.performNextAudioBlock(results);
     }
     if(std::get<0>(performResult).failed())
     {
-        return std::make_tuple(std::get<0>(performResult), Track::Results{});
+        return createEmptyProcessResult(std::get<0>(performResult));
     }
 
-    MiscDebug("Track", "Processor performed");
-
+    MiscDebug("Track::Processor", "Converting results...");
     auto processed = false;
     auto const cresults = Tools::convert(processor.getOutput(), results, [&]()
                                          {
@@ -339,10 +363,20 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
                                          });
     if(!processed)
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Analysis aborted")), Track::Results{});
+        return createEmptyProcessResult(createError(juce::translate("Aborted")));
     }
-    MiscDebug("Track", "Results performed");
+    MiscDebug("Track::Processor", "Analysis completed");
     return std::make_tuple(juce::Result::ok(), std::move(cresults));
+}
+
+Track::Processor::ProcessResult Track::Processor::createEmptyProcessResult(juce::Result result)
+{
+    return std::make_tuple(std::move(result), Track::Results{});
+}
+
+juce::Result Track::Processor::createError(juce::String const& reason)
+{
+    return juce::Result::fail(juce::translate("Analysis failed with error: CERROR").replace("CERROR", reason));
 }
 
 ANALYSE_FILE_END
