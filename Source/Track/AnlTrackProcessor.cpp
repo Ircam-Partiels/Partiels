@@ -47,7 +47,10 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                                                                 return !mShouldAbort.load();
                                                                             });
                                           auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), std::move(desc));
-                                          triggerAsyncUpdate();
+                                          if(!mShouldAbort.load())
+                                          {
+                                              triggerAsyncUpdate();
+                                          }
                                           return fresult;
                                       });
         return true;
@@ -82,7 +85,10 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                                                           return !mShouldAbort.load();
                                                                       });
                                       auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), proc->getDescription());
-                                      triggerAsyncUpdate();
+                                      if(!mShouldAbort.load())
+                                      {
+                                          triggerAsyncUpdate();
+                                      }
                                       return fresult;
                                   });
     return true;
