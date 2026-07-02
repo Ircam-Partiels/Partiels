@@ -34,6 +34,8 @@ namespace Track
         using ProcessResult = std::tuple<juce::Result, Results>;
         static ProcessResult runWaveformAnalysis(juce::AudioFormatReader& reader, std::function<bool(float)> callback);
         static ProcessResult runPluginAnalysis(Plugin::Processor& processor, InputStates const& inputStates, std::function<bool(float)> callback);
+        static ProcessResult createEmptyProcessResult(juce::Result result);
+        static juce::Result createError(juce::String const& reason);
 
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         std::atomic<bool> mShouldAbort{false};
