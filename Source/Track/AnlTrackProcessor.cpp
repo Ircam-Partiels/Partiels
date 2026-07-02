@@ -99,12 +99,10 @@ void Track::Processor::handleAsyncUpdate()
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
     if(mAnalysisProcess.valid())
     {
-        auto const state = mAnalysisProcess.wait_for(std::chrono::milliseconds(0));
-        MiscWeakAssert(state == std::future_status::ready);
-        if(state != std::future_status::ready)
+        auto state = mAnalysisProcess.wait_for(std::chrono::milliseconds(0));
+        while(state != std::future_status::ready)
         {
-            triggerAsyncUpdate();
-            return;
+            state = mAnalysisProcess.wait_for(std::chrono::milliseconds(5));
         }
 
         auto const results = mAnalysisProcess.get();
@@ -141,7 +139,12 @@ void Track::Processor::abortAnalysis(std::unique_lock<std::mutex>& lock)
     if(mAnalysisProcess.valid())
     {
         mShouldAbort.store(true);
-        mAnalysisProcess.get();
+        auto state = mAnalysisProcess.wait_for(std::chrono::milliseconds(0));
+        while(state != std::future_status::ready)
+        {
+            state = mAnalysisProcess.wait_for(std::chrono::milliseconds(5));
+        }
+        [[maybe_unused]] auto result = mAnalysisProcess.get();
         cancelPendingUpdate();
         mShouldAbort.store(false);
         if(onAnalysisAborted != nullptr)
