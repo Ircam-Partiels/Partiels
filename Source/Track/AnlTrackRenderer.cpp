@@ -895,6 +895,8 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
     LabelArrangement labelArr(font, unit, numDecimals);
     auto const showLabel = !colours.text.isTransparent();
     auto const rectExtent = std::max((lineWidth - 1) / 4.0f, 0.0f);
+    auto const xMin = fbounds.getX();
+    auto const xMax = fbounds.getRight();
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
     {
@@ -919,8 +921,8 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             auto const min = std::get<1_z>(nextResult);
             auto const max = std::get<2_z>(nextResult);
 
-            auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
-            auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
+            auto const x = std::clamp(Tools::secondsToPixel(start, timeRange, fbounds), xMin, xMax);
+            auto const x2 = std::clamp(Tools::secondsToPixel(end, timeRange, fbounds), xMin, xMax);
 
             if(it != next && (max - min) >= valueEpsilon)
             {
@@ -961,9 +963,9 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
             auto const value = std::get<2_z>(*it).value();
             auto const y = Tools::valueToPixel(scaleValue(value), valueRange, fbounds);
             auto const start = std::get<0_z>(*it);
-            auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
+            auto const x = std::clamp(Tools::secondsToPixel(start, timeRange, fbounds), xMin, xMax);
             auto const end = getEndTime(it);
-            auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
+            auto const x2 = std::clamp(Tools::secondsToPixel(end, timeRange, fbounds), xMin, xMax);
             if(showLabel)
             {
                 labelArr.addValue(value, x, y);
