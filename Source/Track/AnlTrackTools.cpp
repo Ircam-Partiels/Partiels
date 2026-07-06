@@ -365,7 +365,8 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
 {
     auto const rtToS = [](Vamp::RealTime const& rt)
     {
-        return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
+        static auto constexpr billion = 1000000000.0;
+        return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / billion;
     };
 
     if(callback != nullptr && !callback())
@@ -498,125 +499,127 @@ std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input con
     {
         return {};
     }
-    auto const frameType = getFrameType(input);
-    if(frameType.has_value())
+    auto const inputType = getFrameType(input);
+    auto const frameType = inputType.has_value() ? inputType : getFrameType(results);
+    if(!frameType.has_value())
     {
-        switch(frameType.value())
+        return {};
+    }
+    switch(frameType.value())
+    {
+        case FrameType::label:
         {
-            case FrameType::label:
+            auto const sourceResults = results.getMarkers();
+            if(sourceResults == nullptr)
             {
-                auto const sourceResults = results.getMarkers();
-                if(sourceResults == nullptr)
-                {
-                    return {};
-                }
-                std::vector<std::vector<Plugin::Result>> pluginResults;
-                pluginResults.resize(sourceResults->size());
-                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-                {
-                    auto& pluginChannel = pluginResults[channelIndex];
-                    auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.reserve(sourceChannel.size());
-                    for(auto const& sourceMarker : sourceChannel)
-                    {
-                        if(!Result::passThresholds(sourceMarker, extraThresholds))
-                        {
-                            continue;
-                        }
-                        auto& pluginMaker = pluginChannel.emplace_back();
-                        pluginMaker.hasTimestamp = true;
-                        pluginMaker.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceMarker));
-                        pluginMaker.hasDuration = input.hasDuration;
-                        if(input.hasDuration)
-                        {
-                            pluginMaker.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceMarker));
-                        }
-                        pluginMaker.label = std::get<2_z>(sourceMarker);
-                    }
-                }
-                return pluginResults;
+                return {};
             }
-            case FrameType::value:
+            std::vector<std::vector<Plugin::Result>> pluginResults;
+            pluginResults.resize(sourceResults->size());
+            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
             {
-                auto const sourceResults = results.getPoints();
-                if(sourceResults == nullptr)
+                auto& pluginChannel = pluginResults[channelIndex];
+                auto const& sourceChannel = sourceResults->at(channelIndex);
+                pluginChannel.reserve(sourceChannel.size());
+                for(auto const& sourceMarker : sourceChannel)
                 {
-                    return {};
-                }
-                std::vector<std::vector<Plugin::Result>> pluginResults;
-                pluginResults.resize(sourceResults->size());
-                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-                {
-                    auto& pluginChannel = pluginResults[channelIndex];
-                    auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.reserve(sourceChannel.size());
-                    for(auto const& sourcePoint : sourceChannel)
+                    if(!Result::passThresholds(sourceMarker, extraThresholds))
                     {
-                        if(!Result::passThresholds(sourcePoint, extraThresholds))
+                        continue;
+                    }
+                    auto& pluginMaker = pluginChannel.emplace_back();
+                    pluginMaker.hasTimestamp = true;
+                    pluginMaker.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceMarker));
+                    pluginMaker.hasDuration = input.hasDuration;
+                    if(input.hasDuration)
+                    {
+                        pluginMaker.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceMarker));
+                    }
+                    pluginMaker.label = std::get<2_z>(sourceMarker);
+                }
+            }
+            return pluginResults;
+        }
+        case FrameType::value:
+        {
+            auto const sourceResults = results.getPoints();
+            if(sourceResults == nullptr)
+            {
+                return {};
+            }
+            std::vector<std::vector<Plugin::Result>> pluginResults;
+            pluginResults.resize(sourceResults->size());
+            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
+            {
+                auto& pluginChannel = pluginResults[channelIndex];
+                auto const& sourceChannel = sourceResults->at(channelIndex);
+                pluginChannel.reserve(sourceChannel.size());
+                for(auto const& sourcePoint : sourceChannel)
+                {
+                    if(!Result::passThresholds(sourcePoint, extraThresholds))
+                    {
+                        if(!pluginChannel.empty())
                         {
-                            if(!pluginChannel.empty())
+                            auto& pluginPoint = pluginChannel.emplace_back();
+                            pluginPoint.hasTimestamp = true;
+                            pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
+                            pluginPoint.hasDuration = input.hasDuration;
+                            if(input.hasDuration)
                             {
-                                auto& pluginPoint = pluginChannel.emplace_back();
-                                pluginPoint.hasTimestamp = true;
-                                pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
-                                pluginPoint.hasDuration = input.hasDuration;
-                                if(input.hasDuration)
-                                {
-                                    pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
-                                }
-                                pluginPoint.values.clear();
+                                pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
                             }
-                            continue;
+                            pluginPoint.values.clear();
                         }
-                        auto& pluginPoint = pluginChannel.emplace_back();
-                        pluginPoint.hasTimestamp = true;
-                        pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
-                        pluginPoint.hasDuration = input.hasDuration;
-                        if(input.hasDuration)
-                        {
-                            pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
-                        }
-                        if(std::get<2_z>(sourcePoint).has_value())
-                        {
-                            pluginPoint.values = {std::get<2_z>(sourcePoint).value()};
-                        }
+                        continue;
                     }
-                }
-                return pluginResults;
-            }
-            case FrameType::vector:
-            {
-                auto const sourceResults = results.getColumns();
-                if(sourceResults == nullptr)
-                {
-                    return {};
-                }
-                std::vector<std::vector<Plugin::Result>> pluginResults;
-                pluginResults.resize(sourceResults->size());
-                for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
-                {
-                    auto& pluginChannel = pluginResults[channelIndex];
-                    auto const& sourceChannel = sourceResults->at(channelIndex);
-                    pluginChannel.reserve(sourceChannel.size());
-                    for(auto const& sourceColumn : sourceChannel)
+                    auto& pluginPoint = pluginChannel.emplace_back();
+                    pluginPoint.hasTimestamp = true;
+                    pluginPoint.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourcePoint));
+                    pluginPoint.hasDuration = input.hasDuration;
+                    if(input.hasDuration)
                     {
-                        if(!Result::passThresholds(sourceColumn, extraThresholds))
-                        {
-                            continue;
-                        }
-                        auto& pluginColumn = pluginChannel.emplace_back();
-                        pluginColumn.hasTimestamp = true;
-                        pluginColumn.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceColumn));
-                        pluginColumn.hasDuration = input.hasDuration;
-                        if(input.hasDuration)
-                        {
-                            pluginColumn.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceColumn));
-                        }
-                        pluginColumn.values = std::get<2_z>(sourceColumn);
+                        pluginPoint.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourcePoint));
+                    }
+                    if(std::get<2_z>(sourcePoint).has_value())
+                    {
+                        pluginPoint.values = {std::get<2_z>(sourcePoint).value()};
                     }
                 }
-                return pluginResults;
             }
+            return pluginResults;
+        }
+        case FrameType::vector:
+        {
+            auto const sourceResults = results.getColumns();
+            if(sourceResults == nullptr)
+            {
+                return {};
+            }
+            std::vector<std::vector<Plugin::Result>> pluginResults;
+            pluginResults.resize(sourceResults->size());
+            for(auto channelIndex = 0_z; channelIndex < sourceResults->size(); ++channelIndex)
+            {
+                auto& pluginChannel = pluginResults[channelIndex];
+                auto const& sourceChannel = sourceResults->at(channelIndex);
+                pluginChannel.reserve(sourceChannel.size());
+                for(auto const& sourceColumn : sourceChannel)
+                {
+                    if(!Result::passThresholds(sourceColumn, extraThresholds))
+                    {
+                        continue;
+                    }
+                    auto& pluginColumn = pluginChannel.emplace_back();
+                    pluginColumn.hasTimestamp = true;
+                    pluginColumn.timestamp = Vamp::RealTime::fromSeconds(std::get<0_z>(sourceColumn));
+                    pluginColumn.hasDuration = input.hasDuration;
+                    if(input.hasDuration)
+                    {
+                        pluginColumn.duration = Vamp::RealTime::fromSeconds(std::get<1_z>(sourceColumn));
+                    }
+                    pluginColumn.values = std::get<2_z>(sourceColumn);
+                }
+            }
+            return pluginResults;
         }
     }
     return {};
