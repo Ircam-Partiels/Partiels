@@ -125,7 +125,7 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
         try
         {
             auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
-            return description.name;
+            return description.output.name.empty() ? description.name : description.name + " - " + description.output.name;
         }
         catch(...)
         {
