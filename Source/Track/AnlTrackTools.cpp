@@ -61,14 +61,8 @@ std::optional<Track::FrameType> Track::Tools::getFrameType(Plugin::Output const&
     return {};
 }
 
-std::optional<Track::FrameType> Track::Tools::getFrameType(Accessor const& acsr)
+std::optional<Track::FrameType> Track::Tools::getFrameType(Results const& results)
 {
-    auto frameType = getFrameType(acsr.getAttr<AttrType::description>().output);
-    if(frameType.has_value())
-    {
-        return frameType;
-    }
-    auto const& results = acsr.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(static_cast<bool>(access))
     {
@@ -86,6 +80,16 @@ std::optional<Track::FrameType> Track::Tools::getFrameType(Accessor const& acsr)
         }
     }
     return {};
+}
+
+std::optional<Track::FrameType> Track::Tools::getFrameType(Accessor const& acsr)
+{
+    auto frameType = getFrameType(acsr.getAttr<AttrType::description>().output);
+    if(frameType.has_value())
+    {
+        return frameType;
+    }
+    return getFrameType(acsr.getAttr<AttrType::results>());
 }
 
 optional_ref<Zoom::Accessor const> Track::Tools::getVerticalZoomAccessor(Accessor const& accessor, bool useLinkedZoom)

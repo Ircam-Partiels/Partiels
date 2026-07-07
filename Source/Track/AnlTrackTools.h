@@ -16,6 +16,7 @@ namespace Track
         bool supportsInputTracks(Accessor const& acsr);
         bool supportsInputTrack(Accessor const& acsr, juce::String const& inputIdentifier);
         std::optional<FrameType> getFrameType(Plugin::Output const& output);
+        std::optional<FrameType> getFrameType(Results const& results);
         std::optional<FrameType> getFrameType(Accessor const& acsr);
 
         optional_ref<Zoom::Accessor const> getVerticalZoomAccessor(Accessor const& accessor, bool useLinkedZoom);
