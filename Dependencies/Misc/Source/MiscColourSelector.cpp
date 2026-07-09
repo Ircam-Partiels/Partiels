@@ -1,4 +1,5 @@
 #include "MiscColourSelector.h"
+#include "MiscTooltip.h"
 
 MISC_FILE_BEGIN
 
@@ -421,7 +422,7 @@ void ColourButton::clicked()
     };
 
     mIsColourSelectorVisible = true;
-    auto& box = juce::CallOutBox::launchAsynchronously(std::move(colourSelector), getScreenBounds(), nullptr);
+    auto& box = Tooltip::showCallOutBox(std::move(colourSelector), getScreenBounds());
     mComponentListener.attachTo(box);
     if(onColourSelectorShow != nullptr)
     {
