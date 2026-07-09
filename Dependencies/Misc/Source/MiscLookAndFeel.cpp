@@ -685,23 +685,20 @@ juce::Font LookAndFeel::getTextButtonFont(juce::TextButton& textButtton, int but
     return juce::Font::fromString(fontDescription);
 }
 
-int LookAndFeel::getCallOutBoxBorderSize(juce::CallOutBox const& box)
+int LookAndFeel::getCallOutBoxBorderSize([[maybe_unused]] juce::CallOutBox const& box)
 {
-    juce::ignoreUnused(box);
-    return 2;
+    return 10;
 }
 
-float LookAndFeel::getCallOutBoxCornerSize(juce::CallOutBox const& box)
+float LookAndFeel::getCallOutBoxCornerSize([[maybe_unused]] juce::CallOutBox const& box)
 {
-    juce::ignoreUnused(box);
     return 2.0f;
 }
 
-void LookAndFeel::drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics& g, juce::Path const& path, juce::Image& cachedImage)
+void LookAndFeel::drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics& g, [[maybe_unused]] juce::Path const& path, [[maybe_unused]] juce::Image& cachedImage)
 {
-    juce::ignoreUnused(path, cachedImage);
     auto& colourScheme = getCurrentColourScheme();
-    auto const bounds = box.getLocalBounds().reduced(getCallOutBoxBorderSize(box));
+    auto const bounds = box.getLocalBounds().reduced(box.getBorderSize());
     juce::DropShadow(juce::Colours::black.withAlpha(0.7f), 8, {0, 2}).drawForRectangle(g, bounds);
     g.setColour(colourScheme.getUIColour(ColourScheme::UIColour::windowBackground));
     g.fillRoundedRectangle(bounds.toFloat(), getCallOutBoxCornerSize(box));
