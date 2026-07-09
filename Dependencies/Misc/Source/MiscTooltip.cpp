@@ -218,4 +218,35 @@ void Tooltip::BubbleWindow::timerCallback()
     }
 }
 
+juce::CallOutBox& Tooltip::showCallOutBox(std::unique_ptr<juce::Component> content, juce::Rectangle<int> const& area, int timeOutMs)
+{
+    auto& box = juce::CallOutBox::launchAsynchronously(std::move(content), area, nullptr);
+    box.resized();
+    box.setArrowSize(0.0f);
+    if(auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(area))
+    {
+        box.updatePosition(area, display->userBounds.getLargestIntegerWithin());
+    }
+    if(timeOutMs > 0)
+    {
+        juce::WeakReference<juce::Component> weakReference(&box);
+        juce::Timer::callAfterDelay(timeOutMs, [weakReference]()
+                                    {
+                                        if(auto* boxPtr = dynamic_cast<juce::CallOutBox*>(weakReference.get()))
+                                        {
+                                            boxPtr->dismiss();
+                                        }
+                                    });
+    }
+    return box;
+}
+
+juce::CallOutBox& Tooltip::showMessageBox(juce::String const& message, juce::Rectangle<int> const& area, int timeOutMs)
+{
+    auto info = std::make_unique<juce::Label>("", message);
+    auto const bounds = juce::GlyphArrangement::getStringBounds(info->getFont(), message);
+    info->setBounds(bounds.getLargestIntegerWithin().expanded(10, 4));
+    return showCallOutBox(std::move(info), area, timeOutMs);
+}
+
 MISC_FILE_END
