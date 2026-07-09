@@ -72,6 +72,9 @@ namespace Tooltip
         bool const mAcceptsMouseDown;
         juce::String mTooltip;
     };
+
+    juce::CallOutBox& showCallOutBox(std::unique_ptr<juce::Component> content, juce::Rectangle<int> const& area, int timeOutMs = -1);
+    juce::CallOutBox& showMessageBox(juce::String const& message, juce::Rectangle<int> const& area, int timeOutMs = -1);
 } // namespace Tooltip
 
 MISC_FILE_END
