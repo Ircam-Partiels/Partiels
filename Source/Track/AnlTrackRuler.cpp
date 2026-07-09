@@ -74,9 +74,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                             auto const rulerBounds = rulerPtr->getScreenBounds();
                             auto const width = rulerBounds.getWidth();
                             auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
-                            auto& box = juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr);
-                            box.setLookAndFeel(std::addressof(getLookAndFeel()));
-                            box.setArrowSize(0.0f);
+                            Tooltip::showCallOutBox(std::move(rangeEditor), bounds);
                             return false;
                         }
                         return true;
