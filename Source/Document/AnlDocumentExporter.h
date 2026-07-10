@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Track/AnlTrackExporter.h"
 #include "AnlDocumentModel.h"
 #include "AnlDocumentTools.h"
 
@@ -18,6 +19,7 @@ namespace Document
             using FileDescription = Track::Result::FileDescription;
             using ColumnSeparator = FileDescription::ColumnSeparator;
             using ReaperType = FileDescription::ReaperType;
+            using CsvHeaderType = Track::Exporter::CsvHeaderType;
 
             // clang-format off
             enum class Format
@@ -48,7 +50,7 @@ namespace Document
             int imageWidth{1920};
             int imageHeight{1200};
             int imagePpi{144};
-            bool includeHeaderRow{true};
+            CsvHeaderType csvHeaderType{CsvHeaderType::generic};
             bool applyExtraThresholds{false};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
@@ -138,7 +140,7 @@ namespace Document
             PropertyNumber mPropertyWidth;
             PropertyNumber mPropertyHeight;
             PropertyNumber mPropertyPpi;
-            PropertyToggle mPropertyRowHeader;
+            PropertyList mPropertyRowHeader;
             PropertyList mPropertyColumnSeparator;
             PropertyList mPropertyLabSeparator;
             PropertyToggle mPropertyDisableLabelEscaping;

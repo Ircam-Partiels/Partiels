@@ -64,7 +64,7 @@ Application::CommandLine::CommandLine()
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional if --input/template are defined).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
-         "--header Includes header row before the data rows (optional with the csv format).\n\t"
+         "--header Defines the CSV header format ('none', 'generic', 'specific') (optional with the csv format, default is 'none').\n\t"
          "--separator <character> Defines the separator character between columns (optional with the csv and lab formats, default is ',' for csv and ' ' for lab).\n\t"
          "--noescape Disables escaping of special characters in labels (optional with the csv and lab formats).\n\t"
          "--reapertype <type> Defines the type of the reaper format  (optional with the reaper format 'marker' or 'region', default is 'region').\n\t"
@@ -174,7 +174,23 @@ Application::CommandLine::CommandLine()
                      }
                  }
                  ignoreGridResults = args.containsOption("--nogrids");
-                 options.includeHeaderRow = args.containsOption("--header");
+                 if(args.containsOption("--header"))
+                 {
+                     auto const header = args.getValueForOption("--header");
+                     auto const csvHeader = magic_enum::enum_cast<Document::Exporter::Options::CsvHeaderType>(header.toStdString());
+                     if(csvHeader.has_value())
+                     {
+                         options.csvHeaderType = csvHeader.value();
+                     }
+                     else
+                     {
+                         fail("Header '" + header + "' unsupported! Available headers are none, generic, or specific.");
+                     }
+                 }
+                 else
+                 {
+                     options.csvHeaderType = Document::Exporter::Options::CsvHeaderType::none;
+                 }
                  options.includeDescription = args.containsOption("--description");
                  options.applyExtraThresholds = args.containsOption("--thresholds");
                  options.disableLabelEscaping = args.containsOption("--noescape");

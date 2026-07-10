@@ -1,7 +1,6 @@
 #include "AnlDocumentExporter.h"
 #include "../Group/AnlGroupExporter.h"
 #include "../Group/AnlGroupTools.h"
-#include "../Track/AnlTrackExporter.h"
 #include "../Track/AnlTrackRenderer.h"
 #include "../Track/AnlTrackTools.h"
 #include "AnlDocumentTools.h"
@@ -67,7 +66,7 @@ Document::Exporter::Options::Format Document::Exporter::Options::fromFileDescrip
 
 Document::Exporter::Options::Options(Track::Result::FileDescription const& fd)
 : format(fromFileDescription(fd.format))
-, includeHeaderRow(fd.includeHeaderRow)
+, csvHeaderType(fd.csvHeaderType)
 , reaperType(fd.reaperType)
 , columnSeparator(fd.columnSeparator)
 , labSeparator(fd.columnSeparator)
@@ -85,7 +84,7 @@ bool Document::Exporter::Options::operator==(Options const& rhs) const noexcept
            imageWidth == rhs.imageWidth &&
            imageHeight == rhs.imageHeight &&
            imagePpi == rhs.imagePpi &&
-           includeHeaderRow == rhs.includeHeaderRow &&
+           csvHeaderType == rhs.csvHeaderType &&
            applyExtraThresholds == rhs.applyExtraThresholds &&
            columnSeparator == rhs.columnSeparator &&
            labSeparator == rhs.labSeparator &&
@@ -247,6 +246,18 @@ static juce::StringArray getColumnSeparatorNames()
     // clang-format on
 }
 
+static juce::StringArray getCsvHeaderTypeNames()
+{
+    // clang-format off
+    return
+    {
+          juce::translate("None")
+        , juce::translate("Standard")
+        , juce::translate("Specific")
+    };
+    // clang-format on
+}
+
 Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool showAutoSize)
 : mAccessor(accessor)
 , mShowAutoSize(showAutoSize)
@@ -332,10 +343,10 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
                    options.imagePpi = std::max(static_cast<int>(std::round(value)), 1);
                    setOptions(options, juce::NotificationType::sendNotificationSync);
                })
-, mPropertyRowHeader(juce::translate("Include Header Row"), juce::translate("Include header row before the data rows"), [this](bool state)
+, mPropertyRowHeader(juce::translate("Header type"), juce::translate("The header row before the data rows"), "", getCsvHeaderTypeNames(), [this](size_t index)
                      {
                          auto options = mOptions;
-                         options.includeHeaderRow = state;
+                         options.csvHeaderType = magic_enum::enum_value<Document::Exporter::Options::CsvHeaderType>(index);
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
 , mPropertyColumnSeparator(juce::translate("Column Separator"), juce::translate("The separator character between columns"), "", getColumnSeparatorNames(), [this](size_t index)
@@ -1033,7 +1044,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
         }
     }
 
-    mPropertyRowHeader.entry.setToggleState(options.includeHeaderRow, silent);
+    mPropertyRowHeader.entry.setSelectedItemIndex(static_cast<int>(options.csvHeaderType), silent);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyLabSeparator.entry.setSelectedItemIndex(static_cast<int>(options.labSeparator), silent);
     mPropertyDisableLabelEscaping.entry.setToggleState(options.disableLabelEscaping, silent);
@@ -1344,13 +1355,13 @@ juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File c
                 MiscDebug("Exporter", "Unsupported format");
                 return juce::Result::fail(juce::translate("Unsupported format"));
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.includeHeaderRow, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, options.csvHeaderType, options.getSeparatorChar(), false, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::lab:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, options.getLabSeparatorChar(), true, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, Track::Exporter::CsvHeaderType::none, options.getLabSeparatorChar(), true, options.applyExtraThresholds, "\n", options.disableLabelEscaping, false, shouldAbort);
             case Options::Format::puredata:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";", true, false, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, Track::Exporter::CsvHeaderType::none, ' ', false, options.applyExtraThresholds, ";", true, false, shouldAbort);
             case Options::Format::max:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, false, ' ', false, options.applyExtraThresholds, ";\n", false, true, shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, channels, fileUsed, Track::Exporter::CsvHeaderType::none, ' ', false, options.applyExtraThresholds, ";\n", false, true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, channels, fileUsed, options.includeDescription, options.applyExtraThresholds, shouldAbort);
             case Options::Format::cue:
@@ -1379,7 +1390,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
     toXml(*child, "imageWidth", value.imageWidth);
     toXml(*child, "imageHeight", value.imageHeight);
     toXml(*child, "imagePpi", value.imagePpi);
-    toXml(*child, "includeHeaderRow", value.includeHeaderRow);
+    toXml(*child, "csvHeaderType", value.csvHeaderType);
     toXml(*child, "applyExtraThresholds", value.applyExtraThresholds);
     toXml(*child, "columnSeparator", value.columnSeparator);
     toXml(*child, "labSeparator", value.labSeparator);
@@ -1410,11 +1421,15 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.imagePpi = fromXml(*child, "imagePpi", defaultValue.imagePpi);
     if(child->hasAttribute("includeHeaderRaw")) // For backward compatibility
     {
-        value.includeHeaderRow = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRow);
+        value.csvHeaderType = fromXml(*child, "includeHeaderRaw", defaultValue.csvHeaderType == Track::Result::FileDescription::CsvHeaderType::generic) ? Track::Result::FileDescription::CsvHeaderType::generic : Track::Result::FileDescription::CsvHeaderType::none;
+    }
+    else if(child->hasAttribute("includeHeaderRow")) // For backward compatibility (<= 2.5.0)
+    {
+        value.csvHeaderType = fromXml(*child, "includeHeaderRow", defaultValue.csvHeaderType == Track::Result::FileDescription::CsvHeaderType::generic) ? Track::Result::FileDescription::CsvHeaderType::generic : Track::Result::FileDescription::CsvHeaderType::none;
     }
     else
     {
-        value.includeHeaderRow = fromXml(*child, "includeHeaderRow", defaultValue.includeHeaderRow);
+        value.csvHeaderType = fromXml(*child, "csvHeaderType", defaultValue.csvHeaderType);
     }
     value.applyExtraThresholds = fromXml(*child, "applyExtraThresholds", defaultValue.applyExtraThresholds);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);

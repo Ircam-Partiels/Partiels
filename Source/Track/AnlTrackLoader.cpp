@@ -1,6 +1,7 @@
 #include "AnlTrackLoader.h"
 #include "AnlTrackTools.h"
 #include <TestResultsData.h>
+#include <regex>
 
 #if JUCE_GCC
 #define ANL_ATTR_UNUSED __attribute__((unused))
@@ -245,9 +246,23 @@ std::tuple<juce::Result, Track::FileDescription> Track::Loader::getFileDescripti
                                }
                                auto const separator = line.at(position);
                                fd.columnSeparator = FileDescription::toColumnSeparator(separator);
-                               fd.includeHeaderRow = (line.substr(0, position) == "TIME");
-                               if(fd.includeHeaderRow)
+                               if(line.substr(0, position) == "TIME")
                                {
+                                   fd.csvHeaderType = FileDescription::CsvHeaderType::generic;
+                                   std::istringstream lineStream(line);
+                                   while(splitString(lineStream, [&](std::string const& word)
+                                                     {
+                                                         static const std::regex genericHeaderColumnRegex(R"(^(TIME|END|DURATION|LABEL|VALUE|BIN\d*|EXTRA\d*)$)");
+                                                         if(!std::regex_match(word, genericHeaderColumnRegex))
+                                                         {
+                                                             fd.csvHeaderType = FileDescription::CsvHeaderType::specific;
+                                                             return true;
+                                                         }
+                                                         return false;
+                                                     },
+                                                     separator))
+                                   {
+                                   }
                                    splitString(stream, [&](std::string const& nextline)
                                                {
                                                    fd.disableLabelEscaping = !isEscaped(nextline, separator);
@@ -256,6 +271,7 @@ std::tuple<juce::Result, Track::FileDescription> Track::Loader::getFileDescripti
                                }
                                else
                                {
+                                   fd.csvHeaderType = FileDescription::CsvHeaderType::none;
                                    fd.disableLabelEscaping = !isEscaped(line, separator);
                                }
                                return true;
