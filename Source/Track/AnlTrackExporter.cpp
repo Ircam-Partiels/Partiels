@@ -220,7 +220,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -282,23 +282,83 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         return true;
     };
 
-    auto const addHeader = [&](std::vector<std::string> const& extraColumns)
+    auto const escapeString = [&](juce::String const& s)
     {
-        if(includeHeader)
+        return disableLabelEscaping ? s.toStdString() : s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
+    };
+
+    auto const description = accessor.getAttr<AttrType::description>();
+    auto const addHeader = [&](size_t numValues, std::string const& defaultName)
+    {
+        switch(headerType)
         {
-            addLine();
-            addColumn("TIME");
-            if(useEndTime)
+            case CsvHeaderType::none:
+                break;
+            case CsvHeaderType::generic:
             {
-                addColumn("END");
+                addLine();
+                addColumn("TIME");
+                if(useEndTime)
+                {
+                    addColumn("END");
+                }
+                else
+                {
+                    addColumn("DURATION");
+                }
+                if(numValues == 1_z)
+                {
+                    addColumn(defaultName);
+                }
+                else
+                {
+                    for(size_t j = 0; j < numValues; ++j)
+                    {
+                        addColumn(defaultName + std::to_string(j));
+                    }
+                }
+                auto const& extraOutputs = description.extraOutputs;
+                for(size_t j = 0; j < extraOutputs.size(); ++j)
+                {
+                    addColumn("EXTRA" + std::to_string(j));
+                }
+                break;
             }
-            else
+            case CsvHeaderType::specific:
             {
-                addColumn("DURATION");
-            }
-            for(auto const& extraColumn : extraColumns)
-            {
-                addColumn(extraColumn);
+                auto const getStringOr = [](std::string const& value, std::string const& fallback)
+                {
+                    return value.empty() ? fallback : value;
+                };
+
+                addLine();
+                addColumn("TIME");
+                if(useEndTime)
+                {
+                    addColumn("END");
+                }
+                else
+                {
+                    addColumn("DURATION");
+                }
+                auto const outputName = getStringOr(escapeString(description.output.name), defaultName);
+                if(numValues == 1_z)
+                {
+                    addColumn(outputName);
+                }
+                else
+                {
+                    for(size_t j = 0; j < numValues; ++j)
+                    {
+                        addColumn(outputName + std::to_string(j));
+                    }
+                }
+                auto const& extraOutputs = description.extraOutputs;
+                for(size_t j = 0; j < extraOutputs.size(); ++j)
+                {
+                    addColumn(getStringOr(escapeString(extraOutputs.at(j).name), "EXTRA" + std::to_string(j)));
+                }
+                break;
             }
         }
     };
@@ -318,11 +378,6 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         }
     };
 
-    auto const escapeString = [&](juce::String const& s)
-    {
-        return disableLabelEscaping ? s.toStdString() : s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
-    };
-
     auto const escapeFloat = [](auto const& s)
     {
         // Don't use the stream directly to avoid locale issues, especially with the decimal separator.
@@ -336,7 +391,6 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     auto const markers = results.getMarkers();
     auto const points = results.getPoints();
     auto const columns = results.getColumns();
-    std::vector<std::string> binColumns;
 
     auto const addChannels = [&](auto const data, auto const fn)
     {
@@ -358,18 +412,13 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         }
     };
 
+    std::vector<std::string> binColumns;
     if(markers != nullptr)
     {
         auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
-            binColumns.clear();
-            binColumns.push_back("LABEL");
-            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
-            for(size_t j = 0; j < extraOutputs.size(); ++j)
-            {
-                binColumns.push_back("EXTRA" + std::to_string(j));
-            }
-            addHeader(binColumns);
+            addHeader(1_z, "LABEL");
+            auto const& extraOutputs = description.extraOutputs;
             auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
@@ -392,14 +441,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
-            binColumns.clear();
-            binColumns.push_back("VALUE");
-            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
-            for(size_t j = 0; j < extraOutputs.size(); ++j)
-            {
-                binColumns.push_back("EXTRA" + std::to_string(j));
-            }
-            addHeader(binColumns);
+            addHeader(1_z, "VALUE");
+            auto const& extraOutputs = description.extraOutputs;
             auto it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
@@ -422,22 +465,12 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Column> const& channelColumns)
         {
-            binColumns.clear();
             auto const numBins = std::accumulate(channelColumns.cbegin(), channelColumns.cend(), 0_z, [](auto const s, auto const& channelColumn)
                                                  {
                                                      return std::max(s, std::get<2>(channelColumn).size());
                                                  });
-            for(size_t j = 0; j < numBins; ++j)
-            {
-                binColumns.push_back("BIN" + std::to_string(j));
-            }
-            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
-            for(size_t j = 0; j < extraOutputs.size(); ++j)
-            {
-                binColumns.push_back("EXTRA" + std::to_string(j));
-            }
-            addHeader(binColumns);
-
+            addHeader(numBins, "BIN");
+            auto const& extraOutputs = description.extraOutputs;
             auto it = std::lower_bound(channelColumns.cbegin(), channelColumns.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
@@ -484,7 +517,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -497,7 +530,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     }
     stream << std::fixed;
     stream << std::setprecision(10);
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, headerType, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -511,12 +544,12 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
     stream << std::fixed;
     stream << std::setprecision(10);
-    auto const result = toCsv(accessor, timeRange, channels, stream, includeHeader, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, channels, stream, headerType, separator, useEndTime, applyExtraThresholds, lineBreakSeparator, disableLabelEscaping, prependLineIndex, shouldAbort);
     if(result.failed())
     {
         return result;

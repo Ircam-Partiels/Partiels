@@ -54,6 +54,13 @@ namespace Track
                   marker
                 , region
             };
+            
+            enum class CsvHeaderType
+            {
+                  none
+                , generic
+                , specific
+            };
             // clang-format on
 
             static char toChar(ColumnSeparator const& separator);
@@ -62,7 +69,7 @@ namespace Track
             juce::File file;
             Format format{Format::binary};
             juce::String extension{".dat"};
-            bool includeHeaderRow{false};
+            CsvHeaderType csvHeaderType{CsvHeaderType::none};
             ReaperType reaperType{ReaperType::marker};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
             bool disableLabelEscaping{false};

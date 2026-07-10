@@ -103,7 +103,7 @@ bool Track::Result::FileDescription::operator==(FileDescription const& rhs) cons
     return file == rhs.file &&
            format == rhs.format &&
            extension == rhs.extension &&
-           includeHeaderRow == rhs.includeHeaderRow &&
+           csvHeaderType == rhs.csvHeaderType &&
            columnSeparator == rhs.columnSeparator &&
            disableLabelEscaping == rhs.disableLabelEscaping &&
            reaperType == rhs.reaperType &&
@@ -154,7 +154,7 @@ void XmlParser::toXml<Track::Result::FileDescription>(juce::XmlElement& xml, juc
     toXml(*child, "path", value.file);
     toXml(*child, "format", value.format);
     toXml(*child, "extension", value.extension);
-    toXml(*child, "includeHeaderRow", value.includeHeaderRow);
+    toXml(*child, "csvHeaderType", value.csvHeaderType);
     toXml(*child, "reaperType", value.reaperType);
     toXml(*child, "columnSeparator", value.columnSeparator);
     toXml(*child, "disableLabelEscaping", value.disableLabelEscaping);
@@ -178,7 +178,14 @@ auto XmlParser::fromXml<Track::Result::FileDescription>(juce::XmlElement const& 
     value.file = fromXml(*child, "path", defaultValue.file);
     value.format = fromXml(*child, "format", defaultValue.format);
     value.extension = fromXml(*child, "extension", defaultValue.extension);
-    value.includeHeaderRow = fromXml(*child, "includeHeaderRow", defaultValue.includeHeaderRow);
+    if(child->hasAttribute("includeHeaderRow")) // For backward compatibility (<= 2.5.0)
+    {
+        value.csvHeaderType = fromXml(*child, "includeHeaderRow", defaultValue.csvHeaderType == Track::Result::FileDescription::CsvHeaderType::generic) ? Track::Result::FileDescription::CsvHeaderType::generic : Track::Result::FileDescription::CsvHeaderType::none;
+    }
+    else
+    {
+        value.csvHeaderType = fromXml(*child, "csvHeaderType", defaultValue.csvHeaderType);
+    }
     value.reaperType = fromXml(*child, "reaperType", defaultValue.reaperType);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
     value.disableLabelEscaping = fromXml(*child, "disableLabelEscaping", defaultValue.disableLabelEscaping);
@@ -205,7 +212,7 @@ void Track::Result::to_json(nlohmann::json& j, FileDescription const& file)
     j["path"] = file.file;
     j["format"] = std::string(magic_enum::enum_name(file.format));
     j["extension"] = file.extension;
-    j["includeHeaderRow"] = file.includeHeaderRow;
+    j["csvHeaderType"] = std::string(magic_enum::enum_name(file.csvHeaderType));
     j["columnSeparator"] = std::string(magic_enum::enum_name(file.columnSeparator));
     j["disableLabelEscaping"] = file.disableLabelEscaping;
     j["reaperType"] = std::string(magic_enum::enum_name(file.reaperType));
@@ -219,7 +226,14 @@ void Track::Result::from_json(nlohmann::json const& j, FileDescription& file)
     file.file = j.value("path", file.file);
     file.format = magic_enum::enum_cast<FileDescription::Format>(j.value("format", std::string(magic_enum::enum_name(file.format)))).value_or(file.format);
     file.extension = j.value("extension", file.extension);
-    file.includeHeaderRow = j.value("includeHeaderRow", file.includeHeaderRow);
+    if(j.contains("includeHeaderRow")) // For backward compatibility (<= 2.5.0)
+    {
+        file.csvHeaderType = j.value("includeHeaderRow", file.csvHeaderType == FileDescription::CsvHeaderType::generic) ? FileDescription::CsvHeaderType::generic : FileDescription::CsvHeaderType::none;
+    }
+    else
+    {
+        file.csvHeaderType = magic_enum::enum_cast<FileDescription::CsvHeaderType>(j.value("csvHeaderType", std::string(magic_enum::enum_name(file.csvHeaderType)))).value_or(file.csvHeaderType);
+    }
     file.columnSeparator = magic_enum::enum_cast<FileDescription::ColumnSeparator>(j.value("columnSeparator", std::string(magic_enum::enum_name(file.columnSeparator)))).value_or(file.columnSeparator);
     file.disableLabelEscaping = j.value("disableLabelEscaping", file.disableLabelEscaping);
     file.reaperType = magic_enum::enum_cast<FileDescription::ReaperType>(j.value("reaperType", std::string(magic_enum::enum_name(file.reaperType)))).value_or(file.reaperType);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackModel.h"
+#include "Result/AnlTrackResultFile.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -19,9 +20,11 @@ namespace Track
         juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, std::set<size_t> const& channels, juce::File const& file, int width, int height, int scaledWidth, int scaledHeight, Zoom::Grid::Justification outsideGridjustification, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeHeader, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
+        using CsvHeaderType = Track::Result::FileDescription::CsvHeaderType;
+
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, CsvHeaderType headerType, char separator, bool useEndTime, bool applyExtraThresholds, std::string lineBreakSeparator, bool disableLabelEscaping, bool prependLineIndex, std::atomic<bool> const& shouldAbort);
 
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort);
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, bool applyExtraThresholds, std::atomic<bool> const& shouldAbort);
