@@ -43,6 +43,7 @@ namespace Application
         static juce::String getWildCardForDocumentFile();
         static juce::String getWildCardForImportFormats();
         static juce::String getWildCardForAudioFormats();
+        static juce::String getWildCardForImageFormats();
         static LookAndFeel::ColourChart getColourChart();
 
         Accessor& getApplicationAccessor();

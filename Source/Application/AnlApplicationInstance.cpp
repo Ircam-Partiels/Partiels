@@ -398,6 +398,11 @@ juce::String Application::Instance::getWildCardForAudioFormats()
     return get().getAudioFormatManager().getWildcardForAllFormats();
 }
 
+juce::String Application::Instance::getWildCardForImageFormats()
+{
+    return "*.png;*.jpeg;*.jpg";
+}
+
 LookAndFeel::ColourChart Application::Instance::getColourChart()
 {
     auto& instance = get();
