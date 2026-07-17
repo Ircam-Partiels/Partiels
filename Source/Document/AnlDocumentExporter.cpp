@@ -1265,11 +1265,13 @@ juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File c
         {
             return file.getSiblingFile(filePrefix + file.getFileName());
         }
-        if(!trackName.isEmpty())
+        auto const legalGroupName = juce::File::createLegalFileName(groupName).replace(" ", "_");
+        auto const legalTrackName = juce::File::createLegalFileName(trackName).replace(" ", "_");
+        if(!legalTrackName.isEmpty())
         {
-            return file.getNonexistentChildFile(juce::File::createLegalFileName(groupName) + "_" + filePrefix + juce::File::createLegalFileName(trackName), "." + options.getFormatExtension());
+            return file.getNonexistentChildFile(legalGroupName + "_" + filePrefix + legalTrackName, "." + options.getFormatExtension());
         }
-        return file.getNonexistentChildFile(filePrefix + juce::File::createLegalFileName(groupName), "." + options.getFormatExtension());
+        return file.getNonexistentChildFile(filePrefix + legalGroupName, "." + options.getFormatExtension());
     };
 
     if(options.useImageFormat())
