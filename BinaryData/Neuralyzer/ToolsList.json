@@ -1,14 +1,19 @@
 {
   "tools": [
     {
-      "name": "retrieve_docs",
-      "description": "Perform a semantic search of the documentation related to a query/prompt and return the documents with their IDs, titles, sections, contents, and scores",
+      "name": "search_docs",
+      "description": "Perform a semantic search of the documentation related to a query/prompt and return the corresponding document IDs sorted by relevance with their titles, and sections",
       "inputSchema": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
             "description": "The search query or prompt to retrieve relevant documents"
+          },
+          "maxNumDocuments": {
+            "type": "number",
+            "description": "The maximum number of documents to retrieve (defaults to 10)",
+            "default": 10
           }
         },
         "required": ["query"],
@@ -19,7 +24,35 @@
         "properties": {
           "documents": {
             "type": "array",
-            "description": "Array of documents with their IDs, titles, sections, contents, and scores"
+            "description": "Array of document IDs sorted by relevance with their titles, and sections"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "load_docs",
+      "description": "Load the content of specific documents by their IDs and return the corresponding document IDs with their titles, sections, and contents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of document IDs to load"
+          }
+        },
+        "required": ["ids"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": "array",
+            "description": "Array of document IDs with their titles, sections, and content"
           }
         },
         "additionalProperties": false
