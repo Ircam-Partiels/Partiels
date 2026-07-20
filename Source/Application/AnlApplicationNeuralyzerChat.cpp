@@ -334,8 +334,6 @@ void Application::Neuralyzer::Chat::stopUserQuery()
     }
 
     mAgent.cancelQuery();
-    mTempResponse.setVisible(false);
-    mSeparator2.setVisible(false);
     startTimer(250);
     updated();
     resized();

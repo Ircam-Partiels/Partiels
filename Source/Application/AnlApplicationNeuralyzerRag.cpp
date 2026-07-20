@@ -6,18 +6,25 @@ ANALYSE_FILE_BEGIN
 
 void Application::Neuralyzer::Rag::to_json(nlohmann::json& json, Application::Neuralyzer::Rag::Resource const& resource)
 {
-    json = nlohmann::json{{"id", resource.id.toStdString()},
-                          {"content", resource.content.toStdString()},
-                          {"section", resource.section.toStdString()},
-                          {"document", resource.document.toStdString()}};
+    // clang-format off
+    json = nlohmann::json
+    {
+          {"id", resource.id}
+        , {"content", resource.content}
+        , {"section", resource.section}
+        , {"document", resource.document}
+        , {"score", resource.score}
+    };
+    // clang-format on
 }
 
 void Application::Neuralyzer::Rag::from_json(nlohmann::json const& json, Application::Neuralyzer::Rag::Resource& resource)
 {
-    resource.id = juce::String(json.value("id", std::string{})).trim();
-    resource.content = juce::String(json.value("content", std::string{})).trim();
-    resource.section = juce::String(json.value("section", std::string{})).trim();
-    resource.document = juce::String(json.value("document", std::string{})).trim();
+    resource.id = json.value("id", resource.id).trim();
+    resource.content = json.value("content", resource.content).trim();
+    resource.section = json.value("section", resource.section).trim();
+    resource.document = json.value("document", resource.document).trim();
+    resource.score = json.value("score", resource.score);
 }
 
 juce::File Application::Neuralyzer::Rag::getDefaultModelDirectory()
@@ -120,7 +127,7 @@ std::vector<Application::Neuralyzer::Rag::Resource> Application::Neuralyzer::Rag
                 out << character;
                 lastWasDash = false;
             }
-            else if(!std::exchange(lastWasDash, lastWasDash))
+            else if(!std::exchange(lastWasDash, true))
             {
                 out << "-";
             }
@@ -603,7 +610,17 @@ std::vector<Application::Neuralyzer::Rag::Resource> Application::Neuralyzer::Rag
                           return resource.score < minScore;
                       });
     }
-    std::reverse(resources.begin(), resources.end());
+    return resources;
+}
+
+std::vector<Application::Neuralyzer::Rag::Resource> Application::Neuralyzer::Rag::Engine::getResources(std::vector<juce::String> const& ids) const
+{
+    std::vector<Resource> resources;
+    resources.reserve(ids.size());
+    std::copy_if(mIndexedEntries.cbegin(), mIndexedEntries.cend(), std::back_inserter(resources), [&](auto const& resource)
+                 {
+                     return std::find(ids.cbegin(), ids.cend(), resource.id) != ids.cend();
+                 });
     return resources;
 }
 

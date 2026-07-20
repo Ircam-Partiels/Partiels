@@ -71,8 +71,9 @@ namespace Application
 
             juce::Result performQuery(juce::String const& query, bool allowTools);
             std::tuple<juce::Result, std::string, common_chat_params> performMessage(std::string const& role, std::string query, bool allowTools);
-            nlohmann::json readFile(std::string const filePath);
-            nlohmann::json retrieveDocs(std::string const query);
+            nlohmann::json readFiles(std::vector<std::string> const& filePaths);
+            nlohmann::json searchDocs(std::string const& query, size_t maxNumResources);
+            nlohmann::json loadDocs(std::vector<std::string> const& ids);
 
             std::atomic<bool> mShouldQuit{false};
             Mcp::Dispatcher& mMcpDispatcher;

@@ -33,19 +33,22 @@ namespace Application
 
                 struct DynamicToolMethods
                 {
-                    using read_file_fn_t = std::function<nlohmann::json(std::string const& filepath)>;
-                    using retrieve_docs_fn_t = std::function<nlohmann::json(std::string const& query)>;
+                    using read_files_fn_t = std::function<nlohmann::json(std::vector<std::string> const& filePaths)>;
+                    using search_docs_fn_t = std::function<nlohmann::json(std::string const& query, size_t maxNumResources)>;
+                    using load_docs_fn_t = std::function<nlohmann::json(std::vector<std::string> const& ids)>;
 
                     DynamicToolMethods()
-                    : readFileFn(nullptr)
-                    , retrieveDocs(nullptr)
+                    : readFilesFn(nullptr)
+                    , searchDocsFn(nullptr)
+                    , loadDocsFn(nullptr)
                     {
                     }
 
                     ~DynamicToolMethods() = default;
 
-                    read_file_fn_t readFileFn;
-                    retrieve_docs_fn_t retrieveDocs;
+                    read_files_fn_t readFilesFn;
+                    search_docs_fn_t searchDocsFn;
+                    load_docs_fn_t loadDocsFn;
                 };
 
                 std::string getUuid();

@@ -296,8 +296,9 @@ Application::Neuralyzer::AgentLocal::AgentLocal(Mcp::Dispatcher& mcpDispatcher, 
 : mMcpDispatcher(mcpDispatcher)
 , mRagEngine(ragEngine)
 {
-    mMcpMethods.readFileFn = std::bind(&AgentLocal::readFile, this, std::placeholders::_1);
-    mMcpMethods.retrieveDocs = std::bind(&AgentLocal::retrieveDocs, this, std::placeholders::_1);
+    mMcpMethods.readFilesFn = std::bind(&AgentLocal::readFiles, this, std::placeholders::_1);
+    mMcpMethods.searchDocsFn = std::bind(&AgentLocal::searchDocs, this, std::placeholders::_1, std::placeholders::_2);
+    mMcpMethods.loadDocsFn = std::bind(&AgentLocal::loadDocs, this, std::placeholders::_1);
 }
 
 Application::Neuralyzer::AgentLocal::~AgentLocal()
@@ -345,8 +346,8 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     {
         std::unique_lock<std::mutex> lock(mHistoryMutex);
         mChatInputs = common_chat_templates_inputs{};
-        notifyStateChanged();
     }
+    notifyStateChanged();
     mContextMemoryUsage.store(0.0f);
     {
         std::lock_guard<std::mutex> lock(mModelInfoMutex);
@@ -517,8 +518,8 @@ juce::Result Application::Neuralyzer::AgentLocal::resetModel()
     {
         std::unique_lock<std::mutex> lock(mHistoryMutex);
         mChatInputs = common_chat_templates_inputs{};
-        notifyStateChanged();
     }
+    notifyStateChanged();
     mContextMemoryUsage.store(0.0f);
     {
         std::lock_guard<std::mutex> lock(mModelInfoMutex);
@@ -532,7 +533,7 @@ juce::Result Application::Neuralyzer::AgentLocal::addMedia(juce::File const& fil
     if(file == juce::File{} || !file.existsAsFile())
     {
         MiscDebug("Application::Neuralyzer::AgentLocal", "The media file does not exist: " + file.getFullPathName());
-        return juce::Result::fail(juce::translate("The media file does not exist: FLNAME").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The media file does not exist: FLNAME.").replace("FLNAME", file.getFullPathName()));
     }
 
     auto* context = mInitResult != nullptr ? mInitResult->context() : nullptr;
@@ -550,13 +551,13 @@ juce::Result Application::Neuralyzer::AgentLocal::addMedia(juce::File const& fil
     auto const wrapper = mtmd_helper_bitmap_init_from_file(mMtmdContext.get(), path.c_str(), false);
     if(wrapper.bitmap == nullptr)
     {
-        return juce::Result::fail(juce::translate("Failed to load media file: FLNAME").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("Failed to load media file: FLNAME.").replace("FLNAME", file.getFullPathName()));
     }
     mtmd::bitmap_ptr bitmap(wrapper.bitmap);
     if(wrapper.video_ctx != nullptr)
     {
         mtmd_helper_video_free(wrapper.video_ctx);
-        return juce::Result::fail(juce::translate("Video media is not supported: FLNAME").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("Video media is not supported: FLNAME.").replace("FLNAME", file.getFullPathName()));
     }
 
     auto chatInput = [this]()
@@ -668,8 +669,8 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     {
         std::unique_lock<std::mutex> lock(mHistoryMutex);
         mChatInputs = std::move(chatInput);
-        notifyStateChanged();
     }
+    notifyStateChanged();
 
     // Get the assistant response with streaming support.
     common_chat_msg msg;
@@ -726,55 +727,150 @@ std::tuple<juce::Result, std::string, common_chat_params> Application::Neuralyze
     return createResults(juce::Result::ok(), msg.content, std::move(params));
 }
 
-nlohmann::json Application::Neuralyzer::AgentLocal::readFile(std::string const filePath)
+nlohmann::json Application::Neuralyzer::AgentLocal::readFiles(std::vector<std::string> const& filePaths)
 {
-    juce::File const file(filePath);
-    if(!file.existsAsFile() || !file.hasReadAccess())
-    {
-        return nlohmann::json::object({{"error", "File does not exist or is not readable."}, {"file", filePath}});
-    }
+    nlohmann::json response;
+    response["isError"] = false;
+    response["content"] = nlohmann::json::array();
 
-    if(isMediaAudioFileForInjection(file) || isMediaImageFileForInjection(file))
+    std::string message = "File loading results:\n";
+    for(auto const& filePath : filePaths)
     {
-        auto const result = addMedia(file);
-        if(result.failed())
+        message += "\n--------\n";
+        message += "Path: '" + filePath + "'\n";
+        message += "Result: ";
+        juce::File const file(filePath);
+        if(!file.existsAsFile())
         {
-            return nlohmann::json::object({{"error", result.getErrorMessage().toStdString()}, {"file", filePath}, {"mode", "inject"}, {"kind", "media"}});
+            message += "The file does not exist.";
+            response["isError"] = true;
         }
-        return nlohmann::json::object({{"file", filePath}, {"mode", "inject"}, {"kind", "media"}, {"status", "injected"}});
-    }
-    if(isMediaTextFile(file))
-    {
-        static auto constexpr maxChars = 32000;
-        auto text = file.loadFileAsString();
-        auto truncated = false;
-        if(text.length() > maxChars)
+        else if(!file.hasReadAccess())
         {
-            text = text.substring(0, maxChars);
-            truncated = true;
+            message += "The file does have read access.";
+            response["isError"] = true;
         }
-
-        nlohmann::json payload;
-        payload["mode"] = "content";
-        payload["kind"] = "text";
-        payload["text"] = text.toStdString();
-        payload["truncated"] = truncated;
-        payload["sizeBytes"] = static_cast<int64_t>(file.getSize());
-        return payload;
+        else if(isMediaAudioFileForInjection(file))
+        {
+            auto const result = addMedia(file);
+            if(result.failed())
+            {
+                message += "The audio file cannot be injected into the context: " + result.getErrorMessage().toStdString();
+                response["isError"] = true;
+            }
+            else
+            {
+                message += "The audio file has been injected into the context.";
+            }
+        }
+        else if(isMediaImageFileForInjection(file))
+        {
+            auto const result = addMedia(file);
+            if(result.failed())
+            {
+                message += "The image file cannot be injected into the context: " + result.getErrorMessage().toStdString();
+                response["isError"] = true;
+            }
+            else
+            {
+                message += "The image file has been injected into the context.";
+            }
+        }
+        else if(isMediaTextFile(file))
+        {
+            static auto constexpr maxChars = 32000;
+            auto const text = file.loadFileAsString();
+            auto const truncated = text.length() > maxChars;
+            if(truncated)
+            {
+                message += "The truncated text file content (up to 32000 chars) is:\n";
+                message += text.substring(0, maxChars).toStdString() + "\n...";
+            }
+            else
+            {
+                message += "The text file content is:\n";
+                message += text.toStdString();
+            }
+        }
+        else
+        {
+            message += "The file '" + filePath + "' is not supported.";
+            response["isError"] = true;
+        }
+        message += "\n";
     }
 
-    nlohmann::json payload;
-    payload["mode"] = "content";
-    payload["kind"] = "binary";
-    payload["file"] = filePath;
-    payload["sizeBytes"] = static_cast<int64_t>(file.getSize());
-    payload["text"] = "Binary file is not rendered as text.";
-    return payload;
+    nlohmann::json content;
+    content["text"] = message;
+    response["content"].push_back(content);
+    return response;
 }
 
-nlohmann::json Application::Neuralyzer::AgentLocal::retrieveDocs(std::string const query)
+nlohmann::json Application::Neuralyzer::AgentLocal::searchDocs(std::string const& query, size_t maxNumResources)
 {
-    return mRagEngine.computeResources(query, 3_z, 0.1f);
+    nlohmann::json response;
+    response["isError"] = false;
+    response["content"] = nlohmann::json::array();
+
+    auto const resources = mRagEngine.computeResources(juce::String::fromUTF8(query.c_str()), maxNumResources);
+    std::string message;
+    if(resources.empty())
+    {
+        message += "No relevant document was found.";
+    }
+    else
+    {
+        message += "Relevant documents:\n";
+        for(auto index = 0_z; index < resources.size(); ++index)
+        {
+            auto const resource = resources.at(index);
+            message += "\n";
+            message += "[" + std::to_string(index + 1) + "]" + "\n";
+            message += "ID: " + resource.id.toStdString() + "\n";
+            message += "Title: " + resource.document.toStdString() + "\n";
+            message += "Section: " + resource.section.toStdString() + "\n";
+            message += "Score: " + std::to_string(resource.score) + "\n";
+        }
+        message += "\nRetrieve the contents of the documentation using the load_docs tool with the IDs of the documents.";
+    }
+
+    nlohmann::json content;
+    content["text"] = message;
+    response["content"].push_back(content);
+    return response;
+}
+
+nlohmann::json Application::Neuralyzer::AgentLocal::loadDocs(std::vector<std::string> const& ids)
+{
+    nlohmann::json response;
+    response["isError"] = false;
+    response["content"] = nlohmann::json::array();
+
+    auto const resources = mRagEngine.getResources(std::vector<juce::String>{ids.cbegin(), ids.cend()});
+    std::string message;
+    if(resources.empty())
+    {
+        response["isError"] = true;
+        message += "No document was found for the given ids.";
+    }
+    else
+    {
+        message += "Relevant documents:\n";
+        for(auto const& resource : resources)
+        {
+            message += "\n--------\n";
+            message += "ID: " + resource.id.toStdString() + "\n";
+            message += "Title: " + resource.document.toStdString() + "\n";
+            message += "Section: " + resource.section.toStdString() + "\n";
+            message += "Content:\n" + resource.content.toStdString() + "\n";
+        }
+        message += "\nSearch for complementary documentation using the search_docs tool.";
+    }
+
+    nlohmann::json content;
+    content["text"] = message;
+    response["content"].push_back(content);
+    return response;
 }
 
 juce::Result Application::Neuralyzer::AgentLocal::performQuery(juce::String const& prompt, bool allowTools)
@@ -914,22 +1010,6 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
     }
 
     juce::String fullQuery;
-
-    // Adds the RAG context to the query
-    auto const resources = mRagEngine.computeResources(prompt);
-    if(!resources.empty())
-    {
-        fullQuery << "Relevant documentation excerpts:\n";
-        for(auto const& resource : resources)
-        {
-            fullQuery << "\n";
-            fullQuery << "[" << resource.document << " | " << resource.section << "]\n";
-            // Remove all line breaks, tabs, etc. from the excerpt to avoid formatting issues in the model's response
-            fullQuery << resource.content.trim() << "\n";
-        }
-        fullQuery << "\n";
-    }
-
     // Adds the file paths to the query
     if(!files.isEmpty())
     {
@@ -1007,12 +1087,6 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
         }
     }();
 
-    auto clearResult = clearContextMemory();
-    if(clearResult.failed())
-    {
-        return clearResult;
-    }
-
     auto const shouldUpdate = version != mMcpDispatcher.getUuid();
     if(shouldUpdate && !messages.empty())
     {
@@ -1023,6 +1097,9 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
         std::unique_lock<std::mutex> lock(mHistoryMutex);
         mChatInputs.messages = std::move(messages);
     }
+    // Clear the context memory
+    auto* context = mInitResult->context();
+    llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
 
     if(shouldUpdate)
     {
@@ -1038,7 +1115,6 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
     llama_log_set(logCallback, nullptr);
 
     size_t nloaded = 0;
-    auto* context = mInitResult->context();
     std::vector<llama_token> restoredTokens(static_cast<size_t>(llama_n_ctx(context)));
     if(!llama_state_load_file(context, contextFile.getFullPathName().toRawUTF8(), restoredTokens.data(), restoredTokens.size(), &nloaded) || nloaded == 0)
     {
@@ -1143,10 +1219,10 @@ juce::Result Application::Neuralyzer::AgentLocal::clearContextMemory()
         std::unique_lock<std::mutex> lock(mHistoryMutex);
         mChatInputs.messages.clear();
     }
-    notifyStateChanged();
     auto* context = mInitResult->context();
     llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
     updateContextMemoryUsage();
+    notifyStateChanged();
     return juce::Result::ok();
 }
 
@@ -1221,15 +1297,16 @@ juce::Result Application::Neuralyzer::AgentLocal::decodeContextMemory()
 Application::Neuralyzer::AgentLocal::History Application::Neuralyzer::AgentLocal::getHistory() const
 {
     History history;
-    std::unique_lock<std::mutex> lock(mHistoryMutex);
-    history.reserve(mChatInputs.messages.size());
-    for(auto const& message : mChatInputs.messages)
     {
-        auto const role = magic_enum::enum_cast<MessageType>(message.role);
-        auto const content = message.content.empty() ? message.render_content() : message.content;
-        history.push_back({role.value_or(MessageType::assistant), juce::String(content)});
+        std::unique_lock<std::mutex> lock(mHistoryMutex);
+        history.reserve(mChatInputs.messages.size());
+        for(auto const& message : mChatInputs.messages)
+        {
+            auto const role = magic_enum::enum_cast<MessageType>(message.role);
+            auto const content = message.content.empty() ? message.render_content() : message.content;
+            history.push_back({role.value_or(MessageType::assistant), juce::String(content)});
+        }
     }
-    lock.unlock();
     return history;
 }
 

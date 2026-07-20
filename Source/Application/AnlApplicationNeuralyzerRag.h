@@ -48,6 +48,7 @@ namespace Application
 
                 juce::Result initializeModels(juce::File embeddingModelFile, juce::File rerankerModelFile);
                 std::vector<Resource> computeResources(juce::String const& userPrompt, size_t maxResources = 4_z, float minScore = 0.01f, float maxDistance = 0.6f);
+                std::vector<Resource> getResources(std::vector<juce::String> const& ids) const;
 
             private:
                 juce::Result setResources(std::vector<Resource> const& resources);

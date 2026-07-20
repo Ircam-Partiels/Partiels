@@ -4149,11 +4149,11 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
 
         auto const toolName = methodParams.at("name").get<std::string>();
         // Global methods to call on this threa
-        if(toolName == "retrieve_docs")
+        if(toolName == "search_docs")
         {
-            if(methods.retrieveDocs == nullptr)
+            if(methods.searchDocsFn == nullptr)
             {
-                return createError("The retrieve docs callback is unavailable.");
+                return createError("The list docs callback is unavailable.");
             }
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
             {
@@ -4164,40 +4164,47 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
             {
                 return createError("The 'query' argument is required and must a string.");
             }
-
-            nlohmann::json response;
-            response["isError"] = false;
-            response["content"] = nlohmann::json::array();
-
-            nlohmann::json result;
-            try
+            if(arguments.contains("maxNumDocuments") && !arguments.at("maxNumDocuments").is_number())
             {
-                result["content"] = methods.retrieveDocs(arguments.at("query").get<std::string>());
-            }
-            catch(std::exception const& e)
-            {
-                response["isError"] = true;
-                result["content"] = nlohmann::json::object({{"error", e.what()}});
-            }
-            catch(...)
-            {
-                response["isError"] = true;
-                result["content"] = nlohmann::json::object({{"error", "Unknown exception while reading file."}});
-            }
-            if(result.contains("content") && result.at("content").is_object() && result.at("content").contains("error"))
-            {
-                response["isError"] = true;
+                return createError("The 'maxNumDocuments' argument must be a postive integer.");
             }
 
-            nlohmann::json content;
-            content["type"] = "text";
-            content["text"] = result.dump();
-            response["content"].push_back(content);
-            return response;
+            auto const query = arguments.at("query").get<std::string>();
+            auto const maxNumDocuments = arguments.contains("maxNumDocuments") ? arguments.at("maxNumDocuments").get<int>() : 10;
+            if(maxNumDocuments <= 0)
+            {
+                return createError("The 'maxNumDocuments' argument must be a postive integer.");
+            }
+            return methods.searchDocsFn(query, static_cast<size_t>(maxNumDocuments));
+        }
+        if(toolName == "load_docs")
+        {
+            if(methods.loadDocsFn == nullptr)
+            {
+                return createError("The load docs callback is unavailable.");
+            }
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("ids") || !arguments.at("ids").is_array() || arguments.at("ids").empty())
+            {
+                return createError("The 'ids' argument is required and must an array of strings.");
+            }
+            for(auto const& id : arguments.at("ids"))
+            {
+                if(!id.is_string())
+                {
+                    return createError("The 'ids' argument is required and must an array of strings.");
+                }
+            }
+            auto const ids = arguments.at("ids").get<std::vector<std::string>>();
+            return methods.loadDocsFn(ids);
         }
         if(toolName == "read_files")
         {
-            if(methods.readFileFn == nullptr)
+            if(methods.readFilesFn == nullptr)
             {
                 return createError("The file reader callback is unavailable.");
             }
@@ -4205,54 +4212,20 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
             {
                 return createError("The 'arguments' field is required and must be an object.");
             }
-
             auto const& arguments = methodParams.at("arguments");
             if(!arguments.contains("files") || !arguments.at("files").is_array() || arguments.at("files").empty())
             {
                 return createError("The 'files' argument is required and must be an array of strings.");
             }
-
-            nlohmann::json response;
-            response["isError"] = false;
-            response["content"] = nlohmann::json::array();
-
-            nlohmann::json payload;
-            payload["files"] = nlohmann::json::array();
-            for(auto const& filePath : arguments.at("files"))
+            for(auto const& file : arguments.at("files"))
             {
-                if(!filePath.is_string())
+                if(!file.is_string())
                 {
-                    return createError("The 'files' argument must be an array of strings.");
+                    return createError("The 'files' argument is required and must an array of strings.");
                 }
-
-                nlohmann::json result;
-                result["file"] = filePath;
-                try
-                {
-                    result["content"] = methods.readFileFn(filePath.get<std::string>());
-                }
-                catch(std::exception const& e)
-                {
-                    response["isError"] = true;
-                    result["content"] = nlohmann::json::object({{"error", e.what()}});
-                }
-                catch(...)
-                {
-                    response["isError"] = true;
-                    result["content"] = nlohmann::json::object({{"error", "Unknown exception while reading file."}});
-                }
-                if(result.contains("content") && result.at("content").is_object() && result.at("content").contains("error"))
-                {
-                    response["isError"] = true;
-                }
-                payload["files"].push_back(std::move(result));
             }
-
-            nlohmann::json content;
-            content["type"] = "text";
-            content["text"] = payload.dump();
-            response["content"].push_back(content);
-            return response;
+            auto const files = arguments.at("files").get<std::vector<std::string>>();
+            return methods.readFilesFn(files);
         }
 
         return juce::MessageManager::callSync([&]()
@@ -4366,11 +4339,15 @@ std::vector<common_chat_tool> Application::Neuralyzer::Mcp::Dispatcher::getToolL
     {
         if(name == "read_files")
         {
-            return methods.readFileFn != nullptr;
+            return methods.readFilesFn != nullptr;
         }
-        if(name == "retrieve_docs")
+        if(name == "search_docs")
         {
-            return methods.retrieveDocs != nullptr;
+            return methods.searchDocsFn != nullptr;
+        }
+        if(name == "load_docs")
+        {
+            return methods.loadDocsFn != nullptr;
         }
         return true;
     };
