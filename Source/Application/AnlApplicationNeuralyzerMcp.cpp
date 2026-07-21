@@ -385,53 +385,7 @@ namespace Application::Neuralyzer::Mcp
         response["content"] = nlohmann::json::array();
 
         // Vamp Plugins Section
-        if(toolName == "get_installed_vamp_plugins_list")
-        {
-            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
-            {
-                return createError("The 'arguments' field is required and must be an object.");
-            }
-            auto const& arguments = methodParams.at("arguments");
-            if(arguments.contains("sampleRate") && !arguments.at("sampleRate").is_number())
-            {
-                return createError("The 'sampleRate' argument must be a number.");
-            }
-            auto const sampleRate = arguments.value("sampleRate", 48000.0);
-            auto& scanner = Instance::get().getPluginListScanner();
-            auto const [pluginMap, errors] = scanner.getPlugins(sampleRate, false);
-            nlohmann::json plugins;
-            to_json(plugins, pluginMap);
-            for(auto& plugin : plugins)
-            {
-                // Remove large data from the response
-                plugin.back().erase("defaultState");
-                plugin.back().erase("parameters");
-                plugin.back().erase("output");
-                plugin.back().erase("extraOutputs");
-                plugin.back().erase("input");
-                plugin.back().erase("programs");
-                plugin.back().erase("copyright");
-                plugin.back().erase("inputDomain");
-                plugin.back().erase("version");
-            }
-            nlohmann::json content;
-            content["type"] = "text";
-            nlohmann::json payload;
-            payload["plugins"] = plugins;
-            nlohmann::json errorArray = nlohmann::json::array();
-            for(auto const& err : errors)
-            {
-                errorArray.push_back(err.toStdString());
-            }
-            if(!errorArray.empty())
-            {
-                payload["errors"] = errorArray;
-                response["isError"] = true;
-            }
-            content["text"] = payload.dump();
-            response["content"].push_back(content);
-            return response;
-        }
+
         if(toolName == "get_vamp_plugin_descriptions")
         {
             if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
@@ -4226,6 +4180,66 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
             }
             auto const files = arguments.at("files").get<std::vector<std::string>>();
             return methods.readFilesFn(files);
+        }
+        if(toolName == "get_installed_vamp_plugins_list")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(arguments.contains("sampleRate") && !arguments.at("sampleRate").is_number())
+            {
+                return createError("The 'sampleRate' argument must be a number.");
+            }
+
+            nlohmann::json response;
+            response["isError"] = false;
+            response["content"] = nlohmann::json::array();
+
+            auto const results = juce::MessageManager::callSync([&]() -> std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray>
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        return Instance::get().getPluginListScanner().getPlugins(48000.0, false);
+                                                                    }
+                                                                    catch(std::exception const& e)
+                                                                    {
+                                                                        return std::make_tuple(std::map<Plugin::Key, Plugin::Description>{}, juce::StringArray{e.what()});
+                                                                    }
+                                                                });
+            if(results.has_value())
+            {
+                
+            }
+            std::map<Plugin::Key, Plugin::Description> const& plugins = std::get<0_z>(results.value());
+            juce::StringArray const& errors = std::get<1_z>(results.value());
+            
+            std::string message;
+            if(!errors.isEmpty())
+            {
+                message = errors.joinIntoString(". ").toStdString();
+            }
+            else
+            {
+                message = "Available plugins (" + std::to_string(plugins.size()) + ")\n";
+                for(auto const& plugin : plugins)
+                {
+                    message += "Plugin\n";
+                    message += "------\n";
+                    message += "Name: " + plugin.second.name.toStdString() + "\n";
+                    message += "Category: " + plugin.second.category.toStdString() + "\n";
+                    message += "Description: " + plugin.second.details.toStdString() + "\n";
+                    message += "Developer: " + plugin.second.maker.toStdString() + "\n";
+                    message += "Key:\n";
+                    message += "  Identifier: " + plugin.first.identifier + "\n";
+                    message += "  Feature: " + plugin.first.feature + "\n";
+                }
+            }
+            nlohmann::json content;
+            content["text"] = message;
+            response["content"].push_back(content);
+            return response;
         }
 
         return juce::MessageManager::callSync([&]()
