@@ -63,13 +63,6 @@
       "description": "Get the list of Vamp plugins (keys and brief descriptions) installed on the system",
       "inputSchema": {
         "type": "object",
-        "properties": {
-          "sampleRate": {
-            "type": "number",
-            "description": "Sample rate to use when querying plugin descriptors (defaults to 48000)",
-            "default": 48000
-          }
-        },
         "required": [],
         "additionalProperties": false
       },
