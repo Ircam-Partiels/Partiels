@@ -384,69 +384,6 @@ namespace Application::Neuralyzer::Mcp
         response["isError"] = false;
         response["content"] = nlohmann::json::array();
 
-        // Vamp Plugins Section
-
-        if(toolName == "get_vamp_plugin_descriptions")
-        {
-            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
-            {
-                return createError("The 'arguments' field is required and must be an object.");
-            }
-            auto const& arguments = methodParams.at("arguments");
-            if(!arguments.contains("keys") || !arguments.at("keys").is_array())
-            {
-                return createError("The 'keys' argument is required and must be an array.");
-            }
-            if(arguments.contains("sampleRate") && !arguments.at("sampleRate").is_number())
-            {
-                return createError("The 'sampleRate' argument must be a number.");
-            }
-            auto const sampleRate = arguments.value("sampleRate", 48000.0);
-            auto& scanner = Instance::get().getPluginListScanner();
-            auto const [pluginMap, scanErrors] = scanner.getPlugins(sampleRate, false);
-
-            nlohmann::json descriptions;
-            nlohmann::json errors;
-
-            for(auto const& keyJson : arguments.at("keys"))
-            {
-                if(!keyJson.is_object() || !keyJson.contains("identifier") || !keyJson.contains("feature"))
-                {
-                    return createError("Each key must be an object with 'identifier' and 'feature' fields.");
-                }
-
-                Plugin::Key key;
-                key.identifier = keyJson.at("identifier").get<std::string>();
-                key.feature = keyJson.at("feature").get<std::string>();
-                auto const keyString = key.identifier + ":" + key.feature;
-                auto const it = pluginMap.find(key);
-                if(it != pluginMap.end())
-                {
-                    nlohmann::json description;
-                    to_json(description, it->second);
-                    sanitizePluginDescription(description);
-                    descriptions[keyString] = description;
-                }
-                else
-                {
-                    errors[keyString] = "Plugin not found or could not be loaded";
-                }
-            }
-
-            nlohmann::json content;
-            content["type"] = "text";
-            nlohmann::json payload;
-            payload["descriptions"] = descriptions;
-            if(!errors.empty())
-            {
-                payload["errors"] = errors;
-                response["isError"] = true;
-            }
-            content["text"] = payload.dump();
-            response["content"].push_back(content);
-            return response;
-        }
-
         // Document Getter Section
         if(toolName == "get_document_state")
         {
@@ -4187,16 +4124,6 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
             {
                 return createError("The 'arguments' field is required and must be an object.");
             }
-            auto const& arguments = methodParams.at("arguments");
-            if(arguments.contains("sampleRate") && !arguments.at("sampleRate").is_number())
-            {
-                return createError("The 'sampleRate' argument must be a number.");
-            }
-
-            nlohmann::json response;
-            response["isError"] = false;
-            response["content"] = nlohmann::json::array();
-
             auto const results = juce::MessageManager::callSync([&]() -> std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray>
                                                                 {
                                                                     try
@@ -4208,32 +4135,251 @@ nlohmann::json Application::Neuralyzer::Mcp::Dispatcher::callMethod(nlohmann::js
                                                                         return std::make_tuple(std::map<Plugin::Key, Plugin::Description>{}, juce::StringArray{e.what()});
                                                                     }
                                                                 });
-            if(results.has_value())
-            {
-                
-            }
-            std::map<Plugin::Key, Plugin::Description> const& plugins = std::get<0_z>(results.value());
-            juce::StringArray const& errors = std::get<1_z>(results.value());
-            
+            nlohmann::json response;
+            response["isError"] = false;
+            response["content"] = nlohmann::json::array();
             std::string message;
-            if(!errors.isEmpty())
+            if(!results.has_value())
             {
-                message = errors.joinIntoString(". ").toStdString();
+                response["isError"] = true;
+                message = "The scan of the plugin list failed.";
             }
             else
             {
-                message = "Available plugins (" + std::to_string(plugins.size()) + ")\n";
-                for(auto const& plugin : plugins)
+                auto const& plugins = std::get<0_z>(results.value());
+                auto const& errors = std::get<1_z>(results.value());
+                if(!errors.isEmpty())
                 {
-                    message += "Plugin\n";
-                    message += "------\n";
-                    message += "Name: " + plugin.second.name.toStdString() + "\n";
-                    message += "Category: " + plugin.second.category.toStdString() + "\n";
-                    message += "Description: " + plugin.second.details.toStdString() + "\n";
-                    message += "Developer: " + plugin.second.maker.toStdString() + "\n";
-                    message += "Key:\n";
-                    message += "  Identifier: " + plugin.first.identifier + "\n";
-                    message += "  Feature: " + plugin.first.feature + "\n";
+                    response["isError"] = true;
+                    message = errors.joinIntoString(". ").toStdString();
+                }
+                else
+                {
+                    message = "Available plugins (" + std::to_string(plugins.size()) + ")\n";
+                    for(auto const& plugin : plugins)
+                    {
+                        message += "\nPlugin\n";
+                        message += "------\n";
+                        message += "Name: " + plugin.second.name.toStdString() + "\n";
+                        message += "Category: " + plugin.second.category.toStdString() + "\n";
+                        message += "Description: " + plugin.second.details.toStdString() + "\n";
+                        message += "Developer: " + plugin.second.maker.toStdString() + "\n";
+                        message += "Key:\n";
+                        message += "  Identifier: " + plugin.first.identifier + "\n";
+                        message += "  Feature: " + plugin.first.feature + "\n";
+                    }
+                }
+            }
+            nlohmann::json content;
+            content["text"] = message;
+            response["content"].push_back(content);
+            return response;
+        }
+        if(toolName == "get_vamp_plugin_descriptions")
+        {
+            if(!methodParams.contains("arguments") || !methodParams.at("arguments").is_object())
+            {
+                return createError("The 'arguments' field is required and must be an object.");
+            }
+            auto const& arguments = methodParams.at("arguments");
+            if(!arguments.contains("keys") || !arguments.at("keys").is_array() || arguments.at("keys").empty())
+            {
+                return createError("The 'keys' argument is required and must be an array of objects containing an 'identifier' string field and a 'feature' string field.");
+            }
+            for(auto const& key : arguments.at("keys"))
+            {
+                if(!key.is_object() || !key.contains("identifier") || !key.at("feature").is_string() || !key.contains("identifier") || !key.at("identifier").is_string())
+                {
+                    return createError("The 'keys' argument is required and must be an array of objects containing an 'identifier' string field and a 'feature' string field.");
+                }
+            }
+            auto const keys = arguments.at("files").get<std::vector<Plugin::Key>>();
+            auto const results = juce::MessageManager::callSync([&]() -> std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray>
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        return Instance::get().getPluginListScanner().getPlugins(48000.0, false);
+                                                                    }
+                                                                    catch(std::exception const& e)
+                                                                    {
+                                                                        return std::make_tuple(std::map<Plugin::Key, Plugin::Description>{}, juce::StringArray{e.what()});
+                                                                    }
+                                                                });
+            nlohmann::json response;
+            response["isError"] = false;
+            response["content"] = nlohmann::json::array();
+            std::string message;
+            if(!results.has_value())
+            {
+                response["isError"] = true;
+                message = "The scan of the plugin list failed.";
+            }
+            else
+            {
+                auto const& plugins = std::get<0_z>(results.value());
+                auto const& errors = std::get<1_z>(results.value());
+                if(!errors.isEmpty())
+                {
+                    response["isError"] = true;
+                    message = errors.joinIntoString(". ").toStdString();
+                }
+                else
+                {
+                    message = "Plugin descriptions\n";
+                    auto const addHeader = [&](size_t indent, std::string const& header)
+                    {
+                        while(indent-- > 0)
+                        {
+                            message += " ";
+                        }
+                        message += header + ":\n";
+                    };
+                    auto const addAttr = [&](size_t indent, std::string const& prefix, auto const& value)
+                    {
+                        using T = std::decay_t<decltype(value)>;
+                        if constexpr(std::is_same_v<T, std::string>)
+                        {
+                            if(!value.empty())
+                            {
+                                while(indent-- > 0)
+                                {
+                                    message += " ";
+                                }
+                                message += prefix + ": " + value + "\n";
+                            }
+                        }
+                        else if constexpr(std::is_same_v<T, juce::String>)
+                        {
+                            if(!value.isEmpty())
+                            {
+                                while(indent-- > 0)
+                                {
+                                    message += " ";
+                                }
+                                message += prefix + ": " + value.toStdString() + "\n";
+                            }
+                        }
+                        else
+                        {
+                            while(indent-- > 0)
+                            {
+                                message += " ";
+                            }
+                            message += prefix + ": " + std::to_string(value) + "\n";
+                        }
+                    };
+                    for(auto const& key : keys)
+                    {
+                        auto const it = plugins.find(key);
+                        if(it != plugins.cend())
+                        {
+                            auto const& description = it->second;
+                            message += "\nPlugin\n";
+                            message += "------\n";
+                            addHeader(0, "Key");
+                            addAttr(2, "Identifier", key.identifier);
+                            addAttr(2, "Feature", key.feature);
+                            addAttr(0, "Name", description.name);
+                            addAttr(0, "Developer", description.maker);
+                            addAttr(0, "Version", description.version);
+                            addAttr(0, "Category", description.category);
+                            addAttr(0, "Description", description.details);
+                            addAttr(0, "Copyright", description.copyright);
+                            auto const& parameters = description.parameters;
+                            if(!parameters.empty())
+                            {
+                                addHeader(0, "Parameters (" + std::to_string(parameters.size()) + ")");
+                                for(auto const& parameter : parameters)
+                                {
+                                    addHeader(2, "Parameter");
+                                    addAttr(4, "Identifier", parameter.identifier);
+                                    addAttr(4, "Name", parameter.name);
+                                    addAttr(4, "Description", parameter.description);
+                                    addAttr(4, "Unit", parameter.unit);
+                                    addAttr(4, "Min. Value", parameter.minValue);
+                                    addAttr(4, "Max. Value", parameter.maxValue);
+                                    addAttr(4, "Default Value", parameter.defaultValue);
+                                    if(parameter.isQuantized)
+                                    {
+                                        addAttr(4, "Value Quantization Step", parameter.quantizeStep);
+                                        auto const& valueNames = parameter.valueNames;
+                                        if(!valueNames.empty() && std::any_of(valueNames.cbegin(), valueNames.cend(), [](auto const& name)
+                                                                              {
+                                                                                  return !name.empty();
+                                                                              }))
+                                        {
+                                            juce::StringArray names;
+                                            names.ensureStorageAllocated(static_cast<int>(valueNames.size()));
+                                            for(auto const& name : valueNames)
+                                            {
+                                                names.add(name);
+                                            }
+                                            addAttr(4, "Value Names", names.joinIntoString(", "));
+                                        }
+                                    }
+                                }
+                            }
+                            {
+                                auto const& output = description.output;
+                                addHeader(0, "Output");
+                                addAttr(2, "Name", output.name);
+                                addAttr(2, "Description", output.description);
+                                addAttr(2, "Unit", output.unit);
+                                auto const frameType = Track::Tools::getFrameType(output);
+                                if(frameType.has_value())
+                                {
+                                    addAttr(2, "Type", std::string(magic_enum::enum_name(frameType.value())));
+                                    if(frameType.value() == Track::FrameType::vector)
+                                    {
+                                        addAttr(2, "Num. Bins", output.binCount);
+                                    }
+                                }
+                            }
+                            auto const& extraOutputs = description.extraOutputs;
+                            if(!extraOutputs.empty())
+                            {
+                                addHeader(0, "Extra Outputs (" + std::to_string(extraOutputs.size()) + ")");
+                                for(auto const& extraOutput : extraOutputs)
+                                {
+                                    addHeader(2, "Extra Outputs");
+                                    addAttr(4, "Identifier", extraOutput.identifier);
+                                    addAttr(4, "Name", extraOutput.name);
+                                    addAttr(4, "Description", extraOutput.description);
+                                    addAttr(4, "Unit", extraOutput.unit);
+                                    if(extraOutput.hasKnownExtents)
+                                    {
+                                        addAttr(4, "Min. Value", extraOutput.minValue);
+                                        addAttr(4, "Max. Value", extraOutput.maxValue);
+                                    }
+                                    if(extraOutput.isQuantized)
+                                    {
+                                        addAttr(4, "Value Quantization Step", extraOutput.quantizeStep);
+                                    }
+                                }
+                            }
+                            auto const& inputs = description.inputs;
+                            if(!inputs.empty())
+                            {
+                                addHeader(0, "Inputs (" + std::to_string(inputs.size()) + ")");
+                                for(auto const& input : inputs)
+                                {
+                                    addHeader(0, "Input");
+                                    addAttr(2, "Name", input.name);
+                                    addAttr(2, "Description", input.description);
+                                    auto const frameType = Track::Tools::getFrameType(input);
+                                    if(frameType.has_value())
+                                    {
+                                        addAttr(2, "Type", std::string(magic_enum::enum_name(frameType.value())));
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            response["isError"] = true;
+                            message = "The scan of the plugin list failed.";
+                        }
+                    }
                 }
             }
             nlohmann::json content;
