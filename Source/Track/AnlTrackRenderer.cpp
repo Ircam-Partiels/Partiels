@@ -179,7 +179,7 @@ namespace Track
         void paintExternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification);
 
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit);
+        void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<std::optional<float>> const& thresholds, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, std::function<float(float)> scaleValue, ColourSet const& colours, float lineWidth, juce::String const& unit);
         void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
@@ -488,7 +488,6 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
 {
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = accessor.getAttr<AttrType::graphicsSettings>().colours;
-    auto const& unit = Tools::getUnit(accessor);
     auto const& labelLayout = accessor.getAttr<AttrType::graphicsSettings>().labelLayout;
 
     auto const& thesholds = accessor.getAttr<AttrType::extraThresholds>();
@@ -499,7 +498,7 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
         auto* data = std::get_if<std::vector<Result::Data::Marker>>(&edition.data);
         if(data != nullptr && !data->empty())
         {
-            paintMarkers(g, bounds, *data, thesholds, timeRange, {}, colours, labelLayout, lineWidth, unit);
+            paintMarkers(g, bounds, *data, thesholds, timeRange, {}, colours, labelLayout, lineWidth);
         }
     }
 
@@ -512,11 +511,11 @@ void Track::Renderer::paintMarkers(Accessor const& accessor, size_t channel, juc
     auto const markers = results.getMarkers();
     if(markers != nullptr && markers->size() > channel)
     {
-        paintMarkers(g, bounds, markers->at(channel), thesholds, timeRange, edition.range, colours, labelLayout, lineWidth, unit);
+        paintMarkers(g, bounds, markers->at(channel), thesholds, timeRange, edition.range, colours, labelLayout, lineWidth);
     }
 }
 
-void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth, juce::String const& unit)
+void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, std::vector<std::optional<float>> const& thresholds, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, LabelLayout const& labelLayout, float lineWidth)
 {
     auto const clipBounds = g.getClipBounds().toFloat();
     if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty())
@@ -597,7 +596,7 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 
             if(showLabel && !std::get<2>(*it).empty())
             {
-                auto const text = juce::String(std::get<2>(*it)) + unit;
+                auto const text = juce::String(std::get<2>(*it));
                 auto const textX = static_cast<int>(std::round(x)) + 2;
                 auto const textWidth = juce::GlyphArrangement::getStringWidthInt(font, text);
                 if(labels.empty())
