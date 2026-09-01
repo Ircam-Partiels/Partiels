@@ -45,7 +45,7 @@ Alongside Partiels, a wide range of analyses based on audio engines developed at
 
 ## Compatibility
 
-Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
+Partiels is compatible on MacOS 10.15 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
 
 <p align="center"><img src="BinaryData/Resource/Partiels-Compatibility.png"></p>
 
@@ -108,6 +108,9 @@ Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.
 - **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
 - **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
 - **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** by ggml-org organization.
+- **[md4c](https://github.com/mity/md4c) by Martin Mitáš.
+- **[hnswlib](https://github.com/nmslib/hnswlib) by Apoorv Sharma, Abhishek Tayal and Yury Malkov.
 
 ## Publications and Video Presentations
 
