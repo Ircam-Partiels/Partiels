@@ -94,3 +94,10 @@ Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.
 - **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
 - **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
 - **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** by ggml-org organization.
+- **[md4c](https://github.com/mity/md4c)** by Martin Mitáš.
+- **[hnswlib](https://github.com/nmslib/hnswlib)** by Apoorv Sharma, Abhishek Tayal and Yury Malkov.
+
+### Models (downloaded on demand by Neuralyzer):
+- **[Qwen3.5](https://huggingface.co/Qwen/Qwen3.5-9B)** and **[Qwen3.8](https://huggingface.co/Qwen/Qwen3.8-27B)** by Qwen Team, Alibaba Cloud (Apache 2.0), GGUF versions by [Unsloth](https://huggingface.co/unsloth).
+- **[BGE-M3](https://huggingface.co/BAAI/bge-m3)** (MIT) and **[BGE Reranker v2 M3](https://huggingface.co/BAAI/bge-reranker-v2-m3)** (Apache 2.0) by BAAI, GGUF versions by [GPUStack](https://huggingface.co/gpustack).
