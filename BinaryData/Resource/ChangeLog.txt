@@ -1,4 +1,24 @@
 
+* Fix: Fix support for bundle format Vamp plugins (Linux/Windows)
+
+v2.5.1
+
+* Fix: Fix the conversion of input results when the type is not defined
+* Fix: Fix the display of segments when result values exceed the acceptable ranges
+* Fix: Minor code correction
+* Imp: Ignore the unit when rendering markers
+* Imp: Update JUCE to version 9.0.1
+* Imp: Update mozilla-actions/sccache-action from version 0.0.10 to 0.0.11
+* Imp: Update actions/setup-node from version 6 to 7
+* Imp: Make minor changes to the code interface
+* Imp: Improve default file names when exporting
+* Add: Add an option to use specific track names in CSV file headers during export
+* Imp: Enhance Tooltip functionality with CallOutBox and MessageBox methods
+* Imp: Update JUCE to version 8.0.14
+* Imp: Improve the naming of new plugin tracks
+
+v2.5.0
+
 - Add: Add support for multiple input tracks
 - Add: Add manual marker duration editing
 - Add: Add support for bundle format Vamp plugins
