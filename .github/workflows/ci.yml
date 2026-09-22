@@ -195,6 +195,25 @@ jobs:
         appdmg "${{ github.workspace }}/BinaryData/Resource/macos-dmg-config.json" "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun rez -append "${{ github.workspace }}/BinaryData/Resource/macos-dmg-icon.rsrc" -o "${{ github.workspace }}/build/Partiels-MacOS.dmg"
         xcrun setFile -a C "${{ github.workspace }}/build/Partiels-MacOS.dmg"
+    - name: Build Installer Package (no signing)
+      if: ${{ env.is_notarized == 'false' }}
+      run: |
+        version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${{ github.workspace }}/build/Partiels.app/Contents/Info.plist")
+        pkgbuild --component "${{ github.workspace }}/build/Partiels.app" --version "$version" --identifier fr.ircam.dev.partiels --install-location /Applications "${{ github.workspace }}/build/Partiels-MacOS.pkg"
+    - name: Build Installer Package
+      if: ${{ env.is_notarized == 'true' }}
+      run: |
+        version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${{ github.workspace }}/build/Partiels.app/Contents/Info.plist")
+        pkgbuild --component "${{ github.workspace }}/build/Partiels.app" --version "$version" --identifier fr.ircam.dev.partiels --install-location /Applications --sign "Developer ID Installer: INST RECHER COORD ACOUST MUSICALE (${{ secrets.DEV_TEAM_APPLE_ID }})" "${{ github.workspace }}/build/Partiels-MacOS.pkg"
+    - name: Notarize Installer Package
+      if: ${{ env.is_notarized == 'true' }}
+      run: |
+        xcrun notarytool submit "${{ github.workspace }}/build/Partiels-MacOS.pkg" --keychain-profile "notary-installer" --wait > "${{ github.workspace }}/build/notarize.log" 2>&1
+        cat "${{ github.workspace }}/build/notarize.log"
+        notaryid=$(awk '/^  id:/{sub(/^  id:/ , ""); print; exit}' "${{ github.workspace }}/build/notarize.log")
+        xcrun notarytool log $notaryid --keychain-profile "notary-installer"
+        xcrun stapler staple "${{ github.workspace }}/build/Partiels-MacOS.pkg"
+        xcrun stapler validate "${{ github.workspace }}/build/Partiels-MacOS.pkg"
     - name: Package dSYM Archive
       run: ditto -c -k --keepParent "${{ github.workspace }}/build/Partiels_artefacts/${{ env.build_type }}/Partiels.app.dSYM" "${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip"
     - name: Notarize Disk Image
@@ -212,6 +231,7 @@ jobs:
         name: Partiels-MacOS
         path: |
             ${{ github.workspace }}/build/Partiels-MacOS.dmg
+            ${{ github.workspace }}/build/Partiels-MacOS.pkg
             ${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip
     - name: Release
       uses: softprops/action-gh-release@v3
@@ -224,6 +244,7 @@ jobs:
         body_path: ${{ github.workspace }}/build/Partiels-Release.md
         files: |
           ${{ github.workspace }}/build/Partiels-MacOS.dmg
+          ${{ github.workspace }}/build/Partiels-MacOS.pkg
           ${{ github.workspace }}/build/Partiels-MacOS.dSYM.zip
   # Generates the documentation.
   Doc:
