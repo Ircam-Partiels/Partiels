@@ -60,7 +60,7 @@ jobs:
     - uses: seanmiddleditch/gha-setup-ninja@master
     - run: sudo apt install imagemagick
     - name: Prepare
-      run: sudo apt update && sudo apt install build-essential libasound2-dev libjack-jackd2-dev ladspa-sdk libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libglu1-mesa-dev mesa-common-dev libxi-dev
+      run: sudo apt update && sudo apt install build-essential libasound2-dev libjack-jackd2-dev ladspa-sdk libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libglu1-mesa-dev mesa-common-dev libxi-dev libwebkit2gtk-4.1-dev
     - name: Configure
       run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
     - name: Build
@@ -91,10 +91,14 @@ jobs:
       with:
         submodules: recursive
     - uses: mozilla-actions/sccache-action@v0.0.11
+    - uses: nuget/setup-nuget@v2
+      with:
+        nuget-version: 5.0.0
     - run: choco install imagemagick -fy -d
     - run: choco install innosetup -fy -d
+    - run: nuget install Microsoft.Web.WebView2 -OutputDirectory "$env:GITHUB_WORKSPACE/packages"
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.version_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
+      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.version_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI" "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=$($env:GITHUB_WORKSPACE -replace '\\','/')/packages"
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
     - name: Test
@@ -128,7 +132,7 @@ jobs:
             deployment_target: '12.0'
           - name: MacOS-Intel
             arch: x86_64
-            deployment_target: '10.13'
+            deployment_target: '10.15'
     steps:
     - name: Checkout
       uses: actions/checkout@v7
