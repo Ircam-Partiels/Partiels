@@ -8,11 +8,11 @@ Use these project-specific notes before searching the tree or running ad-hoc com
 
 ## Build and Test Fast Path
 - Configure (prefer Debug for faster builds/tests): 
-  - macOS: `cmake -B build -G Xcode` 
-  - Windows: `cmake -B build -G "Visual Studio 17 2022"`
-  - Linux: `cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`. Linux needs JUCE deps (see [JUCE/docs/Linux Dependencies.md](../JUCE/docs/Linux%20Dependencies.md)).
-- Build: `cmake --build build` (add `--config Debug` when using Xcode/Visual Studio; Debug is selected at configure time for Ninja). 
-- Run tests: `ctest -C Debug -VV --test-dir build --output-on-failure` (≈20s). Set `VAMP_PATH=build/VampPlugins/Debug:build/Debug` (on Windows, use `;` instead of `:`) for plugin-dependent tests.
+  - macOS: `cmake -B build-agent -G Ninja -DCMAKE_BUILD_TYPE=Debug` (Xcode is slower but allows GUI debugging; Ninja is faster and headless).
+  - Windows: `cmake -B build-agent -G "Visual Studio 17 2022"`
+  - Linux: `cmake -B build-agent -G Ninja -DCMAKE_BUILD_TYPE=Debug`. Linux needs JUCE deps (see [JUCE/docs/Linux Dependencies.md](../JUCE/docs/Linux%20Dependencies.md)).
+- Build: `cmake --build build-agent` (add `--config Debug` when using Xcode/Visual Studio; Debug is selected at configure time for Ninja). 
+- Run tests: `ctest -C Debug -VV --test-dir build-agent --output-on-failure` (≈20s). Set `VAMP_PATH=build-agent/VampPlugins/Debug:build-agent/Debug` (on Windows, use `;` instead of `:`) for plugin-dependent tests.
 
 ## Running the App
 - CLI artifacts: [build/Partiels_artefacts/Debug/Partiels](../build/Partiels_artefacts/Debug/Partiels) (use `--version`, `--help`, `--plugin-list --format=json`).
