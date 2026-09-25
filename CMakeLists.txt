@@ -418,6 +418,10 @@ set(WHISPER_URL "https://github.com/Ircam-Partiels/whisper-vamp-plugin")
 set(WHISPER_TAG "4.0.0")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- Whisper Vamp Plugin: [Linux](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Linux.tar.gz) / [MacOS](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-MacOS.pkg) / [Windows](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Windows.exe) / [Manual](${WHISPER_URL}/releases/download/${WHISPER_TAG}/Whisper-Manual.zip)\n") 
 
+set(IPT_URL "https://github.com/Ircam-Partiels/ipt-vamp-plugin")
+set(IPT_TAG "1.2.0")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "- IPT Vamp Plugin: [Linux](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Linux.tar.gz) / [MacOS](${IPT_URL}/releases/download/${IPT_TAG}/IPT-MacOS.pkg) / [Windows](${IPT_URL}/releases/download/${IPT_TAG}/IPT-Windows.exe)\n")
+
 ### Testing ###
 if(NOT PARTIELS_MANUAL_ONLY)
     enable_testing()
