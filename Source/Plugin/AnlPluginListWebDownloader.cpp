@@ -7,7 +7,7 @@ PluginList::WebDownloader::~WebDownloader()
     if(mProcess.valid())
     {
         mShouldQuit = true;
-        mProcess.get();
+        [[maybe_unused]] auto const result = mProcess.get();
     }
 }
 
