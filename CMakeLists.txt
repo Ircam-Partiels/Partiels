@@ -396,7 +396,7 @@ add_custom_target(PartielsPatchs COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_
 ### Publishing ###
 set(PROJECT_URL "https://github.com/Ircam-Partiels/Partiels")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "## Downloads\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels: [Linux](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz) / [MacOS](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS.dmg) / [Windows](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe) / [Manual](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf) / [Patchs](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Patchs.zip)\n") 
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Partiels: [Linux](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Linux.tar.gz) / [MacOS (ARM)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-ARM.dmg) / [MacOS (Intel)](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-MacOS-Intel.dmg) / [Windows](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Windows.exe) / [Manual](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Manual.pdf) / [Patchs](${PROJECT_URL}/releases/download/${PARTIELS_BUILD_TAG}/Partiels-Patchs.zip)\n") 
 
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Release.md "### Vamp Plugins:\n")
 
