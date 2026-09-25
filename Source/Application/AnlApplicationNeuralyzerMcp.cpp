@@ -424,37 +424,6 @@ namespace Application::Neuralyzer::Mcp
                     auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
                     track["identifier"] = trackIdentifier;
                     track["name"] = trackAcsr.getAttr<Track::AttrType::name>();
-                    if(deep)
-                    {
-                        to_json(track["description"], trackAcsr.getAttr<Track::AttrType::description>());
-                        sanitizePluginDescription(track["description"]);
-                        to_json(track["parameters"], trackAcsr.getAttr<Track::AttrType::state>().parameters);
-                        if(Track::Tools::supportsInputTracks(trackAcsr))
-                        {
-                            track["inputs"] = trackAcsr.getAttr<Track::AttrType::inputs>();
-                        }
-                        auto const frameType = Track::Tools::getFrameType(trackAcsr);
-                        if(frameType.has_value())
-                        {
-                            switch(frameType.value())
-                            {
-                                case Track::FrameType::label:
-                                    track["type"] = "label";
-                                    break;
-                                case Track::FrameType::value:
-                                    track["type"] = "value";
-                                    break;
-                                case Track::FrameType::vector:
-                                    track["type"] = "vector";
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            response["isError"] = true;
-                            track["type"] = "Unknown track type, cannot determine the type of value. Either the track is invalid or the analysis is still running.";
-                        }
-                    }
                     tracks.push_back(std::move(track));
                 }
                 group["tracks"] = tracks;
