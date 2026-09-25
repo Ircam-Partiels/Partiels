@@ -4,6 +4,7 @@ if(UNIX AND NOT APPLE)
     set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
+set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_XCODE_GENERATE_SCHEME true)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
 set(CMAKE_XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES")
@@ -129,14 +130,60 @@ if(PARTIELS_MANUAL_ONLY)
 endif()
 
 ### Application ###
+#### Dependencies
 set(VAMP_SDK_PATH "${CMAKE_SOURCE_DIR}/Dependencies/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "ggml: build shared libraries" FORCE)
+set(GGML_USE_METAL ON CACHE BOOL "ggml: use Metal" FORCE)
+set(GGML_NATIVE OFF CACHE BOOL "ggml: optimize the build for the current system" FORCE)
+option(GGML_METAL_EMBED_LIBRARY "ggml: embed Metal library" ON)
+option(GGML_LTO "ggml: use LTO" ON)
+option(GGML_OPENMP "ggml: use OpenMP" OFF)
+option(GGML_CCACHE "ggml: use ccache" OFF)
+if(APPLE)
+    option(GGML_BLAS "ggml: use BLAS" OFF)
+endif()
+option(GGML_CPU  "ggml: enable CPU backend" ON)
+option(LLAMA_BUILD_COMMON "llama: build common utils library" ON)
+option(LLAMA_BUILD_MTMD "llama: build tools/mtmd library standalone" ON)
+option(LLAMA_HTTPLIB    "llama: httplib for downloading functionality" OFF)
+option(LLAMA_OPENSSL    "llama: use openssl to support HTTPS" OFF)
+option(BUILD_MD2HTML_EXECUTABLE "Whether to compile the md2html executable" OFF)
+set(MTMD_VIDEO OFF CACHE BOOL "enable video support in mtmd (requires ffmpeg binary in PATH)" FORCE)
+
 add_subdirectory(JUCE)
+add_subdirectory(Dependencies/llama.cpp)
+add_subdirectory(Dependencies/hnswlib)
 add_subdirectory(Dependencies/ircam-vamp-extension)
+add_subdirectory(Dependencies/md4c)
 add_subdirectory(Dependencies/sdif)
 include(Dependencies/Misc/Misc.cmake)
 add_subdirectory(VampPlugins)
 
+# Set specific compile options and properties for ggml and llama targets
+function(set_ggml_options)
+    foreach(target IN LISTS ARGN)
+        if(CMAKE_GENERATOR STREQUAL "Xcode")
+            target_compile_options(${target} PRIVATE -Wno-shorten-64-to-32 -Wno-implicit-float-conversion -Wno-shadow-field-in-constructor -Wno-missing-noreturn -Wno-unused-parameter)
+            set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION "NO")
+            set_target_properties(${target} PROPERTIES STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols")
+        elseif(UNIX)
+            target_compile_options(${target} PRIVATE -Wno-unused-function -Wno-unused-parameter)
+        elseif(MSVC)
+            target_compile_options(${target} PRIVATE /wd4005 /wd4244 /wd4305)
+        endif()
+    endforeach()
+endfunction()
+
+if(APPLE)
+    set_ggml_options(llama ggml ggml-metal ggml-cpu ggml-base llama-common mtmd)
+elseif(UNIX)
+    set_ggml_options(ggml llama-common)
+elseif(MSVC)
+    set_ggml_options(llama ggml ggml-base ggml-cpu llama-common)
+endif()
+
+#### Partiels Application
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
     VERSION                             ${PARTIELS_VERSION_STRING}
@@ -183,6 +230,8 @@ target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources})
 target_compile_definitions(Partiels PRIVATE
     APP_DOC_PREFIX="ptl"
     DONT_SET_USING_JUCE_NAMESPACE=1
+    JUCE_CATCH_UNHANDLED_EXCEPTIONS=1
+    JUCE_DISABLE_JUCE_VERSION_PRINTING=1
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_LOG_ASSERTIONS=0
@@ -195,6 +244,7 @@ target_compile_definitions(Partiels PRIVATE
     JUCE_DIRECTSOUND=1
     JUCE_ASIO=1
     MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
+    MISC_IGNORE_ASSERT=0
     PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
     PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
     )
@@ -226,6 +276,17 @@ juce_add_binary_data(AnlIconsData HEADER_NAME "AnlIconsData.h" NAMESPACE AnlIcon
 file(GLOB PartielsCursorsDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Cursors/*.png)
 juce_add_binary_data(AnlCursorsData HEADER_NAME "AnlCursorsData.h" NAMESPACE AnlCursorsData SOURCES ${PartielsCursorsDataSources})
 
+file(GLOB PartielsNeuralyzerDataSources
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.json
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.md
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/*.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/Partiels-Manual.md
+    )
+juce_add_binary_data(AnlNeuralyzerData HEADER_NAME "AnlNeuralyzerData.h" NAMESPACE AnlNeuralyzerData SOURCES ${PartielsNeuralyzerDataSources})
+
+file(GLOB PartielsNeuralyzerTutorialDataSources ${PARTIELS_BINARYDATA_DIRECTORY}/Neuralyzer/Tutorials/*.md)
+juce_add_binary_data(AnlNeuralyzerTutorialData HEADER_NAME "AnlNeuralyzerTutorialData.h" NAMESPACE AnlNeuralyzerTutorialData SOURCES ${PartielsNeuralyzerTutorialDataSources})
+
 file(GLOB TestResultsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.lab
@@ -234,21 +295,29 @@ file(GLOB TestResultsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.txt
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.sdif
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.jinja
     )
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
 target_link_libraries(Partiels PRIVATE
     ive_host_static
+    llama-common
+    mtmd
+    hnswlib::hnswlib
+    md4c
     sdif
     MiscData
     TestResultsData
     AnlResourceData
     AnlIconsData
     AnlCursorsData
+    AnlNeuralyzerData
+    AnlNeuralyzerTutorialData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
     juce::juce_osc
+    juce::juce_cryptography
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
