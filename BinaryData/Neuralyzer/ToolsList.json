@@ -135,13 +135,7 @@
       "description": "Get the current document state with all groups and tracks",
       "inputSchema": {
         "type": "object",
-        "properties": {
-          "deep": {
-            "type": "boolean",
-            "description": "Include detailed track information (descriptions, parameters, inputs). Defaults to false",
-            "default": false
-          }
-        },
+        "properties": {},
         "required": [],
         "additionalProperties": false
       },
@@ -175,22 +169,6 @@
                       "name": {
                         "type": "string",
                         "description": "The name of the track"
-                      },
-                      "description": {
-                        "type": "object",
-                        "description": "The description of the track"
-                      },
-                      "parameters": {
-                        "type": "object",
-                        "description": "Map of parameter identifiers to their current values"
-                      },
-                      "input": {
-                        "type": "string",
-                        "description": "The identifier of the input track (empty string if no input)"
-                      },
-                      "type": {
-                        "type": "string",
-                        "description": "The type of the track (label, value, or vector)"
                       }
                     },
                     "additionalProperties": false
