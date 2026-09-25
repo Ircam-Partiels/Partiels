@@ -86,7 +86,7 @@ Application::ExporterContent::~ExporterContent()
     mComponentListener.detachFrom(mExporterPanel);
     if(mProcess.valid())
     {
-        mProcess.get();
+        [[maybe_unused]] auto const result = mProcess.get();
     }
 }
 

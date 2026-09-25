@@ -404,7 +404,7 @@ void Track::Loader::abortLoading()
     {
         MiscWeakAssert(mShouldAbort.load() == false);
         mShouldAbort.store(true);
-        mLoadingProcess.get();
+        [[maybe_unused]] auto const result = mLoadingProcess.get();
         cancelPendingUpdate();
 
         if(onLoadingAborted != nullptr)
