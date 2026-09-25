@@ -277,6 +277,7 @@ target_enable_xcode_full_warnings(partiels-vamp-plugins)
 if(WIN32)
     target_compile_options(Partiels PRIVATE /wd4244)
 elseif(APPLE)
+elseif(CMAKE_GENERATOR STREQUAL "Xcode")
     target_compile_options(Partiels PRIVATE -fno-aligned-allocation)
 endif()
 
