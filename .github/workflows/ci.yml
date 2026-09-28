@@ -82,7 +82,7 @@ jobs:
         files: ${{ github.workspace }}/build/Partiels-Linux.tar.gz
   # Compiles, tests and packages the plugin for Windows.
   Windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: Format
     steps:
     - uses: actions/checkout@v7
