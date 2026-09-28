@@ -92,9 +92,9 @@ jobs:
     - run: choco install imagemagick -fy -d
     - run: choco install innosetup -fy -d
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DPARTIELS_BUILD_TAG="${{ env.version_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
+      run: cmake -B ${{ github.workspace }}/build -G "Ninja" -DCMAKE_BUILD_TYPE=${{ env.build_type }} -A x64 -DPARTIELS_BUILD_TAG="${{ env.version_name }}" -DImageMagick_DIR=PATH:"C:/Program Files/ImageMagick-7.1.1-Q16-HDRI"
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
+      run: cmake --build ${{ github.workspace }}/build
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build --output-on-failure
     - name: Artifact
