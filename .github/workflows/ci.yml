@@ -159,23 +159,23 @@ jobs:
         rm ./Application_Partiels.provisionprofile
     - name: Configure (no signing)
       if: ${{ env.is_notarized == 'false' }}
-      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.deployment_target }} -DPARTIELS_BUILD_TAG=${{ env.version_name }}
+      run: cmake -B ${{ github.workspace }}/build -G "Ninja" -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.deployment_target }} -DPARTIELS_BUILD_TAG=${{ env.version_name }}
     - name: Configure
       if: ${{ env.is_notarized == 'true' }}
-      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.deployment_target }} -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PARTIELS_PROVISIONPROFILE_NAME }}" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
+      run: cmake -B ${{ github.workspace }}/build -G "Ninja"  -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.deployment_target }} -DPARTIELS_PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PARTIELS_PROVISIONPROFILE_NAME }}" -DPARTIELS_DEVELOPMENT_TEAM="${{ secrets.DEV_TEAM_APPLE_ID }}" -DPARTIELS_BUILD_TAG=${{ env.version_name }}
     - name: Build (no signing)
       if: ${{ env.is_notarized == 'false' }}
       run: |
-        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
-        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Build
       if: ${{ env.is_notarized == 'true' }}
       run: |
         security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
         security set-keychain-settings -lut 7200 buildagent
-        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
-        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Test
       run: |
