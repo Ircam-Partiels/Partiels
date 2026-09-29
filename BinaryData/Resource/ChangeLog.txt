@@ -1,4 +1,19 @@
 
+- Imp: Distribute Partiels as an installer package (pkg) in addition to the DMG file on macOS
+- Imp: Split the macOS universal binary into separate Intel and ARM binaries following the discontinuation of Intel support in macOS 27
+- Add: Include the Vamp IPT plugins in the release download links
+- Imp: Improve the instructions for Copilot
+- Fix: Remove several compilation warnings
+- Imp: Format the ChangeLog
+- Imp: Update JUCE to version 9.0.2
+- Imp: Improve CMake generation
+- Fix: Fix the blocking that occurs when scanning plugins
+- Fix: Fix the names of binaries when creating beta versions
+- Imp: Update JUCE to version 9.0.3
+- Fix: Fix the names of binaries when creating beta versions
+
+v2.5.2
+
 - Fix: Fix support for bundle format Vamp plugins (Linux/Windows)
 
 v2.5.1
