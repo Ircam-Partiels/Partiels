@@ -117,14 +117,6 @@ bool HideablePanel::keyPressed(juce::KeyPress const& key)
     return false;
 }
 
-void HideablePanel::inputAttemptWhenModal()
-{
-    if(!escapeKeyPressed())
-    {
-        juce::Component::inputAttemptWhenModal();
-    }
-}
-
 void HideablePanel::setContent(juce::String const& title, juce::Component* content)
 {
     if(content == nullptr)
@@ -170,14 +162,35 @@ void HideablePanelManager::resized()
     }
 }
 
+void HideablePanelManager::mouseDown(juce::MouseEvent const& e)
+{
+    auto const& animator = juce::Desktop::getInstance().getAnimator();
+    auto it = std::find_if(mHideablePanels.cbegin(), mHideablePanels.cend(), [&](std::reference_wrapper<HideablePanel> const& panel)
+                           {
+                               return panel.get().isVisible() && !animator.isAnimating(&panel.get());
+                           });
+    if(it != mHideablePanels.cend() && e.eventComponent != &(it->get()))
+    {
+        hide();
+    }
+}
+
 void HideablePanelManager::setContent(juce::Component* background, std::vector<std::reference_wrapper<HideablePanel>> panels)
 {
+    if(mBackground != nullptr)
+    {
+        mBackground->removeMouseListener(this);
+    }
     for(auto& panel : mHideablePanels)
     {
         mComponentListener.detachFrom(panel.get());
     }
     mHideablePanels = std::move(panels);
     mBackground = background;
+    if(mBackground != nullptr)
+    {
+        mBackground->addMouseListener(this, true);
+    }
     addAndMakeVisible(mBackground, 0);
     for(auto& panel : mHideablePanels)
     {
@@ -220,10 +233,6 @@ void HideablePanelManager::show(HideablePanel& panel)
     {
         if(std::addressof(cpanel.get()) != std::addressof(panel))
         {
-            if(cpanel.get().isCurrentlyModal())
-            {
-                exitModalState();
-            }
             delay = delay || cpanel.get().isVisible();
             animator.fadeOut(std::addressof(cpanel.get()), fadeTime);
         }
@@ -239,20 +248,12 @@ void HideablePanelManager::show(HideablePanel& panel)
                                         }
                                         juce::Desktop::getInstance().getAnimator().fadeIn(std::addressof(panel), fadeTime);
                                         panel.toFront(true);
-                                        if(!panel.isCurrentlyModal())
-                                        {
-                                            panel.enterModalState();
-                                        }
                                     });
     }
     else
     {
         juce::Desktop::getInstance().getAnimator().fadeIn(std::addressof(panel), fadeTime);
-        panel.toFront(true);
-        if(!panel.isCurrentlyModal())
-        {
-            panel.enterModalState();
-        }
+        panel.toFront(false);
     }
 }
 
@@ -265,10 +266,6 @@ void HideablePanelManager::hide()
     }
     for(auto& cpanel : mHideablePanels)
     {
-        if(cpanel.get().isCurrentlyModal())
-        {
-            cpanel.get().exitModalState();
-        }
         animator.fadeOut(std::addressof(cpanel.get()), fadeTime);
     }
     for(auto& window : mWindows)

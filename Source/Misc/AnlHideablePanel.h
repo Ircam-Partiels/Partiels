@@ -18,7 +18,6 @@ public:
     // juce::Component
     void resized() override;
     void childBoundsChanged(juce::Component* child) override;
-    void inputAttemptWhenModal() override;
     bool keyPressed(juce::KeyPress const& key) override;
 
 protected:
@@ -100,10 +99,11 @@ public:
 
     // juce::Component
     void resized() override;
+    void mouseDown(juce::MouseEvent const& e) override;
 
 private:
     ComponentListener mComponentListener;
-    juce::Component* mBackground;
+    juce::Component* mBackground = nullptr;
     std::vector<std::reference_wrapper<HideablePanel>> mHideablePanels;
     std::vector<juce::WeakReference<juce::Component>> mWindows;
 };
