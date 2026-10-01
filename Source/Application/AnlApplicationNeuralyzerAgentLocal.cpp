@@ -166,8 +166,8 @@ static void injectMessages(llama_context* context, mtmd_context* mtmd, std::vect
         while(position < tokens.size())
         {
             auto const size = std::min(batchSize, tokens.size() - position);
-            auto const batch = llama_batch_get_one(tokens.data() + position, static_cast<int32_t>(size));
-            auto const ret = llama_decode(context, batch);
+            auto batch = common_batch_get_one(context, tokens.data() + position, static_cast<int32_t>(size));
+            auto const ret = llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
             if(callback != nullptr && !callback())
             {
                 return;
@@ -203,8 +203,8 @@ static std::string retrieveMessage(llama_context* context, common_sampler* sampl
         {
             return response;
         }
-        auto const batch = llama_batch_get_one(&newTokenId, 1);
-        auto const ret = llama_decode(context, batch);
+        auto batch = common_batch_get_one(context, &newTokenId, 1);
+        auto const ret = llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
         MiscWeakAssert(ret == 0);
         if(ret != 0)
         {
