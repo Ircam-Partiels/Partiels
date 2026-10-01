@@ -317,6 +317,48 @@ juce::File Application::Neuralyzer::AgentLocal::getDefaultProjectorDirectory()
     return resolveDirectory(root).getChildFile("Projectors");
 }
 
+static std::set<juce::File> getHuggingFaceHubDirectories()
+{
+    auto const home = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userHomeDirectory);
+    std::set<juce::File> directories{
+        home.getChildFile(".cache/huggingface/hub"),
+        home.getChildFile("huggingface/hub")
+    };
+
+    auto const hubCache = juce::SystemStats::getEnvironmentVariable("HF_HUB_CACHE", {});
+    if(hubCache.isNotEmpty())
+    {
+        directories.insert(juce::File(hubCache));
+    }
+
+    auto const hfHome = juce::SystemStats::getEnvironmentVariable("HF_HOME", {});
+    if(hfHome.isNotEmpty())
+    {
+        directories.insert(juce::File(hfHome).getChildFile("hub"));
+    }
+    return directories;
+}
+
+static void addHuggingFaceSnapshotFiles(std::set<juce::File>& files, bool projectors)
+{
+    for(auto const& hubDirectory : getHuggingFaceHubDirectories())
+    {
+        auto const repositories = hubDirectory.findChildFiles(juce::File::TypesOfFileToFind::findDirectories, false, "models--*");
+        for(auto const& repository : repositories)
+        {
+            auto const snapshotDirectory = repository.getChildFile("snapshots");
+            auto const snapshotFiles = snapshotDirectory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
+            for(auto const& file : snapshotFiles)
+            {
+                if(file.getFileName().containsIgnoreCase("mmproj") == projectors)
+                {
+                    files.insert(file);
+                }
+            }
+        }
+    }
+}
+
 std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableModels()
 {
     std::set<juce::File> models;
@@ -331,6 +373,7 @@ std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableModels()
     };
     addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
     addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
+    addHuggingFaceSnapshotFiles(models, false);
     return models;
 }
 
@@ -348,6 +391,7 @@ std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableProjectors
     };
     addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
     addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
+    addHuggingFaceSnapshotFiles(models, true);
     return models;
 }
 
