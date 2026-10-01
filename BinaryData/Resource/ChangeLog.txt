@@ -11,6 +11,7 @@
 - Fix: Fix the names of binaries when creating beta versions
 - Imp: Update JUCE to version 9.0.3
 - Fix: Fix the names of binaries when creating beta versions
+- Fix: Fix the property panels that block other windows on macOS
 
 v2.5.2
 
