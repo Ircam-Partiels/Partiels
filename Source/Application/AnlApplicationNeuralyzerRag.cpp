@@ -1,6 +1,7 @@
 #include "AnlApplicationNeuralyzerRag.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationNeuralyzerModel.h"
+#include <common.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -447,28 +448,27 @@ float Application::Neuralyzer::Rag::Engine::computeRerankerScore(juce::String co
         tokens.resize(numBatch);
     }
 
-    auto batch = llama_batch_init(static_cast<int32_t>(tokens.size()), 0, 1);
+    common_batch batch(context);
     for(auto j = 0_z; j < tokens.size(); ++j)
     {
-        common_batch_add(batch, tokens[j], static_cast<llama_pos>(j), {0}, true);
+        batch.add(tokens[j], static_cast<llama_pos>(j), 0, true);
     }
 
     // Clear the memory cache before each new pair (no shared context between pairs)
     llama_memory_clear(llama_get_memory(context), true);
 
-    if(llama_decode(context, batch) < 0)
+    if(llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get()) != 0)
     {
         MiscWeakAssert(false);
-        llama_batch_free(batch);
         return 0.0f;
     }
 
     float score = -1e6;
-    for(auto i = 0; i < batch.n_tokens; ++i)
+    for(auto i = 0_z; i < batch.tokens.size(); ++i)
     {
-        if(batch.logits[i])
+        if(batch.tokens[i].output)
         {
-            auto const* embd = llama_get_embeddings_seq(context, batch.seq_id[i][0]);
+            auto const* embd = llama_get_embeddings_seq(context, batch.tokens[i].seq_id);
             MiscWeakAssert(embd != nullptr);
             if(embd == NULL)
             {
@@ -478,7 +478,6 @@ float Application::Neuralyzer::Rag::Engine::computeRerankerScore(juce::String co
             score = embd[0];
         }
     }
-    llama_batch_free(batch);
     auto const relevance = 1.0f / (1.0f + std::exp(-score));
     MiscDebug("Application::Neuralyzer::Rag::Engine", juce::String("Score: ") + juce::String(score) + " - Relecance: " + juce::String(relevance));
     return relevance;
