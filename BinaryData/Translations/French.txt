@@ -433,7 +433,7 @@ countries: fr be
 "Failed to decode generated messages" = "Échec du décodage des messages générés"
 "Failed to download the model NAME" = "Échec du téléchargement du modèle NAME"
 "Model Downloaded" = "Modèle téléchargé"
-"The model NAME and its projector have been successfully downloaded. You can now select them in the model and projector lists. Would you like to open the Neuralyzer settings panel to select it now?" = "Le modèle NAME et son projecteur a été téléchargé avec succès. Vous pouvez désormais le sélectionner dans la liste des modèles. Souhaitez-vous ouvrir le panneau de paramètres de Neuralyzer pour le sélectionner maintenant ?"
+"Model NAME and its projector have been downloaded. Would you like to open Neuralyzer settings to select the model now?" = "Le modèle NAME et son projecteur ont été téléchargés. Souhaitez-vous ouvrir les paramètres de Neuralyzer pour sélectionner ce modèle ?"
 "Close" = "Fermer"
 "The model file is not set." = "Le fichier du modèle n'est pas défini."
 "The model file does not exist: FLNAME" = "Le fichier du modèle n'existe pas : FLNAME"
