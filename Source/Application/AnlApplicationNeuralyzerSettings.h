@@ -27,7 +27,6 @@ namespace Application
             void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
             void showModelMenu();
-            void showProjectorMenu();
 
             Accessor& mAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
@@ -35,7 +34,6 @@ namespace Application
             ColouredPanel mBackendSeparator;
             PropertyText mRemoteUrl;
             PropertyList mModel;
-            PropertyList mProjector;
             PropertyNumber mContextSize;
             PropertyNumber mBatchSize;
             PropertyNumber mMinP;

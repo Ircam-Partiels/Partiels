@@ -31,7 +31,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                  mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
              })
 , mModel(juce::translate("Model"), juce::translate("The model used by Neuralyzer"), "", {}, nullptr)
-, mProjector(juce::translate("Projector"), juce::translate("Select the multimodal projector used to process images"), "", {}, nullptr)
 , mContextSize(juce::translate("Context Size"), juce::translate("The context size"), "", {static_cast<double>(minContextSize), static_cast<double>(maxContextSize)}, 1.0, [&](double value)
                {
                    auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
@@ -140,10 +139,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
     mModel.entry.setTextWhenNoChoicesAvailable(juce::translate("No model installed"));
     mModel.entry.onShowPopup = std::bind(&SettingsContent::showModelMenu, this);
     addAndMakeVisible(mModel);
-    mProjector.entry.setTextWhenNothingSelected(juce::translate("Select a projector"));
-    mProjector.entry.setTextWhenNoChoicesAvailable(juce::translate("No projector installed"));
-    mProjector.entry.onShowPopup = std::bind(&SettingsContent::showProjectorMenu, this);
-    addAndMakeVisible(mProjector);
     addAndMakeVisible(mContextSize);
     mContextSize.entry.setOptionalSupported(true, juce::translate("Default"));
     addAndMakeVisible(mBatchSize);
@@ -185,7 +180,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 mBackendSeparator.setVisible(backend != AgentBackend::none);
                 mRemoteUrl.setVisible(backend == AgentBackend::remote);
                 mModel.setVisible(backend != AgentBackend::none);
-                mProjector.setVisible(backend == AgentBackend::local);
                 mContextSize.setVisible(backend == AgentBackend::local);
                 mBatchSize.setVisible(backend == AgentBackend::local);
                 mMinP.setVisible(backend == AgentBackend::local);
@@ -280,14 +274,16 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
         auto const currentModel = modelInfo.modelFile;
         for(auto const& defaultModel : AgentLocal::getDefaultModelBundles())
         {
-
-            auto const modelName = defaultModel.name;
             auto const modelFile = defaultModel.modelFile;
             auto const displayName = toDisplayString(defaultModel.name);
-            auto const localModelIt = std::find_if(localModels.begin(), localModels.end(), [&](auto const& installedModel)
-                                                   {
-                                                       return installedModel.getFileName().toLowerCase() == defaultModel.modelFile.getFileName().toLowerCase();
-                                                   });
+            auto localModelIt = localModels.find(defaultModel.modelFile);
+            if(localModelIt == localModels.end())
+            {
+                localModelIt = std::find_if(localModels.begin(), localModels.end(), [&](auto const& installedModel)
+                                            {
+                                                return installedModel.getFileName().toLowerCase() == defaultModel.modelFile.getFileName().toLowerCase();
+                                            });
+            }
             if(localModelIt == localModels.end())
             {
                 static const auto downloadIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x8c\x90"); // 🌐
@@ -301,14 +297,17 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
             else
             {
                 auto const model = *localModelIt;
-                menu.addItem(displayName, true, model == currentModel, [=, this]()
+                auto modelDisplayName = displayName;
+                if(AgentLocal::getProjectorForModel(model).existsAsFile())
+                {
+                    static auto const multimodalIndicator = juce::String(juce::CharPointer_UTF8(" \xf0\x9f\x93\xb7"));
+                    modelDisplayName += multimodalIndicator;
+                }
+                menu.addItem(modelDisplayName, true, model == currentModel, [=, this]()
                              {
                                  mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
                                  ModelInfo newModelInfo(model);
-                                 if(defaultModel.projectorFile.existsAsFile())
-                                 {
-                                     newModelInfo.projectionFile = defaultModel.projectorFile;
-                                 }
+                                 newModelInfo.projectionFile = AgentLocal::getProjectorForModel(model);
                                  mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
                              });
                 localModels.erase(localModelIt);
@@ -321,11 +320,18 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
         }
         for(auto const& model : localModels)
         {
-            auto const displayName = toDisplayString(model.getFileNameWithoutExtension());
+            auto displayName = toDisplayString(model.getFileNameWithoutExtension());
+            if(AgentLocal::getProjectorForModel(model).existsAsFile())
+            {
+                static auto const multimodalIndicator = juce::String(juce::CharPointer_UTF8(" \xf0\x9f\x93\xb7"));
+                displayName += multimodalIndicator;
+            }
             menu.addItem(displayName, true, model == currentModel, [=, this]()
                          {
                              mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(model), NotificationType::synchronous);
+                             auto newModelInfo = ModelInfo(model);
+                             newModelInfo.projectionFile = AgentLocal::getProjectorForModel(model);
+                             mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
                          });
         }
     }
@@ -334,68 +340,6 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
     menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mModel.entry).withDeletionCheck(*this), [this](int)
                        {
                            mModel.entry.hidePopup();
-                       });
-}
-
-void Application::Neuralyzer::SettingsContent::showProjectorMenu()
-{
-    juce::PopupMenu menu;
-    auto const modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-    auto const currentProjector = modelInfo.projectionFile;
-    auto localProjectors = AgentLocal::getAvailableProjectors();
-    for(auto const& defaultModel : AgentLocal::getDefaultModelBundles())
-    {
-        auto const projectorName = defaultModel.name;
-        auto const projectorUrl = defaultModel.projectorUrl;
-        auto const projectorFile = defaultModel.projectorFile;
-        auto const displayName = toDisplayString(projectorName);
-        auto const localProjectorIt = std::find_if(localProjectors.begin(), localProjectors.end(), [&](auto const& installedProjector)
-                                                   {
-                                                       return installedProjector.getFileName().toLowerCase() == projectorFile.getFileName().toLowerCase();
-                                                   });
-        if(localProjectorIt == localProjectors.end())
-        {
-            static const auto downloadIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x8c\x90"); // 🌐
-            auto const isNotDownloading = !Instance::get().getNeuralyzerDownloaderManager().isDownloading(projectorFile);
-            menu.addItem(displayName + juce::String(downloadIndicator), isNotDownloading, false, [=]()
-                         {
-                             AgentLocal::downloadModelBundle(defaultModel, true);
-                         });
-        }
-        else
-        {
-            auto const projector = *localProjectorIt;
-            menu.addItem(displayName, true, projector == currentProjector, [=, this]()
-                         {
-                             mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                             auto newModelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                             newModelInfo.projectionFile = projector;
-                             mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
-                         });
-            localProjectors.erase(localProjectorIt);
-        }
-    }
-
-    if(menu.getNumItems() > 0 && !localProjectors.empty())
-    {
-        menu.addSeparator();
-    }
-    for(auto const& projector : localProjectors)
-    {
-        auto const displayName = toDisplayString(projector.getFileNameWithoutExtension());
-        menu.addItem(displayName, true, projector == currentProjector, [=, this]()
-                     {
-                         mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                         auto newModelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                         newModelInfo.projectionFile = projector;
-                         mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
-                     });
-    }
-    auto& lf = getLookAndFeel();
-    menu.setLookAndFeel(&lf);
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mProjector.entry).withDeletionCheck(*this), [this](int)
-                       {
-                           mProjector.entry.hidePopup();
                        });
 }
 
@@ -419,7 +363,6 @@ void Application::Neuralyzer::SettingsContent::resized()
     setBounds(mBackendSeparator);
     setBounds(mRemoteUrl);
     setBounds(mModel);
-    setBounds(mProjector);
     setBounds(mContextSize);
     setBounds(mBatchSize);
     setBounds(mMinP);
@@ -478,8 +421,20 @@ void Application::Neuralyzer::SettingsContent::handleCommandMessage([[maybe_unus
             auto const modelIt = localModels.find(modelInfo.modelFile);
             if(modelIt != localModels.cend() && modelIt->existsAsFile())
             {
-                auto const displayName = toDisplayString(modelIt->getFileNameWithoutExtension());
+                auto displayName = toDisplayString(modelIt->getFileNameWithoutExtension());
+                auto const associatedProjector = AgentLocal::getProjectorForModel(*modelIt);
+                if(associatedProjector.existsAsFile())
+                {
+                    static auto const multimodalIndicator = juce::String(juce::CharPointer_UTF8(" \xf0\x9f\x93\xb7"));
+                    displayName += multimodalIndicator;
+                }
                 mModel.entry.setText(displayName, juce::NotificationType::dontSendNotification);
+                if(modelInfo.projectionFile != associatedProjector)
+                {
+                    auto updatedModelInfo = modelInfo;
+                    updatedModelInfo.projectionFile = associatedProjector;
+                    mAccessor.setAttr<AttrType::modelInfo>(updatedModelInfo, NotificationType::synchronous);
+                }
             }
             else if(modelInfo.modelFile == juce::File{})
             {
@@ -497,28 +452,6 @@ void Application::Neuralyzer::SettingsContent::handleCommandMessage([[maybe_unus
                 mModel.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
             }
 
-            auto const localProjectors = AgentLocal::getAvailableProjectors();
-            auto const projectorIt = localProjectors.find(modelInfo.projectionFile);
-            if(projectorIt != localProjectors.cend() && projectorIt->existsAsFile())
-            {
-                auto const displayName = toDisplayString(projectorIt->getFileNameWithoutExtension());
-                mProjector.entry.setText(displayName, juce::NotificationType::dontSendNotification);
-            }
-            else if(modelInfo.modelFile == juce::File{})
-            {
-                mProjector.entry.setTextWhenNothingSelected(juce::translate("Select a projector"));
-                mProjector.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-            }
-            else if(!modelInfo.modelFile.existsAsFile())
-            {
-                mProjector.entry.setTextWhenNothingSelected(juce::translate("Projector cannot be found"));
-                mProjector.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                mProjector.entry.setTextWhenNothingSelected(juce::translate("Select a projector"));
-                mProjector.entry.setSelectedId(0, juce::NotificationType::dontSendNotification);
-            }
             break;
         }
         case AgentBackend::remote:

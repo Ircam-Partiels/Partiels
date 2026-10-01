@@ -311,19 +311,12 @@ juce::File Application::Neuralyzer::AgentLocal::getDefaultModelDirectory()
     return resolveDirectory(root).getChildFile("Models");
 }
 
-juce::File Application::Neuralyzer::AgentLocal::getDefaultProjectorDirectory()
-{
-    auto const root = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
-    return resolveDirectory(root).getChildFile("Projectors");
-}
-
 static std::set<juce::File> getHuggingFaceHubDirectories()
 {
     auto const home = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userHomeDirectory);
     std::set<juce::File> directories{
         home.getChildFile(".cache/huggingface/hub"),
-        home.getChildFile("huggingface/hub")
-    };
+        home.getChildFile("huggingface/hub")};
 
     auto const hubCache = juce::SystemStats::getEnvironmentVariable("HF_HUB_CACHE", {});
     if(hubCache.isNotEmpty())
@@ -368,7 +361,10 @@ std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableModels()
         auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
         for(auto const& model : listedModels)
         {
-            models.insert(model);
+            if(!model.getFileName().containsIgnoreCase("mmproj"))
+            {
+                models.insert(model);
+            }
         }
     };
     addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
@@ -377,30 +373,27 @@ std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableModels()
     return models;
 }
 
-std::set<juce::File> Application::Neuralyzer::AgentLocal::getAvailableProjectors()
+juce::File Application::Neuralyzer::AgentLocal::getProjectorForModel(juce::File const& modelFile)
 {
-    std::set<juce::File> models;
-    auto const addFilesFromDirectory = [&](juce::File const& root)
+    auto const directory = modelFile.getParentDirectory();
+    auto const candidates = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.gguf");
+    std::set<juce::File> projectors;
+    for(auto const& candidate : candidates)
     {
-        auto const directory = resolveDirectory(root).getChildFile("Projectors");
-        auto const listedModels = directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, "*.gguf");
-        for(auto const& model : listedModels)
+        if(candidate.getFileName().containsIgnoreCase("mmproj"))
         {
-            models.insert(model);
+            projectors.insert(candidate);
         }
-    };
-    addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory));
-    addFilesFromDirectory(juce::File::getSpecialLocation(juce::File::SpecialLocationType::commonApplicationDataDirectory));
-    addHuggingFaceSnapshotFiles(models, true);
-    return models;
+    }
+    return projectors.empty() ? juce::File{} : *projectors.begin();
 }
 
 std::vector<Application::Neuralyzer::AgentLocal::ModelBundle> Application::Neuralyzer::AgentLocal::getDefaultModelBundles()
 {
     static auto const modelURL = juce::String("https://huggingface.co/unsloth/MODELNAME-GGUF/resolve/main/MODELNAME-UD-Q4_K_M.gguf");
-    static auto const modelFile = getDefaultModelDirectory().getChildFile("MODELNAME-UD-Q4_K_M.gguf").getFullPathName();
+    static auto const modelFile = getDefaultModelDirectory().getChildFile("MODELNAME-UD").getChildFile("MODELNAME-UD-Q4_K_M.gguf").getFullPathName();
     static auto const projectordURL = juce::String("https://huggingface.co/unsloth/MODELNAME-GGUF/resolve/main/mmproj-BF16.gguf");
-    static auto const projectordFile = getDefaultProjectorDirectory().getChildFile("MODELNAME-UD-mmproj.gguf").getFullPathName();
+    static auto const projectordFile = getDefaultModelDirectory().getChildFile("MODELNAME-UD").getChildFile("MODELNAME-UD-mmproj.gguf").getFullPathName();
     static auto constexpr modelNames = {"Qwen3.5-9B", "Qwen3.6-27B", "Qwen3.6-35B-A3B"};
 
     static auto const bundles = [&]()
@@ -461,7 +454,7 @@ void Application::Neuralyzer::AgentLocal::downloadModelBundle(ModelBundle const&
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                                  .withTitle(juce::translate("Model Downloaded"))
-                                 .withMessage(juce::translate("The model NAME and its projector have been successfully downloaded. You can now select them in the model and projector lists. Would you like to open the Neuralyzer settings panel to select it now?").replace("NAME", bundle.name))
+                                 .withMessage(juce::translate("Model NAME and its projector have been downloaded. Would you like to open Neuralyzer settings to select the model now?").replace("NAME", bundle.name))
                                  .withButton(juce::translate("Open"))
                                  .withButton(juce::translate("Close"));
         juce::AlertWindow::showAsync(options, [](int windowResult)
@@ -490,11 +483,12 @@ void Application::Neuralyzer::AgentLocal::downloadModelBundle(ModelBundle const&
 
 void Application::Neuralyzer::AgentLocal::downloadDefaultModelIfNecessary()
 {
-    if(!getAvailableModels().empty() && !getAvailableProjectors().empty())
+    auto const defaultBundle = getDefaultModelBundle();
+    if(!defaultBundle.modelFile.existsAsFile() && !defaultBundle.projectorFile.existsAsFile() && !getAvailableModels().empty())
     {
         return;
     }
-    downloadModelBundle(getDefaultModelBundle(), false);
+    downloadModelBundle(defaultBundle, false);
 }
 
 Application::Neuralyzer::AgentLocal::AgentLocal(Mcp::Dispatcher& mcpDispatcher, Rag::Engine& ragEngine)

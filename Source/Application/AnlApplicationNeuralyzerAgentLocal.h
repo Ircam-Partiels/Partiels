@@ -44,9 +44,8 @@ namespace Application
             void setNotifyCallback(std::function<void()> callback) override;
 
             static juce::File getDefaultModelDirectory();
-            static juce::File getDefaultProjectorDirectory();
             static std::set<juce::File> getAvailableModels();
-            static std::set<juce::File> getAvailableProjectors();
+            static juce::File getProjectorForModel(juce::File const& modelFile);
 
             struct ModelBundle
             {
