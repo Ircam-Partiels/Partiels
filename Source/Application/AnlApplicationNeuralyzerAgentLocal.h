@@ -49,7 +49,6 @@ namespace Application
 
             struct ModelBundle
             {
-                juce::String name;
                 juce::URL modelUrl;
                 juce::File modelFile;
                 juce::URL projectorUrl;

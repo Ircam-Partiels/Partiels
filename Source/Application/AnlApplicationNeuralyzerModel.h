@@ -38,7 +38,7 @@ namespace Application
             std::optional<int32_t> topK;
             std::optional<float> presencePenalty;
             std::optional<float> repetitionPenalty;
-            bool enableReasoning{true};
+            bool enableReasoning{false};
 
             ModelInfo() = default;
             explicit ModelInfo(juce::File const& file);
