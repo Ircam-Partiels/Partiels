@@ -637,7 +637,7 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
         return juce::Result::fail(juce::translate("Failed to initialize chat templates"));
     }
 
-    auto mtmdFile = info.projectionFile;
+    auto mtmdFile = getProjectorForModel(info.modelFile);
     if(mtmdFile != juce::File())
     {
         if(!mtmdFile.existsAsFile())
@@ -689,7 +689,6 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     {
         std::lock_guard<std::mutex> lock(mModelInfoMutex);
         mModelInfo.modelFile = info.modelFile;
-        mModelInfo.projectionFile = info.projectionFile;
         mModelInfo.contextSize = ctxCapacity;
         mModelInfo.batchSize = batchCapacity;
         mModelInfo.minP = params.sampling.min_p;

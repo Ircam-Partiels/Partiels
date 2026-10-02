@@ -24,7 +24,6 @@ bool Application::Neuralyzer::ModelInfo::operator==(ModelInfo const& rhs) const 
     };
 
     return modelFile == rhs.modelFile &&
-           projectionFile == rhs.projectionFile &&
            serverUrl == rhs.serverUrl &&
            modelId == rhs.modelId &&
            contextSize == rhs.contextSize &&
@@ -117,7 +116,6 @@ void XmlParser::toXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement& xml,
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
     toXml(*child, "modelFile", value.modelFile);
-    toXml(*child, "projectionFile", value.projectionFile);
     toXml(*child, "serverUrl", value.serverUrl);
     toXml(*child, "modelId", value.modelId);
     toXml(*child, "contextSize", value.contextSize);
@@ -144,7 +142,6 @@ auto XmlParser::fromXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement con
     }
     Application::Neuralyzer::ModelInfo value;
     value.modelFile = fromXml(*child, "modelFile", defaultValue.modelFile);
-    value.projectionFile = fromXml(*child, "projectionFile", defaultValue.projectionFile);
     value.serverUrl = fromXml(*child, "serverUrl", defaultValue.serverUrl);
     value.modelId = fromXml(*child, "modelId", defaultValue.modelId);
     value.contextSize = fromXml(*child, "contextSize", defaultValue.contextSize);

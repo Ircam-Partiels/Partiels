@@ -27,7 +27,6 @@ namespace Application
         struct ModelInfo
         {
             juce::File modelFile;
-            juce::File projectionFile;
             juce::URL serverUrl{"http://localhost:1234"};
             juce::String modelId;
             std::optional<int32_t> contextSize;

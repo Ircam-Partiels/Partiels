@@ -19,7 +19,7 @@ namespace Application
 
             // juce::Component
             void resized() override;
-            void broughtToFront() override;
+            void visibilityChanged() override;
             void handleCommandMessage(int commandId) override;
 
         private:
@@ -63,7 +63,7 @@ namespace Application
             ~SettingsPanel() override;
 
             // juce::Component
-            void broughtToFront() override;
+            void visibilityChanged() override;
 
         private:
             SettingsContent mContent;

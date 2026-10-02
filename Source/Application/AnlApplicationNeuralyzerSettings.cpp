@@ -295,10 +295,7 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
                 menu.addItem(displayName, true, modelFile == currentModel, [=, this]()
                              {
                                  mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                                 ModelInfo newModelInfo(modelFile);
-                                JUCE_COMPILER_WARNING("remove projector here")
-                                 newModelInfo.projectionFile = projectorFile;
-                                 mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
+                                 mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(modelFile), NotificationType::synchronous);
                              });
                 localModels.erase(localModelIt);
             }
@@ -308,16 +305,14 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
         {
             menu.addSeparator();
         }
-        for(auto const& model : localModels)
+        for(auto const& modelFile : localModels)
         {
-            auto const projectorFile = AgentLocal::getProjectorForModel(model);
-            auto const displayName = toDisplayString(model.getFileNameWithoutExtension(), projectorFile.existsAsFile());
-            menu.addItem(displayName, true, model == currentModel, [=, this]()
+            auto const projectorFile = AgentLocal::getProjectorForModel(modelFile);
+            auto const displayName = toDisplayString(modelFile.getFileNameWithoutExtension(), projectorFile.existsAsFile());
+            menu.addItem(displayName, true, modelFile == currentModel, [=, this]()
                          {
                              mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
-                             auto newModelInfo = ModelInfo(model);
-                             newModelInfo.projectionFile = projectorFile;
-                             mAccessor.setAttr<AttrType::modelInfo>(newModelInfo, NotificationType::synchronous);
+                             mAccessor.setAttr<AttrType::modelInfo>(ModelInfo(modelFile), NotificationType::synchronous);
                          });
         }
     }
@@ -470,7 +465,7 @@ void Application::Neuralyzer::SettingsContent::handleCommandMessage([[maybe_unus
     resized();
 }
 
-void Application::Neuralyzer::SettingsContent::broughtToFront()
+void Application::Neuralyzer::SettingsContent::visibilityChanged()
 {
     postCommandMessage(0);
 }
@@ -486,9 +481,9 @@ Application::Neuralyzer::SettingsPanel::~SettingsPanel()
     setContent("", nullptr);
 }
 
-void Application::Neuralyzer::SettingsPanel::broughtToFront()
+void Application::Neuralyzer::SettingsPanel::visibilityChanged()
 {
-    mContent.broughtToFront();
+    mContent.visibilityChanged();
 }
 
 ANALYSE_FILE_END
