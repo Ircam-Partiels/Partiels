@@ -188,58 +188,68 @@ static std::optional<int32_t> getModelContextSize(juce::URL const& serverUrl, ju
     return std::nullopt;
 }
 
-std::set<juce::String> Application::Neuralyzer::AgentRemote::getAvailableModels(juce::URL const& serverUrl)
+std::set<std::pair<juce::String, bool>> Application::Neuralyzer::AgentRemote::getAvailableModels(juce::URL const& serverUrl)
 {
-    std::set<juce::String> models;
     if(serverUrl.isEmpty())
     {
-        return models;
+        return {};
     }
 
-    int statusCode = 0;
-    auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                             .withExtraHeaders("Content-Type: application/json")
-                             .withStatusCode(&statusCode)
-                             .withConnectionTimeoutMs(30000);
-    auto const stream = serverUrl.withNewSubPath("/v1/models").createInputStream(options);
-    if(stream == nullptr || statusCode < 200 || statusCode >= 300)
+    auto const callAPI = [&](juce::String const& subPath)
     {
-        MiscWeakAssert(false);
-        return models;
-    }
-
-    auto const responseBody = stream->readEntireStreamAsString();
-    MiscWeakAssert(responseBody.isNotEmpty());
-    if(responseBody.isEmpty())
-    {
-        return models;
-    }
-
-    auto const response = [&]() -> nlohmann::json
-    {
-        try
+        std::set<std::pair<juce::String, bool>> models;
+        int statusCode = 0;
+        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                                 .withExtraHeaders("Content-Type: application/json")
+                                 .withStatusCode(&statusCode)
+                                 .withConnectionTimeoutMs(30000);
+        auto const stream = serverUrl.withNewSubPath(subPath).createInputStream(options);
+        if(stream == nullptr || statusCode < 200 || statusCode >= 300)
         {
-            return nlohmann::json::parse(responseBody.toStdString());
+            MiscWeakAssert(false);
+            return models;
         }
-        catch(...)
-        {
-            return {};
-        }
-    }();
 
-    MiscWeakAssert(response.contains("data") && response.at("data").is_array());
-    if(response.contains("data") && response.at("data").is_array())
-    {
-        for(auto const& model : response.at("data"))
+        auto const responseBody = stream->readEntireStreamAsString();
+        MiscWeakAssert(responseBody.isNotEmpty());
+        if(responseBody.isEmpty())
         {
-            MiscWeakAssert(model.contains("id") && model.at("id").is_string());
-            if(model.contains("id") && model.at("id").is_string())
+            return models;
+        }
+
+        auto const response = [&]() -> nlohmann::json
+        {
+            try
             {
-                models.insert(model.at("id").get<juce::String>());
+                return nlohmann::json::parse(responseBody.toStdString());
+            }
+            catch(...)
+            {
+                return {};
+            }
+        }();
+
+        MiscWeakAssert(response.contains("data") && response.at("data").is_array());
+        if(response.contains("data") && response.at("data").is_array())
+        {
+            for(auto const& model : response.at("data"))
+            {
+                MiscWeakAssert(model.contains("id") && model.at("id").is_string());
+                if(model.contains("id") && model.at("id").is_string())
+                {
+                    auto const image = model.contains("architecture") && model.at("architecture").contains("input_modalities") && model.at("architecture").at("input_modalities").is_array() && model.at("architecture").at("input_modalities").count("image") > 0;
+                    models.insert(std::make_pair(model.at("id").get<juce::String>(), image));
+                }
             }
         }
+        return models;
+    };
+    auto models = callAPI("/models");
+    if(!models.empty())
+    {
+        return models;
     }
-    return models;
+    return callAPI("/v1/models");
 }
 
 Application::Neuralyzer::AgentRemote::AgentRemote(Mcp::Dispatcher& mcpDispatcher, Rag::Engine& ragEngine)

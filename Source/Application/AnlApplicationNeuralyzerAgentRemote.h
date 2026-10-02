@@ -33,7 +33,7 @@ namespace Application
 
             void setNotifyCallback(std::function<void()> callback) override;
 
-            static std::set<juce::String> getAvailableModels(juce::URL const& serverUrl);
+            static std::set<std::pair<juce::String, bool>> getAvailableModels(juce::URL const& serverUrl);
 
         private:
             void notifyStateChanged();

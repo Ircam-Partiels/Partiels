@@ -258,13 +258,12 @@ void Application::Neuralyzer::SettingsContent::showModelMenu()
         auto const remoteModels = AgentRemote::getAvailableModels(modelInfo.serverUrl);
         for(auto const& remoteModel : remoteModels)
         {
-            auto const isCurrent = remoteModel == modelInfo.modelId;
-            menu.addItem(toDisplayString(remoteModel, false), true, isCurrent, [=, this]()
+            auto const isCurrent = remoteModel.first == modelInfo.modelId;
+            menu.addItem(toDisplayString(remoteModel.first, remoteModel.second), true, isCurrent, [=, this]()
                          {
-                             JUCE_COMPILER_WARNING("Check for remote projector");
                              mAccessor.setAttr<AttrType::effectiveState>(ModelInfo{}, NotificationType::synchronous);
                              auto currentModelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                             currentModelInfo.modelId = remoteModel;
+                             currentModelInfo.modelId = remoteModel.first;
                              mAccessor.setAttr<AttrType::modelInfo>(currentModelInfo, NotificationType::synchronous);
                          });
         }
@@ -425,11 +424,14 @@ void Application::Neuralyzer::SettingsContent::handleCommandMessage([[maybe_unus
         }
         case AgentBackend::remote:
         {
-            auto const remoteModelIds = AgentRemote::getAvailableModels(modelInfo.serverUrl);
-            auto const it = remoteModelIds.find(modelInfo.modelId);
-            if(it != remoteModelIds.cend() && !modelInfo.modelId.isEmpty())
+            auto const remoteModels = AgentRemote::getAvailableModels(modelInfo.serverUrl);
+            auto const it = std::find_if(remoteModels.cbegin(), remoteModels.cend(), [&](auto const& remoteModel)
+                                         {
+                                             return remoteModel.first == modelInfo.modelId;
+                                         });
+            if(it != remoteModels.cend() && !modelInfo.modelId.isEmpty())
             {
-                auto const displayName = toDisplayString(*it, false);
+                auto const displayName = toDisplayString(it->first, it->second);
                 mModel.entry.setText(displayName, juce::NotificationType::dontSendNotification);
             }
             else if(modelInfo.modelId.isEmpty())
