@@ -148,6 +148,7 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Accessor& accessor, Mc
                 break;
             }
             case AttrType::effectiveState:
+            case AttrType::enableThinking:
             case AttrType::mcpForClaudeApp:
             case AttrType::mcpForCopilotApp:
                 break;

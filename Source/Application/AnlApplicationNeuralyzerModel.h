@@ -37,7 +37,6 @@ namespace Application
             std::optional<int32_t> topK;
             std::optional<float> presencePenalty;
             std::optional<float> repetitionPenalty;
-            bool enableReasoning{false};
 
             ModelInfo() = default;
             explicit ModelInfo(juce::File const& file);
@@ -62,6 +61,7 @@ namespace Application
               agentBackend
             , modelInfo
             , effectiveState
+            , enableThinking
             , mcpForClaudeApp
             , mcpForCopilotApp
         };
@@ -70,6 +70,7 @@ namespace Application
         < Model::Attr<AttrType::agentBackend, AgentBackend, Model::Flag::basic>
         , Model::Attr<AttrType::modelInfo, ModelInfo, Model::Flag::basic>
         , Model::Attr<AttrType::effectiveState, ModelInfo, Model::Flag::notifying>
+        , Model::Attr<AttrType::enableThinking, bool, Model::Flag::basic>
         , Model::Attr<AttrType::mcpForClaudeApp, bool, Model::Flag::basic>
         , Model::Attr<AttrType::mcpForCopilotApp, bool, Model::Flag::basic>
         >;
@@ -86,6 +87,7 @@ namespace Application
                                           {AgentBackend::none}
                                         , {ModelInfo{}}
                                         , {ModelInfo{}}
+                                        , {false}
                                         , {false}
                                         , {false}
                                     }))

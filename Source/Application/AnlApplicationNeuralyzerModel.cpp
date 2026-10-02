@@ -33,8 +33,7 @@ bool Application::Neuralyzer::ModelInfo::operator==(ModelInfo const& rhs) const 
            equals(topP, rhs.topP) &&
            topK == rhs.topK &&
            equals(presencePenalty, rhs.presencePenalty) &&
-           equals(repetitionPenalty, rhs.repetitionPenalty) &&
-           enableReasoning == rhs.enableReasoning;
+           equals(repetitionPenalty, rhs.repetitionPenalty);
 }
 
 static std::atomic<bool> sBackendInitialized{false};
@@ -125,8 +124,6 @@ void XmlParser::toXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement& xml,
     toXml(*child, "topP", value.topP);
     toXml(*child, "topK", value.topK);
     toXml(*child, "presencePenalty", value.presencePenalty);
-    toXml(*child, "repetitionPenalty", value.repetitionPenalty);
-    toXml(*child, "enableReasoning", value.enableReasoning);
     xml.addChildElement(child.release());
 }
 
@@ -152,7 +149,6 @@ auto XmlParser::fromXml<Application::Neuralyzer::ModelInfo>(juce::XmlElement con
     value.topK = fromXml(*child, "topK", defaultValue.topK);
     value.presencePenalty = fromXml(*child, "presencePenalty", defaultValue.presencePenalty);
     value.repetitionPenalty = fromXml(*child, "repetitionPenalty", defaultValue.repetitionPenalty);
-    value.enableReasoning = fromXml(*child, "enableReasoning", defaultValue.enableReasoning);
     return value;
 }
 

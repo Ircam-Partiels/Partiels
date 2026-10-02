@@ -4620,6 +4620,7 @@ Application::Neuralyzer::Mcp::Server::Server(Accessor& accessor, Dispatcher& dis
             case AttrType::modelInfo:
             case AttrType::effectiveState:
             case AttrType::agentBackend:
+            case AttrType::enableThinking:
                 break;
             case AttrType::mcpForClaudeApp:
             {

@@ -697,7 +697,6 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
         mModelInfo.topK = params.sampling.top_k;
         mModelInfo.presencePenalty = params.sampling.penalty_present;
         mModelInfo.repetitionPenalty = params.sampling.penalty_repeat;
-        mModelInfo.enableReasoning = params.reasoning_format != COMMON_REASONING_FORMAT_NONE;
     }
     return juce::Result::ok();
 }
@@ -741,7 +740,8 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
     common_chat_templates_inputs inputs;
     inputs.use_jinja = true;
     inputs.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
-    inputs.enable_thinking = getModelInfo().enableReasoning;
+    JUCE_COMPILER_WARNING("use AttrType::enableThinking and for remote")
+    inputs.enable_thinking = false;
     inputs.parallel_tool_calls = true;
     inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
     inputs.tools = mTools;
@@ -1269,7 +1269,7 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
     inputs.use_jinja = true;
     inputs.add_generation_prompt = false;
     inputs.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
-    inputs.enable_thinking = getModelInfo().enableReasoning;
+    inputs.enable_thinking = true;
     inputs.parallel_tool_calls = true;
     inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
     inputs.tools = mTools;

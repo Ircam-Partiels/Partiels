@@ -105,12 +105,7 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                      })
 , mEnableReasoning(juce::translate("Enable Reasoning"), juce::translate("Enable reasoning"), [&](bool value)
                    {
-                       auto modelInfo = mAccessor.getAttr<AttrType::modelInfo>();
-                       auto effectiveState = mAccessor.getAttr<AttrType::effectiveState>();
-                       modelInfo.enableReasoning = value;
-                       effectiveState.enableReasoning = value;
-                       mAccessor.setAttr<AttrType::effectiveState>(effectiveState, NotificationType::synchronous);
-                       mAccessor.setAttr<AttrType::modelInfo>(modelInfo, NotificationType::synchronous);
+                       mAccessor.setAttr<AttrType::enableThinking>(value, NotificationType::synchronous);
                    })
 , mNeuralyzerDirectory(juce::translate("Neuralyzer Directory"), juce::translate("Reveal the directory where Neuralyzer data is stored"), []()
                        {
@@ -188,10 +183,15 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
                 mTopK.setVisible(backend == AgentBackend::local);
                 mPresencePenalty.setVisible(backend == AgentBackend::local);
                 mRepetitionPenalty.setVisible(backend == AgentBackend::local);
-                mEnableReasoning.setVisible(backend == AgentBackend::local);
+                mEnableReasoning.setVisible(backend != AgentBackend::none);
                 mDownloadSeparator.setVisible(backend == AgentBackend::local);
                 mNeuralyzerDirectory.setVisible(backend == AgentBackend::local);
                 resized();
+                break;
+            }
+            case AttrType::enableThinking:
+            {
+                mEnableReasoning.entry.setToggleState(acsr.getAttr<AttrType::enableThinking>(), juce::NotificationType::dontSendNotification);
                 break;
             }
             case AttrType::mcpForClaudeApp:
@@ -239,7 +239,6 @@ Application::Neuralyzer::SettingsContent::SettingsContent(Accessor& accessor)
         setEntryValue(mTopK.entry, modelInfo.topK, defaultState.topK);
         setEntryValue(mPresencePenalty.entry, modelInfo.presencePenalty, defaultState.presencePenalty);
         setEntryValue(mRepetitionPenalty.entry, modelInfo.repetitionPenalty, defaultState.repetitionPenalty);
-        mEnableReasoning.entry.setToggleState(modelInfo.enableReasoning, juce::NotificationType::dontSendNotification);
         postCommandMessage(0);
     };
 
