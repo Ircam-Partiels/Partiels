@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graphe Mermaid</title>
+  <style>
+    :root {
+      color-scheme: light dark;               /* barres de défilement assorties au thème */
+      --bg: #ffffff; --fg: #1f2328; --err: #c62828;
+      --panel: rgba(240, 242, 245, 0.92); --border: #c9ced6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16181d; --fg: #e6e8eb; --err: #ef9a9a;
+        --panel: rgba(38, 41, 48, 0.92); --border: #3a3f48;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+
+    #app { position: relative; width: 100%; height: 100%; }
+
+    /* Zone défilante : les barres de scroll apparaissent quand le graphe dépasse */
+    #viewport {
+      width: 100%; height: 100%;
+      overflow: auto;
+      display: flex;
+      cursor: grab;
+      user-select: none;
+    }
+    #viewport.dragging { cursor: grabbing; }
+
+    /* margin:auto centre le graphe s'il est plus petit que la zone, sans couper
+       son début quand il est plus grand */
+    #sizer { position: relative; flex: none; margin: auto; }
+    #stage { position: absolute; transform-origin: 0 0; }
+    #stage svg { display: block; }
+    .error { color: var(--err); font-family: monospace; white-space: pre-wrap; padding: 1rem; }
+
+    /* En haut à gauche pour ne pas recouvrir les barres de défilement */
+    #toolbar {
+      position: absolute; top: 6px; left: 6px;
+      display: flex; align-items: center; gap: 2px;
+      padding: 2px 3px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    #toolbar button {
+      width: 20px; height: 20px; padding: 0;
+      border: 1px solid var(--border); border-radius: 4px;
+      background: transparent; color: var(--fg);
+      font-size: 12px; line-height: 1; cursor: pointer;
+    }
+    #toolbar button:hover { background: var(--border); }
+    #info { padding: 0 4px; min-width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="viewport">
+      <div id="sizer"><div id="stage"></div></div>
+    </div>
+    <div id="toolbar">
+      <button id="zoomOut" title="Zoom arrière">−</button>
+      <button id="zoomIn" title="Zoom avant">+</button>
+      <button id="fit" title="Ajuster à la fenêtre (double-clic)">⤢</button>
+      <span id="info"></span>
+    </div>
+  </div>
+
+  <!-- Servi par le ResourceProvider C++ (BinaryData::mermaidminjs) -->
+  <script src="mermaid.min.js"></script>
+  <script>
+    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // htmlLabels:false => le texte est dessiné en <text>/<tspan> SVG natifs (et non
+    // dans un <foreignObject> HTML) : les retours à la ligne sont gérés de façon
+    // fiable, les boîtes sont dimensionnées sur le texte réel, et l'export PNG
+    // ne dépend plus du rendu HTML dans une image.
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? "dark" : "default",
+      htmlLabels: false,
+      flowchart: { htmlLabels: false }
+    });
+
+    // Les "\n" littéraux (par exemple écrits tels quels depuis C++) deviennent des
+    // retours à la ligne dans les boîtes. Un vrai saut de ligne de la syntaxe
+    // Mermaid n'est pas concerné.
+    const normalizeDefinition = (def) => def.replace(/\\n/g, "<br/>");
+
+    const viewport = document.getElementById("viewport");
+    const sizer = document.getElementById("sizer");
+    const stage = document.getElementById("stage");
+    const info = document.getElementById("info");
+
+    const PADDING = 16;                       // marge autour du graphe (px)
+    const MIN_SCALE = 0.05, MAX_SCALE = 20;
+
+    const view = { scale: 1 };
+    let content = { w: 0, h: 0 };             // taille naturelle du graphe (px)
+    let userAdjusted = false;                 // true dès que l'utilisateur zoome
+    let counter = 0;
+
+    // ---- Taille idéale de la page (graphe à 100 % + marges) ---------------
+    function getIdealSize() {
+      return {
+        width: Math.ceil(content.w + 2 * PADDING),
+        height: Math.ceil(content.h + 2 * PADDING)
+      };
+    }
+
+    function reportIdealSize() {
+      try { window.__JUCE__?.backend?.emitEvent("graphSize", getIdealSize()); }
+      catch (e) { console.warn("emitEvent a échoué", e); }
+    }
+
+    // ---- Export PNG (déclenché depuis C++) -------------------------------
+    // Rend le graphe dans un canvas de taille width × height (marges incluses),
+    // puis renvoie l'image PNG encodée en base64 via l'événement "graphPng".
+    function requestPng(width, height) {
+      const fail = () => {
+        try { window.__JUCE__?.backend?.emitEvent("graphPng", { data: "" }); }
+        catch (e) { console.warn("emitEvent a échoué", e); }
+      };
+      const svgEl = stage.querySelector("svg");
+      if (!svgEl || !content.w || !content.h) { fail(); return; }
+
+      const avail = {
+        w: Math.max(1, width - 2 * PADDING),
+        h: Math.max(1, height - 2 * PADDING)
+      };
+      const scale = Math.min(avail.w / content.w, avail.h / content.h);
+      const w = Math.max(1, Math.round(content.w * scale));
+      const h = Math.max(1, Math.round(content.h * scale));
+
+      const clone = svgEl.cloneNode(true);
+      clone.setAttribute("width", w);
+      clone.setAttribute("height", h);
+      const xml = new XMLSerializer().serializeToString(clone);
+
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(width));
+          canvas.height = Math.max(1, Math.round(height));
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, Math.round((canvas.width - w) / 2), Math.round((canvas.height - h) / 2), w, h);
+          const dataUrl = canvas.toDataURL("image/png");
+          window.__JUCE__?.backend?.emitEvent("graphPng",
+            { data: dataUrl.substring(dataUrl.indexOf(",") + 1) });
+        } catch (e) { fail(); }
+      };
+      img.onerror = fail;
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+    }
+
+    // ---- Mise en page / zoom ----------------------------------------------
+    // La taille du conteneur suit le zoom : le navigateur affiche donc
+    // naturellement les barres de défilement quand c'est nécessaire.
+    function layout() {
+      sizer.style.width = (content.w * view.scale + 2 * PADDING) + "px";
+      sizer.style.height = (content.h * view.scale + 2 * PADDING) + "px";
+      stage.style.left = PADDING + "px";
+      stage.style.top = PADDING + "px";
+      stage.style.transform = `scale(${view.scale})`;
+      info.textContent = content.w ? Math.round(view.scale * 100) + " %" : "";
+    }
+
+    function fit() {
+      if (!content.w) return;
+      const s = Math.min(1,                   // sans agrandir au-delà de 100 %
+        (viewport.clientWidth - 2 * PADDING) / content.w,
+        (viewport.clientHeight - 2 * PADDING) / content.h);
+      view.scale = Math.max(MIN_SCALE, s);
+      userAdjusted = false;
+      layout();
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = 0;
+    }
+
+    // Zoom en gardant fixe le point du graphe situé sous (clientX, clientY)
+    function zoomAt(clientX, clientY, factor) {
+      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, view.scale * factor));
+      if (next === view.scale) return;
+
+      const before = stage.getBoundingClientRect();
+      const ux = (clientX - before.left) / view.scale;   // point en coordonnées du graphe
+      const uy = (clientY - before.top) / view.scale;
+
+      view.scale = next;
+      layout();
+
+      const after = stage.getBoundingClientRect();
+      viewport.scrollLeft += after.left + ux * next - clientX;
+      viewport.scrollTop += after.top + uy * next - clientY;
+      userAdjusted = true;
+    }
+
+    // Molette = défilement normal ; Ctrl/Cmd + molette (ou pincement trackpad) = zoom
+    viewport.addEventListener("wheel", (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const speed = e.ctrlKey ? 0.01 : 0.0015;
+      zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * speed));
+    }, { passive: false });
+
+    // Déplacement par glisser à la souris (en plus des barres de défilement)
+    let drag = null;
+    viewport.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      const r = viewport.getBoundingClientRect();
+      // Ignorer les clics sur les barres de défilement
+      if (e.clientX - r.left >= viewport.clientWidth ||
+          e.clientY - r.top >= viewport.clientHeight) return;
+      drag = { sx: e.clientX, sy: e.clientY,
+               ox: viewport.scrollLeft, oy: viewport.scrollTop };
+      viewport.setPointerCapture(e.pointerId);
+      viewport.classList.add("dragging");
+    });
+    viewport.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      viewport.scrollLeft = drag.ox - (e.clientX - drag.sx);
+      viewport.scrollTop = drag.oy - (e.clientY - drag.sy);
+    });
+    const endDrag = () => { drag = null; viewport.classList.remove("dragging"); };
+    viewport.addEventListener("pointerup", endDrag);
+    viewport.addEventListener("pointercancel", endDrag);
+
+    viewport.addEventListener("dblclick", fit);
+
+    const zoomCenter = (factor) => {
+      const r = viewport.getBoundingClientRect();
+      zoomAt(r.left + viewport.clientWidth / 2, r.top + viewport.clientHeight / 2, factor);
+    };
+    document.getElementById("zoomIn").onclick = () => zoomCenter(1.25);
+    document.getElementById("zoomOut").onclick = () => zoomCenter(1 / 1.25);
+    document.getElementById("fit").onclick = fit;
+
+    // Tant que l'utilisateur n'a pas zoomé, on réajuste au redimensionnement
+    window.addEventListener("resize", () => { if (!userAdjusted) fit(); });
+
+    // ---- Affichage du graphe ----------------------------------------------
+    async function setGraph(definition) {
+      try {
+        const { svg } = await mermaid.render("mermaid-svg-" + counter++, normalizeDefinition(definition));
+        stage.innerHTML = svg;
+
+        const svgEl = stage.querySelector("svg");
+        const vb = svgEl.viewBox.baseVal;
+        const box = svgEl.getBoundingClientRect();
+        content = {
+          w: Math.ceil(vb && vb.width ? vb.width : box.width),
+          h: Math.ceil(vb && vb.height ? vb.height : box.height)
+        };
+
+        // Taille naturelle fixe : le zoom est géré par la transformation CSS
+        svgEl.removeAttribute("style");
+        svgEl.setAttribute("width", content.w);
+        svgEl.setAttribute("height", content.h);
+
+        fit();
+        reportIdealSize();
+      } catch (e) {
+        content = { w: 0, h: 0 };
+        view.scale = 1;
+        stage.innerHTML = '<div class="error">Définition Mermaid invalide :\n' +
+          (e.message || e) + "</div>";
+        layout();
+      }
+    }
+
+    // Graphe fourni par C++ via Options::withInitialisationData("mermaid", ...)
+    const initial = window.__JUCE__?.initialisationData?.mermaid?.[0];
+    setGraph(initial ?? "graph TD\n  A[Aucun graphe] --> B[Fourni]");
+  </script>
+</body>
+</html>
