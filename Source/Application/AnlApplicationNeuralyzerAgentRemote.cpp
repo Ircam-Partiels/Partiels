@@ -146,7 +146,7 @@ static std::optional<int32_t> getModelContextSize(juce::URL const& serverUrl, ju
                 return contextSize;
             }
         }
-        catch(std::exception const& e)
+        catch([[maybe_unused]] std::exception const& e)
         {
             MiscDebug("Application::Neuralyzer::AgentRemote", "Failed to retrieve context size from /props: " + juce::String(e.what()));
         }
@@ -180,7 +180,7 @@ static std::optional<int32_t> getModelContextSize(juce::URL const& serverUrl, ju
                 }
             }
         }
-        catch(std::exception const& e)
+        catch([[maybe_unused]] std::exception const& e)
         {
             MiscDebug("Application::Neuralyzer::AgentRemote", "Failed to retrieve context size from /api/v1/models: " + juce::String(e.what()));
         }

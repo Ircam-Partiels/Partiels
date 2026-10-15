@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlApplicationNeuralyzerAst.h"
-JUCE_BEGIN_IGNORE_WARNINGS_MSVC(4100 4245 4267 4305 4457 4505)
+JUCE_BEGIN_IGNORE_WARNINGS_MSVC(4100 4127 4245 4267 4305 4457 4505 4701)
 JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wunused-parameter", "-Wunused-function", "-Wextra-semi", "-Wshadow", "-Wsign-conversion", "-Wshorten-64-to-32", "-Wimplicit-int-float-conversion", "-Wimplicit-int-conversion", "-Wconditional-uninitialized", "-Wcast-align", "-Winconsistent-missing-destructor-override")
 #include <hnswlib/hnswlib.h>
 #include <llama-cpp.h>

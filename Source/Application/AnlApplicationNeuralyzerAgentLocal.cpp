@@ -856,8 +856,8 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     {
         std::lock_guard<std::mutex> lock(mModelInfoMutex);
         mModelInfo.modelFile = info.modelFile;
-        mModelInfo.contextSize = ctxCapacity;
-        mModelInfo.batchSize = batchCapacity;
+        mModelInfo.contextSize = static_cast<int32_t>(ctxCapacity);
+        mModelInfo.batchSize = static_cast<int32_t>(batchCapacity);
         mModelInfo.minP = params.sampling.min_p;
         mModelInfo.temperature = params.sampling.temp;
         mModelInfo.topP = params.sampling.top_p;
