@@ -5,6 +5,7 @@ ANALYSE_FILE_BEGIN
 Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Accessor& accessor, Mcp::Dispatcher& mcpDispatcher)
 : mAccessor(accessor)
 , mMcpDispatcher(mcpDispatcher)
+, mBackend(accessor.getAttr<AttrType::agentBackend>())
 , mAgentLocal(mMcpDispatcher, mRagEngine)
 , mAgentRemote(mMcpDispatcher, mRagEngine)
 {
@@ -16,9 +17,54 @@ Application::Neuralyzer::BackgroundAgent::BackgroundAgent(Accessor& accessor, Mc
                                    {
                                        sendChangeMessage();
                                    });
+
+    // A GGML abort file from a previous session means the engine crashed: ask the user
+    // whether Neuralyzer should be used anyway or disabled, and block the worker thread
+    // until the decision is made (the engine and the RAG models are not initialized yet).
+    auto const abortFile = getAbortFile();
+    if(abortFile.existsAsFile())
+    {
+        auto const errorMessage = abortFile.loadFileAsString();
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Neuralyzer crashed during the previous session"))
+                                 .withMessage(juce::translate("The Neuralyzer engine crashed during the previous session with the following error: ERROR. Do you want to keep using Neuralyzer or disable it?").replace("ERROR", errorMessage))
+                                 .withButton(juce::translate("Use Neuralyzer"))
+                                 .withButton(juce::translate("Disable Neuralyzer"));
+
+        juce::WeakReference<BackgroundAgent> weakReference(this);
+        juce::AlertWindow::showAsync(options, [weakReference](int result)
+                                     {
+                                         auto* agent = weakReference.get();
+                                         if(agent == nullptr)
+                                         {
+                                             return;
+                                         }
+                                         if(result == 1)
+                                         {
+                                             // The user acknowledged the previous crash: clear the abort file.
+                                             getAbortFile().deleteFile();
+                                         }
+                                         agent->mStartupDecision.store(result == 1 ? StartupDecision::launch : StartupDecision::ignore);
+                                         agent->mStartupDecision.notify_all();
+                                         agent->sendChangeMessage();
+                                     });
+    }
+    else
+    {
+        mStartupDecision.store(StartupDecision::launch);
+    }
+
     mWorkerThread = std::thread([this]()
                                 {
                                     juce::Thread::setCurrentThreadName("Neuralyzer::BackgroundAgent");
+                                    // Wait for the user's decision if a GGML abort file was found at startup.
+                                    mStartupDecision.wait(StartupDecision::wait);
+                                    if(mStartupDecision.load() == StartupDecision::ignore)
+                                    {
+                                        // Nothing is initialized: leave the thread immediately.
+                                        return;
+                                    }
                                     mCurrentAction.store(Action::setupSystem);
                                     sendChangeMessage();
                                     initializeEngine();
@@ -173,10 +219,21 @@ Application::Neuralyzer::BackgroundAgent::~BackgroundAgent()
         mPendingActions.clear();
     }
     mPendingCondition.notify_all();
+    if(mStartupDecision.load() == StartupDecision::wait)
+    {
+        // Unblock the worker if the user has not decided yet (the alert is gone with the window).
+        mStartupDecision.store(StartupDecision::ignore);
+    }
+    mStartupDecision.notify_all();
     if(mWorkerThread.joinable())
     {
         mWorkerThread.join();
     }
+}
+
+Application::Neuralyzer::BackgroundAgent::StartupDecision Application::Neuralyzer::BackgroundAgent::getStartupDecision() const
+{
+    return mStartupDecision.load();
 }
 
 std::optional<std::reference_wrapper<Application::Neuralyzer::Agent>> Application::Neuralyzer::BackgroundAgent::getCurrentAgent()

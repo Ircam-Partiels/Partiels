@@ -49,6 +49,15 @@ void Application::Neuralyzer::initializeEngine()
                                          MiscDebug("Application::Neuralyzer::AgentLocal::Init", juce::String::fromUTF8(text));
                                      },
                                      nullptr);
+                       ggml_set_abort_callback([](char const* errorMessage)
+                                               {
+                                                   // The process is about to abort: keep the error message in a file that
+                                                   // persists between sessions so that the user is notified on the next launch.
+                                                   auto const abortFile = getAbortFile();
+                                                   abortFile.getParentDirectory().createDirectory();
+                                                   abortFile.replaceWithText(juce::String::fromUTF8(errorMessage));
+                                                   MiscDebug("Application::Neuralyzer::AgentLocal", "GGML abort: " + juce::String::fromUTF8(errorMessage));
+                                               });
                        llama_backend_init();
                        sBackendInitialized.store(true);
                        MiscDebug("Application::Neuralyzer::AgentLocal", "Global Initialized");
@@ -65,6 +74,7 @@ void Application::Neuralyzer::releaseEngine()
                            return;
                        }
                        MiscDebug("Application::Neuralyzer::AgentLocal", "Global Release...");
+                       ggml_set_abort_callback(nullptr);
                        llama_backend_free();
                        llama_log_set(nullptr, nullptr);
                        MiscDebug("Application::Neuralyzer::AgentLocal", "Global Released");
@@ -92,6 +102,11 @@ juce::File Application::Neuralyzer::getSessionFile(juce::File const& documentFil
 juce::File Application::Neuralyzer::getTempDirectory()
 {
     return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("Neuralyzer");
+}
+
+juce::File Application::Neuralyzer::getAbortFile()
+{
+    return getTempDirectory().getChildFile("Abort.txt");
 }
 
 juce::File Application::Neuralyzer::getTempHistoryFile()

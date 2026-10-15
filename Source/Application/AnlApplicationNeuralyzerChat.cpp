@@ -463,6 +463,15 @@ void Application::Neuralyzer::Chat::updateHistory()
     {
         mHistory.push_back({MessageType::warning, lastResult.getErrorMessage()});
     }
+    auto const startupDecision = mAgent.getStartupDecision();
+    if(startupDecision == BackgroundAgent::StartupDecision::wait)
+    {
+        mHistory.push_back({MessageType::warning, juce::translate("Neuralyzer crashed during the previous session. It is waiting for your decision before starting.")});
+    }
+    else if(startupDecision == BackgroundAgent::StartupDecision::ignore)
+    {
+        mHistory.push_back({MessageType::warning, juce::translate("Neuralyzer is disabled. Restart the application to relaunch it.")});
+    }
     mHistoryEditor.setHistory(mHistory);
     mQueryEditor.setHistory(mHistory);
 }
@@ -477,7 +486,22 @@ void Application::Neuralyzer::Chat::updated()
 
     auto const modelInfo = mAgent.getModelInfo();
     auto const currentAction = mAgent.getCurrentAction();
-    if(!isConfigured())
+    auto const startupDecision = mAgent.getStartupDecision();
+    if(startupDecision == BackgroundAgent::StartupDecision::wait)
+    {
+        auto const message = juce::translate("Neuralyzer crashed during the previous session. It is waiting for your decision before starting.");
+        mStatusLabel.setText(message, juce::dontSendNotification);
+        mQueryEditor.setTextToShowWhenEmpty(message, findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
+    }
+    else if(startupDecision == BackgroundAgent::StartupDecision::ignore)
+    {
+        auto const message = juce::translate("Neuralyzer is disabled. Restart the application to relaunch it.");
+        mStatusLabel.setText(message, juce::dontSendNotification);
+        mQueryEditor.setTextToShowWhenEmpty(message, findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));
+        // The whole component is disabled: the settings button is handled by the NeuralyzerPanel and remains accessible.
+        setEnabled(false);
+    }
+    else if(!isConfigured())
     {
         mStatusLabel.setText(juce::translate("Configure Neuralyzer in the settings panel."), juce::dontSendNotification);
         mQueryEditor.setTextToShowWhenEmpty(juce::translate("Neuralyzer is not configured"), findColour(juce::TextEditor::ColourIds::textColourId).withAlpha(0.5f));

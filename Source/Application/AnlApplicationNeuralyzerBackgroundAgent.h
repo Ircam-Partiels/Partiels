@@ -28,6 +28,13 @@ namespace Application
                 , saveSession
                 , cancelQuery
             };
+
+            enum class StartupDecision
+            {
+                  wait
+                , launch
+                , ignore
+            };
             // clang-format on
 
             BackgroundAgent(Accessor& accessor, Mcp::Dispatcher& mcpDispatcher);
@@ -45,6 +52,7 @@ namespace Application
             bool hasPendingAction() const;
             Action getCurrentAction() const;
             juce::Result getLastResult() const;
+            StartupDecision getStartupDecision() const;
 
             // Async operations - schedule work on the background thread.
             // initializeModel also loads or starts a session on completion.
@@ -85,11 +93,14 @@ namespace Application
             mutable std::mutex mResultMutex;
             juce::Result mLastResult{juce::Result::ok()};
 
+            std::atomic<StartupDecision> mStartupDecision{StartupDecision::wait};
+
             std::thread mWorkerThread;
             std::atomic<bool> mShouldExit{false};
             std::atomic<Action> mCurrentAction{Action::none};
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BackgroundAgent)
+            JUCE_DECLARE_WEAK_REFERENCEABLE(BackgroundAgent)
         };
     } // namespace Neuralyzer
 } // namespace Application

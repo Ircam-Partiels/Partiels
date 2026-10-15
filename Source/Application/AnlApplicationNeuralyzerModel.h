@@ -102,6 +102,7 @@ namespace Application
         juce::File resolveDirectory(juce::File const& root);
         juce::File getSessionFile(juce::File const& documentFile);
         juce::File getTempDirectory();
+        juce::File getAbortFile();
         juce::File getTempHistoryFile();
         juce::File getTempExportDirectory();
         juce::File getTempSessionFile(juce::String const& name);
