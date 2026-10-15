@@ -223,8 +223,6 @@ juce::Result Application::Neuralyzer::Rag::Engine::initializeModels(juce::File e
 
     auto modelParams = llama_model_default_params();
     modelParams.load_mode = llama_load_mode::LLAMA_LOAD_MODE_MMAP;
-    // The Metal async tensor read asserts on non page-aligned output buffers (embeddings), so the models run on the CPU.
-    modelParams.n_gpu_layers = 0;
     mEmbeddingModel.reset(llama_model_load_from_file(embeddingModelFile.getFullPathName().toRawUTF8(), modelParams));
     if(mEmbeddingModel == nullptr)
     {
@@ -246,7 +244,6 @@ juce::Result Application::Neuralyzer::Rag::Engine::initializeModels(juce::File e
     contextParams.embeddings = true;
     contextParams.pooling_type = llama_pooling_type::LLAMA_POOLING_TYPE_UNSPECIFIED;
     contextParams.no_perf = true;
-    contextParams.op_offload = false;
 
     mEmbeddingContext.reset(llama_init_from_model(mEmbeddingModel.get(), contextParams));
     if(mEmbeddingContext == nullptr)
