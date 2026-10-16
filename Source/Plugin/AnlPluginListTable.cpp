@@ -189,11 +189,23 @@ void PluginList::Table::notifyAddSelectedPlugins()
 void PluginList::Table::updateContent()
 {
     mFilteredList.clear();
+    mFilteredUpdates.clear();
     mFilteredWebPlugins.clear();
 
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
 
-    // Filter local plugins
+    // Find the internet-available plugin that updates a local plugin (the local version is older than the distributed version)
+    auto const& webReferences = mAccessor.getAttr<AttrType::webReferences>();
+    auto const findUpdate = [&](Plugin::Key const& key, Plugin::Description const& description)
+    {
+        auto const updateIt = std::find_if(webReferences.cbegin(), webReferences.cend(), [&](Plugin::WebReference const& reference)
+                                           {
+                                               return reference.version > 0u && juce::String(key.identifier).startsWith(reference.identifier) && description.version < reference.version;
+                                           });
+        return updateIt != webReferences.cend() ? *updateIt : Plugin::WebReference{};
+    };
+
+    // Filter local plugins and retrieve the available updates
     for(auto const& plugin : mList)
     {
         auto const& description = plugin.second;
@@ -203,18 +215,19 @@ void PluginList::Table::updateContent()
             if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
             {
                 mFilteredList.push_back(plugin);
+                mFilteredUpdates.push_back(findUpdate(plugin.first, description));
             }
         }
     }
 
-    // Filter internet plugins that are compatible and NOT installed locally
-    for(auto const& plugin : mAccessor.getAttr<AttrType::webReferences>())
+    // Filter internet plugins that are compatible and not installed locally
+    for(auto const& plugin : webReferences)
     {
-        auto const isNotInstalled = std::none_of(mList.cbegin(), mList.cend(), [&](auto const& pair)
-                                                 {
-                                                     return juce::String(pair.first.identifier).startsWith(plugin.identifier);
-                                                 });
-        if(isNotInstalled && plugin.isCompatible)
+        auto const isInstalled = std::any_of(mList.cbegin(), mList.cend(), [&](auto const& pair)
+                                             {
+                                                 return juce::String(pair.first.identifier).startsWith(plugin.identifier);
+                                             });
+        if(!isInstalled && plugin.isCompatible)
         {
             auto const filterName = (plugin.name + plugin.pluginDescription + plugin.libraryDescription + plugin.maker).removeCharacters(" ");
             if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
@@ -245,9 +258,12 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
         auto const totalPlugins = totalLocalPlugins + static_cast<int>(mFilteredWebPlugins.size());
         if(rowNumber < totalLocalPlugins) // Local Plugins
         {
+            static const auto updateIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x94\x94"); // 🔔
             auto const index = static_cast<size_t>(rowNumber);
             auto const& description = mFilteredList.at(index).second;
-            return std::make_tuple(description.name + " - " + description.output.name, false);
+            auto const updateAvailable = index < mFilteredUpdates.size() && mFilteredUpdates.at(index).getDownloadUrl().isNotEmpty();
+            auto const name = description.name + " - " + description.output.name + (updateAvailable ? juce::String(updateIndicator) : juce::String{});
+            return std::make_tuple(name, false);
         }
         else if(rowNumber < totalPlugins) // Web Plugins
         {
@@ -285,15 +301,18 @@ void PluginList::Table::selectedRowsChanged(int lastRowSelected)
 
     if(lastRowSelected < 0 || lastRowSelected >= totalPlugins) [[unlikely]]
     {
-        mDescriptionPanel.setDescription({});
+        mDescriptionPanel.setContent({}, {});
     }
     else if(lastRowSelected < totalLocalPlugins) // Local plugin
     {
-        mDescriptionPanel.setDescription(mFilteredList.at(static_cast<size_t>(lastRowSelected)).second);
+        auto const index = static_cast<size_t>(lastRowSelected);
+        auto const update = index < mFilteredUpdates.size() ? mFilteredUpdates.at(index) : Plugin::WebReference{};
+        mDescriptionPanel.setContent(mFilteredList.at(index).second, update);
     }
     else // Web Plugin
     {
-        mDescriptionPanel.setWebReference(mFilteredWebPlugins.at(static_cast<size_t>(lastRowSelected - totalLocalPlugins)));
+        auto const index = static_cast<size_t>(lastRowSelected - totalLocalPlugins);
+        mDescriptionPanel.setContent({}, mFilteredWebPlugins.at(index));
     }
 }
 
