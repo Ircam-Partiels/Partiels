@@ -131,7 +131,7 @@ void Application::Interface::RightBorder::applicationCommandListChanged()
 
 Application::Interface::DocumentContainer::DocumentContainer()
 : mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getTrackPresetListAccessor())
-, mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+, mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner(), Instance::get().getApplicationCommandManager())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);
     mPluginListTable.onAddPlugins = [](std::vector<Plugin::Key> keys)
