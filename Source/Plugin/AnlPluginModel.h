@@ -137,6 +137,12 @@ namespace Plugin
         std::vector<Input> inputs;               //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
 
+        //! @brief Check if the description is valid
+        bool valid() const noexcept
+        {
+            return name.isNotEmpty();
+        }
+
         inline bool operator==(Description const& rhs) const noexcept
         {
             return name == rhs.name &&
@@ -188,13 +194,26 @@ namespace Plugin
     //! @brief Information about an internet-available plugin
     struct WebReference
     {
-        juce::String identifier;         //!< The plugin identifier
-        juce::String name;               //!< The name of the plugin
+        juce::String identifier;         //!< The identifier of the plugin library
+        juce::String name;               //!< The name of the plugin library
         juce::String libraryDescription; //!< Library description
         juce::String pluginDescription;  //!< Plugin description
         juce::String maker;              //!< The creator of the plugin
-        juce::String downloadUrl;        //!< The download link
+        juce::String websiteUrl;         //!< The website of the plugin library
+        unsigned int version{0};         //!< The major version of the plugins of the library (the package version is formatted as major.minor.bugfix)
+        juce::String downloadUrlLinux;   //!< The download link of the package for Linux
+        juce::String downloadUrlMacos;   //!< The download link of the package for MacOS
+        juce::String downloadUrlWindows; //!< The download link of the package for Windows
         bool isCompatible{true};         //!< Whether the plugin is compatible with this system
+
+        //! @brief Get the download link of the package for the current system
+        juce::String getDownloadUrl() const;
+
+        //! @brief Check if the reference is valid
+        bool valid() const noexcept
+        {
+            return identifier.isNotEmpty();
+        }
 
         inline bool operator==(WebReference const& rhs) const noexcept
         {
@@ -203,7 +222,11 @@ namespace Plugin
                    libraryDescription == rhs.libraryDescription &&
                    pluginDescription == rhs.pluginDescription &&
                    maker == rhs.maker &&
-                   downloadUrl == rhs.downloadUrl &&
+                   websiteUrl == rhs.websiteUrl &&
+                   version == rhs.version &&
+                   downloadUrlLinux == rhs.downloadUrlLinux &&
+                   downloadUrlMacos == rhs.downloadUrlMacos &&
+                   downloadUrlWindows == rhs.downloadUrlWindows &&
                    isCompatible == rhs.isCompatible;
         }
 
