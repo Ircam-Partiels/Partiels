@@ -8,7 +8,7 @@ namespace
 {
     juce::Result failed(juce::String const& name, juce::String const& format, juce::String const& reason)
     {
-        return juce::Result::fail(juce::translate("The export of the track NAME as FORMAT failed because REASON.").replace("NAME", name).replace("FORMAT", format).replace("REASON", reason));
+        return juce::Result::fail(juce::translate("The export of the track TKNAME as FORMATNAME failed because ERRSTR.").replace("TKNAME", name).replace("FORMATNAME", format).replace("ERRSTR", reason));
     }
 
     // clang-format off
@@ -42,7 +42,7 @@ namespace
 
     juce::Result aborted(juce::String const& name, juce::String const& format)
     {
-        return juce::Result::fail(juce::translate("The export of the track NAME as FORMAT has been aborted.").replace("NAME", name).replace("FORMAT", format));
+        return juce::Result::fail(juce::translate("The export of the track TKNAME as FORMATNAME has been aborted.").replace("TKNAME", name).replace("FORMATNAME", format));
     }
 } // namespace
 

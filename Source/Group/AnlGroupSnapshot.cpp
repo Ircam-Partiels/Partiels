@@ -303,11 +303,11 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     juce::StringArray lines;
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
+    lines.add(juce::translate("Time: TIMESTR").replace("TIMESTR", Format::secondsToString(time)));
     auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
     if(referenceTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
     {
-        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
+        lines.add(juce::translate("Mouse: VALSTR").replace("VALSTR", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
     }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

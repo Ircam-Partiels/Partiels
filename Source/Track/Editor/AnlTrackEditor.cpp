@@ -38,8 +38,8 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             }
             juce::StringArray lines;
             auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
-            lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
-            lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Tools::getZoomTootip(mAccessor, *this, pt.y)));
+            lines.add(juce::translate("Time: TIMESTR").replace("TIMESTR", Format::secondsToString(time)));
+            lines.add(juce::translate("Mouse: VALSTR").replace("VALSTR", Tools::getZoomTootip(mAccessor, *this, pt.y)));
             lines.addArray(Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time));
             return lines.joinIntoString("\n");
         };

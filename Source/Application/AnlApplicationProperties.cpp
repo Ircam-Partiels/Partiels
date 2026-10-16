@@ -208,7 +208,7 @@ void Application::Properties::askToRestoreDefaultAudioSettings(juce::String cons
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::QuestionIcon)
                              .withTitle(juce::translate("Error loading audio device settings!"))
-                             .withMessage(juce::translate("An error accured while loading audio device settings: ERROR. Do you want to restore the default settings?").replace("ERROR", error))
+                             .withMessage(juce::translate("An error accured while loading audio device settings: ERRSTR. Do you want to restore the default settings?").replace("ERRSTR", error))
                              .withButton(juce::translate("Restore Default Settings"))
                              .withButton(juce::translate("Ignore"));
 
