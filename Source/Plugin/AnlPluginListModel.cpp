@@ -28,7 +28,7 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 {
 #if JUCE_WINDOWS
     return {juce::File::getSpecialLocation(juce::File::SpecialLocationType::globalApplicationsDirectory).getChildFile("Vamp Plugins"),
-            juce::File::getSpecialLocation(juce::File::SpecialLocationType::localApplicationDataDirectory).getChildFile("Vamp Plugins")};
+            juce::File::getSpecialLocation(juce::File::SpecialLocationType::windowsLocalAppData).getChildFile("Vamp Plugins")};
 #elif JUCE_MAC
     return {juce::File("~/Library/Audio/Plug-Ins/Vamp"), juce::File("/Library/Audio/Plug-Ins/Vamp")};
 #else

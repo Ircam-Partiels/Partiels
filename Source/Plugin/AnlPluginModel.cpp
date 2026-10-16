@@ -215,19 +215,53 @@ void Plugin::to_json(nlohmann::json& j, WebReference const& info)
                        {"libraryDescription", info.libraryDescription.toStdString()},
                        {"pluginDescription", info.pluginDescription.toStdString()},
                        {"maker", info.maker.toStdString()},
-                       {"downloadUrl", info.downloadUrl.toStdString()},
+                       {"websiteUrl", info.websiteUrl.toStdString()},
+                       {"version", info.version},
+                       {"downloadUrlLinux", info.downloadUrlLinux.toStdString()},
+                       {"downloadUrlMacos", info.downloadUrlMacos.toStdString()},
+                       {"downloadUrlWindows", info.downloadUrlWindows.toStdString()},
                        {"isCompatible", info.isCompatible}};
 }
 
 void Plugin::from_json(nlohmann::json const& j, WebReference& info)
 {
-    info.identifier = juce::String(j.at("identifier").get<std::string>());
-    info.name = juce::String(j.at("name").get<std::string>());
-    info.libraryDescription = juce::String(j.at("libraryDescription").get<std::string>());
-    info.pluginDescription = juce::String(j.at("pluginDescription").get<std::string>());
-    info.maker = juce::String(j.at("maker").get<std::string>());
-    info.downloadUrl = juce::String(j.at("downloadUrl").get<std::string>());
-    info.isCompatible = j.at("isCompatible").get<bool>();
+    info.identifier = juce::String(j.value("identifier", std::string{}));
+    info.name = juce::String(j.value("name", std::string{}));
+    info.libraryDescription = juce::String(j.value("libraryDescription", std::string{}));
+    info.pluginDescription = juce::String(j.value("pluginDescription", std::string{}));
+    info.maker = juce::String(j.value("maker", std::string{}));
+    info.websiteUrl = juce::String(j.value("websiteUrl", std::string{}));
+    // The version of the plugins is formatted as major.minor.bugfix, only the major part is used
+    auto const version = j.contains("version") ? j.at("version") : nlohmann::json{};
+    if(version.is_number())
+    {
+        info.version = version.get<unsigned int>();
+    }
+    else if(version.is_string())
+    {
+        info.version = static_cast<unsigned int>(Misc::Version::fromString(juce::String{version.get<std::string>()}).major);
+    }
+    else
+    {
+        info.version = 0u;
+    }
+    info.downloadUrlLinux = juce::String(j.value("downloadUrlLinux", std::string{}));
+    info.downloadUrlMacos = juce::String(j.value("downloadUrlMacos", std::string{}));
+    info.downloadUrlWindows = juce::String(j.value("downloadUrlWindows", std::string{}));
+    info.isCompatible = j.value("isCompatible", true);
+}
+
+juce::String Plugin::WebReference::getDownloadUrl() const
+{
+#if JUCE_LINUX
+    return downloadUrlLinux;
+#elif JUCE_MAC
+    return downloadUrlMacos;
+#elif JUCE_WINDOWS
+    return downloadUrlWindows;
+#else
+#error "Unsupported platform: getDownloadUrl is not defined. Please add support for your platform."
+#endif
 }
 
 template <>
@@ -497,7 +531,11 @@ void XmlParser::toXml<Plugin::WebReference>(juce::XmlElement& xml, juce::Identif
     element->setAttribute("libraryDescription", value.libraryDescription);
     element->setAttribute("pluginDescription", value.pluginDescription);
     element->setAttribute("maker", value.maker);
-    element->setAttribute("downloadUrl", value.downloadUrl);
+    element->setAttribute("websiteUrl", value.websiteUrl);
+    element->setAttribute("version", static_cast<int>(value.version));
+    element->setAttribute("downloadUrlLinux", value.downloadUrlLinux);
+    element->setAttribute("downloadUrlMacos", value.downloadUrlMacos);
+    element->setAttribute("downloadUrlWindows", value.downloadUrlWindows);
     element->setAttribute("isCompatible", value.isCompatible);
     xml.addChildElement(element.release());
 }
@@ -517,7 +555,11 @@ auto XmlParser::fromXml<Plugin::WebReference>(juce::XmlElement const& xml, juce:
     info.libraryDescription = element->getStringAttribute("libraryDescription", defaultValue.libraryDescription);
     info.pluginDescription = element->getStringAttribute("pluginDescription", defaultValue.pluginDescription);
     info.maker = element->getStringAttribute("maker", defaultValue.maker);
-    info.downloadUrl = element->getStringAttribute("downloadUrl", defaultValue.downloadUrl);
+    info.websiteUrl = element->getStringAttribute("websiteUrl", defaultValue.websiteUrl);
+    info.version = static_cast<unsigned int>(element->getIntAttribute("version", static_cast<int>(defaultValue.version)));
+    info.downloadUrlLinux = element->getStringAttribute("downloadUrlLinux", defaultValue.downloadUrlLinux);
+    info.downloadUrlMacos = element->getStringAttribute("downloadUrlMacos", defaultValue.downloadUrlMacos);
+    info.downloadUrlWindows = element->getStringAttribute("downloadUrlWindows", defaultValue.downloadUrlWindows);
     info.isCompatible = element->getBoolAttribute("isCompatible", defaultValue.isCompatible);
     return info;
 }
