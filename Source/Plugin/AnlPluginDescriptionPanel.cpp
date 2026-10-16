@@ -3,13 +3,6 @@
 ANALYSE_FILE_BEGIN
 
 Plugin::DescriptionPanel::DescriptionPanel()
-: mPropertyPluginDownload(juce::translate("Download"), juce::translate("Proceed to plugin download page"), [this]()
-                          {
-                              if(mPluginDownloadUrl.isNotEmpty())
-                              {
-                                  juce::URL(mPluginDownloadUrl).launchInDefaultBrowser();
-                              }
-                          })
 {
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setJustification(juce::Justification::topLeft);
@@ -23,9 +16,12 @@ Plugin::DescriptionPanel::DescriptionPanel()
     addAndMakeVisible(mPropertyPluginVersion);
     addAndMakeVisible(mPropertyPluginCategory);
     addAndMakeVisible(mPropertyPluginDetails);
-    addChildComponent(mPropertyPluginDownload);
+    addChildComponent(downloadPluginButton);
+    addChildComponent(mDownloadProgressBar);
+    mDownloadProgressBar.setSize(0, PropertyComponentBase::defaultHeight / 3);
+    mDownloadProgressBar.setPercentageDisplay(false);
     setSize(300, optimalHeight);
-    setDescription({});
+    setContent({}, {});
 }
 
 void Plugin::DescriptionPanel::resized()
@@ -44,7 +40,8 @@ void Plugin::DescriptionPanel::resized()
     setBounds(mPropertyPluginMaker);
     setBounds(mPropertyPluginVersion);
     setBounds(mPropertyPluginCategory);
-    setBounds(mPropertyPluginDownload);
+    setBounds(downloadPluginButton);
+    setBounds(mDownloadProgressBar);
     mPropertyPluginDetails.setBounds(bounds);
 }
 
@@ -55,47 +52,74 @@ void Plugin::DescriptionPanel::lookAndFeelChanged()
     mPropertyPluginDetails.setText(text);
 }
 
-void Plugin::DescriptionPanel::setDescription(Description const& description)
+void Plugin::DescriptionPanel::setContent(Description const& description, WebReference const& webReference)
 {
+    mDescription = description;
+    mWebReference = webReference;
+    mIsDownloading = false;
+    mDownloadProgress = -1.0;
+    auto const isLocal = description.valid();
+
     mPropertyPluginName.setVisible(true);
-    mPropertyPluginFeature.setVisible(true);
+    mPropertyPluginFeature.setVisible(isLocal);
     mPropertyPluginMaker.setVisible(true);
     mPropertyPluginVersion.setVisible(true);
-    mPropertyPluginCategory.setVisible(true);
-    mPropertyPluginDownload.setVisible(false);
+    mPropertyPluginCategory.setVisible(isLocal);
     mPropertyPluginDetails.setVisible(true);
 
-    mPropertyPluginName.entry.setText(description.name, juce::NotificationType::dontSendNotification);
+    mPropertyPluginName.entry.setText(isLocal ? description.name : webReference.name, juce::NotificationType::dontSendNotification);
     mPropertyPluginFeature.entry.setText(description.output.name, juce::NotificationType::dontSendNotification);
-    mPropertyPluginMaker.entry.setText(description.maker, juce::NotificationType::dontSendNotification);
-    mPropertyPluginVersion.entry.setText(juce::String(description.version), juce::NotificationType::dontSendNotification);
+    mPropertyPluginMaker.entry.setText(isLocal ? description.maker : webReference.maker, juce::NotificationType::dontSendNotification);
+    mPropertyPluginVersion.entry.setText(juce::String(isLocal ? description.version : webReference.version), juce::NotificationType::dontSendNotification);
     mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, juce::NotificationType::dontSendNotification);
-    juce::StringArray details{juce::String(description.output.description), description.details, description.copyright};
+    juce::StringArray details{isLocal ? juce::StringArray{juce::String(description.output.description), description.details, description.copyright}
+                                      : juce::StringArray{webReference.pluginDescription, webReference.libraryDescription}};
     details.removeEmptyStrings();
     mPropertyPluginDetails.setText(details.joinIntoString("\n"), juce::NotificationType::dontSendNotification);
-    resized();
+
+    updateDownloadState();
     mPropertyPluginDetails.moveCaretToTop(false);
 }
 
-void Plugin::DescriptionPanel::setWebReference(WebReference const& webReference)
+void Plugin::DescriptionPanel::setDownloadState(bool isDownloading, double progress)
 {
-    mPropertyPluginName.setVisible(true);
-    mPropertyPluginFeature.setVisible(false);
-    mPropertyPluginMaker.setVisible(true);
-    mPropertyPluginVersion.setVisible(false);
-    mPropertyPluginCategory.setVisible(false);
-    mPropertyPluginDownload.setVisible(true);
-    mPropertyPluginDetails.setVisible(true);
+    mDownloadProgress = progress;
+    if(std::exchange(mIsDownloading, isDownloading) != isDownloading)
+    {
+        updateDownloadState();
+    }
+}
 
-    mPropertyPluginName.entry.setText(webReference.name, juce::NotificationType::dontSendNotification);
-    mPropertyPluginMaker.entry.setText(webReference.maker, juce::NotificationType::dontSendNotification);
-    mPluginDownloadUrl = webReference.downloadUrl;
-    mPropertyPluginDownload.setEnabled(mPluginDownloadUrl.isNotEmpty());
-    juce::StringArray details{webReference.pluginDescription, webReference.libraryDescription};
-    details.removeEmptyStrings();
-    mPropertyPluginDetails.setText(details.joinIntoString("\n"), juce::NotificationType::dontSendNotification);
+void Plugin::DescriptionPanel::updateDownloadState()
+{
+    // The internet-available plugin proposes a download, an update of the installed version if the local plugin is installed, or its website
+    auto const isLocal = mDescription.valid();
+    auto const isWeb = mWebReference.valid();
+    downloadPluginButton.setVisible(isWeb && (mWebReference.getDownloadUrl().isNotEmpty() || mWebReference.websiteUrl.isNotEmpty()));
+    if(mIsDownloading)
+    {
+        downloadPluginButton.entry.setButtonText(juce::translate("Downloading..."));
+        downloadPluginButton.setTooltip(juce::translate("Click again to cancel the download"));
+    }
+    else if(mWebReference.getDownloadUrl().isNotEmpty())
+    {
+        downloadPluginButton.entry.setButtonText(juce::translate("Download"));
+        if(isLocal && isWeb)
+        {
+            downloadPluginButton.setTooltip(juce::translate("Download the plugin package and update the installed version"));
+        }
+        else
+        {
+            downloadPluginButton.setTooltip(juce::translate("Download the plugin package and run its installer"));
+        }
+    }
+    else
+    {
+        downloadPluginButton.setTooltip(juce::translate("Open the website of the plugin in the default browser"));
+        downloadPluginButton.entry.setButtonText(juce::translate("Website"));
+    }
+    mDownloadProgressBar.setVisible(mIsDownloading);
     resized();
-    mPropertyPluginDetails.moveCaretToTop(false);
 }
 
 ANALYSE_FILE_END

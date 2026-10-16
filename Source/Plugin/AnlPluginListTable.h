@@ -11,9 +11,10 @@ namespace PluginList
     class Table
     : public juce::Component
     , private juce::ListBoxModel
+    , private juce::Timer
     {
     public:
-        Table(Accessor& accessor, Scanner& scanner);
+        Table(Accessor& accessor, Scanner& scanner, juce::ApplicationCommandManager& applicationCommandManager);
         ~Table() override;
 
         // juce::Component
@@ -29,6 +30,8 @@ namespace PluginList
     private:
         void updateContent();
         void notifyAddSelectedPlugins();
+        void downloadPlugin();
+        void updateDownloadState();
 
         // juce::TableListBoxModel
         int getNumRows() override;
@@ -39,12 +42,17 @@ namespace PluginList
         void listBoxItemDoubleClicked(int rowNumber, juce::MouseEvent const& event) override;
         juce::String getTooltipForRow(int rowNumber) override;
 
+        // juce::Timer
+        void timerCallback() override;
+
         Accessor& mAccessor;
         Scanner& mScanner;
+        juce::ApplicationCommandManager& mApplicationCommandManager;
         Accessor::Listener mListener{"PluginList::Table"};
         Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
+        std::vector<Plugin::WebReference> mFilteredUpdates;
         std::vector<Plugin::WebReference> mFilteredWebPlugins;
         juce::String mLookingWord;
 
@@ -55,6 +63,7 @@ namespace PluginList
         juce::ListBox mPluginTable;
         ColouredPanel mSeparator2;
         Plugin::DescriptionPanel mDescriptionPanel;
+        WebDownloader mWebDownloader;
 
         JUCE_LEAK_DETECTOR(Table)
     };

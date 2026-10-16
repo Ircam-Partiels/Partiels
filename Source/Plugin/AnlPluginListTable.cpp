@@ -4,9 +4,10 @@
 
 ANALYSE_FILE_BEGIN
 
-PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
+PluginList::Table::Table(Accessor& accessor, Scanner& scanner, juce::ApplicationCommandManager& applicationCommandManager)
 : mAccessor(accessor)
 , mScanner(scanner)
+, mApplicationCommandManager(applicationCommandManager)
 , mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
 , mIrcamIcon(juce::ImageCache::getFromMemory(AnlResourceData::PompidoulogonoirRS_png, AnlResourceData::PompidoulogonoirRS_pngSize))
 {
@@ -59,6 +60,11 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mSearchField.onReturnKey = [this]()
     {
         moveKeyboardFocusToSibling(false);
+    };
+
+    mDescriptionPanel.downloadPluginButton.entry.onClick = [this]()
+    {
+        downloadPlugin();
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -189,11 +195,23 @@ void PluginList::Table::notifyAddSelectedPlugins()
 void PluginList::Table::updateContent()
 {
     mFilteredList.clear();
+    mFilteredUpdates.clear();
     mFilteredWebPlugins.clear();
 
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
 
-    // Filter local plugins
+    // Find the internet-available plugin that updates a local plugin (the local version is older than the distributed version)
+    auto const& webReferences = mAccessor.getAttr<AttrType::webReferences>();
+    auto const findUpdate = [&](Plugin::Key const& key, Plugin::Description const& description)
+    {
+        auto const updateIt = std::find_if(webReferences.cbegin(), webReferences.cend(), [&](Plugin::WebReference const& reference)
+                                           {
+                                               return reference.version > 0u && juce::String(key.identifier).startsWith(reference.identifier + ":") && description.version < reference.version;
+                                           });
+        return updateIt != webReferences.cend() ? *updateIt : Plugin::WebReference{};
+    };
+
+    // Filter local plugins and retrieve the available updates
     for(auto const& plugin : mList)
     {
         auto const& description = plugin.second;
@@ -203,18 +221,19 @@ void PluginList::Table::updateContent()
             if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
             {
                 mFilteredList.push_back(plugin);
+                mFilteredUpdates.push_back(findUpdate(plugin.first, description));
             }
         }
     }
 
-    // Filter internet plugins that are compatible and NOT installed locally
-    for(auto const& plugin : mAccessor.getAttr<AttrType::webReferences>())
+    // Filter internet plugins that are compatible and not installed locally
+    for(auto const& plugin : webReferences)
     {
-        auto const isNotInstalled = std::none_of(mList.cbegin(), mList.cend(), [&](auto const& pair)
-                                                 {
-                                                     return juce::String(pair.first.identifier).startsWith(plugin.identifier);
-                                                 });
-        if(isNotInstalled && plugin.isCompatible)
+        auto const isInstalled = std::any_of(mList.cbegin(), mList.cend(), [&](auto const& pair)
+                                             {
+                                                 return juce::String(pair.first.identifier).startsWith(plugin.identifier + ":");
+                                             });
+        if(!isInstalled && plugin.isCompatible)
         {
             auto const filterName = (plugin.name + plugin.pluginDescription + plugin.libraryDescription + plugin.maker).removeCharacters(" ");
             if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
@@ -245,9 +264,12 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
         auto const totalPlugins = totalLocalPlugins + static_cast<int>(mFilteredWebPlugins.size());
         if(rowNumber < totalLocalPlugins) // Local Plugins
         {
+            static const auto updateIndicator = juce::CharPointer_UTF8(" \xf0\x9f\x94\x94"); // 🔔
             auto const index = static_cast<size_t>(rowNumber);
             auto const& description = mFilteredList.at(index).second;
-            return std::make_tuple(description.name + " - " + description.output.name, false);
+            auto const updateAvailable = index < mFilteredUpdates.size() && mFilteredUpdates.at(index).getDownloadUrl().isNotEmpty();
+            auto const name = description.name + " - " + description.output.name + (updateAvailable ? juce::String(updateIndicator) : juce::String{});
+            return std::make_tuple(name, false);
         }
         else if(rowNumber < totalPlugins) // Web Plugins
         {
@@ -285,16 +307,20 @@ void PluginList::Table::selectedRowsChanged(int lastRowSelected)
 
     if(lastRowSelected < 0 || lastRowSelected >= totalPlugins) [[unlikely]]
     {
-        mDescriptionPanel.setDescription({});
+        mDescriptionPanel.setContent({}, {});
     }
     else if(lastRowSelected < totalLocalPlugins) // Local plugin
     {
-        mDescriptionPanel.setDescription(mFilteredList.at(static_cast<size_t>(lastRowSelected)).second);
+        auto const index = static_cast<size_t>(lastRowSelected);
+        auto const update = index < mFilteredUpdates.size() ? mFilteredUpdates.at(index) : Plugin::WebReference{};
+        mDescriptionPanel.setContent(mFilteredList.at(index).second, update);
     }
     else // Web Plugin
     {
-        mDescriptionPanel.setWebReference(mFilteredWebPlugins.at(static_cast<size_t>(lastRowSelected - totalLocalPlugins)));
+        auto const index = static_cast<size_t>(lastRowSelected - totalLocalPlugins);
+        mDescriptionPanel.setContent({}, mFilteredWebPlugins.at(index));
     }
+    updateDownloadState();
 }
 
 void PluginList::Table::listBoxItemDoubleClicked([[maybe_unused]] int rowNumber, [[maybe_unused]] juce::MouseEvent const& event)
@@ -320,6 +346,96 @@ juce::String PluginList::Table::getTooltipForRow(int rowNumber)
 void PluginList::Table::setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept
 {
     mPluginTable.setMultipleSelectionEnabled(shouldBeEnabled);
+}
+
+void PluginList::Table::timerCallback()
+{
+    updateDownloadState();
+}
+
+void PluginList::Table::updateDownloadState()
+{
+    // The download state is retrieved from the downloader for the plugin displayed by the panel
+    // so that the panel remains consistent when the selection changes during a download
+    auto const& reference = mDescriptionPanel.getWebReference();
+    auto const isDownloading = reference.valid() && mWebDownloader.isDownloading(reference);
+    mDescriptionPanel.setDownloadState(isDownloading, isDownloading ? mWebDownloader.getDownloadProgress(reference) : -1.0);
+    if(!isDownloading)
+    {
+        stopTimer();
+    }
+    else if(!isTimerRunning())
+    {
+        startTimer(30);
+    }
+}
+
+void PluginList::Table::downloadPlugin()
+{
+    using CommandIDs = ApplicationCommandIDs;
+    auto const& reference = mDescriptionPanel.getWebReference();
+    if(mWebDownloader.isDownloading(reference))
+    {
+        mWebDownloader.abort(reference);
+        return;
+    }
+    if(reference.getDownloadUrl().isEmpty())
+    {
+        if(reference.websiteUrl.isNotEmpty())
+        {
+            juce::URL(reference.websiteUrl).launchInDefaultBrowser();
+        }
+        return;
+    }
+    mWebDownloader.download(reference, [this](juce::Result result, juce::File installer)
+                            {
+                                updateDownloadState();
+                                if(!result.wasOk())
+                                {
+                                    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                                                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                                                     .withTitle(juce::translate("Plugin installation failed!"))
+                                                                     .withMessage(result.getErrorMessage())
+                                                                     .withButton(juce::translate("Ok")),
+                                                                 nullptr);
+                                    return;
+                                }
+                                // The download has been aborted by the user
+                                if(installer == juce::File{})
+                                {
+                                    return;
+                                }
+#if JUCE_MAC || JUCE_WINDOWS
+                                // The pkg installer is opened with the system installer on MacOS, the exe installer is executed on Windows
+                                if(!installer.existsAsFile() || !installer.startAsProcess())
+                                {
+                                    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                                                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                                                     .withTitle(juce::translate("Plugin installation failed!"))
+                                                                     .withMessage(juce::translate("The plugin installer could not be launched."))
+                                                                     .withButton(juce::translate("Ok")),
+                                                                 nullptr);
+                                    return;
+                                }
+#else
+                                // The installer is revealed in the file manager of the system
+                                // (the file manager shows its own alert if the file cannot be revealed)
+                                if(!installer.existsAsFile())
+                                {
+                                    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                                                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                                                     .withTitle(juce::translate("Plugin installation failed!"))
+                                                                     .withMessage(juce::translate("The plugin installer could not be launched."))
+                                                                     .withButton(juce::translate("Ok")),
+                                                                 nullptr);
+                                    return;
+                                }
+                                installer.revealToUser();
+#endif
+                                // The plugin settings panel is shown so that the user can rescan the plugins after the installation
+                                mApplicationCommandManager.invokeDirectly(CommandIDs::helpOpenPluginSettings, true);
+                            });
+    updateDownloadState();
 }
 
 ANALYSE_FILE_END
