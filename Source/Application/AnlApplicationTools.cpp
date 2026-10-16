@@ -301,7 +301,7 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
-                                 .withMessage(juce::translate("There are NUMFAILS tracks out of TOTAL that could not be created in the document. They correspond to the plugins:\nPLUGINMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("TOTAL", juce::String(keys.size())).replace("PLUGINMESSAGES", failMessages.joinIntoString("\n")))
+                                 .withMessage(juce::translate("There are NUMFAILS tracks out of NUMTOTAL that could not be created in the document. They correspond to the plugins:\nPLUGINMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("NUMTOTAL", juce::String(keys.size())).replace("PLUGINMESSAGES", failMessages.joinIntoString("\n")))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
     }
@@ -356,7 +356,7 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
-                                 .withMessage(juce::translate("There are NUMFAILS tracks out of TOTAL that could not be created in the document. They correspond to the files:\nFILEMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("TOTAL", juce::String(files.size())).replace("FILEMESSAGES", failMessages.joinIntoString("\n")))
+                                 .withMessage(juce::translate("There are NUMFAILS tracks out of NUMTOTAL that could not be created in the document. They correspond to the files:\nFILEMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("NUMTOTAL", juce::String(files.size())).replace("FILEMESSAGES", failMessages.joinIntoString("\n")))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
     }
@@ -369,7 +369,7 @@ void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersio
         auto options = juce::MessageBoxOptions()
                            .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                            .withTitle(juce::translate("A new version is available!"))
-                           .withMessage(juce::translate("PRODUCT VERSION has been published on the PROJECT page.").replace("PRODUCT", product).replace("VERSION", upstreamVersion.toString()).replace("PROJECT", project))
+                           .withMessage(juce::translate("PRODUCTNAME APPVER has been published on the PROJECTNAME page.").replace("PRODUCTNAME", product).replace("APPVER", upstreamVersion.toString()).replace("PROJECTNAME", project))
                            .withButton(juce::translate("Proceed to download page"));
         options = warnIfUpToDate ? options.withButton(juce::translate("Close the window")) : options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
         juce::AlertWindow::showAsync(options, callback);
@@ -379,7 +379,7 @@ void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersio
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                                  .withTitle(juce::translate("The version is up to date!"))
-                                 .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the PROJECT page.").replace("PRODUCT", product).replace("VERSION", currentVersion.toString()).replace("PROJECT", project))
+                                 .withMessage(juce::translate("PRODUCTNAME APPVER is the latest version available on the PROJECTNAME page.").replace("PRODUCTNAME", product).replace("APPVER", currentVersion.toString()).replace("PROJECTNAME", project))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
     }

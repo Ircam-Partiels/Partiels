@@ -153,7 +153,7 @@ juce::Result Downloader::download(juce::URL const& url, juce::File const& target
     catch(std::exception const& e)
     {
         MiscDebug("Downloader", "Failed to download the file from URL \"" + url.toString(true) + "\": " + e.what() + ".");
-        return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": ERROR.").replace("URLPATH", url.toString(true)).replace("ERROR", e.what()));
+        return juce::Result::fail(juce::translate("Failed to download the file from URL \"URLPATH\": ERRSTR.").replace("URLPATH", url.toString(true)).replace("ERRSTR", e.what()));
     }
     return juce::Result::ok();
 }

@@ -111,12 +111,12 @@ namespace Track
                 if(index < extraOutputs.size())
                 {
                     auto const& extraOutput = extraOutputs.at(index);
-                    auto const name = extraOutput.name.empty() ? juce::translate("Extra INDEX").replace("INDEX", juce::String(index + 1_z)) : juce::String(extraOutput.name);
+                    auto const name = extraOutput.name.empty() ? juce::translate("Extra IDX").replace("IDX", juce::String(index + 1_z)) : juce::String(extraOutput.name);
                     lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4) + extraOutput.unit);
                 }
                 else
                 {
-                    auto const name = juce::translate("Extra INDEX").replace("INDEX", juce::String(index + 1_z));
+                    auto const name = juce::translate("Extra IDX").replace("IDX", juce::String(index + 1_z));
                     lines.add(name + ": " + Format::valueToString(extraValues.at(index), 4));
                 }
             }
@@ -152,10 +152,10 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
 #if JUCE_DEBUG
                     auto const diff = value.value() - static_cast<double>(index);
                     auto const name = getBinName(acsr, index);
-                    return juce::translate("Bin INDEX (+DIFF)").replace("INDEX", juce::String(index)).replace("DIFF", juce::String(diff, 2)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+                    return juce::translate("Bin IDX (+DIFFSTR)").replace("IDX", juce::String(index)).replace("DIFFSTR", juce::String(diff, 2)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
 #else
                     auto const name = getBinName(acsr, index);
-                    return juce::translate("Bin INDEX").replace("INDEX", juce::String(index)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+                    return juce::translate("Bin IDX").replace("IDX", juce::String(index)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
 #endif
                 }
                 break;

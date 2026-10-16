@@ -219,7 +219,7 @@ void Application::FileManager::consolidateDocument()
                                                              auto const options = juce::MessageBoxOptions()
                                                                                       .withIconType(juce::AlertWindow::WarningIcon)
                                                                                       .withTitle(juce::translate("Document consolidation failed!"))
-                                                                                      .withMessage(juce::translate("The document cannot be consolidated with the audio files and the analyses to FLNAME: ERROR.").replace("FLNAME", fileName).replace("ERROR", result.getErrorMessage()))
+                                                                                      .withMessage(juce::translate("The document cannot be consolidated with the audio files and the analyses to FLNAME: ERRSTR.").replace("FLNAME", fileName).replace("ERRSTR", result.getErrorMessage()))
                                                                                       .withButton(juce::translate("Ok"));
                                                              juce::AlertWindow::showAsync(options, nullptr);
                                                          }

@@ -74,11 +74,11 @@ bool Application::Osc::Sender::connect()
     mIsConnected = mSender.connect(name, port);
     if(!mIsConnected)
     {
-        mMessages.add(juce::translate("Failed to connect to host NAME at port PORT!").replace("NAME", name).replace("PORT", juce::String(port)));
+        mMessages.add(juce::translate("Failed to connect to host HOSTNAME at port PORTNUM!").replace("HOSTNAME", name).replace("PORTNUM", juce::String(port)));
     }
     else
     {
-        mMessages.add(juce::translate("Connected to host NAME at port PORT.").replace("NAME", name).replace("PORT", juce::String(port)));
+        mMessages.add(juce::translate("Connected to host HOSTNAME at port PORTNUM.").replace("HOSTNAME", name).replace("PORTNUM", juce::String(port)));
     }
     sendChangeMessage();
     Instance::get().getApplicationCommandManager().invokeDirectly(ApplicationCommandIDs::transportOscConnected, true);

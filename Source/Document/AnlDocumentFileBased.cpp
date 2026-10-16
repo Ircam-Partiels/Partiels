@@ -393,7 +393,7 @@ std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> Document::FileBase
     }
     if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
     {
-        return juce::Result::fail(juce::translate("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file."));
+        return juce::Result::fail(juce::translate("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.").replace("FLNM", file.getFileName()));
     }
     return xml;
 }

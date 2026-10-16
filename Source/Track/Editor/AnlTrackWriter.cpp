@@ -361,7 +361,8 @@ void Track::Writer::mouseUp(juce::MouseEvent const& event)
                             auto const preserveFullDuration = mEditDuration ? false : mDirector.isPreserveFullDurationWhenEditingEnabled();
                             auto const endTime = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>().getEnd();
                             auto const& edition = mAccessor.getAttr<AttrType::edit>();
-                            undoManager.beginNewTransaction(juce::translate(mEditDuration ? "Resize Marker" : "Move Marker"));
+                            auto const transactionName = mEditDuration ? juce::translate("Resize Marker") : juce::translate("Move Marker");
+                            undoManager.beginNewTransaction(transactionName);
                             undoManager.perform(std::make_unique<Result::Modifier::ActionErase>(mDirector.getSafeAccessorFn(), edition.channel, edition.range, preserveFullDuration, endTime).release());
                             undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), edition.channel, edition.data, time, preserveFullDuration, endTime).release());
                         }

@@ -1473,7 +1473,7 @@ juce::Result Document::Exporter::clearUnusedAudioFiles(Accessor const& accessor,
     {
         return juce::Result::ok();
     }
-    return juce::Result::fail(juce::translate("Cannot clear unused audio files: LIST").replace("LIST", errors.joinIntoString(", ")));
+    return juce::Result::fail(juce::translate("Cannot clear unused audio files: ERRMESSAGES").replace("ERRMESSAGES", errors.joinIntoString(", ")));
 }
 
 juce::Result Document::Exporter::clearUnusedTrackFiles(Accessor const& accessor, juce::File directory)
@@ -1504,7 +1504,7 @@ juce::Result Document::Exporter::clearUnusedTrackFiles(Accessor const& accessor,
     {
         return juce::Result::ok();
     }
-    return juce::Result::fail(juce::translate("Cannot clear unused track files: LIST").replace("LIST", errors.joinIntoString(", ")));
+    return juce::Result::fail(juce::translate("Cannot clear unused track files: ERRMESSAGES").replace("ERRMESSAGES", errors.joinIntoString(", ")));
 }
 
 juce::Result Document::Exporter::consolidateAudioFiles(Accessor& accessor, juce::File directory)

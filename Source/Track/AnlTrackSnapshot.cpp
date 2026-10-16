@@ -510,8 +510,8 @@ void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     juce::StringArray lines;
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
-    lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Tools::getZoomTootip(mAccessor, *this, pt.y)));
+    lines.add(juce::translate("Time: TIMESTR").replace("TIMESTR", Format::secondsToString(time)));
+    lines.add(juce::translate("Mouse: VALSTR").replace("VALSTR", Tools::getZoomTootip(mAccessor, *this, pt.y)));
     lines.addArray(Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time));
     Tooltip::BubbleClient::setTooltip(lines.joinIntoString("\n"));
 }
