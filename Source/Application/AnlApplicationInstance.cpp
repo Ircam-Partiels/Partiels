@@ -69,6 +69,11 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     MiscDebug("Application", "Running with GUI");
 
+    // The temporary directory that contains the installers downloaded by the plugin list
+    // is removed at startup so that the installers launched by a previous session are not
+    // removed while they are running
+    PluginList::WebDownloader::getInstallerDirectory().deleteRecursively();
+
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
     mLookAndFeel = std::make_unique<LookAndFeel>();
