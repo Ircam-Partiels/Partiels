@@ -1,0 +1,101 @@
+[
+    {
+        "identifier": "fcn",
+        "name": "FCN",
+        "libraryDescription": "Fundamental frequency estimation based on a fully convolutional network model developed at Ircam.",
+        "pluginDescription": "FCN",
+        "maker": "Ircam",
+        "version": 5,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Windows.zip"
+    },
+    {
+        "identifier": "ircambeat",
+        "name": "Ircam Beat",
+        "libraryDescription": "Beat marker detection and mean tempo estimation of musical signals developed at Ircam.",
+        "pluginDescription": "Beat Detection, Mean Tempo Estimate",
+        "maker": "Ircam",
+        "version": 3,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Windows.zip"
+    },
+    {
+        "identifier": "ircamdescriptor",
+        "name": "Ircam Descriptor",
+        "libraryDescription": "Perceptual (loudness, sharpness) and spectral (centroid, decrease, rolloff, spread) descriptors of audio signals developed at Ircam.",
+        "pluginDescription": "Perceptual Descriptor, Spectral Descriptor",
+        "maker": "Ircam",
+        "version": 2,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Windows.zip"
+    },
+    {
+        "identifier": "pm2",
+        "name": "Pm2",
+        "libraryDescription": "Harmonic, inharmonic and chord partial tracking based on the PM2 sinusoidal model engine developed at Ircam.",
+        "pluginDescription": "Harmonic Partial, Inharmonic Partial, Chord Partial",
+        "maker": "Ircam",
+        "version": 5,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Windows.zip"
+    },
+    {
+        "identifier": "supervp",
+        "name": "SuperVP",
+        "libraryDescription": "Spectrogram, pitch estimation, transient detection, formant, peak and masking analyses based on the SuperVP audio analysis engine developed at Ircam.",
+        "pluginDescription": "Fast Fourier Transform, Linear Predictive Coding, True Envelope, Reassigned Spectrum, Cepstrum, Feature Scoring, Primes Matching, Pitched Percussion, Voiced/Unvoiced, Formant LPC, Formant CED, Peak, Mask, Rd Shape, Transient Detection, Spectral Difference Positive, Spectral Difference Negative",
+        "maker": "Ircam",
+        "version": 7,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/Ircam-Vamp-Plugins-Windows.zip"
+    },
+    {
+        "identifier": "ircamvax",
+        "name": "VAX",
+        "libraryDescription": "Text and audio alignment Vamp plugins developed at Ircam.",
+        "pluginDescription": "VAX - Aligner, VAX - Probability",
+        "maker": "Ircam",
+        "version": 1,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/VAX-Vamp-Plugin-v2.0.0-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/VAX-Vamp-Plugin-v2.0.0-MacOS.zip",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ircam-vamp-plugins/releases/download/2.1.0/VAX-Vamp-Plugin-v2.0.0-Windows.zip"
+    },
+    {
+        "identifier": "ircamcrepe",
+        "name": "Crepe",
+        "libraryDescription": "Implementation of the CREPE monophonic pitch tracker, as a Vamp plugin.",
+        "pluginDescription": "Crepe",
+        "maker": "Ircam",
+        "version": 4,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/crepe-vamp-plugin/releases/download/4.1.0/Crepe-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/crepe-vamp-plugin/releases/download/4.1.0/Crepe-MacOS.pkg",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/crepe-vamp-plugin/releases/download/4.1.0/Crepe-Windows.exe"
+    },
+    {
+        "identifier": "ircamwhisper",
+        "name": "Whisper",
+        "libraryDescription": "Implementation of the OpenAI Whisper speech recognition model, as a Vamp plugin.",
+        "pluginDescription": "Whisper",
+        "maker": "Ircam",
+        "version": 5,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/whisper-vamp-plugin/releases/download/5.0.0/Whisper-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/whisper-vamp-plugin/releases/download/5.0.0/Whisper-MacOS.pkg",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/whisper-vamp-plugin/releases/download/5.0.0/Whisper-Windows.exe"
+    },
+    {
+        "identifier": "ircamipt",
+        "name": "IPT",
+        "libraryDescription": "Recognition of instrumental playing techniques using deep learning CNN models.",
+        "pluginDescription": "IPT",
+        "maker": "Ircam",
+        "version": 2,
+        "downloadUrlLinux": "https://github.com/Ircam-Partiels/ipt-vamp-plugin/releases/download/2.1.0/IPT-Linux.zip",
+        "downloadUrlMacos": "https://github.com/Ircam-Partiels/ipt-vamp-plugin/releases/download/2.1.0/IPT-MacOS.pkg",
+        "downloadUrlWindows": "https://github.com/Ircam-Partiels/ipt-vamp-plugin/releases/download/2.1.0/IPT-Windows.exe"
+    }
+]

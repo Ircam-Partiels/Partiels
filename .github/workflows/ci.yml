@@ -282,3 +282,4 @@ jobs:
         files: |
           ${{ github.workspace }}/build/Partiels-Manual.pdf
           ${{ github.workspace }}/build/Partiels-Patchs.zip
+          ${{ github.workspace }}/BinaryData/Resource/Partiels-Plugins.json
