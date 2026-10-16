@@ -1132,11 +1132,11 @@ void Track::Director::warmAboutPlugin(juce::String const& reason)
     MiscDebug("Track::Director", reason);
     auto const name = mAccessor.getAttr<AttrType::name>();
     auto const key = mAccessor.getAttr<AttrType::key>();
-    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: ERRSTR.")
                                   .replace("KEYID", key.identifier)
                                   .replace("KEYFEATURE", key.feature)
                                   .replace("TKNAME", name)
-                                  .replace("REASON", reason);
+                                  .replace("ERRSTR", reason);
 
     if(mAlertCatcher != nullptr)
     {
@@ -1156,11 +1156,11 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
 {
     auto const name = mAccessor.getAttr<AttrType::name>();
     auto const key = mAccessor.getAttr<AttrType::key>();
-    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: ERRSTR.")
                                   .replace("KEYID", key.identifier)
                                   .replace("KEYFEATURE", key.feature)
                                   .replace("TKNAME", name)
-                                  .replace("REASON", reason);
+                                  .replace("ERRSTR", reason);
 
     if(mAlertCatcher != nullptr)
     {
@@ -1213,11 +1213,11 @@ void Track::Director::askToRestoreState(juce::String const& reason)
 {
     auto const name = mAccessor.getAttr<AttrType::name>();
     auto const key = mAccessor.getAttr<AttrType::key>();
-    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: ERRSTR.")
                                   .replace("KEYID", key.identifier)
                                   .replace("KEYFEATURE", key.feature)
                                   .replace("TKNAME", name)
-                                  .replace("REASON", reason);
+                                  .replace("ERRSTR", reason);
 
     if(mAlertCatcher != nullptr)
     {
@@ -1286,10 +1286,10 @@ void Track::Director::askToReloadFile(juce::String const& reason)
 {
     auto const file = mAccessor.getAttr<AttrType::file>().file;
     auto const name = mAccessor.getAttr<AttrType::name>();
-    auto const errorMessage = juce::translate("The file FLNAME of the track TKNAME cannot be loaded: REASON.")
+    auto const errorMessage = juce::translate("The file FLNAME of the track TKNAME cannot be loaded: ERRSTR.")
                                   .replace("FLNAME", file.getFullPathName())
                                   .replace("TKNAME", name)
-                                  .replace("REASON", reason);
+                                  .replace("ERRSTR", reason);
 
     if(mAlertCatcher != nullptr)
     {

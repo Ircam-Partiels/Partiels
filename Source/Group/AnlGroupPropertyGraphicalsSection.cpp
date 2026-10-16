@@ -1024,9 +1024,9 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto const end = srange.has_value() ? static_cast<float>(srange.value().getEnd()) : 0.0f;
         auto const range = juce::Range<float>(start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f));
         auto const tooltip = Track::Tools::getExtraTooltip(trackAcsr, outputIndex);
-        auto const vname = it->name.empty() ? juce::translate("Extra NUM").replace("NUM", juce::String(outputIndex))
+        auto const vname = it->name.empty() ? juce::translate("Extra OUTIDX").replace("OUTIDX", juce::String(outputIndex))
                                             : juce::String(it->name);
-        auto const name = juce::translate("NAME Threshold").replace("NAME", vname);
+        auto const name = juce::translate("OUTNAME Threshold").replace("OUTNAME", vname);
         auto const step = it->isQuantized ? it->quantizeStep : 0.0f;
 
         // Create tooltip showing which tracks this affects
@@ -1058,7 +1058,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
             {
                 return;
             }
-            mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", vname));
+            mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the OUTNAME threshold").replace("OUTNAME", vname));
         };
         auto const applyChange = [=, this](float newValue)
         {

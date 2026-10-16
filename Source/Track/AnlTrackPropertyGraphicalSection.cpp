@@ -686,9 +686,9 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
         auto const& output = description.extraOutputs.at(index);
         auto const range = Tools::getExtraRange(mAccessor, index);
         auto const tooltip = Tools::getExtraTooltip(mAccessor, index);
-        auto const vname = output.name.empty() ? juce::translate("Extra NUM").replace("NUM", juce::String(index))
+        auto const vname = output.name.empty() ? juce::translate("Extra OUTIDX").replace("OUTIDX", juce::String(index))
                                                : juce::String(output.name);
-        auto const name = juce::translate("NAME Threshold").replace("NAME", vname);
+        auto const name = juce::translate("OUTNAME Threshold").replace("OUTNAME", vname);
         auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
         auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
         auto const step = output.isQuantized ? output.quantizeStep : 0.0f;
@@ -708,7 +708,7 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             {
                 return;
             }
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Modify the NAME threshold").replace("NAME", vname));
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Modify the OUTNAME threshold").replace("OUTNAME", vname));
         };
         auto const applyChange = [=, this](float newValue)
         {

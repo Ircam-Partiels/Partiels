@@ -77,7 +77,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                         auto const options = juce::MessageBoxOptions()
                                                  .withIconType(juce::AlertWindow::WarningIcon)
                                                  .withTitle(juce::translate("Plugins scan failed!"))
-                                                 .withMessage(juce::translate("Partiels failed to scan the plugins due to: MESSAGE.").replace("MESSAGE", message))
+                                                 .withMessage(juce::translate("Partiels failed to scan the plugins due to: ERRSTR.").replace("ERRSTR", message))
                                                  .withButton(juce::translate("Ok"));
                         juce::AlertWindow::showAsync(options, nullptr);
                     };

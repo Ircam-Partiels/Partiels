@@ -90,7 +90,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                     mTabbedButtonBar.clearTabs();
                     for(auto i = 0; i < numChannels; ++i)
                     {
-                        auto const name = juce::translate("Channel INDEX").replace("INDEX", juce::String(i + 1));
+                        auto const name = juce::translate("Channel IDX").replace("IDX", juce::String(i + 1));
                         mTabbedButtonBar.addTab(name, juce::Colours::transparentBlack, i);
                     }
                     mTabbedButtonBar.setCurrentTabIndex(channel.has_value() ? static_cast<int>(*channel) : 0, false);
@@ -108,7 +108,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 for(int i = static_cast<int>(ColumnType::extra); i < static_cast<int>(ColumnType::extra) + numExtra; ++i)
                 {
                     auto const name = description.extraOutputs.at(static_cast<size_t>(i - static_cast<int>(ColumnType::extra))).name;
-                    header.addColumn(name.empty() ? juce::translate("Extra INDEX").replace("INDEX", juce::String(i + 1)) : name, i, 96, 84, -1, ColumnFlags::visible);
+                    header.addColumn(name.empty() ? juce::translate("Extra IDX").replace("IDX", juce::String(i + 1)) : name, i, 96, 84, -1, ColumnFlags::visible);
                 }
                 auto const valueName = description.output.name;
                 auto const valueColumnId = static_cast<int>(ColumnType::value);
