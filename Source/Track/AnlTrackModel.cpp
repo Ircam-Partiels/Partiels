@@ -275,6 +275,7 @@ void XmlParser::toXml<Track::GraphicsSettings>(juce::XmlElement& xml, juce::Iden
     toXml(*child, "lineWidth", value.lineWidth);
     toXml(*child, "unit", value.unit);
     toXml(*child, "labelLayout", value.labelLayout);
+    toXml(*child, "markerStyle", value.markerStyle);
     xml.addChildElement(child.release());
 }
 
@@ -294,6 +295,7 @@ auto XmlParser::fromXml<Track::GraphicsSettings>(juce::XmlElement const& xml, ju
     value.lineWidth = fromXml(*child, "lineWidth", defaultValue.lineWidth);
     value.unit = fromXml(*child, "unit", defaultValue.unit);
     value.labelLayout = fromXml(*child, "labelLayout", defaultValue.labelLayout);
+    value.markerStyle = fromXml(*child, "markerStyle", defaultValue.markerStyle);
     return value;
 }
 
@@ -304,6 +306,7 @@ void Track::to_json(nlohmann::json& j, GraphicsSettings const& settings)
     j["lineWidth"] = settings.lineWidth;
     j["unit"] = settings.unit;
     Track::to_json(j["labelLayout"], settings.labelLayout);
+    j["markerStyle"] = settings.markerStyle;
 }
 
 void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
@@ -319,6 +322,7 @@ void Track::from_json(nlohmann::json const& j, GraphicsSettings& settings)
     {
         Track::from_json(j["labelLayout"], settings.labelLayout);
     }
+    settings.markerStyle = j.value("markerStyle", settings.markerStyle);
 }
 
 ANALYSE_FILE_END
