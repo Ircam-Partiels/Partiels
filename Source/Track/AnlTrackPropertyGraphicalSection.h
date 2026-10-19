@@ -28,6 +28,7 @@ namespace Track
         void setUnit(juce::String const& unit);
         void setLabelJustification(LabelLayout::Justification justification);
         void setLabelPosition(float position);
+        void setMarkerStyle(MarkerStyle markerStyle);
         void setPluginValueRange();
         void setResultValueRange();
         void setValueRangeMin(double value);
@@ -66,6 +67,7 @@ namespace Track
         PropertyText mPropertyUnit;
         PropertyList mPropertyLabelJustification;
         PropertyNumber mPropertyLabelPosition;
+        PropertyList mPropertyMarkerStyle;
         PropertyList mPropertyValueRangeMode;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
