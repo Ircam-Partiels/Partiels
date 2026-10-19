@@ -27,6 +27,7 @@ namespace PluginList
         juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new plugin settings")};
         juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current plugin settings")};
         juce::TextButton mDefaultButton{juce::translate("Default"), juce::translate("Reset to the default plugin settings")};
+        juce::TextButton mRescanButton{juce::translate("Rescan"), juce::translate("Rescan the list of installed plugins")};
         juce::TextButton mOptionButton{juce::translate("Options"), juce::translate("Change the plugin options")};
         bool mUseEnvVariable = true;
 #if JUCE_MAC

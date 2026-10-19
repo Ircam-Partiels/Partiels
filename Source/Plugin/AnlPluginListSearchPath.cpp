@@ -57,6 +57,11 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         updateButtonsStates();
     };
 
+    mRescanButton.onClick = [=, this]()
+    {
+        mAccessor.sendSignal(SignalType::rescan, {true}, NotificationType::synchronous);
+    };
+
     mOptionButton.onClick = [=, this]()
     {
         juce::PopupMenu menu;
@@ -155,6 +160,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     addAndMakeVisible(mApplyButton);
     addAndMakeVisible(mResetButton);
     addAndMakeVisible(mDefaultButton);
+    addAndMakeVisible(mRescanButton);
     addAndMakeVisible(mOptionButton);
     setSize(405, 200);
 }
@@ -169,11 +175,13 @@ void PluginList::SearchPath::resized()
     auto bounds = getLocalBounds();
     {
         auto bottomBounds = bounds.removeFromBottom(30).withSizeKeepingCentre(403, 24);
-        mApplyButton.setBounds(bottomBounds.removeFromLeft(100));
+        mApplyButton.setBounds(bottomBounds.removeFromLeft(79));
         bottomBounds.removeFromLeft(1);
-        mResetButton.setBounds(bottomBounds.removeFromLeft(100));
+        mResetButton.setBounds(bottomBounds.removeFromLeft(79));
         bottomBounds.removeFromLeft(1);
-        mDefaultButton.setBounds(bottomBounds.removeFromLeft(100));
+        mDefaultButton.setBounds(bottomBounds.removeFromLeft(79));
+        bottomBounds.removeFromLeft(1);
+        mRescanButton.setBounds(bottomBounds.removeFromLeft(79));
         bottomBounds.removeFromLeft(1);
         mOptionButton.setBounds(bottomBounds);
     }
