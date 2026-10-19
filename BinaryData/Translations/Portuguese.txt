@@ -777,6 +777,8 @@ countries: pt br
 "Reset to the default plugin settings" = "Redefinir para as configurações padrão do plugin"
 "Options" = "Opções"
 "Change the plugin options" = "Alterar as opções do plugin"
+"Rescan" = "Reverificar"
+"Rescan the list of installed plugins" = "Reverificar a lista de plugins instalados"
 "Show Ircam plugins" = "Mostrar plugins Ircam"
 "Search for a plugin by name, feature, description or maker" = "Buscar por um plugin por nome, recurso, descrição ou criador"
 "Plugins scan failed!" = "A verificação de plugins falhou!"
