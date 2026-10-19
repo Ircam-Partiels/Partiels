@@ -777,6 +777,8 @@ countries: fr be
 "Reset to the default plugin settings" = "Réinitialiser aux paramètres par défaut du plugin"
 "Options" = "Options"
 "Change the plugin options" = "Modifier les options du plugin"
+"Rescan" = "Réanalyser"
+"Rescan the list of installed plugins" = "Réanalyser la liste des plugins installés"
 "Show Ircam plugins" = "Afficher les plugins Ircam"
 "Search for a plugin by name, feature, description or maker" = "Recherche d'un plugin par nom, fonctionnalité, description ou créateur"
 "Plugins scan failed!" = "L'analyse des plugins a échoué !"
