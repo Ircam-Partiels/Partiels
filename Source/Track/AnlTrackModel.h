@@ -161,6 +161,14 @@ namespace Track
     void to_json(nlohmann::json& j, LabelLayout const& labelLayout);
     void from_json(nlohmann::json const& j, LabelLayout& labelLayout);
 
+    // clang-format off
+    enum class MarkerStyle
+    {
+          bar
+        , underline
+    };
+    // clang-format on
+
     struct GraphicsSettings
     {
         ColourSet colours{};
@@ -168,10 +176,11 @@ namespace Track
         float lineWidth = 1.0f;
         std::optional<juce::String> unit{};
         LabelLayout labelLayout{};
+        MarkerStyle markerStyle{MarkerStyle::bar};
 
         const auto tie() const
         {
-            return std::tie(colours, font, lineWidth, unit, labelLayout);
+            return std::tie(colours, font, lineWidth, unit, labelLayout, markerStyle);
         }
 
         bool operator==(GraphicsSettings const& rhs) const
