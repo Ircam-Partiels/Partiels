@@ -30,6 +30,11 @@ static juce::StringArray getLabelJustifications()
     return {juce::translate("Top"), juce::translate("Centred"), juce::translate("Bottom")};
 }
 
+static juce::StringArray getMarkerStyles()
+{
+    return {juce::translate("Bar"), juce::translate("Underline")};
+}
+
 Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, PresetList::Accessor& presetListAcsr)
 : mDirector(director)
 , mPresetListAccessor(presetListAcsr)
@@ -197,6 +202,13 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                              setLabelPosition(static_cast<float>(position));
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change the position of the labels"));
                          })
+, mPropertyMarkerStyle(juce::translate("Marker Style"), juce::translate("The style of the markers."), "", getMarkerStyles(), [&](size_t index)
+                       {
+                           mDirector.startAction();
+                           auto const fallbackMarkerStyle = mAccessor.getAttr<AttrType::graphicsSettings>().markerStyle;
+                           setMarkerStyle(magic_enum::enum_cast<MarkerStyle>(static_cast<int>(index)).value_or(fallbackMarkerStyle));
+                           mDirector.endAction(ActionState::newTransaction, juce::translate("Change the style of the markers"));
+                       })
 , mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", {juce::translate("Default"), juce::translate("Results"), juce::translate("Manual")}, [&](size_t index)
                           {
                               switch(index)
@@ -342,6 +354,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                             mPropertyLineWidth.setVisible(true);
                             mPropertyLabelJustification.setVisible(true);
                             mPropertyLabelPosition.setVisible(true);
+                            mPropertyMarkerStyle.setVisible(true);
                             mPropertyChannelLayout.setVisible(numChannels > 1_z);
                             mPropertyShowInGroup.setVisible(true);
                             mPropertyPreset.setVisible(true);
@@ -439,6 +452,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 auto const index = magic_enum::enum_index(settings.labelLayout.justification).value_or(mPropertyLabelJustification.entry.getSelectedItemIndex());
                 mPropertyLabelJustification.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
                 mPropertyLabelPosition.entry.setValue(static_cast<double>(settings.labelLayout.position), juce::NotificationType::dontSendNotification);
+
+                // Update markerStyle
+                auto const markerStyleIndex = magic_enum::enum_index(settings.markerStyle).value_or(mPropertyMarkerStyle.entry.getSelectedItemIndex());
+                mPropertyMarkerStyle.entry.setSelectedItemIndex(static_cast<int>(markerStyleIndex), juce::NotificationType::dontSendNotification);
                 break;
             }
             case AttrType::zoomLink:
@@ -590,6 +607,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
+    addAndMakeVisible(mPropertyMarkerStyle);
     addAndMakeVisible(mPropertyValueRangeMode);
     addAndMakeVisible(mPropertyValueRangeLogScale);
     addAndMakeVisible(mPropertyValueRangeMin);
@@ -648,6 +666,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
+    setBounds(mPropertyMarkerStyle);
     setBounds(mPropertyValueRangeMode);
     setBounds(mPropertyValueRangeLogScale);
     setBounds(mPropertyValueRangeMin);
@@ -825,6 +844,13 @@ void Track::PropertyGraphicalSection::setLabelPosition(float position)
 {
     auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
     settings.labelLayout.position = position;
+    mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+}
+
+void Track::PropertyGraphicalSection::setMarkerStyle(MarkerStyle markerStyle)
+{
+    auto settings = mAccessor.getAttr<AttrType::graphicsSettings>();
+    settings.markerStyle = markerStyle;
     mAccessor.setAttr<AttrType::graphicsSettings>(settings, NotificationType::synchronous);
 }
 
