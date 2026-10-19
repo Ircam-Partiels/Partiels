@@ -30,6 +30,11 @@ static juce::StringArray getLabelJustifications()
     return {juce::translate("Top"), juce::translate("Centred"), juce::translate("Bottom")};
 }
 
+static juce::StringArray getMarkerStyles()
+{
+    return {juce::translate("Bar"), juce::translate("Underline")};
+}
+
 Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
 : mDirector(director)
 , mPropertyColourMap(juce::translate("Color Map"), juce::translate("The color map used by the graphical renderers of the tracks of the group."), "", getColourMapNames(), [&](size_t index)
@@ -178,6 +183,12 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                              setLabelPosition(static_cast<float>(position));
                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's position of the labels"));
                          })
+, mPropertyMarkerStyle(juce::translate("Marker Style"), juce::translate("The style of the markers for the graphical renderers of the tracks of the group."), "", getMarkerStyles(), [&](size_t index)
+                       {
+                           mDirector.startAction(true);
+                           setMarkerStyle(magic_enum::enum_cast<Track::MarkerStyle>(static_cast<int>(index)).value_or(Track::MarkerStyle::bar));
+                           mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's style of the markers"));
+                       })
 , mPropertyValueRangeLogScale(juce::translate("Value Log. Scale"), juce::translate("Toggle the logarithmic scale of the zoom range of the tracks of the group."), [&](bool value)
                               {
                                   mDirector.startAction(true);
@@ -223,6 +234,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyLabelJustification);
     addAndMakeVisible(mPropertyLabelPosition);
+    addAndMakeVisible(mPropertyMarkerStyle);
     addAndMakeVisible(mPropertyValueRangeLogScale);
     addAndMakeVisible(mPropertyTrackVisibility);
     addAndMakeVisible(mPropertyChannelLayout);
@@ -251,6 +263,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyUnit);
     setBounds(mPropertyLabelJustification);
     setBounds(mPropertyLabelPosition);
+    setBounds(mPropertyMarkerStyle);
     setBounds(mPropertyValueRangeLogScale);
     for(auto const& propertyExtraThreshold : mPropertyExtraThresholds)
     {
@@ -582,6 +595,26 @@ void Group::PropertyGraphicalsSection::setLabelPosition(float position)
     updateLabel();
 }
 
+void Group::PropertyGraphicalsSection::setMarkerStyle(Track::MarkerStyle markerStyle)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::label;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto settings = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>();
+        settings.markerStyle = markerStyle;
+        trackAcsr.get().setAttr<Track::AttrType::graphicsSettings>(settings, NotificationType::synchronous);
+    }
+    updateMarkerStyle();
+}
+
 void Group::PropertyGraphicalsSection::setLogScale(bool state)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
@@ -648,6 +681,7 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateLineWidth();
     updateUnit();
     updateLabel();
+    updateMarkerStyle();
     updateLogScale();
     updateExtraThresholds();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
@@ -941,6 +975,32 @@ void Group::PropertyGraphicalsSection::updateLabel()
     {
         mPropertyLabelJustification.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
         mPropertyLabelPosition.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+    }
+}
+
+void Group::PropertyGraphicalsSection::updateMarkerStyle()
+{
+    juce::StringArray trackNames;
+    std::set<Track::MarkerStyle> markerStyles;
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label)
+        {
+            markerStyles.insert(trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().markerStyle);
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+    mPropertyMarkerStyle.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The style of the markers for the graphical renderers of the tracks of the group."));
+    mPropertyMarkerStyle.setVisible(!markerStyles.empty());
+    if(markerStyles.size() == 1_z)
+    {
+        auto const index = magic_enum::enum_index(*markerStyles.cbegin()).value_or(mPropertyMarkerStyle.entry.getSelectedItemIndex());
+        mPropertyMarkerStyle.entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyMarkerStyle.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
 }
 
