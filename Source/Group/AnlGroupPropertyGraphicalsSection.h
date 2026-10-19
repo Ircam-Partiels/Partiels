@@ -31,6 +31,7 @@ namespace Group
         void setUnit(juce::String const& unit);
         void setLabelJustification(Track::LabelLayout::Justification justification);
         void setLabelPosition(float position);
+        void setMarkerStyle(Track::MarkerStyle markerStyle);
         void setLogScale(bool state);
         void showTrackVisibility();
         void showChannelLayout();
@@ -41,6 +42,7 @@ namespace Group
         void updateLineWidth();
         void updateUnit();
         void updateLabel();
+        void updateMarkerStyle();
         void updateLogScale();
         void updateExtraThresholds();
         void updateExtraThresholdStates();
@@ -61,6 +63,7 @@ namespace Group
         PropertyText mPropertyUnit;
         PropertyList mPropertyLabelJustification;
         PropertyNumber mPropertyLabelPosition;
+        PropertyList mPropertyMarkerStyle;
         PropertyToggle mPropertyValueRangeLogScale;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
