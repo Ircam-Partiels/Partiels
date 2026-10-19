@@ -62,7 +62,7 @@ Application::ExporterContent::ExporterContent()
             {
                 auto const options = acsr.getAttr<AttrType::exportOptions>();
                 mExporterPanel.setOptions(options, juce::NotificationType::dontSendNotification);
-                mPropertyExport.setEnabled(options.isValid());
+                mPropertyExport.setEnabled(options.isValid() && !mExporterPanel.getSelectedIdentifiers().empty());
             }
             break;
         }
@@ -72,6 +72,11 @@ Application::ExporterContent::ExporterContent()
     {
         auto& acsr = Instance::get().getApplicationAccessor();
         acsr.setAttr<AttrType::exportOptions>(mExporterPanel.getOptions(), NotificationType::synchronous);
+    };
+
+    mExporterPanel.onSelectionChanged = [this]()
+    {
+        mPropertyExport.setEnabled(mExporterPanel.getOptions().isValid() && !mExporterPanel.getSelectedIdentifiers().empty());
     };
 
     auto& acsr = Instance::get().getApplicationAccessor();
