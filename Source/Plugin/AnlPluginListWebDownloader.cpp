@@ -360,6 +360,8 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::download(std::atomi
     }
 
     std::vector<Plugin::WebReference> allReferences;
+    // The plugins of the RDF list are not compatible with the ARM processors, only the plugins of the Partiels distribution are listed on this system
+#if !(JUCE_MAC && JUCE_ARM)
     try
     {
         auto const references = downloadRdf(shouldQuit);
@@ -383,6 +385,7 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::download(std::atomi
     {
         return {};
     }
+#endif
 
     allReferences.insert(allReferences.end(), distribution.cbegin(), distribution.cend());
     return allReferences;
