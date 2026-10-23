@@ -542,14 +542,14 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
         }
     };
 
-    mBinZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mBinZoomListener.onAttrChanged = [&]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
             {
-                auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                mPropertyNumBins.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+                auto const numBins = Tools::getNumBins(mAccessor);
+                mPropertyNumBins.entry.setValue(numBins.has_value() ? static_cast<double>(numBins.value()) : 0.0, juce::NotificationType::dontSendNotification);
             }
             break;
             case Zoom::AttrType::minimumLength:

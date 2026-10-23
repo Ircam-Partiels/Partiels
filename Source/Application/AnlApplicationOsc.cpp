@@ -720,7 +720,14 @@ void Application::Osc::MouseDispatcher::mouseMove(juce::MouseEvent const& event)
         auto const scaledY = static_cast<double>(verRange.getEnd() - pos.y) / static_cast<double>(verRange.getLength());
         auto const binRange = trackAcsr.getAcsr<Track::AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
         auto binIndex = scaledY * binRange.getLength() + binRange.getStart();
-        if(trackAcsr.getAttr<Track::AttrType::zoomLogScale>() && Track::Tools::hasVerticalZoomInHertz(trackAcsr))
+        if(Track::Tools::getFrameType(trackAcsr) == Track::FrameType::vector && Track::Tools::hasVerticalZoomInHertz(trackAcsr))
+        {
+            // The zoom range is expressed in hertz (or in scaled midi values if the log scale
+            // is enabled), convert it back to a bin index
+            auto const hertz = Track::Tools::getHertzFromBinZoomValue(trackAcsr, binIndex);
+            binIndex = Track::Tools::getBinIndexFromHertz(trackAcsr, hertz);
+        }
+        else if(trackAcsr.getAttr<Track::AttrType::zoomLogScale>() && Track::Tools::hasVerticalZoomInHertz(trackAcsr))
         {
             auto const numBins = trackAcsr.getAcsr<Track::AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
             auto const nyquist = trackAcsr.getAttr<Track::AttrType::sampleRate>() / 2.0;

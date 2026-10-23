@@ -27,6 +27,13 @@ namespace Track
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
         void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
         bool hasVerticalZoomInHertz(Accessor const& accessor);
+        std::optional<size_t> getNumBins(Accessor const& acsr);
+        double getBinIndexFromHertz(Accessor const& acsr, double hertz);
+        double getHertzFromBinIndex(Accessor const& acsr, double binIndex);
+        double getHertzFromBinZoomValue(Accessor const& acsr, double value);
+        double getBinZoomValueFromHertz(Accessor const& acsr, double hertz);
+        size_t getBinIndexFromBinZoomValue(Accessor const& acsr, double value);
+        juce::String binZoomValueToString(Accessor const& acsr, double value);
 
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float pixelToValue(float position, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);

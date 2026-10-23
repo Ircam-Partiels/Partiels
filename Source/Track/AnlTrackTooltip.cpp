@@ -86,6 +86,13 @@ namespace Track
                             return {};
                         }
                         auto const value = getScaledVerticalValue(acsr.getAcsr<AcsrType::binZoom>(), std::get<1_z>(channelRange.value()), y);
+                        if(hasVerticalZoomInHertz(acsr))
+                        {
+                            // The zoom range is expressed in hertz (or in scaled midi values if the
+                            // log scale is enabled), convert it back to a fractional bin index
+                            auto const hertz = getHertzFromBinZoomValue(acsr, value);
+                            return getBinIndexFromHertz(acsr, hertz);
+                        }
                         if(acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr))
                         {
                             auto const numBins = acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
@@ -148,6 +155,15 @@ juce::String Track::Tools::getZoomTootip(Accessor const& acsr, juce::Component c
                 auto const value = getScaledVerticalValue(acsr, component, y);
                 if(value.has_value())
                 {
+                    if(hasVerticalZoomInHertz(acsr))
+                    {
+                        // The value is a fractional bin index, display the equivalent in hertz
+                        auto const hertz = getHertzFromBinIndex(acsr, value.value());
+                        auto const index = static_cast<size_t>(std::max(std::floor(value.value()), 0.0));
+                        auto const name = getBinName(acsr, index);
+                        auto const binText = juce::translate("Bin IDX").replace("IDX", juce::String(index)) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+                        return Format::valueToString(hertz, 4) + " Hz (" + binText + ")";
+                    }
                     auto const index = static_cast<size_t>(std::max(std::floor(value.value()), 0.0));
 #if JUCE_DEBUG
                     auto const diff = value.value() - static_cast<double>(index);
@@ -299,7 +315,7 @@ juce::StringArray Track::Tools::getValueTootip(Accessor const& accessor, Zoom::A
             return lines;
         }
         auto const binName = getBinName(accessor, binIndex);
-        auto const info = juce::translate("frame FIDX - bin BIDX").replace("FIDX", juce::String(frameIndex)).replace("BIDX", juce::String(binIndex)) + (binName.isNotEmpty() ? (" - " + binName) : "");
+        auto const info = juce::translate("Frame FIDX - Bin BIDX").replace("FIDX", juce::String(frameIndex)).replace("BIDX", juce::String(binIndex)) + (binName.isNotEmpty() ? (" - " + binName) : "");
         lines.add(name + ": " + Format::valueToString(column.at(binIndex), 4) + unit + " (" + info + ")");
         lines.addArray(getExtraTooltip(description, std::get<3_z>(*it)));
         return lines;
