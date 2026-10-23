@@ -1,5 +1,6 @@
 #include "AnlApplicationTools.h"
 #include "../Document/AnlDocumentSelection.h"
+#include "../Track/AnlTrackTools.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
@@ -178,6 +179,26 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
     }
 
     trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+
+    // Enable the logarithmic scale if the vertical zoom of the new track allows it and if the
+    // tracks of the group already use it
+    if(Track::Tools::hasVerticalZoomInHertz(trackAcsr))
+    {
+        auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+        std::erase(layout, trackIdentifier);
+        std::erase_if(layout, [&](juce::String const& otherTrackIdentifier)
+                      {
+                          return !Track::Tools::hasVerticalZoomInHertz(Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier));
+                      });
+        auto const groupUsesLogScale = !layout.empty() && std::all_of(layout.cbegin(), layout.cend(), [&](juce::String const& otherTrackIdentifier)
+                                                                      {
+                                                                          return Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier).getAttr<Track::AttrType::zoomLogScale>();
+                                                                      });
+        if(groupUsesLogScale)
+        {
+            trackAcsr.setAttr<Track::AttrType::zoomLogScale>(true, NotificationType::synchronous);
+        }
+    }
     return std::make_tuple(juce::Result::ok(), trackIdentifier);
 }
 
