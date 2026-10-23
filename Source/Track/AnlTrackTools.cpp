@@ -189,6 +189,108 @@ bool Track::Tools::hasVerticalZoomInHertz(Accessor const& accessor)
     return std::any_of(binNames.cbegin(), binNames.cend(), isHertz);
 }
 
+std::optional<size_t> Track::Tools::getNumBins(Accessor const& acsr)
+{
+    auto const& output = acsr.getAttr<AttrType::description>().output;
+    if(output.hasFixedBinCount)
+    {
+        return output.binCount;
+    }
+    auto const& results = acsr.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    return static_cast<bool>(access) ? results.getNumBins() : decltype(results.getNumBins()){};
+}
+
+double Track::Tools::getBinIndexFromHertz(Accessor const& acsr, double hertz)
+{
+    auto const numBins = getNumBins(acsr).value_or(0_z);
+    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+    // The bins are spread from 0 to nyquist inclusive, so the bin i is at i / (numBins - 1) * nyquist
+    if(numBins <= 1_z || nyquist <= 0.0)
+    {
+        return 0.0;
+    }
+    return std::clamp(hertz / nyquist * static_cast<double>(numBins - 1_z), 0.0, static_cast<double>(numBins - 1_z));
+}
+
+double Track::Tools::getHertzFromBinIndex(Accessor const& acsr, double binIndex)
+{
+    auto const numBins = getNumBins(acsr).value_or(0_z);
+    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+    // The bins are spread from 0 to nyquist inclusive, so the bin i is at i / (numBins - 1) * nyquist
+    if(numBins <= 1_z || nyquist <= 0.0)
+    {
+        return 0.0;
+    }
+    return std::clamp(binIndex / static_cast<double>(numBins - 1_z) * nyquist, 0.0, nyquist);
+}
+
+double Track::Tools::getHertzFromBinZoomValue(Accessor const& acsr, double value)
+{
+    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+    auto const isLog = acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr);
+    if(getFrameType(acsr) == FrameType::vector && hasVerticalZoomInHertz(acsr))
+    {
+        return isLog ? getHertzFromMidi(value * midiMax / nyquist) : value;
+    }
+    auto const numBins = getNumBins(acsr);
+    if(!numBins.has_value() || numBins.value() == 0_z || nyquist <= 0.0)
+    {
+        return value;
+    }
+    if(isLog)
+    {
+        return getHertzFromMidi(value / static_cast<double>(numBins.value()) * midiMax);
+    }
+    return value / static_cast<double>(numBins.value()) * nyquist;
+}
+
+double Track::Tools::getBinZoomValueFromHertz(Accessor const& acsr, double hertz)
+{
+    auto const nyquist = acsr.getAttr<AttrType::sampleRate>() / 2.0;
+    auto const midiMax = std::max(getMidiFromHertz(nyquist), 1.0);
+    auto const isLog = acsr.getAttr<AttrType::zoomLogScale>() && hasVerticalZoomInHertz(acsr);
+    if(getFrameType(acsr) == FrameType::vector && hasVerticalZoomInHertz(acsr))
+    {
+        return isLog ? getMidiFromHertz(hertz) * nyquist / midiMax : hertz;
+    }
+    auto const numBins = getNumBins(acsr);
+    if(!numBins.has_value() || numBins.value() == 0_z || nyquist <= 0.0)
+    {
+        return hertz;
+    }
+    if(isLog)
+    {
+        return getMidiFromHertz(hertz) / midiMax * static_cast<double>(numBins.value());
+    }
+    return hertz / nyquist * static_cast<double>(numBins.value());
+}
+
+size_t Track::Tools::getBinIndexFromBinZoomValue(Accessor const& acsr, double value)
+{
+    auto const numBins = getNumBins(acsr).value_or(0_z);
+    if(numBins == 0_z)
+    {
+        return 0_z;
+    }
+    auto const hertz = getHertzFromBinZoomValue(acsr, value);
+    return static_cast<size_t>(std::clamp(std::floor(getBinIndexFromHertz(acsr, hertz)), 0.0, static_cast<double>(numBins - 1_z)));
+}
+
+juce::String Track::Tools::binZoomValueToString(Accessor const& acsr, double value)
+{
+    if(!(getFrameType(acsr) == FrameType::vector && hasVerticalZoomInHertz(acsr)))
+    {
+        auto const index = getBinIndexFromBinZoomValue(acsr, value);
+        auto const name = getBinName(acsr, index);
+        return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
+    }
+    auto const hertz = getHertzFromBinZoomValue(acsr, value);
+    auto const index = getBinIndexFromBinZoomValue(acsr, value);
+    return Format::valueToString(hertz, 4) + " Hz - " + juce::translate("Bin IDX").replace("IDX", juce::String(index));
+}
+
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
@@ -709,25 +811,49 @@ std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& ac
     : public juce::Component
     {
     public:
-        RangeEditor(Zoom::Accessor& accessor, juce::String const name, std::vector<std::string> const names)
+        RangeEditor(Accessor& accessor, bool const hertzMode)
         : mAccessor(accessor)
-        , mName("Name", name)
-        , mNames(names)
-        , mPropertyStart(juce::translate("Low Bin"), juce::translate("The low bin of the visible range"), "", {0.0, 1.0}, 0.01, [&](double value)
+        , mHertzMode(hertzMode)
+        , mName("Name", accessor.getAttr<AttrType::name>())
+        , mNames(accessor.getAttr<AttrType::description>().output.binNames)
+        , mPropertyLowFrequency(juce::translate("Low Frequency"), juce::translate("The low frequency of the visible range"), "Hz", {0.0, 1.0}, 0.01, [this](double value)
+                                {
+                                    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                                    auto const zoomValue = getBinZoomValueFromHertz(mAccessor, value);
+                                    auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().withStart(zoomValue);
+                                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                                })
+        , mPropertyHighFrequency(juce::translate("High Frequency"), juce::translate("The high frequency of the visible range"), "Hz", {0.0, 1.0}, 0.01, [this](double value)
+                                 {
+                                     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                                     auto const zoomValue = getBinZoomValueFromHertz(mAccessor, value);
+                                     auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().withEnd(zoomValue);
+                                     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                                 })
+        , mPropertyStart(juce::translate("Low Bin"), juce::translate("The low bin of the visible range"), "", {0.0, 1.0}, 0.01, [this](double value)
                          {
-                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(value);
-                             mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                             auto const zoomValue = mHertzMode ? getBinZoomValueFromHertz(mAccessor, getHertzFromBinIndex(mAccessor, value)) : value;
+                             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().withStart(zoomValue);
+                             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                          })
-        , mPropertyEnd(juce::translate("High Bin"), juce::translate("The high bin of the visible range"), "", {0.0, 1.0}, 0.01, [&](double value)
+        , mPropertyEnd(juce::translate("High Bin"), juce::translate("The high bin of the visible range"), "", {0.0, 1.0}, 0.01, [this](double value)
                        {
-                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(value);
-                           mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                           auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                           auto const zoomValue = mHertzMode ? getBinZoomValueFromHertz(mAccessor, getHertzFromBinIndex(mAccessor, value)) : value;
+                           auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().withEnd(zoomValue);
+                           zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                        })
         {
             setWantsKeyboardFocus(true);
             addAndMakeVisible(mName);
             addAndMakeVisible(mPropertyStart);
             addAndMakeVisible(mPropertyEnd);
+            if(mHertzMode)
+            {
+                addAndMakeVisible(mPropertyLowFrequency);
+                addAndMakeVisible(mPropertyHighFrequency);
+            }
             mListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
             {
                 switch(attribute)
@@ -735,21 +861,47 @@ std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& ac
                     case Zoom::AttrType::globalRange:
                     {
                         auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                        mPropertyStart.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
-                        mPropertyEnd.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                        if(mHertzMode)
+                        {
+                            mPropertyLowFrequency.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                            mPropertyHighFrequency.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                            mPropertyStart.entry.setRange(juce::Range<double>{0.0, static_cast<double>(mNumBins)}, 0.0, juce::NotificationType::dontSendNotification);
+                            mPropertyEnd.entry.setRange(juce::Range<double>{0.0, static_cast<double>(mNumBins)}, 0.0, juce::NotificationType::dontSendNotification);
+                        }
+                        else
+                        {
+                            mPropertyStart.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                            mPropertyEnd.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                        }
                     }
                     break;
                     case Zoom::AttrType::visibleRange:
                     {
-                        auto const setValue = [this](NumberField& field, double value)
-                        {
-                            field.setValue(value, juce::NotificationType::dontSendNotification);
-                            auto const index = static_cast<size_t>(std::floor(value));
-                            field.setTextValueSuffix(index < mNames.size() ? " - " + mNames[index] : std::string());
-                        };
                         auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
-                        setValue(mPropertyStart.entry, range.getStart());
-                        setValue(mPropertyEnd.entry, range.getEnd());
+                        if(mHertzMode)
+                        {
+                            mPropertyLowFrequency.entry.setValue(getHertzFromBinZoomValue(mAccessor, range.getStart()), juce::NotificationType::dontSendNotification);
+                            mPropertyHighFrequency.entry.setValue(getHertzFromBinZoomValue(mAccessor, range.getEnd()), juce::NotificationType::dontSendNotification);
+                            auto const setBinValue = [this](NumberField& field, double value)
+                            {
+                                field.setValue(value, juce::NotificationType::dontSendNotification);
+                                auto const index = static_cast<size_t>(std::max(std::floor(value), 0.0));
+                                field.setTextValueSuffix(index < mNames.size() ? " (" + mNames[index] + ")" : std::string());
+                            };
+                            setBinValue(mPropertyStart.entry, getBinIndexFromHertz(mAccessor, getHertzFromBinZoomValue(mAccessor, range.getStart())));
+                            setBinValue(mPropertyEnd.entry, getBinIndexFromHertz(mAccessor, getHertzFromBinZoomValue(mAccessor, range.getEnd())));
+                        }
+                        else
+                        {
+                            auto const setValue = [this](NumberField& field, double value)
+                            {
+                                field.setValue(value, juce::NotificationType::dontSendNotification);
+                                auto const index = static_cast<size_t>(std::floor(value));
+                                field.setTextValueSuffix(index < mNames.size() ? " (" + mNames[index] + ")" : std::string());
+                            };
+                            setValue(mPropertyStart.entry, range.getStart());
+                            setValue(mPropertyEnd.entry, range.getEnd());
+                        }
                     }
                     break;
                     case Zoom::AttrType::minimumLength:
@@ -758,13 +910,16 @@ std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& ac
                 }
             };
 
-            mAccessor.addListener(mListener, NotificationType::synchronous);
-            setSize(180, 74);
+            mAccessor.getAcsr<AcsrType::binZoom>().addListener(mListener, NotificationType::synchronous);
+            // Make sure the editor is sized to fit all its fields before it is displayed
+            // in a callout box that takes the current size of the content into account
+            setSize(180, 122);
+            resized();
         }
 
         ~RangeEditor() override
         {
-            mAccessor.removeListener(mListener);
+            mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mListener);
         }
 
         // juce::Component
@@ -772,24 +927,30 @@ std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& ac
         {
             auto bounds = getLocalBounds();
             mName.setBounds(bounds.removeFromTop(24));
+            if(mHertzMode)
+            {
+                mPropertyHighFrequency.setBounds(bounds.removeFromTop(mPropertyHighFrequency.getHeight()));
+                mPropertyLowFrequency.setBounds(bounds.removeFromTop(mPropertyLowFrequency.getHeight()));
+            }
             mPropertyEnd.setBounds(bounds.removeFromTop(mPropertyEnd.getHeight()));
             mPropertyStart.setBounds(bounds.removeFromTop(mPropertyStart.getHeight()));
             setSize(getWidth(), bounds.getY() + 2);
         }
 
     private:
-        Zoom::Accessor& mAccessor;
+        Accessor& mAccessor;
+        bool const mHertzMode;
+        size_t const mNumBins{getNumBins(mAccessor).value_or(0_z)};
         Zoom::Accessor::Listener mListener{typeid(*this).name()};
         juce::Label mName;
         std::vector<std::string> const mNames;
+        PropertyNumber mPropertyLowFrequency;
+        PropertyNumber mPropertyHighFrequency;
         PropertyNumber mPropertyStart;
         PropertyNumber mPropertyEnd;
     };
 
-    auto& zoomAcsr = acsr.getAcsr<AcsrType::binZoom>();
-    auto const name = acsr.getAttr<AttrType::name>();
-    auto const unit = acsr.getAttr<AttrType::description>().output.binNames;
-    return std::make_unique<RangeEditor>(zoomAcsr, name, unit);
+    return std::make_unique<RangeEditor>(acsr, getFrameType(acsr) == FrameType::vector && hasVerticalZoomInHertz(acsr));
 }
 
 ANALYSE_FILE_END

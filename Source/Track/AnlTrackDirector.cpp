@@ -221,12 +221,15 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::zoomLogScale:
             case AttrType::sampleRate:
             {
-                if(mAudioFormatReader != nullptr && (mAccessor.getAttr<AttrType::sampleRate>() - mAudioFormatReader->sampleRate) > std::numeric_limits<double>::epsilon())
+                if(mAudioFormatReader != nullptr && std::abs(mAccessor.getAttr<AttrType::sampleRate>() - mAudioFormatReader->sampleRate) > std::numeric_limits<double>::epsilon())
                 {
                     mAccessor.setAttr<AttrType::sampleRate>(mAudioFormatReader->sampleRate, NotificationType::synchronous);
                 }
                 else
                 {
+                    // The ranges of the bin zoom accessor must be updated if they are expressed
+                    // in hertz (the domain of the zoom depends on the log scale and the sample rate)
+                    sanitizeZooms(notification);
                     runRendering();
                 }
             }
@@ -473,6 +476,13 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
     mHierarchyManager.addHierarchyListener(mHierarchyListener, NotificationType::synchronous);
+
+    // Make sure the sample rate of the track matches the one of the audio format reader, the
+    // analyses, the plugin descriptions and the vertical zoom in hertz depend on it
+    if(mAudioFormatReader != nullptr && std::abs(mAccessor.getAttr<AttrType::sampleRate>() - mAudioFormatReader->sampleRate) > std::numeric_limits<double>::epsilon())
+    {
+        mAccessor.setAttr<AttrType::sampleRate>(mAudioFormatReader->sampleRate, NotificationType::synchronous);
+    }
 
     runAnalysis(NotificationType::synchronous);
     resetSavedState();
@@ -924,7 +934,20 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const& results = mAccessor.getAttr<AttrType::results>();
         auto const access = results.getReadAccess();
         auto const numBins = static_cast<bool>(access) ? results.getNumBins() : decltype(results.getNumBins()){};
-        if(pluginRange.has_value() && !pluginRange.value().isEmpty())
+
+        // If the vertical zoom can be displayed and controlled in hertz, the ranges of the
+        // zoom accessor are expressed in hertz (or in scaled midi values if the log scale is
+        // enabled) instead of bin indices
+        auto const nyquist = mAccessor.getAttr<AttrType::sampleRate>() / 2.0;
+        if(Tools::hasVerticalZoomInHertz(mAccessor) && nyquist > 0.0)
+        {
+            Zoom::Range const hertzRange{0.0, nyquist};
+            auto const visibleRange = getVisibleRange(zoomAcsr, hertzRange, useZoomLink);
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(hertzRange, notification);
+            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, notification);
+        }
+        else if(pluginRange.has_value() && !pluginRange.value().isEmpty())
         {
             auto const visibleRange = getVisibleRange(zoomAcsr, pluginRange.value(), useZoomLink);
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(pluginRange.value(), notification);

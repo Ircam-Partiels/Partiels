@@ -265,29 +265,10 @@ std::function<juce::String(double)> Track::Renderer::getGridStringify(Accessor c
         }
         case Track::FrameType::vector:
         {
-            auto const isLog = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
-            if(isLog)
+            return [&](double value)
             {
-                auto const numBins = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
-                auto const nyquist = accessor.getAttr<AttrType::sampleRate>() / 2.0;
-                auto const midiMax = std::max(Tools::getMidiFromHertz(nyquist), 1.0);
-                return [&, numBins, nyquist, midiMax](double value)
-                {
-                    auto const startMidi = Tools::getHertzFromMidi(value / numBins * midiMax);
-                    auto const index = static_cast<size_t>(std::floor(startMidi / nyquist * numBins));
-                    auto const name = Tools::getBinName(accessor, index);
-                    return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
-                };
-            }
-            else
-            {
-                return [&](double value)
-                {
-                    auto const index = static_cast<size_t>(std::floor(value));
-                    auto const name = Tools::getBinName(accessor, index);
-                    return juce::String(index) + (name.isNotEmpty() ? juce::String(" - ") + name : "");
-                };
-            }
+                return Tools::binZoomValueToString(accessor, value);
+            };
         }
     }
     return nullptr;
