@@ -35,6 +35,45 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 #endif
 }
 
+std::vector<juce::File> PluginList::getPluginDirectories(Accessor const& accessor)
+{
+    std::vector<juce::File> directories;
+    auto const addDirectory = [&](juce::File const& directory)
+    {
+        if(juce::File::isAbsolutePath(directory.getFullPathName()) && std::none_of(directories.cbegin(), directories.cend(), [&](juce::File const& existing)
+                                                                                   {
+                                                                                       return existing == directory;
+                                                                                   }))
+        {
+            directories.push_back(directory);
+        }
+    };
+    // The environment variable ($VAMP_PATH, or the default paths of the SDK if the variable is empty)
+    // is modified by the application (see setEnvironment), the paths of the variable are kept
+    // from the first call before the modification (even if the environment variable is not used yet)
+    static auto const environmentDirectories = []()
+    {
+        auto dirs = std::vector<juce::File>{};
+        for(auto const& path : Vamp::PluginHostAdapter::getPluginPath())
+        {
+            dirs.push_back(juce::File{juce::String{path}});
+        }
+        return dirs;
+    }();
+    if(accessor.getAttr<AttrType::useEnvVariable>())
+    {
+        for(auto const& directory : environmentDirectories)
+        {
+            addDirectory(directory);
+        }
+    }
+    for(auto const& directory : accessor.getAttr<AttrType::searchPath>())
+    {
+        addDirectory(directory);
+    }
+    return directories;
+}
+
 juce::File PluginList::getPackagePluginDirectory()
 {
     auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
@@ -57,41 +96,30 @@ void PluginList::setEnvironment(Accessor const& accessor, bool usePluginPackageD
 
     std::set<juce::File> files;
     std::string value;
-    auto addToValue = [&](std::string const& path)
+    auto addToValue = [&](juce::File const& file)
     {
 #if JUCE_MAC || JUCE_LINUX
         auto constexpr separator = ":";
 #elif JUCE_WINDOWS
         auto constexpr separator = ";";
 #endif
-        if(juce::File::isAbsolutePath(path))
+        if(!juce::File::isAbsolutePath(file.getFullPathName()))
         {
-            auto const result = files.insert(juce::File(path));
-            if(result.second)
-            {
-                value += result.first->getFullPathName().toStdString() + separator;
-            }
+            return;
         }
-        else
+        auto const result = files.insert(file);
+        if(result.second)
         {
-            value += path + separator;
+            value += result.first->getFullPathName().toStdString() + separator;
         }
     };
-    if(accessor.getAttr<AttrType::useEnvVariable>())
+    for(auto const& directory : getPluginDirectories(accessor))
     {
-        auto const paths = Vamp::PluginHostAdapter::getPluginPath();
-        for(auto const& path : paths)
-        {
-            addToValue(path);
-        }
-    }
-    for(auto const& file : accessor.getAttr<AttrType::searchPath>())
-    {
-        addToValue(file.getFullPathName().toStdString());
+        addToValue(directory);
     }
     if(usePluginPackageDirectory)
     {
-        addToValue(getPackagePluginDirectory().getFullPathName().toStdString());
+        addToValue(getPackagePluginDirectory());
     }
     if(value.empty())
     {
