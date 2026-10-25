@@ -269,7 +269,7 @@ endif()
 set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
 set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES")
 set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_COPY_PHASE_STRIP "NO")
-set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
+set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=/Library/Audio/Plug-Ins/Vamp:$ENV{HOME}/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
 
 include(${PARTIELS_BINARYDATA_DIRECTORY}/Resource/XcodeSetupWarnings.cmake)
 target_enable_xcode_full_warnings(Partiels)
