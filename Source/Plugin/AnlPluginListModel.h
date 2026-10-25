@@ -47,6 +47,7 @@ namespace PluginList
     };
 
     std::vector<juce::File> getDefaultSearchPath();
+    std::vector<juce::File> getPluginDirectories(Accessor const& accessor);
     juce::File getPackagePluginDirectory();
     void setEnvironment(Accessor const& accessor, bool usePluginPackageDirectory);
     void setBlackListFile(juce::File const& blacklistFile);
