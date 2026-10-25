@@ -45,6 +45,13 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
         throw std::runtime_error("plugin loader is not available");
     }
 
+    std::unique_lock<std::mutex> lock(mMutex);
+    if(forceRescan)
+    {
+        // Destroying the plugin instances releases the dynamic libraries held by the loader, otherwise the update of an already loaded plugin is ignored
+        mPlugins.clear();
+    }
+    lock.unlock();
     std::map<Plugin::Key, Plugin::Description> list;
     juce::StringArray errors;
     auto const pluginKeys = pluginLoader->listPlugins(forceRescan);
