@@ -137,6 +137,8 @@ add_subdirectory(Dependencies/sdif)
 include(Dependencies/Misc/Misc.cmake)
 add_subdirectory(VampPlugins)
 
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/macos-plist-to-merge.plist PARTIELS_PLIST_TO_MERGE)
+
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
     VERSION                             ${PARTIELS_VERSION_STRING}
@@ -145,13 +147,12 @@ juce_add_gui_app(Partiels
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
     ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon_square.png"
-    DOCUMENT_EXTENSIONS                 "ptldoc,aac,aiff,aif,flac,m4a,mp3,ogg,wav,wma"
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
     NEEDS_STORE_KIT                     FALSE
     HARDENED_RUNTIME_ENABLED            TRUE
     HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.disable-library-validation"
-    PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string><key>NSAppTransportSecurity</key><dict><key>NSExceptionDomains</key><dict><key>vamp-plugins.org</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/><key>NSIncludesSubdomains</key><true/><key>NSExceptionRequiresForwardSecrecy</key><false/><key>NSRequiresCertificateTransparency</key><false/></dict></dict></dict></dict></plist>"
+    PLIST_TO_MERGE                      "${PARTIELS_PLIST_TO_MERGE}"
     )
 
 juce_generate_juce_header(Partiels)
