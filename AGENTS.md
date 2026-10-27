@@ -36,6 +36,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Place `const` after the type (`Type const& value`) and prefix members with `m` (`mProcess`).
 - Document public declarations with Doxygen comments (`//! @brief`, `//! @param`, `//! @return`).
 - Match the style of the surrounding code rather than introducing new idioms.
+- Code must compile without warnings. Strict warning flags are enabled for `Partiels` and `partiels-vamp-plugins` (`juce::juce_recommended_warning_flags`, plus [XcodeSetupWarnings.cmake](BinaryData/Resource/XcodeSetupWarnings.cmake) with Xcode); do not silence warnings with pragmas or flags.
 
 ## Translations
 - Wrap every user-visible string in `juce::translate`.
@@ -57,6 +58,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Do not commit, push or rewrite history unless explicitly asked. If asked to write a commit message, follow the existing convention `Module::Class: description` (e.g. `PluginList::Scanner: fix forceRescan in getPlugins()`).
 
 ## Checklist Before Handing Over
+- Build completes without warnings in the modified files.
 - Code formatted (`PartielsCheckFormat` passes).
 - New user-visible strings translated in French and Portuguese.
 - `ctest` passes.
