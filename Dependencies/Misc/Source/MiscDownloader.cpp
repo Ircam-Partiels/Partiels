@@ -17,7 +17,9 @@ void Downloader::launch(juce::URL url, juce::String const& header, std::function
         MiscWeakAssert(false);
         return;
     }
-    auto const file = directory.getChildFile("temp");
+    // The temporary directory can be shared with other applications (on Linux and Windows),
+    // the name of the file is specific to the application
+    auto const file = directory.getChildFile(juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getFileNameWithoutExtension() + "-download");
     if(!file.deleteFile())
     {
         MiscWeakAssert(false);
