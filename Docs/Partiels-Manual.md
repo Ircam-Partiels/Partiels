@@ -1093,6 +1093,7 @@ Usage:
  Partiels --plugin-list [options]  Prints an exhaustive list of installed plugins.
         --description Includes the descriptions of the plugins (optional).
         --format <fileformat> Defines the output format (json or xml) (optional - default: json).
+        --vamp-path-only Ignores the default plugin directories of the system and only uses the directories defined by the VAMP_PATH environment variable and the plugins embedded in Partiels (optional).
 ```
 
 It is recommended to add the path to the executable in the paths of your command line tool environment. 
