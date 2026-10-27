@@ -292,6 +292,12 @@ endif()
 
 if(APPLE)
     set_target_properties(Partiels PROPERTIES XCODE_EMBED_PLUGINS partiels-vamp-plugins XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY ON)
+    if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
+        add_custom_command(TARGET Partiels POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_CONTENT_DIR:Partiels>/PlugIns"
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_BUNDLE_CONTENT_DIR:Partiels>/PlugIns"
+        )
+    endif()
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/FactoryTemplate.ptldoc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Templates/)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Preset/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
