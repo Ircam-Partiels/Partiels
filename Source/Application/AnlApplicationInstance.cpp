@@ -526,7 +526,12 @@ void Application::Instance::handleAsyncUpdate()
 
 juce::File Application::Instance::getBackupFile() const
 {
-    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getExtensionForDocumentFile());
+    // The temporary directory is shared with other applications on Linux and Windows,
+    // the backup files are stored in a directory specific to the application
+    auto const directory = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile(ProjectInfo::projectName);
+    [[maybe_unused]] auto const result = directory.createDirectory();
+    MiscWeakAssert(result.wasOk());
+    return directory.getChildFile("backup").withFileExtension(getExtensionForDocumentFile());
 }
 
 void Application::Instance::openStartupFiles()
