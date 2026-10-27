@@ -4,6 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::CommandLine::CommandLine()
+: mInitialVampPath(juce::SystemStats::getEnvironmentVariable("VAMP_PATH", {}))
 {
     PluginList::Accessor pluginListAcsr;
     pluginListAcsr.setAttr<PluginList::AttrType::useEnvVariable>(true, NotificationType::synchronous);
@@ -360,15 +361,37 @@ Application::CommandLine::CommandLine()
          "--plugin-list [options]",
          "Prints an exhaustive list of installed plugins.\n\t"
          "--description Includes the descriptions of the plugins (optional).\n\t"
-         "--format <fileformat> Defines the output format (json or xml) (optional - default: json).",
+         "--format <fileformat> Defines the output format (json or xml) (optional - default: json).\n\t"
+         "--vamp-path-only Ignores the default plugin directories of the system and only uses the directories defined by the VAMP_PATH environment variable and the plugins embedded in Partiels (optional).",
          "",
-         []([[maybe_unused]] juce::ArgumentList const& args)
+         [this](juce::ArgumentList const& args)
          {
              auto const includeDescription = args.containsOption("--description");
              auto const format = args.containsOption("--format") ? args.getValueForOption("--format").toLowerCase() : "json";
              if(format != "json" && format != "xml")
              {
                  fail("Invalid value for '--format'. Accepted values are 'json' or 'xml'. Use '--help' for more information.");
+             }
+             if(args.containsOption("--vamp-path-only"))
+             {
+#if JUCE_WINDOWS
+                 auto constexpr separator = ";";
+#else
+                 auto constexpr separator = ":";
+#endif
+                 std::vector<juce::File> searchPath;
+                 for(auto const& path : juce::StringArray::fromTokens(mInitialVampPath, separator, ""))
+                 {
+                     if(path.isNotEmpty())
+                     {
+                         searchPath.push_back(juce::File::getCurrentWorkingDirectory().getChildFile(path));
+                     }
+                 }
+                 PluginList::Accessor pluginListAcsr;
+                 pluginListAcsr.setAttr<PluginList::AttrType::useEnvVariable>(false, NotificationType::synchronous);
+                 pluginListAcsr.setAttr<PluginList::AttrType::quarantineMode>(PluginList::QuarantineMode::ignore, NotificationType::synchronous);
+                 pluginListAcsr.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
+                 PluginList::setEnvironment(pluginListAcsr, true);
              }
              PluginList::Scanner scanner;
              auto const plugins = scanner.getPlugins(48000.0, false);

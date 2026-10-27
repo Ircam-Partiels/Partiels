@@ -23,6 +23,7 @@ namespace Application
 
         static void sendQuitSignal(int value);
 
+        juce::String const mInitialVampPath;
         std::unique_ptr<Document::Executor> mExecutor;
         bool mShouldWait{false};
     };

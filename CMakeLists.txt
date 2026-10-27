@@ -623,22 +623,22 @@ function(parse_expected_results expected_file output_content)
 endfunction()
 
 parse_expected_results("${TESTS_DIRECTORY}/PluginList.json" PLUGIN_LIST_JSON_CONTENT)
-add_test(NAME PluginListJson COMMAND Partiels --plugin-list --format=json)
+add_test(NAME PluginListJson COMMAND Partiels --plugin-list --vamp-path-only --format=json)
 set_tests_properties(PluginListJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(PluginListJson PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_JSON_CONTENT}")
 
 parse_expected_results("${TESTS_DIRECTORY}/PluginList.xml" PLUGIN_LIST_XML_CONTENT)
-add_test(NAME PluginListXml COMMAND Partiels --plugin-list --format=xml)
+add_test(NAME PluginListXml COMMAND Partiels --plugin-list --vamp-path-only --format=xml)
 set_tests_properties(PluginListXml PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(PluginListXml PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_XML_CONTENT}")
 
 parse_expected_results("${TESTS_DIRECTORY}/PluginListDescription.json" PLUGIN_LIST_DESCRIPTION_JSON_CONTENT)
-add_test(NAME PluginListDescriptionJson COMMAND Partiels --plugin-list --description --format=json)
+add_test(NAME PluginListDescriptionJson COMMAND Partiels --plugin-list --vamp-path-only --description --format=json)
 set_tests_properties(PluginListDescriptionJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(PluginListDescriptionJson PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_DESCRIPTION_JSON_CONTENT}")
 
 parse_expected_results("${TESTS_DIRECTORY}/PluginListDescription.xml" PLUGIN_LIST_DESCRIPTION_XML_CONTENT)
-add_test(NAME PluginListDescriptionXml COMMAND Partiels --plugin-list --description --format=xml)
+add_test(NAME PluginListDescriptionXml COMMAND Partiels --plugin-list --vamp-path-only --description --format=xml)
 set_tests_properties(PluginListDescriptionXml PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:partiels-vamp-plugins>$<IF:$<PLATFORM_ID:Windows>,$<SEMICOLON>,:>$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(PluginListDescriptionXml PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_DESCRIPTION_XML_CONTENT}")
 
