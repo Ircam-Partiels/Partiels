@@ -670,33 +670,51 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     // The fit only resolves an unset context size: the context size of the user is used as an upper limit of
     // the fitted context size so that it never exceeds the free device memory.
     auto contextSizeLimit = std::optional<int32_t>{};
-    if(info.contextSize.has_value())
+    auto const initialize = [&](ggml_type cacheType)
     {
-        auto fitParams = params;
-        auto modelParams = common_model_params_to_llama(fitParams);
-        auto contextParams = common_context_params_to_llama(fitParams);
-        common_fit_apply(fitParams, modelParams, contextParams);
-        auto const contextSize = std::max(info.contextSize.value(), minContextSize);
-        if(contextParams.n_ctx > 0)
+        params.cache_type_k = cacheType;
+        params.cache_type_v = cacheType;
+        params.speculative.draft.cache_type_k = cacheType;
+        params.speculative.draft.cache_type_v = cacheType;
+        params.n_ctx = 0;
+        contextSizeLimit.reset();
+        if(info.contextSize.has_value())
         {
-            contextSizeLimit = static_cast<int32_t>(contextParams.n_ctx);
-            params.n_ctx = std::min(contextSize, contextSizeLimit.value());
+            auto fitParams = params;
+            auto modelParams = common_model_params_to_llama(fitParams);
+            auto contextParams = common_context_params_to_llama(fitParams);
+            common_fit_apply(fitParams, modelParams, contextParams);
+            auto const contextSize = std::max(info.contextSize.value(), minContextSize);
+            if(contextParams.n_ctx > 0)
+            {
+                contextSizeLimit = static_cast<int32_t>(contextParams.n_ctx);
+                params.n_ctx = std::min(contextSize, contextSizeLimit.value());
+            }
+            else
+            {
+                params.n_ctx = contextSize;
+            }
+            MiscDebug("Application::Neuralyzer::AgentLocal", "Context size fitted to: " + juce::String(contextParams.n_ctx) + " (requested " + juce::String(contextSize) + ")");
         }
-        else
-        {
-            params.n_ctx = contextSize;
-        }
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Context size fitted to: " + juce::String(contextParams.n_ctx) + " (requested " + juce::String(contextSize) + ")");
-    }
+        // Initialize model, context and sampler as a single lifetime-managed object.
+        mInitResult = common_init_from_params(params);
+    };
 
-    // Initialize model, context and sampler as a single lifetime-managed object.
-    mInitResult = common_init_from_params(params);
+    // The quantized KV cache halves the memory of the context but requires the flash attention (the quantized V
+    // cache) and attention heads compatible with the block size: fall back to the default KV cache otherwise.
+    initialize(GGML_TYPE_Q8_0);
+    if(!mShouldQuit.load() && mInitResult != nullptr && mInitResult->model() != nullptr && mInitResult->context() == nullptr)
+    {
+        MiscDebug("Application::Neuralyzer::AgentLocal", "Failed to create the context with the quantized KV cache: fallback to the default KV cache.");
+        mInitResult.reset();
+        initialize(GGML_TYPE_F16);
+    }
     if(mShouldQuit.load())
     {
         MiscDebug("Application::Neuralyzer::AgentLocal", "Model loading aborted by user.");
         return juce::Result::fail(juce::translate("Model loading aborted by user."));
     }
-    if(mInitResult == nullptr || mInitResult->model() == nullptr)
+    if(mInitResult == nullptr || mInitResult->model() == nullptr || mInitResult->context() == nullptr)
     {
         MiscDebug("Application::Neuralyzer::AgentLocal", "Failed to load model from: " + info.modelFile.getFullPathName());
         return juce::Result::fail(juce::translate("Failed to load model from: FLNAME").replace("FLNAME", info.modelFile.getFullPathName()));
@@ -935,7 +953,7 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
         }
         else
         {
-            throw;            
+            throw;
         }
     }
     appendContextTokens(decodedTokens.data(), decodedTokens.size());
