@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Document/AnlDocumentDirector.h"
 #include "../Track/AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -15,8 +16,9 @@ namespace Application
         std::tuple<juce::String, size_t> getNewTrackPosition();
         std::tuple<juce::Result, juce::String, size_t> prepareForNewTracks(juce::String const& groupIdentifier, size_t const trackPosition);
         void revealTracks(std::set<juce::String> const& trackIdentifiers);
-        std::tuple<juce::Result, juce::String> addPluginTrack(juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key);
-        std::tuple<juce::Result, juce::String> addFileTrack(juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file);
+        // The tracks are added with the presets (processor and graphic presets for the plugin key, or the global graphic preset)
+        std::tuple<juce::Result, juce::String> addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key);
+        std::tuple<juce::Result, juce::String> addFileTrack(Document::Director& documentDir, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file);
 
         // Tools that help to create tracks and groups with any user interface and undo/redo management
         // The positions specify where the new groups or tracks should be inserted; these helpers wrap
