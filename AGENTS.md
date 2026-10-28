@@ -40,6 +40,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 
 ## Translations
 - Wrap every user-visible string in `juce::translate`.
+- In translated strings, write replaceable tokens (names, indices, etc.) in uppercase, abbreviated when possible (e.g. `FLNAME` for file name), so they stand out as placeholders to substitute.
 - Translation keys are extracted automatically when building `Partiels` (target `PartielsExtractTranslationKeys`).
 - Update the translation files with the targets `PartielsUpdateTranslationFrench` and `PartielsUpdateTranslationPortuguese`, then report the new keys in [BinaryData/Translations](BinaryData/Translations).
 - Never modify [BinaryData/Translations/English.txt](BinaryData/Translations/English.txt): it must stay empty (English is the source locale).
