@@ -66,12 +66,29 @@ namespace Application
             static void downloadModelBundle(ModelBundle const& bundle, bool warnIfFailed);
 
         private:
+            // A chunk of the content evaluated in the context: text tokens or a media
+            struct ContextChunk
+            {
+                llama_tokens tokens;       // The tokens of a text chunk
+                std::string mediaId;       // The identifier of a media chunk (empty for a text chunk)
+                llama_pos numPositions{0}; // The number of positions used in the context
+            };
+
             void notifyStateChanged();
             std::vector<common_chat_msg> performInference(bool useThinkingMode);
-            juce::Result summarizeSession();
+            void evaluatePrompt(std::vector<common_chat_msg> const& messages, common_chat_params const& chatParams, std::function<bool(void)> callback);
+            juce::Result summarizeSession(bool useThinkingMode);
+            llama_pos getSystemPromptSize(bool useThinkingMode) const;
 
             void updateContextMemoryUsage();
             void resetSpeculativeMemory();
+
+            llama_pos getContextPosition() const;
+            void appendContextTokens(llama_token const* tokens, size_t numTokens);
+            bool truncateContextChunks(llama_pos position);
+            void createContextCheckpoint(llama_pos position);
+            llama_pos rollbackContextMemory(llama_pos position);
+            void clearContextMemory();
 
             nlohmann::json readFiles(std::vector<std::string> const& filePaths);
             std::atomic<bool> mShouldQuit{false};
@@ -89,7 +106,9 @@ namespace Application
 
             mutable std::mutex mMessagesMutex;
             std::vector<common_chat_msg> mMessages;
-            size_t mPastMessagesPosition{0_z};
+
+            std::vector<ContextChunk> mContextChunks;
+            common_prompt_checkpoint mContextCheckpoint;
 
             mutable std::mutex mTemporaryMutex;
             std::string mTempResponse;

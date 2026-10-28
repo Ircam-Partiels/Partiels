@@ -1,6 +1,7 @@
 #include "AnlApplicationNeuralyzerAgentLocal.h"
 #include "AnlApplicationInstance.h"
 #include <AnlNeuralyzerData.h>
+#include <AnlResourceData.h>
 #include <TestResultsData.h>
 #include <mtmd-helper.h>
 
@@ -20,6 +21,9 @@ static bool isMediaTextFile(juce::File const& file)
 }
 
 ANALYSE_FILE_BEGIN
+
+// The version of the context state saved with the sessions (the state file contains the tokens of the context memory)
+static auto constexpr contextStateVersion = 1;
 
 static void logCallback(enum ggml_log_level level, [[maybe_unused]] const char* text, void*)
 {
@@ -44,6 +48,11 @@ static size_t getMemoryMargin()
     // already excludes the memory of the system and the other processes.
     return fixedMargin;
 #endif
+}
+
+static juce::String getContextFullMessage()
+{
+    return juce::translate("The context of the agent is full. Reset the history from the context menu of the conversation to continue.");
 }
 
 static common_chat_params applyChatTemplates(common_chat_templates const* chatTplt, common_chat_templates_inputs const& inputs)
@@ -100,114 +109,8 @@ static common_sampler_ptr createSampler(llama_model const* model, common_params_
     }
 }
 
-// Returns true if the prompt has been evaluated through the multimodal context, which bypasses the speculative context.
-static bool injectMessages(llama_context* context, mtmd_context* mtmd, common_speculative* speculative, std::vector<common_chat_msg> const& messages, std::string const& prompt, std::function<bool(void)> callback)
-{
-    // Try to create bipmap for messages that contain a media
-    std::vector<mtmd::bitmap_ptr> bitmaps;
-    if(mtmd != nullptr)
-    {
-        for(auto const& message : messages)
-        {
-            if(message.contains_media())
-            {
-                auto const wrapper = mtmd_helper_bitmap_init_from_file(mtmd, message.tool_name.c_str(), false, mtmd_helper_init_opt_default());
-                if(wrapper.bitmap == nullptr)
-                {
-                    throw juce::translate("Failed to reload media file: FLNAME").replace("FLNAME", juce::String(message.tool_name));
-                }
-                if(wrapper.video_ctx != nullptr)
-                {
-                    mtmd_helper_video_free(wrapper.video_ctx);
-                    throw juce::translate("Video media is not supported: FLNAME").replace("FLNAME", juce::String(message.tool_name));
-                }
-                bitmaps.emplace_back(wrapper.bitmap);
-            }
-        }
-    }
-
-    // Use MTMD if there are bitmaps, otherwise fallback to the default approach
-    if(!bitmaps.empty())
-    {
-        std::vector<mtmd_bitmap const*> bitmapPtrs;
-        for(auto const& bitmap : bitmaps)
-        {
-            bitmapPtrs.push_back(bitmap.get());
-        }
-        mtmd_input_text text;
-        text.text = prompt.c_str();
-        text.text_len = prompt.size();
-        text.add_special = true;
-        text.parse_special = true;
-
-        mtmd::input_chunks chunks(mtmd_input_chunks_init());
-        if(mtmd_tokenize(mtmd, chunks.ptr.get(), &text, bitmapPtrs.data(), bitmapPtrs.size()) != 0)
-        {
-            throw juce::translate("Failed to tokenize media prompt.");
-        }
-
-        auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(context));
-        auto const ctxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
-        if(ctxCapacity - ctxUsed < mtmd_helper_get_n_tokens(chunks.ptr.get()))
-        {
-            throw juce::translate("The context capacity is not enough");
-        }
-
-        auto const batchSize = static_cast<int32_t>(llama_n_batch(context));
-        auto const nPast = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
-        llama_pos newNPast = nPast;
-        // Request logits for the last token so the sampler can run after injection.
-        if(mtmd_helper_eval_chunks(mtmd, context, chunks.ptr.get(), nPast, 0, batchSize, true, &newNPast) != 0)
-        {
-            throw juce::translate("Failed to decode media prompt.");
-        }
-        if(callback != nullptr)
-        {
-            callback();
-        }
-        return true;
-    }
-    else
-    {
-        auto tokens = common_tokenize(context, prompt, true, true);
-
-        // Check if prompt tokens will exceed context capacity
-        auto const ctxCapacity = static_cast<size_t>(llama_n_ctx(context));
-        auto const ctxUsed = static_cast<size_t>(llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1);
-        if(ctxCapacity - ctxUsed < tokens.size())
-        {
-            throw juce::translate("The context capacity is not enough");
-        }
-
-        // Send the prompt tokens into the model in batches
-        // Decode the prompt in chunks so prompts larger than n_batch still work.
-        auto const batchSize = static_cast<size_t>(llama_n_batch(context));
-        auto position = 0_z;
-        while(position < tokens.size())
-        {
-            auto const size = std::min(batchSize, tokens.size() - position);
-            auto batch = common_batch_get_one(context, tokens.data() + position, static_cast<int32_t>(size));
-            auto const ret = llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
-            MiscWeakAssert(ret == 0);
-            if(ret != 0)
-            {
-                throw juce::translate("Failed to decode input messages");
-            }
-            if(!common_speculative_process(speculative, batch))
-            {
-                throw juce::translate("Failed to decode input messages");
-            }
-            if(callback != nullptr && !callback())
-            {
-                return false;
-            }
-            position += size;
-        }
-    }
-    return false;
-}
-
-static std::string retrieveMessage(llama_context* context, llama_context* contextDraft, common_speculative* speculative, common_params_sampling const& samplingParams, common_sampler* sampler, llama_vocab const* vocab, std::function<bool(std::string)> callback)
+// The decoded tokens are the tokens kept in the context (the last sampled token is not decoded).
+static std::string retrieveMessage(llama_context* context, llama_context* contextDraft, common_speculative* speculative, common_params_sampling const& samplingParams, common_sampler* sampler, llama_vocab const* vocab, llama_tokens& decodedTokens, std::function<bool(std::string)> callback)
 {
     auto const useSpeculation = speculative != nullptr && contextDraft != nullptr;
     auto const nDraftMax = useSpeculation ? static_cast<int32_t>(common_speculative_n_max(speculative)) : 0;
@@ -239,6 +142,10 @@ static std::string retrieveMessage(llama_context* context, llama_context* contex
         }
 
         auto const position = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
+        if(position >= contextCapacity)
+        {
+            throw getContextFullMessage();
+        }
 
         // Draft the next tokens with the MTP model
         draft.clear();
@@ -270,6 +177,7 @@ static std::string retrieveMessage(llama_context* context, llama_context* contex
 
         if(draft.empty())
         {
+            decodedTokens.push_back(sampled);
             sampled = common_sampler_sample(sampler, context, -1);
             common_sampler_accept(sampler, sampled, true);
             continue;
@@ -298,6 +206,8 @@ static std::string retrieveMessage(llama_context* context, llama_context* contex
             llama_memory_seq_rm(llama_get_memory(contextDraft), 0, keep, -1);
         }
         common_speculative_accept(speculative, 0, static_cast<uint16_t>(accepted.size() - 1_z));
+        decodedTokens.push_back(sampled);
+        decodedTokens.insert(decodedTokens.end(), accepted.cbegin(), std::prev(accepted.cend()));
 
         for(size_t i = 0_z; i + 1_z < accepted.size(); ++i)
         {
@@ -352,6 +262,17 @@ static common_chat_msg formatToolCall(common_chat_msg const& message, bool appen
         return fmtMsg;
     }
 
+    if(!parsed.is_object())
+    {
+        fmtMsg.content += "- Status: ERROR\n";
+        fmtMsg.content += "- Message:\nInvalid response format: " + parsed.dump();
+        if(appendInstructions)
+        {
+            fmtMsg.content += fmtErrorMsg;
+        }
+        return fmtMsg;
+    }
+
     if(parsed.contains("error"))
     {
         fmtMsg.content += "- Status: ERROR\n";
@@ -378,8 +299,17 @@ static common_chat_msg formatToolCall(common_chat_msg const& message, bool appen
         return fmtMsg;
     }
 
-    auto content = parsed.value("content", nlohmann::json::array());
-    auto const text = unquote(content[0].value("text", "(empty)"));
+    // The content may be missing, empty or without text
+    auto const text = [&]() -> std::string
+    {
+        auto const content = parsed.find("content");
+        if(content == parsed.end() || !content->is_array() || content->empty() || !content->front().is_object())
+        {
+            return "(empty)";
+        }
+        auto const textIt = content->front().find("text");
+        return textIt != content->front().end() && textIt->is_string() ? unquote(textIt->get<std::string>()) : "(empty)";
+    }();
     if(parsed.value("isError", false))
     {
         fmtMsg.content += "- Status: FAILED\n";
@@ -615,6 +545,7 @@ Application::Neuralyzer::AgentLocal::AgentLocal(Mcp::Dispatcher& mcpDispatcher, 
         return mRagEngine.loadDocs(ids);
     };
     mTools = mMcpDispatcher.getToolList(mMcpMethods);
+    mContextCheckpoint.clear();
 }
 
 Application::Neuralyzer::AgentLocal::~AgentLocal()
@@ -673,8 +604,9 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     {
         std::unique_lock<std::mutex> lock(mMessagesMutex);
         mMessages.clear();
-        mPastMessagesPosition = 0_z;
     }
+    mContextChunks.clear();
+    mContextCheckpoint.clear();
     notifyStateChanged();
     mContextMemoryUsage.store(0.0f);
     {
@@ -922,8 +854,9 @@ juce::Result Application::Neuralyzer::AgentLocal::resetModel()
     {
         std::unique_lock<std::mutex> lock(mMessagesMutex);
         mMessages.clear();
-        mPastMessagesPosition = 0_z;
     }
+    mContextChunks.clear();
+    mContextCheckpoint.clear();
     notifyStateChanged();
     mContextMemoryUsage.store(0.0f);
     {
@@ -941,14 +874,6 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
     auto const* vocab = llama_model_get_vocab(model);
     MiscStrongAssert(model != nullptr && context != nullptr && chatTplt != nullptr);
 
-    auto [messages, lastPosition] = [this]()
-    {
-        std::unique_lock<std::mutex> lock(mMessagesMutex);
-        MiscWeakAssert(mPastMessagesPosition < mMessages.size());
-        return std::make_pair(mMessages, mPastMessagesPosition);
-    }();
-    MiscWeakAssert(lastPosition < messages.size());
-
     common_chat_templates_inputs inputs;
     inputs.use_jinja = true;
     inputs.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
@@ -957,15 +882,8 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
     inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
     inputs.tools = mTools;
     inputs.add_generation_prompt = true;
-    inputs.messages = std::move(messages);
-    auto params = applyChatTemplates(chatTplt, inputs);
-    MiscWeakAssert(params.prompt.parts.size() > lastPosition);
-    if(params.prompt.parts.size() > lastPosition)
-    {
-        auto const firstPrompt = params.prompt.parts.begin();
-        auto const lastPrompt = std::next(firstPrompt, static_cast<long>(lastPosition));
-        params.prompt.parts.erase(firstPrompt, lastPrompt);
-    }
+    inputs.messages = getHistory();
+    auto const params = applyChatTemplates(chatTplt, inputs);
 
     MiscDebug("Application::Neuralyzer::AgentLocal", "Prompt: " + juce::String(params.prompt.str()));
 
@@ -976,29 +894,25 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
         return {};
     }
 
-    // The speculative context must see every token of the target context to produce relevant drafts
-    auto* speculative = mSpeculativeSynchronized.load() ? mSpeculative.get() : nullptr;
-    auto* contextDraft = speculative != nullptr && mMtpInitResult != nullptr ? mMtpInitResult->context() : nullptr;
     std::string response;
+    llama_tokens decodedTokens;
     try
     {
-        if(injectMessages(context, mMtmdContext.get(), speculative, inputs.messages, params.prompt.str(), [this]()
-                          {
-                              updateContextMemoryUsage();
-                              return !mShouldQuit.load();
-                          }))
-        {
-            mSpeculativeSynchronized.store(false);
-            speculative = nullptr;
-            contextDraft = nullptr;
-        }
+        evaluatePrompt(inputs.messages, params, [this]()
+                       {
+                           updateContextMemoryUsage();
+                           return !mShouldQuit.load();
+                       });
         if(mShouldQuit.load())
         {
             return {};
         }
 
+        // The speculative context must see every token of the target context to produce relevant drafts
+        auto* speculative = mSpeculativeSynchronized.load() ? mSpeculative.get() : nullptr;
+        auto* contextDraft = speculative != nullptr && mMtpInitResult != nullptr ? mMtpInitResult->context() : nullptr;
         notifyStateChanged();
-        response = retrieveMessage(context, contextDraft, speculative, mSamplingParams, sampler.get(), vocab, [&, this](std::string message)
+        response = retrieveMessage(context, contextDraft, speculative, mSamplingParams, sampler.get(), vocab, decodedTokens, [&, this](std::string message)
                                    {
                                        {
                                            std::unique_lock<std::mutex> lock(mTemporaryMutex);
@@ -1010,7 +924,11 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
     }
     catch(...)
     {
+        // The context memory may contain tokens of a failed decoding: restore the tracked content
+        appendContextTokens(decodedTokens.data(), decodedTokens.size());
         mSpeculativeSynchronized.store(false);
+        rollbackContextMemory(getContextPosition());
+        updateContextMemoryUsage();
         if(mShouldQuit.load())
         {
             return {};
@@ -1020,6 +938,7 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
             throw;            
         }
     }
+    appendContextTokens(decodedTokens.data(), decodedTokens.size());
     if(mShouldQuit.load())
     {
         return {};
@@ -1064,16 +983,23 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
     // Set log callback to suppress unnecessary output
     llama_log_set(logCallback, nullptr);
 
-    // Summarize the conversation if there is lass than 80% of the context available
+    // Summarize the conversation if there is less than 20% of the context available and if the history (without the
+    // system prompt that cannot be summarized) occupies a significant part of the context, otherwise the summary would
+    // not free enough space and the user has to reset the history when the context is full
     auto* context = mInitResult->context();
     auto const ctxCapacity = static_cast<llama_pos>(llama_n_ctx(context));
     auto const ctxUsed = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
     if(static_cast<double>(ctxUsed) / static_cast<double>(ctxCapacity) > 0.8)
     {
-        auto const summarizeResult = summarizeSession();
-        if(summarizeResult.failed())
+        auto const historySize = ctxUsed - getSystemPromptSize(useThinkingMode);
+        MiscDebug("Application::Neuralyzer::AgentLocal", "Context usage above 80% with a history of " + juce::String(historySize) + " positions");
+        if(historySize > ctxCapacity / 4)
         {
-            return summarizeResult;
+            auto const summarizeResult = summarizeSession(useThinkingMode);
+            if(summarizeResult.failed())
+            {
+                return summarizeResult;
+            }
         }
     }
 
@@ -1157,7 +1083,6 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
         {
             std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
             mMessages.insert(mMessages.end(), receivedMessages.cbegin(), receivedMessages.cend());
-            mPastMessagesPosition = mMessages.size();
         }
 
         saveSession(tempSessionFile);
@@ -1335,10 +1260,7 @@ juce::Result Application::Neuralyzer::AgentLocal::startSession()
         return juce::Result::fail(juce::translate("The model is not initialized."));
     }
 
-    auto* context = mInitResult->context();
-    // Clear the context memory
-    llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
-    resetSpeculativeMemory();
+    clearContextMemory();
 
     common_chat_msg message;
     message.role = "system";
@@ -1346,7 +1268,6 @@ juce::Result Application::Neuralyzer::AgentLocal::startSession()
     {
         std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
         mMessages = {std::move(message)};
-        mPastMessagesPosition = 0_z;
     }
     {
         std::unique_lock<std::mutex> temporaryLock(mTemporaryMutex);
@@ -1375,6 +1296,7 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
 
     std::vector<common_chat_msg> messages;
     std::string version;
+    int contextVersion = 0;
     try
     {
         auto const root = nlohmann::json::parse(sessionFile.loadFileAsString().toStdString());
@@ -1385,6 +1307,7 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
 
         messages = common_chat_msgs_parse_oaicompat(common_json::parse(root.at("messages").dump()));
         version = root.value("version", std::string{});
+        contextVersion = root.value("contextVersion", 0);
     }
     catch(std::exception const& e)
     {
@@ -1392,18 +1315,14 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
     }
     // Use the latest instructions
     messages.front().content = mMcpDispatcher.getInstructions();
-    auto const avoidContextState = version != mMcpDispatcher.getUuid();
+    auto const avoidContextState = version != mMcpDispatcher.getUuid() || contextVersion != contextStateVersion;
 
     {
         std::unique_lock<std::mutex> lock(mMessagesMutex);
         mMessages = std::move(messages);
-        mPastMessagesPosition = 0_z;
     }
 
-    // Clear the context memory
-    auto* context = mInitResult->context();
-    llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
-    resetSpeculativeMemory();
+    clearContextMemory();
 
     auto const contextFile = sessionFile.withFileExtension(".ctx");
     if(avoidContextState || contextFile.getSize() <= 0)
@@ -1413,28 +1332,20 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
         return juce::Result::ok();
     }
 
+    // The tokens saved with the state are the tokens of the context memory
+    auto* context = mInitResult->context();
     size_t nloaded = 0;
-    std::vector<llama_token> restoredTokens(static_cast<size_t>(llama_n_ctx(context)));
-    // nloaded only reflects the token count header (derived from the chat template), not the
-    // actual KV-cache content, so it can be positive even though nothing was ever decoded into
-    // this session (e.g. a session saved right after startSession()). Check the real memory usage
-    // to detect that case and fall back to a full reprocessing of the messages.
+    llama_tokens restoredTokens(static_cast<size_t>(llama_n_ctx(context)));
     auto const loaded = llama_state_load_file(context, contextFile.getFullPathName().toRawUTF8(), restoredTokens.data(), restoredTokens.size(), &nloaded);
     auto const ctxUsed = llama_memory_seq_pos_max(llama_get_memory(context), 0) + 1;
-    if(!loaded || ctxUsed <= 0)
+    if(!loaded || ctxUsed <= 0 || static_cast<size_t>(ctxUsed) != nloaded)
     {
-        llama_memory_seq_rm(llama_get_memory(context), 0, -1, -1);
-        resetSpeculativeMemory();
-
+        clearContextMemory();
         updateContextMemoryUsage();
         notifyStateChanged();
         return juce::Result::ok();
     }
-
-    {
-        std::unique_lock<std::mutex> lock(mMessagesMutex);
-        mPastMessagesPosition = mMessages.size();
-    }
+    appendContextTokens(restoredTokens.data(), nloaded);
 
     // The restored state only covers the target context, so the speculative context cannot follow
     mSpeculativeSynchronized.store(false);
@@ -1463,16 +1374,15 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
         return juce::Result::fail(juce::translate("Failed to create directory: FLNAME").replace("FLNAME", sessionFile.getParentDirectory().getFullPathName()));
     }
 
-    auto [messages, avoidContextState] = [this]()
-    {
-        std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
-        return std::make_pair(mMessages, mMessages.size() != mPastMessagesPosition);
-    }();
+    auto const messages = getHistory();
+    // The media chunks cannot be restored from the tokens saved with the state
+    auto const avoidContextState = mContextChunks.size() != 1_z || !mContextChunks.front().mediaId.empty();
 
     try
     {
         nlohmann::json root;
         root["version"] = mMcpDispatcher.getUuid();
+        root["contextVersion"] = contextStateVersion;
         for(auto const& message : messages)
         {
             root["messages"].push_back(nlohmann::json::parse(message.to_json_oaicompat().dump()));
@@ -1483,7 +1393,7 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
             return juce::Result::fail(juce::translate("Failed to write session file"));
         }
 
-        MiscDebug("Application::Neuralyzer::AgentRemote", "Session saved with " + juce::String(messages.size()) + " messages");
+        MiscDebug("Application::Neuralyzer::AgentLocal", "Session saved with " + juce::String(messages.size()) + " messages");
     }
     catch(std::exception const& e)
     {
@@ -1492,6 +1402,7 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
 
     if(avoidContextState)
     {
+        contextFile.deleteFile();
         MiscDebug("Application::Neuralyzer::AgentLocal", juce::String("Saved message history to files: ") + sessionFile.getFullPathName());
         return juce::Result::ok();
     }
@@ -1499,29 +1410,8 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
     // Set log callback to suppress unnecessary output
     llama_log_set(logCallback, nullptr);
 
-    auto* context = mInitResult->context();
-    common_chat_params stateParams;
-
-    common_chat_templates_inputs inputs;
-    inputs.messages = std::move(messages);
-    inputs.use_jinja = true;
-    inputs.add_generation_prompt = false;
-    inputs.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
-    inputs.enable_thinking = true;
-    inputs.parallel_tool_calls = true;
-    inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
-    inputs.tools = mTools;
-    try
-    {
-        stateParams = common_chat_templates_apply(mChatTemplates.get(), inputs);
-    }
-    catch(std::exception const& e)
-    {
-        return juce::Result::fail(juce::translate("Failed to apply chat templates: ERRSTR").replace("ERRSTR", e.what()));
-    }
-
-    auto const stateTokens = common_tokenize(context, stateParams.prompt.str(), true, true);
-    auto const saved = llama_state_save_file(context, contextFile.getFullPathName().toRawUTF8(), stateTokens.data(), stateTokens.size());
+    auto const& stateTokens = mContextChunks.front().tokens;
+    auto const saved = llama_state_save_file(mInitResult->context(), contextFile.getFullPathName().toRawUTF8(), stateTokens.data(), stateTokens.size());
     if(!saved)
     {
         return juce::Result::fail(juce::translate("Failed to save state to file: FLNAME").replace("FLNAME", contextFile.getFullPathName()));
@@ -1531,7 +1421,44 @@ juce::Result Application::Neuralyzer::AgentLocal::saveSession(juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Application::Neuralyzer::AgentLocal::summarizeSession()
+llama_pos Application::Neuralyzer::AgentLocal::getSystemPromptSize(bool useThinkingMode) const
+{
+    // The system prompt is the common prefix of two prompts that only differ by the user message (this does not
+    // depend on the template)
+    auto const messages = getHistory();
+    if(messages.empty() || mInitResult == nullptr || mInitResult->context() == nullptr || mChatTemplates == nullptr)
+    {
+        return 0;
+    }
+    auto const tokenize = [&](std::string const& content)
+    {
+        common_chat_msg message;
+        message.role = "user";
+        message.content = content;
+        common_chat_templates_inputs inputs;
+        inputs.use_jinja = true;
+        inputs.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
+        inputs.enable_thinking = useThinkingMode;
+        inputs.parallel_tool_calls = true;
+        inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
+        inputs.tools = mTools;
+        inputs.add_generation_prompt = false;
+        inputs.messages = {messages.front(), std::move(message)};
+        return common_tokenize(mInitResult->context(), applyChatTemplates(mChatTemplates.get(), inputs).prompt.str(), true, true);
+    };
+    try
+    {
+        auto const first = tokenize("A");
+        auto const second = tokenize("B");
+        return static_cast<llama_pos>(std::distance(first.cbegin(), std::mismatch(first.cbegin(), first.cend(), second.cbegin(), second.cend()).first));
+    }
+    catch(...)
+    {
+        return 0;
+    }
+}
+
+juce::Result Application::Neuralyzer::AgentLocal::summarizeSession(bool useThinkingMode)
 {
     if(mInitResult == nullptr || mInitResult->context() == nullptr)
     {
@@ -1547,62 +1474,69 @@ juce::Result Application::Neuralyzer::AgentLocal::summarizeSession()
     message.role = "user";
     message.content = summaryPrompt.toStdString();
 
-    // Add the new message to the history
+    // Add the new message to the history and restore the previous history if the summary fails
+    // (the context memory follows the history with the next inference)
+    auto const previousMessages = getHistory();
     {
         std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
-        mMessages.push_back(std::move(message));
+        mMessages.push_back(message);
     }
+    auto const restoreHistory = [&](juce::String const& error)
+    {
+        {
+            std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
+            mMessages = previousMessages;
+        }
+        notifyStateChanged();
+        MiscDebug("Application::Neuralyzer::AgentLocal", "Summary failed - " + error);
+        return juce::Result::fail(error);
+    };
 
     // Run the inference of the model using the full history
     std::vector<common_chat_msg> receivedMessages;
     try
     {
-        receivedMessages = performInference(true);
+        receivedMessages = performInference(useThinkingMode);
     }
     catch(juce::String const& e)
     {
-        notifyStateChanged();
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - " + e);
-        return juce::Result::fail(e);
+        return restoreHistory(e);
     }
     catch(std::exception const& e)
     {
-        notifyStateChanged();
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - " + juce::String(e.what()));
-        return juce::Result::fail(juce::String::fromUTF8(e.what()));
+        return restoreHistory(juce::String::fromUTF8(e.what()));
     }
     catch(...)
     {
-        notifyStateChanged();
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - Unknown error");
-        return juce::Result::fail(juce::translate("Unknown error"));
+        return restoreHistory(juce::translate("Unknown error"));
     }
 
     if(mShouldQuit.load())
     {
-        notifyStateChanged();
-        return juce::Result::fail(juce::translate("Operation aborted"));
+        return restoreHistory(juce::translate("Operation aborted"));
     }
 
-    if(receivedMessages.empty() || receivedMessages.at(0_z).empty())
+    // Only the text of the summary is kept (the tool calls cannot be answered)
+    if(receivedMessages.empty() || receivedMessages.front().content.empty())
     {
-        notifyStateChanged();
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - No model reponse");
-        return juce::Result::fail(juce::String::fromUTF8("No model reponse"));
+        return restoreHistory(juce::String::fromUTF8("No model reponse"));
     }
+    common_chat_msg summary;
+    summary.role = "assistant";
+    summary.content = receivedMessages.front().content;
 
-    auto startResult = startSession();
-    if(startResult.failed())
-    {
-        return startResult;
-    }
-
-    // Add the new message to the history
+    // Replace the history by the system message, the summary request and the summary (a template may require a
+    // user message before an assistant message)
+    MiscWeakAssert(!previousMessages.empty() && previousMessages.front().role == "system");
     {
         std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
-        mMessages.insert(mMessages.end(), receivedMessages.cbegin(), receivedMessages.cend());
+        mMessages = {previousMessages.front(), std::move(message), std::move(summary)};
     }
-
+    {
+        std::unique_lock<std::mutex> temporaryLock(mTemporaryMutex);
+        mTempResponse.clear();
+    }
+    notifyStateChanged();
     return juce::Result::ok();
 }
 
@@ -1615,6 +1549,349 @@ void Application::Neuralyzer::AgentLocal::resetSpeculativeMemory()
     }
     llama_memory_seq_rm(llama_get_memory(mMtpInitResult->context()), 0, -1, -1);
     mSpeculativeSynchronized.store(true);
+}
+
+llama_pos Application::Neuralyzer::AgentLocal::getContextPosition() const
+{
+    return std::accumulate(mContextChunks.cbegin(), mContextChunks.cend(), llama_pos{0}, [](llama_pos position, ContextChunk const& chunk)
+                           {
+                               return position + chunk.numPositions;
+                           });
+}
+
+void Application::Neuralyzer::AgentLocal::appendContextTokens(llama_token const* tokens, size_t numTokens)
+{
+    if(numTokens == 0_z)
+    {
+        return;
+    }
+    if(mContextChunks.empty() || !mContextChunks.back().mediaId.empty())
+    {
+        mContextChunks.emplace_back();
+    }
+    auto& chunk = mContextChunks.back();
+    chunk.tokens.insert(chunk.tokens.end(), tokens, tokens + numTokens);
+    chunk.numPositions = static_cast<llama_pos>(chunk.tokens.size());
+}
+
+bool Application::Neuralyzer::AgentLocal::truncateContextChunks(llama_pos position)
+{
+    if(!mContextCheckpoint.empty() && mContextCheckpoint.n_tokens > position)
+    {
+        mContextCheckpoint.clear();
+    }
+    auto remaining = position;
+    for(auto it = mContextChunks.begin(); it != mContextChunks.end(); ++it)
+    {
+        if(remaining >= it->numPositions)
+        {
+            remaining -= it->numPositions;
+            continue;
+        }
+        if(remaining == 0)
+        {
+            mContextChunks.erase(it, mContextChunks.end());
+            return true;
+        }
+        // A media cannot be partially kept in the context
+        if(!it->mediaId.empty())
+        {
+            return false;
+        }
+        it->tokens.resize(static_cast<size_t>(remaining));
+        it->numPositions = remaining;
+        mContextChunks.erase(std::next(it), mContextChunks.end());
+        return true;
+    }
+    return true;
+}
+
+void Application::Neuralyzer::AgentLocal::createContextCheckpoint(llama_pos position)
+{
+    // The checkpoint saves the partial states (recurrent or sliding window) that cannot be rolled back
+    auto* context = mInitResult->context();
+    auto* memory = llama_get_memory(context);
+    auto const posMin = llama_memory_seq_pos_min(memory, 0);
+    if(posMin <= 0)
+    {
+        return;
+    }
+    mContextCheckpoint.clear();
+    mContextCheckpoint.update_pos(position, posMin, llama_memory_seq_pos_max(memory, 0));
+    mContextCheckpoint.update_tgt(context, 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY);
+    if(mSpeculativeSynchronized.load() && mMtpInitResult != nullptr && mMtpInitResult->context() != nullptr)
+    {
+        mContextCheckpoint.update_dft(mMtpInitResult->context(), 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY);
+        common_speculative_get_state(mSpeculative.get(), 0, mContextCheckpoint.data_spec);
+    }
+}
+
+llama_pos Application::Neuralyzer::AgentLocal::rollbackContextMemory(llama_pos position)
+{
+    if(position <= 0)
+    {
+        clearContextMemory();
+        return 0;
+    }
+
+    auto* context = mInitResult->context();
+    auto* memory = llama_get_memory(context);
+    auto* contextDraft = mSpeculativeSynchronized.load() && mMtpInitResult != nullptr ? mMtpInitResult->context() : nullptr;
+
+    // The sliding window states cannot be rolled back before their first position (the recurrent states fail to be
+    // removed partially without being modified)
+    auto const numSwa = llama_model_n_swa(mInitResult->model());
+    auto const posMin = llama_memory_seq_pos_min(memory, 0);
+    if((numSwa <= 0 || posMin < std::max(0, position - numSwa + 2)) && llama_memory_seq_rm(memory, 0, position, -1))
+    {
+        if(contextDraft != nullptr && !llama_memory_seq_rm(llama_get_memory(contextDraft), 0, position, -1))
+        {
+            mSpeculativeSynchronized.store(false);
+        }
+        if(truncateContextChunks(position))
+        {
+            return position;
+        }
+        clearContextMemory();
+        return 0;
+    }
+
+    // Restore the partial states of the checkpoint and remove the rest of the memory
+    auto const checkpointPosition = static_cast<llama_pos>(mContextCheckpoint.n_tokens);
+    if(!mContextCheckpoint.empty() && checkpointPosition <= position && mContextCheckpoint.load_tgt(context, 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY) && llama_memory_seq_rm(memory, 0, checkpointPosition, -1) && truncateContextChunks(checkpointPosition))
+    {
+        if(contextDraft != nullptr)
+        {
+            if(mContextCheckpoint.load_dft(contextDraft, 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY) && llama_memory_seq_rm(llama_get_memory(contextDraft), 0, checkpointPosition, -1))
+            {
+                common_speculative_set_state(mSpeculative.get(), 0, mContextCheckpoint.data_spec);
+            }
+            else
+            {
+                mSpeculativeSynchronized.store(false);
+            }
+        }
+        MiscDebug("Application::Neuralyzer::AgentLocal", "Context checkpoint restored at position " + juce::String(checkpointPosition));
+        return checkpointPosition;
+    }
+
+    clearContextMemory();
+    return 0;
+}
+
+void Application::Neuralyzer::AgentLocal::clearContextMemory()
+{
+    if(mInitResult != nullptr && mInitResult->context() != nullptr)
+    {
+        llama_memory_seq_rm(llama_get_memory(mInitResult->context()), 0, -1, -1);
+    }
+    mContextChunks.clear();
+    mContextCheckpoint.clear();
+    resetSpeculativeMemory();
+}
+
+void Application::Neuralyzer::AgentLocal::evaluatePrompt(std::vector<common_chat_msg> const& messages, common_chat_params const& chatParams, std::function<bool(void)> callback)
+{
+    auto* context = mInitResult->context();
+    auto* mtmd = mMtmdContext.get();
+    auto const prompt = chatParams.prompt.str();
+
+    // Create the bitmaps of all the media of the history: the prompt contains a marker for each of them
+    std::vector<mtmd::bitmap_ptr> bitmaps;
+    if(mtmd != nullptr)
+    {
+        for(auto const& message : messages)
+        {
+            if(message.contains_media())
+            {
+                auto const wrapper = mtmd_helper_bitmap_init_from_file(mtmd, message.tool_name.c_str(), false, mtmd_helper_init_opt_default());
+                if(wrapper.bitmap == nullptr)
+                {
+                    throw juce::translate("Failed to reload media file: FLNAME").replace("FLNAME", juce::String(message.tool_name));
+                }
+                if(wrapper.video_ctx != nullptr)
+                {
+                    mtmd_helper_video_free(wrapper.video_ctx);
+                    throw juce::translate("Video media is not supported: FLNAME").replace("FLNAME", juce::String(message.tool_name));
+                }
+                bitmaps.emplace_back(wrapper.bitmap);
+            }
+        }
+    }
+
+    // Tokenize the full prompt into text and media chunks
+    std::vector<ContextChunk> chunks;
+    std::vector<mtmd_input_chunk const*> mediaChunks;
+    mtmd::input_chunks inputChunks(mtmd_input_chunks_init());
+    if(!bitmaps.empty())
+    {
+        std::vector<mtmd_bitmap const*> bitmapPtrs;
+        for(auto const& bitmap : bitmaps)
+        {
+            bitmapPtrs.push_back(bitmap.get());
+        }
+        mtmd_input_text text;
+        text.text = prompt.c_str();
+        text.text_len = prompt.size();
+        text.add_special = true;
+        text.parse_special = true;
+        if(mtmd_tokenize(mtmd, inputChunks.ptr.get(), &text, bitmapPtrs.data(), bitmapPtrs.size()) != 0)
+        {
+            throw juce::translate("Failed to tokenize media prompt.");
+        }
+        for(size_t i = 0_z; i < mtmd_input_chunks_size(inputChunks.ptr.get()); ++i)
+        {
+            auto const* inputChunk = mtmd_input_chunks_get(inputChunks.ptr.get(), i);
+            ContextChunk chunk;
+            if(mtmd_input_chunk_get_type(inputChunk) == MTMD_INPUT_CHUNK_TYPE_TEXT)
+            {
+                auto numTokens = 0_z;
+                auto const* tokens = mtmd_input_chunk_get_tokens_text(inputChunk, &numTokens);
+                chunk.tokens.assign(tokens, tokens + numTokens);
+                chunk.numPositions = static_cast<llama_pos>(numTokens);
+                mediaChunks.push_back(nullptr);
+            }
+            else
+            {
+                auto const* id = mtmd_input_chunk_get_id(inputChunk);
+                chunk.mediaId = id != nullptr && *id != '\0' ? std::string(id) : juce::Uuid().toString().toStdString();
+                chunk.numPositions = mtmd_input_chunk_get_n_pos(inputChunk);
+                mediaChunks.push_back(inputChunk);
+            }
+            chunks.push_back(std::move(chunk));
+        }
+    }
+    else
+    {
+        ContextChunk chunk;
+        chunk.tokens = common_tokenize(context, prompt, true, true);
+        chunk.numPositions = static_cast<llama_pos>(chunk.tokens.size());
+        chunks.push_back(std::move(chunk));
+        mediaChunks.push_back(nullptr);
+    }
+    if(chunks.empty() || chunks.back().numPositions <= 0)
+    {
+        throw juce::translate("Failed to decode input messages");
+    }
+
+    auto const numPositions = std::accumulate(chunks.cbegin(), chunks.cend(), llama_pos{0}, [](llama_pos position, ContextChunk const& chunk)
+                                              {
+                                                  return position + chunk.numPositions;
+                                              });
+    if(numPositions > static_cast<llama_pos>(llama_n_ctx(context)))
+    {
+        throw getContextFullMessage();
+    }
+
+    // Find the common prefix between the context memory and the prompt
+    auto numKept = llama_pos{0};
+    for(size_t i = 0_z; i < std::min(chunks.size(), mContextChunks.size()); ++i)
+    {
+        auto const& previous = mContextChunks.at(i);
+        auto const& next = chunks.at(i);
+        if(!previous.mediaId.empty() || !next.mediaId.empty())
+        {
+            if(previous.mediaId != next.mediaId || previous.numPositions != next.numPositions)
+            {
+                break;
+            }
+            numKept += next.numPositions;
+            continue;
+        }
+        auto const numCommon = std::distance(previous.tokens.cbegin(), std::mismatch(previous.tokens.cbegin(), previous.tokens.cend(), next.tokens.cbegin(), next.tokens.cend()).first);
+        numKept += static_cast<llama_pos>(numCommon);
+        if(static_cast<size_t>(numCommon) != previous.tokens.size() || static_cast<size_t>(numCommon) != next.tokens.size())
+        {
+            break;
+        }
+    }
+    // At least the last token must be evaluated to sample the response
+    if(numKept >= numPositions)
+    {
+        numKept = numPositions - (chunks.back().mediaId.empty() ? 1 : chunks.back().numPositions);
+    }
+    if(numKept < getContextPosition())
+    {
+        numKept = rollbackContextMemory(numKept);
+    }
+    MiscWeakAssert(numKept == getContextPosition());
+    MiscDebug("Application::Neuralyzer::AgentLocal", "Context reused: " + juce::String(numKept) + "/" + juce::String(numPositions) + " positions");
+
+    // The checkpoint is created before the generation prompt, so the next prompt can roll back the partial states
+    // to the end of the history even if the template renders the last response differently
+    auto checkpointPosition = numPositions - 1;
+    auto const generationTokens = common_tokenize(context, chatParams.generation_prompt, false, true);
+    auto const& lastTokens = chunks.back().tokens;
+    if(!generationTokens.empty() && generationTokens.size() < lastTokens.size() && std::equal(generationTokens.crbegin(), generationTokens.crend(), lastTokens.crbegin()))
+    {
+        checkpointPosition = numPositions - static_cast<llama_pos>(generationTokens.size());
+    }
+
+    // Evaluate the rest of the prompt
+    auto const batchSize = static_cast<size_t>(llama_n_batch(context));
+    auto position = llama_pos{0};
+    for(size_t i = 0_z; i < chunks.size(); ++i)
+    {
+        auto const& chunk = chunks.at(i);
+        auto const chunkStart = position;
+        position += chunk.numPositions;
+        if(position <= numKept)
+        {
+            continue;
+        }
+
+        if(!chunk.mediaId.empty())
+        {
+            MiscWeakAssert(chunkStart == numKept);
+            // The multimodal context bypasses the speculative context
+            mSpeculativeSynchronized.store(false);
+            llama_pos newNPast = chunkStart;
+            if(mtmd_helper_eval_chunk_single(mtmd, context, mediaChunks.at(i), chunkStart, 0, static_cast<int32_t>(batchSize), i + 1_z == chunks.size(), &newNPast) != 0)
+            {
+                throw juce::translate("Failed to decode media prompt.");
+            }
+            mContextChunks.push_back(chunk);
+            if(callback != nullptr && !callback())
+            {
+                return;
+            }
+            continue;
+        }
+
+        // Decode the tokens in chunks so prompts larger than n_batch still work.
+        auto offset = static_cast<size_t>(std::max(numKept - chunkStart, llama_pos{0}));
+        while(offset < chunk.tokens.size())
+        {
+            auto const tokenPosition = chunkStart + static_cast<llama_pos>(offset);
+            auto size = std::min(batchSize, chunk.tokens.size() - offset);
+            if(checkpointPosition > tokenPosition && checkpointPosition < tokenPosition + static_cast<llama_pos>(size))
+            {
+                size = static_cast<size_t>(checkpointPosition - tokenPosition);
+            }
+            auto* speculative = mSpeculativeSynchronized.load() ? mSpeculative.get() : nullptr;
+            auto batch = common_batch_get_one(context, chunk.tokens.data() + offset, static_cast<int32_t>(size));
+            auto const ret = llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
+            MiscWeakAssert(ret == 0);
+            if(ret != 0)
+            {
+                throw juce::translate("Failed to decode input messages");
+            }
+            if(!common_speculative_process(speculative, batch))
+            {
+                throw juce::translate("Failed to decode input messages");
+            }
+            appendContextTokens(chunk.tokens.data() + offset, size);
+            offset += size;
+            if(tokenPosition + static_cast<llama_pos>(size) == checkpointPosition)
+            {
+                createContextCheckpoint(checkpointPosition);
+            }
+            if(callback != nullptr && !callback())
+            {
+                return;
+            }
+        }
+    }
 }
 
 void Application::Neuralyzer::AgentLocal::updateContextMemoryUsage()
@@ -1725,6 +2002,28 @@ public:
             common_chat_parse(common_chat_input(assistantMsg), false, parserParams);
         };
 
+        beginTest("Tool Call Format");
+        {
+            auto const formatContent = [](std::string const& content)
+            {
+                common_chat_msg message;
+                message.role = "tool";
+                message.tool_name = "my_method";
+                message.content = content;
+                return formatToolCall(message, false).content;
+            };
+            expect(formatContent(R"({"content":[{"type":"text","text":"result"}]})").find("Status: SUCCESSFUL\n- Result:\nresult") != std::string::npos);
+            expect(formatContent(R"({"content":[{"type":"text","text":"failure"}],"isError":true})").find("Status: FAILED\n- Message:\nfailure") != std::string::npos);
+            expect(formatContent(R"({"content":[]})").find("(empty)") != std::string::npos);
+            expect(formatContent(R"({"isError":false})").find("(empty)") != std::string::npos);
+            expect(formatContent(R"({"content":[{"type":"image"}]})").find("(empty)") != std::string::npos);
+            expect(formatContent(R"({"content":["text"]})").find("(empty)") != std::string::npos);
+            expect(formatContent(R"({"content":{"text":"text"}})").find("(empty)") != std::string::npos);
+            expect(formatContent(R"(["content"])").find("Status: ERROR") != std::string::npos);
+            expect(formatContent(R"({"error":{"code":-1,"message":"error"}})").find("Status: ERROR\n- Code: -1\n- Message:\nerror") != std::string::npos);
+            expect(formatContent("not json").find("Status: ERROR") != std::string::npos);
+        }
+
         beginTest("Chat Parser Tools");
         {
             testCase("1 - Required Parameter Only", [&]()
@@ -1819,5 +2118,125 @@ public:
 };
 
 static ChatParserTest chatParserTest;
+
+// Runs a multi-turn conversation with a local model to check the reuse of the context memory.
+// The test is only enabled if the environment variable PARTIELS_NEURALYZER_TEST_MODEL is set
+// with the path of a model file (the multimodal projector of the model is used if available).
+class AgentLocalTest
+: public juce::UnitTest
+{
+public:
+    AgentLocalTest()
+    : juce::UnitTest("Neuralyzer Agent Local", "Application")
+    {
+    }
+
+    ~AgentLocalTest() override = default;
+
+    void runTest() override
+    {
+        auto const modelPath = juce::SystemStats::getEnvironmentVariable("PARTIELS_NEURALYZER_TEST_MODEL", {});
+        if(modelPath.isEmpty())
+        {
+            return;
+        }
+
+        beginTest("Initialization");
+        Application::Neuralyzer::Mcp::Dispatcher dispatcher(Application::Instance::get());
+        Application::Neuralyzer::Rag::Engine engine;
+        Application::Neuralyzer::AgentLocal agent(dispatcher, engine);
+        Application::Neuralyzer::ModelInfo info;
+        info.modelFile = juce::File(modelPath);
+        info.contextSize = 32768;
+        auto const initResult = agent.initializeModel(info);
+        expect(initResult.wasOk(), initResult.getErrorMessage());
+        if(initResult.failed())
+        {
+            return;
+        }
+        expect(agent.startSession().wasOk());
+
+        auto const ask = [&](juce::String const& prompt, juce::String const& expected, bool useThinkingMode = true)
+        {
+            auto const start = juce::Time::getMillisecondCounterHiRes();
+            auto const result = agent.sendQuery(prompt + " Answer briefly and do not use tools.", useThinkingMode);
+            auto const duration = (juce::Time::getMillisecondCounterHiRes() - start) / 1000.0;
+            auto const history = agent.getHistory();
+            auto const answer = history.empty() ? juce::String{} : juce::String::fromUTF8(history.back().content.c_str());
+            logMessage(prompt + " -> " + answer + " (" + juce::String(duration, 2) + "s, context usage " + juce::String(agent.getContextCapacityUsage(), 3) + ")");
+            expect(result.wasOk(), result.getErrorMessage());
+            expect(expected.isEmpty() || answer.containsIgnoreCase(expected), answer);
+        };
+
+        beginTest("Multi-turn");
+        ask("My name is Zorglub and my favorite number is 47.", {});
+        ask("What is my name?", "Zorglub");
+        ask("What is my favorite number plus 3?", "50");
+
+        beginTest("Session");
+        auto const sessionFile = juce::File::createTempFile("ptldoc");
+        expect(agent.saveSession(sessionFile).wasOk());
+        expect(agent.loadSession(sessionFile).wasOk());
+        ask("What was my favorite number?", "47");
+        sessionFile.deleteFile();
+        sessionFile.withFileExtension(".ctx").deleteFile();
+
+        if(Application::Neuralyzer::AgentLocal::getProjectorForModel(info.modelFile) != juce::File{})
+        {
+            beginTest("Media");
+            juce::TemporaryFile imageFile(".png");
+            expect(imageFile.getFile().replaceWithData(AnlResourceData::Ircamlogo_png, static_cast<size_t>(AnlResourceData::Ircamlogo_pngSize)));
+            expect(agent.addMedia(imageFile.getFile()).wasOk());
+            ask("Which institute is named in the image I just gave you?", "IRCAM");
+            ask("What is my name?", "Zorglub");
+            ask("What colors were in the image?", {});
+        }
+
+        // The model may refuse to answer about personal information without reasoning, the questions use the name
+        // of the document
+        auto const createInventory = [](int numItems)
+        {
+            juce::String inventory = "Here is the inventory of my studio:";
+            for(auto i = 1; i <= numItems; ++i)
+            {
+                inventory << " item " << i << " is a box of " << (i * 7) % 100 << " cables;";
+            }
+            return inventory;
+        };
+
+        // The history occupies a significant part of the context so the second query summarizes the session
+        beginTest("Summary");
+        info.contextSize = 18432;
+        expect(agent.initializeModel(info).wasOk());
+        expect(agent.startSession().wasOk());
+        ask("The Partiels document I am working on is named Zorglub. " + createInventory(400) + " Just acknowledge.", {}, false);
+        expect(agent.getContextCapacityUsage() > 0.8f, juce::String(agent.getContextCapacityUsage()));
+        ask("What is the name of the Partiels document I am working on?", "Zorglub", false);
+        auto history = agent.getHistory();
+        expect(history.size() == 5_z && juce::String(history.at(1_z).content).startsWith("Summarize our conversation"), juce::String(history.size()));
+        if(history.size() == 5_z)
+        {
+            logMessage("Summary: " + juce::String::fromUTF8(history.at(2_z).content.c_str()));
+        }
+
+        // The system prompt occupies most of the context so the session is not summarized and the user is invited to
+        // reset the history when the context is full
+        beginTest("Context Full");
+        info.contextSize = 13824;
+        expect(agent.initializeModel(info).wasOk());
+        expect(agent.startSession().wasOk());
+        ask("The Partiels document I am working on is named Zorglub.", {}, false);
+        expect(agent.getContextCapacityUsage() > 0.8f, juce::String(agent.getContextCapacityUsage()));
+        ask("What is the name of the Partiels document I am working on?", "Zorglub", false);
+        history = agent.getHistory();
+        expect(history.size() == 5_z && juce::String(history.at(1_z).content).startsWith("The Partiels document"), juce::String(history.size()));
+        auto const result = agent.sendQuery(createInventory(400), false);
+        logMessage("Context full: " + result.getErrorMessage());
+        expect(result.failed() && result.getErrorMessage() == getContextFullMessage(), result.getErrorMessage());
+        expect(agent.getHistory().size() == 5_z, juce::String(agent.getHistory().size()));
+    }
+};
+
+static AgentLocalTest agentLocalTest;
 
 ANALYSE_FILE_END
