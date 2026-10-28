@@ -119,7 +119,7 @@ void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentif
                                 });
 }
 
-std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key)
+std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key)
 {
     auto const name = [&]() -> juce::String
     {
@@ -138,13 +138,12 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
         return std::make_tuple(juce::Result::fail(juce::translate("Failed to load plugin description for key {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}.").replace("PLUGINID", key.identifier).replace("PLUGINFEATURE", key.feature)), juce::String());
     }
 
-    auto& documentDir = Instance::get().getDocumentDirector();
     auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
     if(result.failed())
     {
         return std::make_tuple(result, juce::String());
     }
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& documentAcsr = documentDir.getAccessor();
     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
     auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier);
     auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
@@ -159,13 +158,13 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
     trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
 
     // Apply default presets if defined
-    auto const procPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::processor>();
+    auto const& procPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::processor>();
     auto const procPresetIt = procPresets.find(key);
     if(procPresetIt != procPresets.cend())
     {
         trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
     }
-    auto const graphicPresets = Instance::get().getTrackPresetListAccessor().getAttr<Track::PresetList::AttrType::graphic>();
+    auto const& graphicPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::graphic>();
     auto const graphicPresetIt = graphicPresets.find(key);
     if(graphicPresetIt != graphicPresets.cend())
     {
@@ -174,8 +173,7 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
     else
     {
         // Use global graphic preset as fallback
-        auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
-        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalGraphicPreset, NotificationType::synchronous);
     }
 
     trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
@@ -202,20 +200,19 @@ std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(juce::
     return std::make_tuple(juce::Result::ok(), trackIdentifier);
 }
 
-std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file)
+std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(Document::Director& documentDir, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file)
 {
     if(!file.existsAsFile())
     {
         return std::make_tuple(juce::Result::fail(juce::translate("The file \"FILENAME\" doesn't exist!").replace("FILENAME", file.getFullPathName())), juce::String());
     }
 
-    auto& documentDir = Instance::get().getDocumentDirector();
     auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
     if(result.failed())
     {
         return std::make_tuple(result, juce::String());
     }
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& documentAcsr = documentDir.getAccessor();
     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
     trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
 
@@ -229,8 +226,7 @@ std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(juce::St
                    });
 
     // Use global graphic preset
-    auto const& globalPreset = Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>();
-    trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalPreset, NotificationType::synchronous);
+    trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalGraphicPreset, NotificationType::synchronous);
 
     trackAcsr.setAttr<Track::AttrType::file>(Track::FileInfo{file}, NotificationType::synchronous);
 
@@ -296,7 +292,7 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
     juce::StringArray failMessages;
     for(auto const& key : keys)
     {
-        auto const [result, identifier] = addPluginTrack(group, position, key);
+        auto const [result, identifier] = addPluginTrack(documentDir, Instance::get().getTrackPresetListAccessor(), Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>(), group, position, key);
         if(result.failed())
         {
             failMessages.add(juce::String(key.identifier + ":" + key.feature) + ": " + result.getErrorMessage());
@@ -351,7 +347,7 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
     juce::StringArray failMessages;
     for(auto const& file : files)
     {
-        auto const [result, identifier] = addFileTrack(group, position, file);
+        auto const [result, identifier] = addFileTrack(documentDir, Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>(), group, position, file);
         if(result.failed())
         {
             failMessages.add(file.getFullPathName() + ": " + result.getErrorMessage());
