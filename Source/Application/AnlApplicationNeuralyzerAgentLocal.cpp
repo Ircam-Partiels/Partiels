@@ -326,7 +326,7 @@ static common_chat_msg formatToolCall(common_chat_msg const& message, bool appen
         fmtMsg.content += "- Result:\n" + text + "\n";
         if(appendInstructions)
         {
-            static auto constexpr successMsg = "\n\nBased on these results, provide your final answer or call more tools if needed. If necessary, ensure your response is accurate based on the current state of the document..";
+            static auto constexpr successMsg = "\n\nBased on these results, provide your final answer or call more tools if needed. If necessary, ensure your response is accurate based on the current state of the document.";
             fmtMsg.content += successMsg;
         }
     }
@@ -837,12 +837,6 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
         return juce::Result::fail(juce::translate("Model loading aborted by user."));
     }
 
-    if(mShouldQuit.load())
-    {
-        MiscDebug("Application::Neuralyzer::AgentLocal", "Model loading aborted by user.");
-        return juce::Result::fail(juce::translate("Model loading aborted by user."));
-    }
-
     MiscDebug("Application::Neuralyzer::AgentLocal", "Successfully initialized model: " + info.modelFile.getFullPathName());
     {
         std::lock_guard<std::mutex> lock(mModelInfoMutex);
@@ -976,11 +970,11 @@ std::vector<common_chat_msg> Application::Neuralyzer::AgentLocal::performInferen
     }
     catch(std::exception& e)
     {
-        throw juce::translate("Failed to parse model reponse: ERRSTR").replace("ERRSTR", juce::String::fromUTF8(e.what()));
+        throw juce::translate("Failed to parse model response: ERRSTR").replace("ERRSTR", juce::String::fromUTF8(e.what()));
     }
     catch(...)
     {
-        throw juce::translate("Failed to parse model reponse: ERRSTR").replace("ERRSTR", "Unknown error");
+        throw juce::translate("Failed to parse model response: ERRSTR").replace("ERRSTR", "Unknown error");
     }
     return {chatMsg};
 }
@@ -1087,8 +1081,8 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
         if(receivedMessages.empty() || receivedMessages.at(0_z).empty())
         {
             restoreHistory();
-            MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - No model reponse");
-            return juce::Result::fail(juce::String::fromUTF8("No model reponse"));
+            MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - No model response");
+            return juce::Result::fail(juce::translate("No model response"));
         }
 
         // Store the MCP tool call
@@ -1208,7 +1202,7 @@ nlohmann::json Application::Neuralyzer::AgentLocal::readFiles(std::vector<std::s
         }
         else if(!file.hasReadAccess())
         {
-            message += "The file does have read access.";
+            message += "The file does not have read access.";
             response["isError"] = true;
         }
         else if(isMediaAudioFileForInjection(file))
@@ -1328,7 +1322,13 @@ juce::Result Application::Neuralyzer::AgentLocal::loadSession(juce::File const& 
     {
         return juce::Result::fail(juce::translate("Failed to load session: ") + juce::String(e.what()));
     }
-    // Use the latest instructions
+    // Use the latest instructions (the system message is restored if missing)
+    if(messages.empty() || messages.front().role != "system")
+    {
+        common_chat_msg message;
+        message.role = "system";
+        messages.insert(messages.begin(), std::move(message));
+    }
     messages.front().content = mMcpDispatcher.getInstructions();
     auto const avoidContextState = version != mMcpDispatcher.getUuid() || contextVersion != contextStateVersion;
 
@@ -1534,7 +1534,7 @@ juce::Result Application::Neuralyzer::AgentLocal::summarizeSession(bool useThink
     // Only the text of the summary is kept (the tool calls cannot be answered)
     if(receivedMessages.empty() || receivedMessages.front().content.empty())
     {
-        return restoreHistory(juce::String::fromUTF8("No model reponse"));
+        return restoreHistory(juce::translate("No model response"));
     }
     common_chat_msg summary;
     summary.role = "assistant";
@@ -1990,10 +1990,12 @@ public:
                 "  ]\n"
                 "}";
 
+            // The response of the model is parsed after the generation prompt as in AgentLocal::performInference()
             common_chat_templates_inputs inputs;
             inputs.use_jinja = true;
             inputs.parallel_tool_calls = true;
-            inputs.add_generation_prompt = false;
+            inputs.add_generation_prompt = true;
+            inputs.enable_thinking = false;
             inputs.tool_choice = COMMON_CHAT_TOOL_CHOICE_AUTO;
             inputs.tools = {chatTool};
             common_chat_msg msg;
@@ -2003,9 +2005,6 @@ public:
             msg.role = "user";
             msg.content = "User message content";
             inputs.messages.push_back(msg);
-            msg.role = "assitant";
-            msg.content = assistantMsg;
-            inputs.messages.push_back(msg);
 
             auto tplt = common_chat_templates_init(nullptr, TestResultsData::NeuralyzerChatTemplate_jinja);
             common_chat_params chatParams = common_chat_templates_apply(tplt.get(), inputs);
@@ -2014,7 +2013,19 @@ public:
             {
                 parserParams.parser = chatParams.parser;
             }
-            common_chat_parse(common_chat_input(assistantMsg), false, parserParams);
+            return common_chat_parse(common_chat_input(assistantMsg), false, parserParams);
+        };
+
+        // Checks that the response contains a single call of the method with the expected arguments
+        auto const expectToolCall = [this](common_chat_msg const& parsed, nlohmann::json const& expected)
+        {
+            expectEquals(parsed.tool_calls.size(), 1_z);
+            if(parsed.tool_calls.size() == 1_z)
+            {
+                expectEquals(juce::String(parsed.tool_calls.front().name), juce::String("my_method"));
+                auto const arguments = nlohmann::json::parse(parsed.tool_calls.front().arguments);
+                expect(arguments == expected, arguments.dump() + " != " + expected.dump());
+            }
         };
 
         beginTest("Tool Call Format");
@@ -2039,94 +2050,103 @@ public:
             expect(formatContent("not json").find("Status: ERROR") != std::string::npos);
         }
 
+        // The grammar of the tool calls (applied by the sampler during the generation) requires the required parameter
+        // first, then the optional parameters in any order, and lower case booleans: the parser rejects the responses
+        // that the grammar prevents. The string values are not quoted.
         beginTest("Chat Parser Tools");
         {
             testCase("1 - Required Parameter Only", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expectToolCall(parseToolCall(
+                                            "<tool_call>\n"
+                                            "<function=my_method>\n"
+                                            "<parameter=identifier>\n"
+                                            "zaza\n"
+                                            "</parameter>\n"
+                                            "</function>\n"
+                                            "</tool_call>"),
+                                        {{"identifier", "zaza"}});
                      });
-            testCase("2 - Reordered Parameters", [&]()
+            testCase("2 - Optional Parameter Before Required Parameter", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=enabled>\n"
-                             "true\n"
-                             "</parameter>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expect(parseToolCall(
+                                    "<tool_call>\n"
+                                    "<function=my_method>\n"
+                                    "<parameter=enabled>\n"
+                                    "true\n"
+                                    "</parameter>\n"
+                                    "<parameter=identifier>\n"
+                                    "zaza\n"
+                                    "</parameter>\n"
+                                    "</function>\n"
+                                    "</tool_call>")
+                                    .tool_calls.empty());
                      });
             testCase("3 - Ordered Parameters", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "<parameter=enabled>\n"
-                             "true\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expectToolCall(parseToolCall(
+                                            "<tool_call>\n"
+                                            "<function=my_method>\n"
+                                            "<parameter=identifier>\n"
+                                            "zaza\n"
+                                            "</parameter>\n"
+                                            "<parameter=enabled>\n"
+                                            "true\n"
+                                            "</parameter>\n"
+                                            "</function>\n"
+                                            "</tool_call>"),
+                                        {{"identifier", "zaza"}, {"enabled", true}});
                      });
-            testCase("4 - Reordered Parameters", [&]()
+            testCase("4 - Optional Parameters Before Required Parameter", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=count>\n"
-                             "12\n"
-                             "</parameter>\n"
-                             "<parameter=enabled>\n"
-                             "true\n"
-                             "</parameter>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expect(parseToolCall(
+                                    "<tool_call>\n"
+                                    "<function=my_method>\n"
+                                    "<parameter=count>\n"
+                                    "12\n"
+                                    "</parameter>\n"
+                                    "<parameter=enabled>\n"
+                                    "true\n"
+                                    "</parameter>\n"
+                                    "<parameter=identifier>\n"
+                                    "zaza\n"
+                                    "</parameter>\n"
+                                    "</function>\n"
+                                    "</tool_call>")
+                                    .tool_calls.empty());
                      });
-            testCase("5 - Reordered Parameters", [&]()
+            testCase("5 - Reordered Optional Parameters", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "<parameter=count>\n"
-                             "12\n"
-                             "</parameter>\n"
-                             "<parameter=enabled>\n"
-                             "true\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expectToolCall(parseToolCall(
+                                            "<tool_call>\n"
+                                            "<function=my_method>\n"
+                                            "<parameter=identifier>\n"
+                                            "zaza\n"
+                                            "</parameter>\n"
+                                            "<parameter=count>\n"
+                                            "12\n"
+                                            "</parameter>\n"
+                                            "<parameter=enabled>\n"
+                                            "true\n"
+                                            "</parameter>\n"
+                                            "</function>\n"
+                                            "</tool_call>"),
+                                        {{"identifier", "zaza"}, {"count", 12}, {"enabled", true}});
                      });
             testCase("6 - Upper case Boolean", [&]()
                      {
-                         parseToolCall(
-                             "<tool_call>\n"
-                             "<function=my_method>\n"
-                             "<parameter=identifier>\n"
-                             "\"zaza\"\n"
-                             "</parameter>\n"
-                             "<parameter=enabled>\n"
-                             "True\n"
-                             "</parameter>\n"
-                             "</function>\n"
-                             "</tool_call>");
+                         expect(parseToolCall(
+                                    "<tool_call>\n"
+                                    "<function=my_method>\n"
+                                    "<parameter=identifier>\n"
+                                    "zaza\n"
+                                    "</parameter>\n"
+                                    "<parameter=enabled>\n"
+                                    "True\n"
+                                    "</parameter>\n"
+                                    "</function>\n"
+                                    "</tool_call>")
+                                    .tool_calls.empty());
                      });
         }
     }
