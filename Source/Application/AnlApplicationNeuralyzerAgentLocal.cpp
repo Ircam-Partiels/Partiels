@@ -33,6 +33,13 @@ static void logCallback(enum ggml_log_level level, [[maybe_unused]] const char* 
     }
 }
 
+static int32_t getNumThreads()
+{
+    // The CPU computes the layers that are not offloaded to the GPU (or all the layers without GPU). One core is left
+    // free for the application (the threads of the inference are busy waiting).
+    return std::max(common_cpu_get_num_math() - 1, 1);
+}
+
 static size_t getMemoryMargin()
 {
     // The memory left free on each device when fitting the model and the context, for the application,
@@ -653,8 +660,8 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
     {
         return !reinterpret_cast<AgentLocal*>(data)->mShouldQuit.load();
     };
-    params.cpuparams.n_threads = 1;
-    params.cpuparams_batch.n_threads = 1;
+    params.cpuparams.n_threads = getNumThreads();
+    params.cpuparams_batch.n_threads = getNumThreads();
 
     // Enable the multi-token prediction (MTP) speculative decoding if the MTP model is available
     auto const mtpFile = getMtpForModel(info.modelFile);
@@ -805,6 +812,7 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
         }
 
         auto mtmdParams = mtmd_context_params_default();
+        mtmdParams.n_threads = getNumThreads();
         mtmdParams.progress_callback_user_data = static_cast<void*>(this);
         mtmdParams.progress_callback = [](float, void* data) -> bool
         {
