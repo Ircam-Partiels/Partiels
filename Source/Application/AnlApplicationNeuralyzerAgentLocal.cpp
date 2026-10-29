@@ -1025,11 +1025,18 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
     message.role = "user";
     message.content = prompt.toStdString();
 
-    // Save a backup of the current session to allow recovery in case of a crash during tool calls.
-    // We save it to the temp directory to avoid cluttering the user's documents with backup files,
-    // and we use a fixed file name since we only need to keep the most recent backup.
-    auto const tempSessionFile = getTempSessionFile("localagent.ptldoc");
-    saveSession(tempSessionFile);
+    // Keep the history to restore it if the query fails: the restore point follows the completed tool calls so the
+    // history stays consistent with the modifications of the document (the context memory follows the history with
+    // the next inference)
+    auto restorePoint = getHistory();
+    auto const restoreHistory = [&]()
+    {
+        {
+            std::unique_lock<std::mutex> sessionLock(mMessagesMutex);
+            mMessages = restorePoint;
+        }
+        notifyStateChanged();
+    };
 
     // Add the new message to the history
     {
@@ -1054,37 +1061,32 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
         }
         catch(juce::String const& e)
         {
-            notifyStateChanged();
-            loadSession(tempSessionFile);
+            restoreHistory();
             MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - " + e);
             return juce::Result::fail(e);
         }
         catch(std::exception const& e)
         {
-            notifyStateChanged();
-            loadSession(tempSessionFile);
+            restoreHistory();
             MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - " + juce::String(e.what()));
             return juce::Result::fail(juce::String::fromUTF8(e.what()));
         }
         catch(...)
         {
-            notifyStateChanged();
-            loadSession(tempSessionFile);
+            restoreHistory();
             MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - Unknown error");
             return juce::Result::fail(juce::translate("Unknown error"));
         }
 
         if(mShouldQuit.load())
         {
-            notifyStateChanged();
-            loadSession(tempSessionFile);
+            restoreHistory();
             return juce::Result::fail(juce::translate("Operation aborted"));
         }
 
         if(receivedMessages.empty() || receivedMessages.at(0_z).empty())
         {
-            notifyStateChanged();
-            loadSession(tempSessionFile);
+            restoreHistory();
             MiscDebug("Application::Neuralyzer::AgentLocal", "Inference failed - No model reponse");
             return juce::Result::fail(juce::String::fromUTF8("No model reponse"));
         }
@@ -1103,7 +1105,6 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
             mMessages.insert(mMessages.end(), receivedMessages.cbegin(), receivedMessages.cend());
         }
 
-        saveSession(tempSessionFile);
         notifyStateChanged();
 
         if(toolCalls.empty())
@@ -1112,11 +1113,6 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
             notifyStateChanged();
             return juce::Result::ok();
         }
-
-        // Save a backup of the current session to allow recovery in case of a crash during tool calls.
-        // We save it to the temp directory to avoid cluttering the user's documents with backup files,
-        // and we use a fixed file name since we only need to keep the most recent backup.
-        // saveSession(tempSessionFile);
 
         // Call the MCP tools
         for(auto const& toolCall : toolCalls)
@@ -1128,6 +1124,7 @@ juce::Result Application::Neuralyzer::AgentLocal::sendQuery(juce::String const& 
                 mMessages.push_back(std::move(toolMessage));
             }
         }
+        restorePoint = getHistory();
     }
     if(mShouldQuit.load())
     {
