@@ -709,6 +709,11 @@ juce::Result Application::Neuralyzer::AgentLocal::initializeModel(ModelInfo cons
 
     // The quantized KV cache halves the memory of the context but requires the flash attention (the quantized V
     // cache) and attention heads compatible with the block size: fall back to the default KV cache otherwise.
+    // Note: the fallback reloads the whole model (the weights from the disk) although only the creation of the context
+    // failed, and it occurs each time the model is initialized on a configuration that does not support the quantized
+    // KV cache. It also relies on common_init_from_params() returning the model without context on failure (instead of
+    // throwing), which may change with an update of llama.cpp.
+    // TODO: create only the context with the default KV cache from the loaded model, or remember the failure.
     initialize(GGML_TYPE_Q8_0);
     if(!mShouldQuit.load() && mInitResult != nullptr && mInitResult->model() != nullptr && mInitResult->context() == nullptr)
     {
