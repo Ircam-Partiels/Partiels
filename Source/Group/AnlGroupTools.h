@@ -18,6 +18,11 @@ namespace Group
 
         std::optional<std::reference_wrapper<Track::Accessor>> getReferenceTrackAcsr(Accessor const& accessor);
         std::optional<std::reference_wrapper<Track::Accessor>> getVerticalZoomTrackAcsr(Accessor const& accessor);
+        //! @brief Gets the track used to paint the grid of the group.
+        //! @details This is the track used by the vertical ruler or, if the group has no track with vertical zoom, the reference track.
+        //! @param accessor The accessor of the group.
+        //! @return The accessor of the track if any.
+        std::optional<std::reference_wrapper<Track::Accessor>> getGridTrackAcsr(Accessor const& accessor);
         bool canZoomIn(Accessor const& accessor);
         bool canZoomOut(Accessor const& accessor);
         void zoomIn(Accessor& accessor, double ratio, NotificationType notification);

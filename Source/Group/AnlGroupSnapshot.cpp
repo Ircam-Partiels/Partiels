@@ -158,13 +158,13 @@ void Group::Snapshot::paint(juce::Graphics& g)
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
+    auto const gridTrackAcsr = Tools::getGridTrackAcsr(mAccessor);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
-            auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
+            auto const isSelected = gridTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(gridTrackAcsr.value().get());
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Snapshot::paint(trackAcsr.value().get(), mTimeZoomAccessor, time, g, bounds, colour);
         }
@@ -304,10 +304,10 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     lines.add(juce::translate("Time: TIMESTR").replace("TIMESTR", Format::secondsToString(time)));
-    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(mAccessor);
-    if(referenceTrackAcsr.has_value() && Track::Tools::hasVerticalZoom(referenceTrackAcsr.value()))
+    auto const verticalZoomTrackAcsr = Tools::getVerticalZoomTrackAcsr(mAccessor);
+    if(verticalZoomTrackAcsr.has_value())
     {
-        lines.add(juce::translate("Mouse: VALSTR").replace("VALSTR", Track::Tools::getZoomTootip(referenceTrackAcsr.value().get(), *this, pt.y)));
+        lines.add(juce::translate("Mouse: VALSTR").replace("VALSTR", Track::Tools::getZoomTootip(verticalZoomTrackAcsr.value().get(), *this, pt.y)));
     }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

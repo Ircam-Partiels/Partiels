@@ -19,7 +19,7 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     g.fillRect(Track::Renderer::getOutsideGridBorder(outsideGridOptions).subtractedFrom(bounds));
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 
-    auto const referenceTrackAcsr = Tools::getReferenceTrackAcsr(accessor);
+    auto const gridTrackAcsr = Tools::getGridTrackAcsr(accessor);
     auto const& layout = accessor.getAttr<AttrType::layout>();
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
@@ -35,7 +35,7 @@ juce::Image Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
                     channelVisibility[channel] = true;
                 }
             }
-            auto const isSelected = referenceTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(referenceTrackAcsr.value().get());
+            auto const isSelected = gridTrackAcsr.has_value() && std::addressof(trackAcsr.value().get()) == std::addressof(gridTrackAcsr.value().get());
             auto const colour = isSelected ? laf.findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Renderer::paint(trackAcsr.value().get(), timeZoomAccessor, g, bounds, channelVisibility, colour, outsideGridOptions);
         }
