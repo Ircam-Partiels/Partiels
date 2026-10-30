@@ -200,7 +200,7 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
     auto const rangeLength = visibleRange.getLength();
     auto getPosition = [&](double value)
     {
-        return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(height + 1) + static_cast<double>(y);
+        return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(height) + static_cast<double>(y);
     };
 
     auto const textJustification = justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontal) ? juce::Justification::left : juce::Justification::right;
@@ -233,7 +233,8 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
             path.addLineSegment(juce::Line<float>(x, yPos, width + x, yPos), 1.0f);
         }
 
-        if(isPrimaryTick && stringify != nullptr && yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height))
+        // The text is drawn above the tick so the tick on the bottom edge can have a text (with a tolerance for rounding errors)
+        if(isPrimaryTick && stringify != nullptr && yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height) + 0.5f)
         {
             auto const text = stringify(value);
             g.drawText(text, 2 + static_cast<int>(x), static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4.0f + x), static_cast<int>(std::ceil(font.getHeight())), textJustification);
@@ -265,7 +266,7 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
     auto const rangeLength = visibleRange.getLength();
     auto getPosition = [&](double value)
     {
-        return (value - rangeStart) / rangeLength * static_cast<double>(width + 1) + static_cast<double>(x);
+        return (value - rangeStart) / rangeLength * static_cast<double>(width) + static_cast<double>(x);
     };
 
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, width - 1, static_cast<double>(maxStringWidth));
