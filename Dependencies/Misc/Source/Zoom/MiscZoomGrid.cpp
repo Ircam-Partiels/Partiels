@@ -205,11 +205,17 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
 
     auto const textJustification = justification.testFlags(Justification::left) || justification.testFlags(Justification::horizontal) ? juce::Justification::left : juce::Justification::right;
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, height - 1, font.getHeight() + 2.0f);
+    auto const tickRange = visibleRange.expanded(std::get<4>(tickDrawingInfo));
     juce::Path path;
     auto const x = static_cast<float>(bounds.getX());
     for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
     {
         auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
+        // The first and the last ticks can be outside the visible range
+        if(value < tickRange.getStart() || value > tickRange.getEnd())
+        {
+            continue;
+        }
         auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
         auto const tickWidth = isPrimaryTick ? 12.0f : 8.0f;
 
@@ -263,12 +269,18 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
     };
 
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, width - 1, static_cast<double>(maxStringWidth));
+    auto const tickRange = visibleRange.expanded(std::get<4>(tickDrawingInfo));
     juce::Path path;
     auto const fheight = static_cast<float>(height);
     auto const y = static_cast<float>(bounds.getY());
     for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
     {
         auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
+        // The first and the last ticks can be outside the visible range
+        if(value < tickRange.getStart() || value > tickRange.getEnd())
+        {
+            continue;
+        }
         auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
         auto const tickHeight = isPrimaryTick ? 8.0f : 6.0f;
 
