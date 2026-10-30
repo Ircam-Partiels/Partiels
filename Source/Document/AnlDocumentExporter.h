@@ -11,7 +11,6 @@ namespace Document
     namespace Exporter
     {
         juce::Component const* getPlotComponent(juce::String const& identifier);
-        juce::Rectangle<int> getPlotBounds(juce::String const& identifier);
         std::tuple<int, int, int> getPlotDimension(juce::String const& identifier);
 
         struct Options
