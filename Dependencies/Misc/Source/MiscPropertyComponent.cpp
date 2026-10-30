@@ -196,7 +196,7 @@ void PropertySlider::resized()
 
 void PropertySlider::setTooltip(juce::String const& newTooltip)
 {
-    PropertyComponentBase::setTitle(newTooltip);
+    PropertyComponentBase::setTooltip(newTooltip);
     numberField.setTooltip(newTooltip);
 }
 
@@ -314,7 +314,7 @@ void PropertyRangeSlider::resized()
 
 void PropertyRangeSlider::setTooltip(juce::String const& newTooltip)
 {
-    PropertyComponentBase::setTitle(newTooltip);
+    PropertyComponentBase::setTooltip(newTooltip);
     numberFieldLow.setTooltip(newTooltip);
     numberFieldHigh.setTooltip(newTooltip);
 }
