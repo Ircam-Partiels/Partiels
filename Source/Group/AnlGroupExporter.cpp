@@ -102,7 +102,7 @@ juce::Result Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
 
         if(!imageFormat->writeImageToStream(image, stream))
         {
-            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
         }
     }
     else
