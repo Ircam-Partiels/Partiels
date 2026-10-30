@@ -195,7 +195,7 @@ void Track::Renderer::paintChannels(juce::Graphics& g, juce::Rectangle<int> cons
         auto const top = verticalRange.second.getStart();
         auto const bottom = verticalRange.second.getEnd();
         auto const region = bounds.withTop(top).withBottom(bottom);
-        if(bottom < bounds.getHeight())
+        if(bottom < bounds.getBottom())
         {
             g.setColour(separatorColour);
             g.fillRect(bounds.withTop(bottom).withBottom(bottom + 1));
@@ -349,29 +349,30 @@ void Track::Renderer::paintExternalGrid(Accessor const& accessor, Zoom::Accessor
             }
         };
         auto const verticalBounds = bounds.withTrimmedTop(outsideGridjustification.testFlags(Justification::top) ? outsideGridHeight : 0).withTrimmedBottom(outsideGridjustification.testFlags(Justification::bottom) ? outsideGridHeight : 0);
+        auto const paintChannelGrids = [&](Zoom::Accessor const& zoomAcsr)
+        {
+            for(auto const& verticalRange : Tools::getChannelVerticalRanges(verticalBounds, channels))
+            {
+                juce::Graphics::ScopedSaveState sss(g);
+                auto const region = verticalBounds.withTop(verticalRange.second.getStart()).withBottom(verticalRange.second.getEnd());
+                // The clip region is expanded so the ticks centered on the edges of the channel remain visible
+                g.reduceClipRegion(region.expanded(0, 1));
+                paintChannel(zoomAcsr, region);
+            }
+        };
+        paintChannels(g, verticalBounds, channels, colour, nullptr);
         switch(frameType.value())
         {
             case Track::FrameType::label:
-            {
-                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int>, size_t)
-                              {
-                              });
-            }
-            break;
+                break;
             case Track::FrameType::value:
             {
-                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
-                              {
-                                  paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
-                              });
+                paintChannelGrids(accessor.getAcsr<AcsrType::valueZoom>());
             }
             break;
             case Track::FrameType::vector:
             {
-                paintChannels(g, verticalBounds, channels, colour, [&](juce::Rectangle<int> region, size_t)
-                              {
-                                  paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
-                              });
+                paintChannelGrids(accessor.getAcsr<AcsrType::binZoom>());
             }
             break;
         }
@@ -380,7 +381,7 @@ void Track::Renderer::paintExternalGrid(Accessor const& accessor, Zoom::Accessor
     auto horizontalBounds = bounds.withTrimmedLeft(outsideGridjustification.testFlags(Justification::left) ? outsideGridWidth : 0).withTrimmedRight(outsideGridjustification.testFlags(Justification::right) ? outsideGridWidth : 0);
     if(outsideGridjustification.testFlags(Justification::top))
     {
-        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromTop(outsideGridHeight).reduced(0, 1), [&](double time)
+        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromTop(outsideGridHeight).withTrimmedTop(1), [&](double time)
                                     {
                                         return getStringForTime(timeZoomAccessor, time);
                                     },
@@ -388,7 +389,7 @@ void Track::Renderer::paintExternalGrid(Accessor const& accessor, Zoom::Accessor
     }
     if(outsideGridjustification.testFlags(Justification::bottom))
     {
-        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromBottom(outsideGridHeight).reduced(0, 1), [&](double time)
+        Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), horizontalBounds.removeFromBottom(outsideGridHeight).withTrimmedBottom(1), [&](double time)
                                     {
                                         return getStringForTime(timeZoomAccessor, time);
                                     },
@@ -460,7 +461,8 @@ void Track::Renderer::paint(Accessor const& accessor, Zoom::Accessor const& time
     if(!outsideGridBorder.isEmpty())
     {
         g.setColour(colour);
-        g.drawRect(internalBounds.expanded(1), 1);
+        // The frame is centered on the edges of the plot like the decorator of the interface
+        g.drawRect(internalBounds.toFloat().expanded(0.5f), 1.0f);
         paintExternalGrid(accessor, timeZoomAcsr, g, bounds, channels, colour, outsideGridjustification);
     }
 }
