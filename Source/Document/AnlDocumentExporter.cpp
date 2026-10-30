@@ -7,27 +7,24 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Rectangle<int> Document::Exporter::getPlotBounds(juce::String const& identifier)
-{
-    if(auto const* plot = getPlotComponent(identifier))
-    {
-        return plot->getBounds();
-    }
-    MiscWeakAssert(false && "Plot component not found for identifier");
-    return juce::Rectangle<int>{};
-}
-
 std::tuple<int, int, int> Document::Exporter::getPlotDimension(juce::String const& identifier)
 {
-    auto const bounds = getPlotBounds(identifier);
-    auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(bounds.toNearestInt(), false);
+    auto const* plot = getPlotComponent(identifier);
+    if(plot == nullptr)
+    {
+        MiscWeakAssert(false && "Plot component not found for identifier");
+        return std::make_tuple(0, 0, 72);
+    }
+    auto const bounds = plot->getBounds();
+    // The display must be found using the screen coordinates of the plot and the pixel density
+    // must only depend on the scale of the display (that already includes the global scale factor)
+    auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(plot->getScreenBounds(), false);
     if(display == nullptr)
     {
         return std::make_tuple(bounds.getWidth(), bounds.getHeight(), 72);
     }
-    auto const globalScale = juce::Desktop::getInstance().getGlobalScaleFactor();
-    auto const dpi = static_cast<int>(std::round(static_cast<double>(globalScale) * display->scale * display->dpi));
-    return std::make_tuple(bounds.getWidth(), bounds.getHeight(), dpi);
+    auto const ppi = static_cast<int>(std::round(display->scale * 72.0));
+    return std::make_tuple(bounds.getWidth(), bounds.getHeight(), ppi);
 }
 
 size_t Document::Exporter::getNumFilesToExport(Accessor const& accessor, std::set<juce::String> const& identifiers)
@@ -1278,15 +1275,19 @@ juce::Result Document::Exporter::exportTo(Accessor const& accessor, juce::File c
     {
         auto const getSizes = [&]()
         {
+            auto const getScaledSize = [](int size, int ppi)
+            {
+                return static_cast<int>(std::round(static_cast<double>(size) * static_cast<double>(ppi) / 72.0));
+            };
             if(options.useAutoSize)
             {
-                auto const autoBounds = getPlotBounds(identifier);
+                auto const dimension = getPlotDimension(identifier);
                 auto const outsideBorder = Track::Renderer::getOutsideGridBorder(options.outsideGridJustification);
-                auto const bounds = outsideBorder.addedTo(autoBounds);
-                auto const scaledBounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(bounds);
-                return std::make_tuple(bounds.getWidth(), bounds.getHeight(), scaledBounds.getWidth(), scaledBounds.getHeight());
+                auto const bounds = outsideBorder.addedTo(juce::Rectangle<int>(std::get<0_z>(dimension), std::get<1_z>(dimension)));
+                auto const ppi = std::get<2_z>(dimension);
+                return std::make_tuple(bounds.getWidth(), bounds.getHeight(), getScaledSize(bounds.getWidth(), ppi), getScaledSize(bounds.getHeight(), ppi));
             }
-            return std::make_tuple(options.imageWidth, options.imageHeight, static_cast<int>(std::round(static_cast<double>(options.imageWidth) * static_cast<double>(options.imagePpi) / 72.0)), static_cast<int>(std::round(static_cast<double>(options.imageHeight) * static_cast<double>(options.imagePpi) / 72.0)));
+            return std::make_tuple(options.imageWidth, options.imageHeight, getScaledSize(options.imageWidth, options.imagePpi), getScaledSize(options.imageHeight, options.imagePpi));
         };
 
         if(Tools::hasTrackAcsr(accessor, identifier))
