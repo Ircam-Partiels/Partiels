@@ -1,6 +1,7 @@
 #include "AnlGroupExporter.h"
 #include "../Track/AnlTrackRenderer.h"
 #include "AnlGroupPlot.h"
+#include "AnlGroupSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -79,7 +80,18 @@ juce::Result Group::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto const image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, outsideGridOptions);
+    auto image = toImage(accessor, timeZoomAccessor, channels, width, height, scaledWidth, scaledHeight, outsideGridOptions);
+    if(image.isValid() && dynamic_cast<juce::JPEGImageFormat*>(imageFormat) != nullptr)
+    {
+        // The JPEG format doesn't support transparency so the image is drawn over the background of the section
+        juce::Image opaqueImage(juce::Image::PixelFormat::RGB, image.getWidth(), image.getHeight(), false);
+        {
+            juce::Graphics g(opaqueImage);
+            g.fillAll(juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Section::ColourIds::backgroundColourId));
+            g.drawImageAt(image, 0, 0);
+        }
+        image = opaqueImage;
+    }
     if(image.isValid())
     {
         juce::FileOutputStream stream(temp.getFile());
