@@ -162,6 +162,16 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getVertical
     return {};
 }
 
+std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getGridTrackAcsr(Accessor const& accessor)
+{
+    auto const verticalZoomTrackAcsr = getVerticalZoomTrackAcsr(accessor);
+    if(verticalZoomTrackAcsr.has_value())
+    {
+        return verticalZoomTrackAcsr;
+    }
+    return getReferenceTrackAcsr(accessor);
+}
+
 bool Group::Tools::canZoomIn(Accessor const& accessor)
 {
     auto const trackAcsr = getVerticalZoomTrackAcsr(accessor);
