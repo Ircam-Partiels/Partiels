@@ -132,8 +132,10 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     auto const scaleWidth = static_cast<float>(scaledWidth) / static_cast<float>(width);
     auto const scaleHeight = static_cast<float>(scaledHeight) / static_cast<float>(height);
     g.addTransform(juce::AffineTransform::scale(scaleWidth, scaleHeight));
-    g.fillAll(accessor.getAttr<AttrType::graphicsSettings>().colours.background);
     auto const bounds = juce::Rectangle<int>(0, 0, width, height);
+    // The background is only painted behind the plot, the outside grid remains transparent
+    g.setColour(accessor.getAttr<AttrType::graphicsSettings>().colours.background);
+    g.fillRect(Renderer::getOutsideGridBorder(outsideGridJustification).subtractedFrom(bounds));
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
 
     auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
