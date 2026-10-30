@@ -111,7 +111,9 @@ void Application::ExporterContent::exportToFile()
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifiers = mExporterPanel.getSelectedIdentifiers();
     auto const timeRange = mExporterPanel.getTimeRange();
-    auto const useDirectory = Document::Exporter::getNumFilesToExport(documentAcsr, identifiers) > 1_z;
+    // A group is exported as a single image (overlay) but as one file per track with text formats
+    auto const numFiles = options.useImageFormat() ? identifiers.size() : Document::Exporter::getNumFilesToExport(documentAcsr, identifiers);
+    auto const useDirectory = numFiles > 1_z;
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
