@@ -108,7 +108,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     {
         mProcessorsSection.setEnabled(mPropertyProcessorsSection.getHeight() > 0);
         mGraphicalsSection.setEnabled(mPropertyGraphicalsSection.getHeight() > 0);
-        mGraphicalsSection.setEnabled(mPropertyOscSection.getHeight() > 0);
+        mOscSection.setEnabled(mPropertyOscSection.getHeight() > 0);
         resized();
     };
 
