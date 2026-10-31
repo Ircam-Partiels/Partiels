@@ -524,11 +524,21 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
         {
             case AcsrType::tracks:
             {
-                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this]([[maybe_unused]] Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this, isRunning = false](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute) mutable
                                                                                  {
-                                                                                     if(trackAttribute == Track::AttrType::name)
+                                                                                     if(trackAttribute == Track::AttrType::name || trackAttribute == Track::AttrType::description)
                                                                                      {
                                                                                          setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
+                                                                                     }
+                                                                                     else if(trackAttribute == Track::AttrType::processing)
+                                                                                     {
+                                                                                         // The selection is only validated when the analysis starts or ends (not when the progress changes)
+                                                                                         auto const running = std::get<0_z>(trackAcsr.getAttr<Track::AttrType::processing>());
+                                                                                         if(running != isRunning)
+                                                                                         {
+                                                                                             isRunning = running;
+                                                                                             setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
+                                                                                         }
                                                                                      }
                                                                                  });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
@@ -685,22 +695,36 @@ void Document::Exporter::Panel::setSelectedIdentifiers(std::set<juce::String> co
         }
         if(Tools::hasTrackAcsr(mAccessor, identifier))
         {
-            auto const frameType = Track::Tools::getFrameType(Document::Tools::getTrackAcsr(mAccessor, identifier));
-            return frameType.has_value() && mOptions.isCompatible(frameType.value());
+            return isTrackSelectable(Document::Tools::getTrackAcsr(mAccessor, identifier));
         }
         MiscWeakAssert(false);
         return true;
+    };
+    auto const isTrackRunning = [this](juce::String const& trackId)
+    {
+        return Tools::hasTrackAcsr(mAccessor, trackId) && std::get<0_z>(Tools::getTrackAcsr(mAccessor, trackId).getAttr<Track::AttrType::processing>());
+    };
+    auto const isItemRunning = [&](juce::String const& identifier)
+    {
+        if(Tools::hasGroupAcsr(mAccessor, identifier))
+        {
+            auto const groupLayout = Tools::getEffectiveTrackIdentifiers(mAccessor, identifier);
+            return std::any_of(groupLayout.cbegin(), groupLayout.cend(), isTrackRunning);
+        }
+        return isTrackRunning(identifier);
     };
     auto selectedIdentifiers = copy_with_erased_if(identifiers, [=](auto const& identifier)
                                                    {
                                                        return !validateIdentifier(identifier);
                                                    });
-    if(selectedIdentifiers == mSelectedIdentifiers)
+    auto const isProcessing = std::any_of(selectedIdentifiers.cbegin(), selectedIdentifiers.cend(), isItemRunning);
+    if(selectedIdentifiers == mSelectedIdentifiers && isProcessing == mIsProcessing)
     {
         notification = juce::NotificationType::dontSendNotification;
     }
 
     mSelectedIdentifiers = std::move(selectedIdentifiers);
+    mIsProcessing = isProcessing;
     auto const numSelected = mSelectedIdentifiers.size();
     if(numSelected == 0_z)
     {
@@ -801,9 +825,11 @@ std::set<juce::String> Document::Exporter::Panel::getDefaultSelectedIdentifiers(
             auto const groupLayout = Tools::getEffectiveTrackIdentifiers(mAccessor, groupId);
             for(auto const& trackId : groupLayout)
             {
-                auto const frameType = Track::Tools::getFrameType(Document::Tools::getTrackAcsr(mAccessor, trackId));
+                auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+                auto const frameType = Track::Tools::getFrameType(trackAcsr);
                 // Exclude incompatible tracks by default and vector tracks because most of the time they are not useful to export
-                if(frameType.has_value() && mOptions.isCompatible(frameType.value()) && frameType.value() != Track::FrameType::vector)
+                // (the tracks with an unknown frame type and a running analysis are included until the analysis ends)
+                if(isTrackSelectable(trackAcsr) && frameType != Track::FrameType::vector)
                 {
                     selectedIdentifiers.insert(trackId);
                 }
@@ -811,6 +837,22 @@ std::set<juce::String> Document::Exporter::Panel::getDefaultSelectedIdentifiers(
         }
     }
     return selectedIdentifiers;
+}
+
+bool Document::Exporter::Panel::isProcessing() const
+{
+    return mIsProcessing;
+}
+
+bool Document::Exporter::Panel::isTrackSelectable(Track::Accessor const& trackAcsr) const
+{
+    auto const frameType = Track::Tools::getFrameType(trackAcsr);
+    if(frameType.has_value())
+    {
+        return mOptions.isCompatible(frameType.value());
+    }
+    // The frame type of a track can be unknown until its analysis ends
+    return std::get<0_z>(trackAcsr.getAttr<Track::AttrType::processing>());
 }
 
 bool Document::Exporter::Panel::isAllDocumentSelected() const
@@ -864,8 +906,7 @@ void Document::Exporter::Panel::showItemPopup(int groupToShow)
                          }
                          for(auto const& trackId : Tools::getEffectiveTrackIdentifiers(mAccessor))
                          {
-                             auto const frameType = Track::Tools::getFrameType(Document::Tools::getTrackAcsr(mAccessor, trackId));
-                             if(frameType.has_value() && mOptions.isCompatible(frameType.value()))
+                             if(isTrackSelectable(Document::Tools::getTrackAcsr(mAccessor, trackId)))
                              {
                                  identifiers.insert(trackId);
                              }
@@ -903,10 +944,9 @@ void Document::Exporter::Panel::showItemPopup(int groupToShow)
         {
             auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
             auto const& trackName = trackAcsr.getAttr<Track::AttrType::name>();
-            auto const trackFrameType = Track::Tools::getFrameType(trackAcsr);
             auto const trackSelected = mSelectedIdentifiers.count(trackId) > 0_z;
             juce::PopupMenu::Item i(juce::translate("TRACKNAME (Track)").replace("TRACKNAME", trackName));
-            i.isEnabled = trackFrameType.has_value() && mOptions.isCompatible(trackFrameType.value());
+            i.isEnabled = isTrackSelectable(trackAcsr);
             i.isTicked = trackSelected;
             i.action = [=, this]()
             {

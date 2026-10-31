@@ -26,6 +26,7 @@ namespace Application
         void handleAsyncUpdate() override;
 
         void exportToFile();
+        void updateExportButton();
 
         Accessor::Listener mListener{typeid(*this).name()};
         Document::Exporter::Panel mExporterPanel;

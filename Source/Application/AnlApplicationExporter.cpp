@@ -60,9 +60,8 @@ Application::ExporterContent::ExporterContent()
                 break;
             case AttrType::exportOptions:
             {
-                auto const options = acsr.getAttr<AttrType::exportOptions>();
-                mExporterPanel.setOptions(options, juce::NotificationType::dontSendNotification);
-                mPropertyExport.setEnabled(options.isValid() && !mExporterPanel.getSelectedIdentifiers().empty());
+                mExporterPanel.setOptions(acsr.getAttr<AttrType::exportOptions>(), juce::NotificationType::dontSendNotification);
+                updateExportButton();
             }
             break;
         }
@@ -76,7 +75,7 @@ Application::ExporterContent::ExporterContent()
 
     mExporterPanel.onSelectionChanged = [this]()
     {
-        mPropertyExport.setEnabled(mExporterPanel.getOptions().isValid() && !mExporterPanel.getSelectedIdentifiers().empty());
+        updateExportButton();
     };
 
     auto& acsr = Instance::get().getApplicationAccessor();
@@ -151,23 +150,33 @@ void Application::ExporterContent::exportToFile()
                               });
 }
 
+void Application::ExporterContent::updateExportButton()
+{
+    // The button is used to abort the export while the export is running
+    if(mProcess.valid())
+    {
+        return;
+    }
+    auto const isProcessing = mExporterPanel.isProcessing();
+    mPropertyExport.setEnabled(!isProcessing && mExporterPanel.getOptions().isValid() && !mExporterPanel.getSelectedIdentifiers().empty());
+    mPropertyExport.entry.setButtonText(isProcessing ? juce::translate("Analyses in progress...") : juce::translate("Export"));
+    mPropertyExport.entry.setTooltip(isProcessing ? juce::translate("The export will be available once the analyses of the selected items are complete") : juce::translate("Export the results"));
+}
+
 void Application::ExporterContent::handleAsyncUpdate()
 {
     mExporterPanel.setEnabled(true);
-    mPropertyExport.setEnabled(true);
-
     mShoulAbort.store(false);
-    mPropertyExport.entry.setButtonText(juce::translate("Export"));
-    mPropertyExport.entry.setTooltip(juce::translate("Export the results"));
-
     mLoadingIcon.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     MiscWeakAssert(mProcess.valid());
     if(!mProcess.valid())
     {
+        updateExportButton();
         return;
     }
     auto const result = mProcess.get();
+    updateExportButton();
     auto const options = juce::MessageBoxOptions()
                              .withIconType(static_cast<juce::MessageBoxIconType>(std::get<0>(result)))
                              .withTitle(std::get<1>(result))
@@ -187,6 +196,7 @@ void Application::ExporterContent::updateItems()
     {
         mExporterPanel.setSelectedIdentifiers(mExporterPanel.getDefaultSelectedIdentifiers(), juce::NotificationType::dontSendNotification);
     }
+    updateExportButton();
 }
 
 Application::ExporterPanel::ExporterPanel()
