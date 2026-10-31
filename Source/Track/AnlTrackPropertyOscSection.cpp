@@ -68,7 +68,7 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
     mCopyButton.onClick = [this]()
     {
         juce::SystemClipboard::copyTextToClipboard(Tools::getEffectiveOscIdentifier(mAccessor));
-        Tooltip::showMessageBox(juce::translate("OSC identifier copied to clipboard"), mCopyButton.getScreenBounds(), 2000);
+        Tooltip::showMessageBox(juce::translate("OSC identifier copied to clipboard"), mCopyButton, mCopyButton.getScreenBounds(), 2000);
     };
     mCopyButton.setTooltip(juce::translate("Copy to clipboard"));
 

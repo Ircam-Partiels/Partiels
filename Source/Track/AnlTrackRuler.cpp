@@ -74,7 +74,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                             auto const rulerBounds = rulerPtr->getScreenBounds();
                             auto const width = rulerBounds.getWidth();
                             auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
-                            Tooltip::showCallOutBox(std::move(rangeEditor), bounds);
+                            Tooltip::showCallOutBox(std::move(rangeEditor), *rulerPtr, bounds);
                             return false;
                         }
                         return true;

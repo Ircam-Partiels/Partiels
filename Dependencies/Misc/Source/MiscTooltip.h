@@ -73,8 +73,21 @@ namespace Tooltip
         juce::String mTooltip;
     };
 
-    juce::CallOutBox& showCallOutBox(std::unique_ptr<juce::Component> content, juce::Rectangle<int> const& area, int timeOutMs = -1);
-    juce::CallOutBox& showMessageBox(juce::String const& message, juce::Rectangle<int> const& area, int timeOutMs = -1);
+    //! @brief Shows a call-out box pointing to an area
+    //! @param content The component to display inside the call-out box
+    //! @param associatedComponent The component the call-out box is opened from (the call-out box is kept above the window containing it)
+    //! @param area The area to point to in screen coordinates
+    //! @param timeOutMs The delay before dismissing the call-out box (ignored if negative)
+    //! @return The call-out box
+    juce::CallOutBox& showCallOutBox(std::unique_ptr<juce::Component> content, juce::Component& associatedComponent, juce::Rectangle<int> const& area, int timeOutMs = -1);
+
+    //! @brief Shows a message in a call-out box pointing to an area
+    //! @param message The message to display inside the call-out box
+    //! @param associatedComponent The component the call-out box is opened from (the call-out box is kept above the window containing it)
+    //! @param area The area to point to in screen coordinates
+    //! @param timeOutMs The delay before dismissing the call-out box (ignored if negative)
+    //! @return The call-out box
+    juce::CallOutBox& showMessageBox(juce::String const& message, juce::Component& associatedComponent, juce::Rectangle<int> const& area, int timeOutMs = -1);
 } // namespace Tooltip
 
 MISC_FILE_END

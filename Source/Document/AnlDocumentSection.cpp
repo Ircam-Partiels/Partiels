@@ -79,7 +79,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             auto const timeRulerBounds = mTimeRuler.getScreenBounds();
             auto const height = timeRulerBounds.getHeight();
             auto const bounds = timeRulerBounds.withX(x - height / 2).withWidth(height);
-            Tooltip::showCallOutBox(std::move(timeRangeEditor), bounds);
+            Tooltip::showCallOutBox(std::move(timeRangeEditor), mTimeRuler, bounds);
             return false;
         }
         return true;

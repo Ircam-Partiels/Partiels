@@ -128,25 +128,26 @@ void Tooltip::BubbleWindow::paint(juce::Graphics& g)
 void Tooltip::BubbleWindow::timerCallback()
 {
     auto* owner = getParentComponent();
-    auto const getTipFor = [&](juce::Component* component) -> juce::String
+    auto const getClientFor = [&](juce::Component* component) -> juce::Component*
     {
         if(component == nullptr || component->isCurrentlyBlockedByAnotherModalComponent() || !juce::Process::isForegroundProcess())
         {
-            return {};
+            return nullptr;
         }
         for(auto* parent = component; parent != nullptr; parent = parent->getParentComponent())
         {
             if(dynamic_cast<BubbleClient*>(parent) != nullptr && (owner == nullptr || owner == parent || owner->isParentOf(parent)))
             {
-                return dynamic_cast<BubbleClient*>(parent)->getTooltip();
+                return parent;
             }
         }
-        return {};
+        return nullptr;
     };
 
     auto& desktop = juce::Desktop::getInstance();
     auto mouseSource = desktop.getMainMouseSource();
-    mTooltip = getTipFor(mouseSource.isTouch() ? nullptr : mouseSource.getComponentUnderMouse());
+    auto* client = getClientFor(mouseSource.isTouch() ? nullptr : mouseSource.getComponentUnderMouse());
+    mTooltip = client != nullptr ? dynamic_cast<BubbleClient*>(client)->getTooltip() : juce::String();
 
     if((mouseSource.isDragging() && !mAcceptsMouseDown) || mTooltip.isEmpty())
     {
@@ -207,7 +208,8 @@ void Tooltip::BubbleWindow::timerCallback()
         setBounds(bounds);
         if(owner == nullptr)
         {
-            addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary | juce::ComponentPeer::windowIgnoresKeyPresses | juce::ComponentPeer::windowIgnoresMouseClicks);
+            auto const styleFlags = juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary | juce::ComponentPeer::windowIgnoresKeyPresses | juce::ComponentPeer::windowIgnoresMouseClicks;
+            addToDesktop(juce::DesktopWindowOptions().withStyleFlags(styleFlags).withAssociatedComponent(client));
         }
         else
         {
@@ -218,9 +220,9 @@ void Tooltip::BubbleWindow::timerCallback()
     }
 }
 
-juce::CallOutBox& Tooltip::showCallOutBox(std::unique_ptr<juce::Component> content, juce::Rectangle<int> const& area, int timeOutMs)
+juce::CallOutBox& Tooltip::showCallOutBox(std::unique_ptr<juce::Component> content, juce::Component& associatedComponent, juce::Rectangle<int> const& area, int timeOutMs)
 {
-    auto& box = juce::CallOutBox::launchAsynchronously(std::move(content), area, nullptr);
+    auto& box = juce::CallOutBox::launchAsynchronously(std::move(content), associatedComponent, nullptr);
     box.resized();
     box.setArrowSize(0.0f);
     if(auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(area))
@@ -241,12 +243,12 @@ juce::CallOutBox& Tooltip::showCallOutBox(std::unique_ptr<juce::Component> conte
     return box;
 }
 
-juce::CallOutBox& Tooltip::showMessageBox(juce::String const& message, juce::Rectangle<int> const& area, int timeOutMs)
+juce::CallOutBox& Tooltip::showMessageBox(juce::String const& message, juce::Component& associatedComponent, juce::Rectangle<int> const& area, int timeOutMs)
 {
     auto info = std::make_unique<juce::Label>("", message);
     auto const bounds = juce::GlyphArrangement::getStringBounds(info->getFont(), message);
     info->setBounds(bounds.getLargestIntegerWithin().expanded(10, 4));
-    return showCallOutBox(std::move(info), area, timeOutMs);
+    return showCallOutBox(std::move(info), associatedComponent, area, timeOutMs);
 }
 
 MISC_FILE_END

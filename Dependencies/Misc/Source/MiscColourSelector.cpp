@@ -422,7 +422,7 @@ void ColourButton::clicked()
     };
 
     mIsColourSelectorVisible = true;
-    auto& box = Tooltip::showCallOutBox(std::move(colourSelector), getScreenBounds());
+    auto& box = Tooltip::showCallOutBox(std::move(colourSelector), *this, getScreenBounds());
     mComponentListener.attachTo(box);
     if(onColourSelectorShow != nullptr)
     {
