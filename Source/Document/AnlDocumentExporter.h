@@ -120,6 +120,8 @@ namespace Document
         private:
             void showItemPopup(int groupToShow = 0);
             bool isTrackSelectable(Track::Accessor const& trackAcsr) const;
+            std::set<juce::String> getValidIdentifiers(std::set<juce::String> const& identifiers) const;
+            bool hasRunningAnalysis(std::set<juce::String> const& identifiers) const;
             void sanitizeProperties(bool updateModel);
             void updateTimePreset(bool updateModel, juce::NotificationType notification);
             void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
