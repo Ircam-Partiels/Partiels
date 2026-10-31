@@ -110,11 +110,16 @@ namespace Document
             bool isAllGroupSelected(juce::String const& groupId) const;
             std::set<juce::String> getDefaultSelectedIdentifiers() const;
 
+            //! @brief Gets whether the analysis of a selected track is running
+            //! @return true if the analysis of a selected track (or of a track of a selected group) is running
+            bool isProcessing() const;
+
             std::function<void(void)> onOptionsChanged = nullptr;
             std::function<void(void)> onSelectionChanged = nullptr;
 
         private:
             void showItemPopup(int groupToShow = 0);
+            bool isTrackSelectable(Track::Accessor const& trackAcsr) const;
             void sanitizeProperties(bool updateModel);
             void updateTimePreset(bool updateModel, juce::NotificationType notification);
             void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
@@ -128,6 +133,7 @@ namespace Document
             bool mShowAutoSize;
             Options mOptions;
             std::set<juce::String> mSelectedIdentifiers;
+            bool mIsProcessing{false};
 
             PropertyList mPropertyItem;
             PropertyList mPropertyTimePreset;
