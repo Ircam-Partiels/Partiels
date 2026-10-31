@@ -104,8 +104,8 @@ void Document::ReaderLayoutContent::warnBeforeClosing()
                                  .withIconType(juce::AlertWindow::QuestionIcon)
                                  .withTitle(juce::translate("Apply audio files layout modification?"))
                                  .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                 .withButton(juce::translate("Apply"))
-                                 .withButton(juce::translate("Discard"));
+                                 .withButton(juce::translate("Apply"), 1)
+                                 .withButton(juce::translate("Discard"), 0);
 
         juce::WeakReference<juce::Component> weakReference(this);
         juce::AlertWindow::showAsync(options, [=, this](int result)

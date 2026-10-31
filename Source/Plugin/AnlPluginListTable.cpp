@@ -84,7 +84,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner, juce::Application
                                                  .withIconType(juce::AlertWindow::WarningIcon)
                                                  .withTitle(juce::translate("Plugins scan failed!"))
                                                  .withMessage(juce::translate("Partiels failed to scan the plugins due to: ERRSTR.").replace("ERRSTR", message))
-                                                 .withButton(juce::translate("Ok"));
+                                                 .withButton(juce::translate("Ok"), 0);
                         juce::AlertWindow::showAsync(options, nullptr);
                     };
                     try
@@ -109,7 +109,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner, juce::Application
                                              .withIconType(juce::AlertWindow::WarningIcon)
                                              .withTitle(juce::translate("Plugins scan has encountered errors!"))
                                              .withMessage(juce::translate("The following plugins failed to be scanned:\n.") + std::get<1>(results).joinIntoString("\n"))
-                                             .withButton(juce::translate("Ok"));
+                                             .withButton(juce::translate("Ok"), 0);
                     juce::AlertWindow::showAsync(options, nullptr);
                 }
                 updateContent();
@@ -396,7 +396,7 @@ void PluginList::Table::downloadPlugin()
                                                                      .withIconType(juce::AlertWindow::WarningIcon)
                                                                      .withTitle(juce::translate("Plugin installation failed!"))
                                                                      .withMessage(result.getErrorMessage())
-                                                                     .withButton(juce::translate("Ok")),
+                                                                     .withButton(juce::translate("Ok"), 0),
                                                                  nullptr);
                                     return;
                                 }
@@ -413,7 +413,7 @@ void PluginList::Table::downloadPlugin()
                                                                      .withIconType(juce::AlertWindow::WarningIcon)
                                                                      .withTitle(juce::translate("Plugin installation failed!"))
                                                                      .withMessage(juce::translate("The plugin installer could not be launched."))
-                                                                     .withButton(juce::translate("Ok")),
+                                                                     .withButton(juce::translate("Ok"), 0),
                                                                  nullptr);
                                     return;
                                 }
@@ -426,7 +426,7 @@ void PluginList::Table::downloadPlugin()
                                                                      .withIconType(juce::AlertWindow::WarningIcon)
                                                                      .withTitle(juce::translate("Plugin installation failed!"))
                                                                      .withMessage(juce::translate("The plugin installer could not be launched."))
-                                                                     .withButton(juce::translate("Ok")),
+                                                                     .withButton(juce::translate("Ok"), 0),
                                                                  nullptr);
                                     return;
                                 }

@@ -173,8 +173,8 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
                                      .withIconType(juce::AlertWindow::WarningIcon)
                                      .withTitle(juce::translate("Audio file cannot be found!"))
                                      .withMessage(juce::translate("The audio file FILENAME has been moved or deleted. Would you like to restore it?").replace("FILENAME", mAudioFileLayout.file.getFullPathName()))
-                                     .withButton(juce::translate("Ok"))
-                                     .withButton(juce::translate("Cancel"));
+                                     .withButton(juce::translate("Ok"), 1)
+                                     .withButton(juce::translate("Cancel"), 0);
             juce::AlertWindow::showAsync(options, [=, this](int returnedValue)
                                          {
                                              if(weakReference.get() == nullptr)

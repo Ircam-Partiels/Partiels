@@ -679,7 +679,7 @@ void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t 
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Track cannot be moved!"))
                                  .withMessage(result.getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
     else
@@ -705,7 +705,7 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Track cannot be copied!"))
                                  .withMessage(result.getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
     else
@@ -731,7 +731,7 @@ void Document::Section::moveGroup(juce::String const& groupIdentifier, size_t in
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Group cannot be moved!"))
                                  .withMessage(result.getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
     else
@@ -756,7 +756,7 @@ void Document::Section::copyGroup(juce::String const& groupIdentifier, size_t in
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Group cannot be copied!"))
                                  .withMessage(result.getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
     else

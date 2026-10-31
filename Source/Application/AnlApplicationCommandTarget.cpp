@@ -924,8 +924,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withIconType(juce::AlertWindow::QuestionIcon)
                                          .withTitle(juce::translate("Remove Group(s)?"))
                                          .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" from the project? This will also remove all the contained tracks!").replace("GROUPNAMES", names.joinIntoString(", ")))
-                                         .withButton(juce::translate("Remove"))
-                                         .withButton(juce::translate("Cancel"));
+                                         .withButton(juce::translate("Remove"), 1)
+                                         .withButton(juce::translate("Cancel"), 0);
                 juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
@@ -954,8 +954,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withIconType(juce::AlertWindow::QuestionIcon)
                                          .withTitle(juce::translate("Remove Track?"))
                                          .withMessage(juce::translate("Are you sure you want to remove the track(s) \"TRACKNAMES\" from the project?").replace("TRACKNAMES", names.joinIntoString(", ")))
-                                         .withButton(juce::translate("Remove"))
-                                         .withButton(juce::translate("Cancel"));
+                                         .withButton(juce::translate("Remove"), 1)
+                                         .withButton(juce::translate("Cancel"), 0);
                 juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
@@ -989,8 +989,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withIconType(juce::AlertWindow::QuestionIcon)
                                          .withTitle(juce::translate("Remove Group(s) and Track(s)?"))
                                          .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" and the from the project and the track(s) \"TRACKNAMES\"?").replace("GROUPNAMES", groupNames.joinIntoString(", ")).replace("TRACKNAMES", trackNames.joinIntoString(", ")))
-                                         .withButton(juce::translate("Remove"))
-                                         .withButton(juce::translate("Cancel"));
+                                         .withButton(juce::translate("Remove"), 1)
+                                         .withButton(juce::translate("Cancel"), 0);
                 juce::AlertWindow::showAsync(options, [=, &documentDir](int windowResult)
                                              {
                                                  if(windowResult != 1)
@@ -1035,7 +1035,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                                        .withIconType(juce::AlertWindow::WarningIcon)
                                                                        .withTitle(juce::translate("Failed to load template!"))
                                                                        .withMessage(loadResults.getErrorMessage())
-                                                                       .withButton(juce::translate("Ok"));
+                                                                       .withButton(juce::translate("Ok"), 0);
                                               juce::AlertWindow::showAsync(options, nullptr);
                                               documentDir.endAction(ActionState::abort);
                                           }
@@ -1345,8 +1345,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                      .withIconType(juce::AlertWindow::WarningIcon)
                                      .withTitle(juce::translate("Overwrite Original File(s)?"))
                                      .withMessage(message)
-                                     .withButton(juce::translate("Overwrite"))
-                                     .withButton(juce::translate("Cancel"));
+                                     .withButton(juce::translate("Overwrite"), 1)
+                                     .withButton(juce::translate("Cancel"), 0);
 
             auto const ignoreTimeSelection = Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
             auto const exportSelection = ignoreTimeSelection ? timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>() : selection;
@@ -1413,8 +1413,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withIconType(juce::AlertWindow::WarningIcon)
                                          .withTitle(juce::translate("Audio device not set!"))
                                          .withMessage(juce::translate("Audio playback cannot be started because the output audio device is not set. Do you want to open the audio settings panel to select the output audio device?"))
-                                         .withButton(juce::translate("Open"))
-                                         .withButton(juce::translate("Ignore"));
+                                         .withButton(juce::translate("Open"), 1)
+                                         .withButton(juce::translate("Ignore"), 0);
                 juce::AlertWindow::showAsync(options, [](int result)
                                              {
                                                  if(result == 1)

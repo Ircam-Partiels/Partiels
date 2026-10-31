@@ -116,8 +116,8 @@ void Group::PropertyProcessorsSection::askToModifyProcessors(std::function<bool(
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Plugins' results are locked!"))
                                  .withMessage(juce::translate("The analysis results of one or more were consolidated or loaded from a file. Do you want to detach the files to modify the parameters and restart the analyses?"))
-                                 .withButton(juce::translate("Detach the files"))
-                                 .withButton(juce::translate("Cancel changes"));
+                                 .withButton(juce::translate("Detach the files"), 1)
+                                 .withButton(juce::translate("Cancel changes"), 0);
         juce::WeakReference<juce::Component> weakReference(this);
         juce::AlertWindow::showAsync(options, [=](auto result)
                                      {

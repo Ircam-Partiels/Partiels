@@ -183,7 +183,7 @@ void Application::ExporterContent::handleAsyncUpdate()
                              .withIconType(static_cast<juce::MessageBoxIconType>(std::get<0>(result)))
                              .withTitle(std::get<1>(result))
                              .withMessage(std::get<2>(result))
-                             .withButton(juce::translate("Ok"));
+                             .withButton(juce::translate("Ok"), 0);
     juce::AlertWindow::showAsync(options, nullptr);
 }
 

@@ -279,7 +279,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
                                  .withIconType(static_cast<juce::AlertWindow::AlertIconType>(type))
                                  .withTitle(title)
                                  .withMessage(message.second.joinIntoString("\n"))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 

@@ -120,7 +120,7 @@ void AlertWindow::Catcher::showAsync() const
                                  .withIconType(static_cast<juce::MessageBoxIconType>(std::get<0>(message.first)))
                                  .withTitle(std::get<1>(message.first) + (message.second.size() > 1 ? "(" + juce::String(message.second.size()) + ")" : ""))
                                  .withMessage(message.second.joinIntoString("\n"))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }

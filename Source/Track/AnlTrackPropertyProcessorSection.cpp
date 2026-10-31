@@ -307,8 +307,8 @@ void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bo
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Plugin results are locked!"))
                                  .withMessage(juce::translate("The plugin analysis results were modified, consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
-                                 .withButton(juce::translate("Detach the file"))
-                                 .withButton(juce::translate("Cancel changes"));
+                                 .withButton(juce::translate("Detach the file"), 1)
+                                 .withButton(juce::translate("Cancel changes"), 0);
         juce::WeakReference<juce::Component> weakReference(this);
         juce::AlertWindow::showAsync(options, [=, this](auto result)
                                      {
@@ -534,7 +534,7 @@ void Track::PropertyProcessorSection::loadPreset()
                                                                                         .withIconType(juce::AlertWindow::WarningIcon)
                                                                                         .withTitle(juce::translate("Failed to load from processor preset file!"))
                                                                                         .withMessage(exportResult.getErrorMessage())
-                                                                                        .withButton(juce::translate("Ok"));
+                                                                                        .withButton(juce::translate("Ok"), 0);
                                                                juce::AlertWindow::showAsync(options, nullptr);
                                                            }
                                                            else
@@ -569,7 +569,7 @@ void Track::PropertyProcessorSection::savePreset()
                                                                .withIconType(juce::AlertWindow::WarningIcon)
                                                                .withTitle(juce::translate("Failed to save a processor preset file!"))
                                                                .withMessage(result.getErrorMessage())
-                                                               .withButton(juce::translate("Ok"));
+                                                               .withButton(juce::translate("Ok"), 0);
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
                                   updateState();

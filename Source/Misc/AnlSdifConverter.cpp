@@ -799,7 +799,7 @@ std::tuple<uint32_t, uint32_t, std::optional<juce::String>> SdifConverter::Panel
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Invalid SDIF Format!"))
                                  .withMessage(juce::translate("The frame and matrix signatures must contain 4 characters."))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
         return {uint32_t(0), uint32_t(0), std::optional<juce::String>{}};
     }
