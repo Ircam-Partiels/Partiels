@@ -198,7 +198,7 @@ Application::LoaderContent::LoaderContent()
                                          .withIconType(juce::AlertWindow::WarningIcon)
                                          .withTitle(juce::translate("Failed to load template!"))
                                          .withMessage(results.getErrorMessage())
-                                         .withButton(juce::translate("Ok"));
+                                         .withButton(juce::translate("Ok"), 0);
                 juce::AlertWindow::showAsync(options, nullptr);
                 documentDir.endAction(ActionState::abort);
             }

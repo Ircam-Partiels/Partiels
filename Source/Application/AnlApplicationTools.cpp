@@ -253,7 +253,7 @@ void Application::Tools::addGroups(size_t numGroups, size_t firstGroupPosition)
                                      .withIconType(juce::AlertWindow::WarningIcon)
                                      .withTitle(juce::translate("Group cannot be created!"))
                                      .withMessage(result.getErrorMessage())
-                                     .withButton(juce::translate("Ok"));
+                                     .withButton(juce::translate("Ok"), 0);
             juce::AlertWindow::showAsync(options, nullptr);
             return;
         }
@@ -285,7 +285,7 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
                                  .withMessage(std::get<0_z>(prepareResult).getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
         return;
     }
@@ -323,7 +323,7 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
                                  .withMessage(juce::translate("There are NUMFAILS tracks out of NUMTOTAL that could not be created in the document. They correspond to the plugins:\nPLUGINMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("NUMTOTAL", juce::String(keys.size())).replace("PLUGINMESSAGES", failMessages.joinIntoString("\n")))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }
@@ -340,7 +340,7 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
                                  .withMessage(std::get<0_z>(prepareResult).getErrorMessage())
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
         return;
     }
@@ -378,7 +378,7 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Tracks cannot be created!"))
                                  .withMessage(juce::translate("There are NUMFAILS tracks out of NUMTOTAL that could not be created in the document. They correspond to the files:\nFILEMESSAGES.").replace("NUMFAILS", juce::String(failMessages.size())).replace("NUMTOTAL", juce::String(files.size())).replace("FILEMESSAGES", failMessages.joinIntoString("\n")))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }
@@ -391,8 +391,8 @@ void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersio
                            .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                            .withTitle(juce::translate("A new version is available!"))
                            .withMessage(juce::translate("PRODUCTNAME APPVER has been published on the PROJECTNAME page.").replace("PRODUCTNAME", product).replace("APPVER", upstreamVersion.toString()).replace("PROJECTNAME", project))
-                           .withButton(juce::translate("Proceed to download page"));
-        options = warnIfUpToDate ? options.withButton(juce::translate("Close the window")) : options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
+                           .withButton(juce::translate("Proceed to download page"), 1);
+        options = warnIfUpToDate ? options.withButton(juce::translate("Close the window"), 0) : options.withButton(juce::translate("Ignore this version"), 2).withButton(juce::translate("Remind me later"), 0);
         juce::AlertWindow::showAsync(options, callback);
     }
     else if(warnIfUpToDate)
@@ -401,7 +401,7 @@ void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersio
                                  .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
                                  .withTitle(juce::translate("The version is up to date!"))
                                  .withMessage(juce::translate("PRODUCTNAME APPVER is the latest version available on the PROJECTNAME page.").replace("PRODUCTNAME", product).replace("APPVER", currentVersion.toString()).replace("PROJECTNAME", project))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }

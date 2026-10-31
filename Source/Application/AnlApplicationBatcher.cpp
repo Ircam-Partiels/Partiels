@@ -156,7 +156,7 @@ void Application::BatcherContent::handleAsyncUpdate()
                              .withIconType(static_cast<juce::AlertWindow::AlertIconType>(std::get<0>(result)))
                              .withTitle(std::get<1>(result))
                              .withMessage(message)
-                             .withButton(juce::translate("Ok"));
+                             .withButton(juce::translate("Ok"), 0);
     juce::AlertWindow::showAsync(options, nullptr);
 }
 

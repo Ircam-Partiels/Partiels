@@ -133,7 +133,7 @@ void Application::FileManager::openAudioFiles(std::vector<juce::File> const& fil
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("File(s) cannot be open!"))
                                  .withMessage(juce::translate("The file(s) cannot be open by the application:\n FILEPATHS\nEnsure the file(s) exist(s) and you have read access.").replace("FILEPATHS", remainingFiles.joinIntoString("\n")))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }
@@ -176,7 +176,7 @@ void Application::FileManager::openFiles(std::vector<juce::File> const& files)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("File formats not supported!"))
                              .withMessage(juce::translate("The formats of the files are not supported by the application:\n FILEPATHS").replace("FILEPATHS", array.joinIntoString("\n")))
-                             .withButton(juce::translate("Ok"));
+                             .withButton(juce::translate("Ok"), 0);
     juce::AlertWindow::showAsync(options, nullptr);
 }
 
@@ -211,7 +211,7 @@ void Application::FileManager::consolidateDocument()
                                                                                       .withIconType(juce::AlertWindow::InfoIcon)
                                                                                       .withTitle(juce::translate("Document consolidated!"))
                                                                                       .withMessage(juce::translate("The document has been consolidated with the audio files and the analyses to FLNAME.").replace("FLNAME", fileName))
-                                                                                      .withButton(juce::translate("Ok"));
+                                                                                      .withButton(juce::translate("Ok"), 0);
                                                              juce::AlertWindow::showAsync(options, nullptr);
                                                          }
                                                          else
@@ -220,7 +220,7 @@ void Application::FileManager::consolidateDocument()
                                                                                       .withIconType(juce::AlertWindow::WarningIcon)
                                                                                       .withTitle(juce::translate("Document consolidation failed!"))
                                                                                       .withMessage(juce::translate("The document cannot be consolidated with the audio files and the analyses to FLNAME: ERRSTR.").replace("FLNAME", fileName).replace("ERRSTR", result.getErrorMessage()))
-                                                                                      .withButton(juce::translate("Ok"));
+                                                                                      .withButton(juce::translate("Ok"), 0);
                                                              juce::AlertWindow::showAsync(options, nullptr);
                                                          }
                                                      });

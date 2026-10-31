@@ -526,7 +526,7 @@ void Application::ConverterContent::exportToSdif()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Failed to convert JSON file..."))
                                  .withMessage(juce::translate("The frame and matrix signatures must contain 4 characters."))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         return;
     }
 
@@ -552,7 +552,7 @@ void Application::ConverterContent::exportToSdif()
                                                                .withIconType(juce::AlertWindow::InfoIcon)
                                                                .withTitle(juce::translate("Conversion succeeded!"))
                                                                .withMessage(juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()))
-                                                               .withButton(juce::translate("Ok"));
+                                                               .withButton(juce::translate("Ok"), 0);
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
                                   else
@@ -561,7 +561,7 @@ void Application::ConverterContent::exportToSdif()
                                                                .withIconType(juce::AlertWindow::WarningIcon)
                                                                .withTitle(juce::translate("Failed to convert JSON file..."))
                                                                .withMessage(juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage())
-                                                               .withButton(juce::translate("Ok"));
+                                                               .withButton(juce::translate("Ok"), 0);
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
                               });
@@ -640,7 +640,7 @@ void Application::ConverterContent::exportToJson()
                                                                    .withIconType(juce::AlertWindow::InfoIcon)
                                                                    .withTitle(juce::translate("Conversion succeeded!"))
                                                                    .withMessage(juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()))
-                                                                   .withButton(juce::translate("Ok"));
+                                                                   .withButton(juce::translate("Ok"), 0);
                                           juce::AlertWindow::showAsync(options, nullptr);
                                       }
                                   }
@@ -650,7 +650,7 @@ void Application::ConverterContent::exportToJson()
                                                                .withIconType(juce::AlertWindow::WarningIcon)
                                                                .withTitle(juce::translate("Failed to convert SDIF file..."))
                                                                .withMessage(juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage())
-                                                               .withButton(juce::translate("Ok"));
+                                                               .withButton(juce::translate("Ok"), 0);
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
                               });

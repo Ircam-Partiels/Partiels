@@ -60,8 +60,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                                              .withIconType(juce::AlertWindow::WarningIcon)
                                              .withTitle(juce::translate("Audio(s) files cannot be found!"))
                                              .withMessage(juce::translate("Audio file(s) cannot be found. Would you like to use the audio files layout panel to restore the file(s)?"))
-                                             .withButton(juce::translate("Open Panel"))
-                                             .withButton(juce::translate("Ignore"));
+                                             .withButton(juce::translate("Open Panel"), 1)
+                                             .withButton(juce::translate("Ignore"), 0);
 
                     juce::WeakReference<Director> weakReference(this);
                     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -990,8 +990,8 @@ void Document::Director::fileHasBeenRemoved(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Audio file has been removed!"))
                              .withMessage(juce::translate("The audio file FLNAME has been removed. Would you like to restore it?").replace("FLNAME", file.getFullPathName()))
-                             .withButton(juce::translate("Restore"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Restore"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1013,8 +1013,8 @@ void Document::Director::fileHasBeenRestored(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Audio file has been restored!"))
                              .withMessage(juce::translate("The audio file FLNAME has been restored. Would you like to reload it?").replace("FLNAME", file.getFullPathName()))
-                             .withButton(juce::translate("Reload"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Reload"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1033,8 +1033,8 @@ void Document::Director::fileHasBeenModified(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Audio file has been modified!"))
                              .withMessage(juce::translate("The audio file FLNAME has been modified. Would you like to reload it?").replace("FLNAME", file.getFullPathName()))
-                             .withButton(juce::translate("Reload"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Reload"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1106,7 +1106,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
                                      .withIconType(juce::AlertWindow::WarningIcon)
                                      .withTitle(juce::translate("Audio format reader cannot be loaded!"))
                                      .withMessage(errors.joinIntoString("\n"))
-                                     .withButton(juce::translate("Ok"));
+                                     .withButton(juce::translate("Ok"), 0);
             juce::AlertWindow::showAsync(options, nullptr);
         }
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
@@ -1126,7 +1126,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Invalid audio format reader!"))
                                  .withMessage(errors.joinIntoString("\n"))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 
@@ -1173,7 +1173,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
                                  .withIconType(juce::AlertWindow::InfoIcon)
                                  .withTitle(juce::translate("Audio files layout cannot be applied to all tracks!"))
                                  .withMessage(juce::translate("The analysis results of the track(s) \"TRACKNAMES\" were modified, consolidated, or loaded from file(s). The results of these tracks won't be updated by the new audio files layout but you can detach the files using the track properties panels to trigger and update the analyses.").replace("TRACKNAMES", files.joinIntoString(", ")))
-                                 .withButton(juce::translate("Ok"));
+                                 .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
 }

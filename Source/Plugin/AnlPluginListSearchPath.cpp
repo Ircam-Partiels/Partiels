@@ -201,8 +201,8 @@ void PluginList::SearchPath::warnBeforeClosing()
                                  .withIconType(juce::AlertWindow::QuestionIcon)
                                  .withTitle(juce::translate("Apply plugin settings modification?"))
                                  .withMessage(juce::translate("The plugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                 .withButton(juce::translate("Apply"))
-                                 .withButton(juce::translate("Discard"));
+                                 .withButton(juce::translate("Apply"), 1)
+                                 .withButton(juce::translate("Discard"), 0);
 
         juce::WeakReference<juce::Component> safePointer(this);
         juce::AlertWindow::showAsync(options, [=, this](int windowResult)

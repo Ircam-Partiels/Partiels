@@ -1063,8 +1063,8 @@ void Track::Director::fileHasBeenRemoved(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been removed!"))
                              .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been removed. Would you like to restore it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
-                             .withButton(juce::translate("Restore"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Restore"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1093,8 +1093,8 @@ void Track::Director::fileHasBeenRestored(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been restored!"))
                              .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been restored. Would you like to reload it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
-                             .withButton(juce::translate("Reload"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Reload"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1123,8 +1123,8 @@ void Track::Director::fileHasBeenModified(juce::File const& file)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been modified!"))
                              .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been modified. Would you like to reload it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
-                             .withButton(juce::translate("Reload"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Reload"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -1171,7 +1171,7 @@ void Track::Director::warmAboutPlugin(juce::String const& reason)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Plugin cannot be loaded!"))
                              .withMessage(errorMessage)
-                             .withButton(juce::translate("Ok"));
+                             .withButton(juce::translate("Ok"), 0);
     juce::AlertWindow::showAsync(options, nullptr);
 }
 
@@ -1195,8 +1195,8 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Plugin cannot be loaded!"))
                              .withMessage(errorMessage + " " + juce::translate("Would you like to select another plugin?"))
-                             .withButton(juce::translate("Replace plugin"))
-                             .withButton(juce::translate("Ignore"));
+                             .withButton(juce::translate("Replace plugin"), 1)
+                             .withButton(juce::translate("Ignore"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int windowResult)
@@ -1252,8 +1252,8 @@ void Track::Director::askToRestoreState(juce::String const& reason)
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Plugin cannot be loaded!"))
                              .withMessage(errorMessage + " " + juce::translate("Would you like to reset to the default state?"))
-                             .withButton(juce::translate("Restore default state"))
-                             .withButton(juce::translate("Ignore"));
+                             .withButton(juce::translate("Restore default state"), 1)
+                             .withButton(juce::translate("Ignore"), 0);
 
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int windowResult)
@@ -1288,8 +1288,8 @@ void Track::Director::askToRemoveFile()
                              .withIconType(juce::AlertWindow::QuestionIcon)
                              .withTitle(juce::translate("Remove result files?"))
                              .withMessage(juce::translate("The analysis results are loaded from a file, have been modified, or consolidated to a file. Do you want to remove the file (it will restart the analysis if a plugin is selected)?"))
-                             .withButton(juce::translate("Remove file"))
-                             .withButton(juce::translate("Cancel"));
+                             .withButton(juce::translate("Remove file"), 1)
+                             .withButton(juce::translate("Cancel"), 0);
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](auto result)
                                  {
@@ -1329,16 +1329,16 @@ void Track::Director::askToReloadFile(juce::String const& reason)
                 .withIconType(juce::AlertWindow::WarningIcon)
                 .withTitle(juce::translate("Loading file failed!"))
                 .withMessage(errorMessage + " " + juce::translate("Would you like to replace the file, run the analysis or to ignore the file?"))
-                .withButton(juce::translate("Replace"))
-                .withButton(juce::translate("Analyze"))
-                .withButton(juce::translate("Ignore"));
+                .withButton(juce::translate("Replace"), 1)
+                .withButton(juce::translate("Analyze"), 2)
+                .withButton(juce::translate("Ignore"), 0);
         }
         return juce::MessageBoxOptions()
             .withIconType(juce::AlertWindow::WarningIcon)
             .withTitle(juce::translate("Loading file failed!"))
             .withMessage(errorMessage + " " + juce::translate("Would you like to replace the file or to ignore the file?"))
-            .withButton(juce::translate("Replace"))
-            .withButton(juce::translate("Ignore"));
+            .withButton(juce::translate("Replace"), 1)
+            .withButton(juce::translate("Ignore"), 0);
     };
 
     juce::WeakReference<Director> safePointer(this);

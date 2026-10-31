@@ -507,8 +507,8 @@ void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
                                  .withIconType(juce::AlertWindow::QuestionIcon)
                                  .withTitle("Would you like to reset the unit to default?")
                                  .withMessage("The specified unit is empty. Would you like remove the unit or to reset the unit to default using the one provided by the plugin(s)?")
-                                 .withButton(juce::translate("Remove the unit"))
-                                 .withButton(juce::translate("Reset the unit to default"));
+                                 .withButton(juce::translate("Remove the unit"), 1)
+                                 .withButton(juce::translate("Reset the unit to default"), 0);
         juce::WeakReference<juce::Component> weakReference(this);
         juce::AlertWindow::showAsync(options, [=, this](int result)
                                      {

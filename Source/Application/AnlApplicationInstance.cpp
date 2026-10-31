@@ -278,8 +278,8 @@ void Application::Instance::systemRequestedQuit()
                                      .withIconType(juce::AlertWindow::QuestionIcon)
                                      .withTitle(juce::translate("Some analyses are still running!"))
                                      .withMessage(juce::translate("Do you still want to quit the app? Note that a running analysis may block the application from closing until it completes."))
-                                     .withButton(juce::translate("Quit"))
-                                     .withButton(juce::translate("Cancel"));
+                                     .withButton(juce::translate("Quit"), 1)
+                                     .withButton(juce::translate("Cancel"), 0);
 
             juce::AlertWindow::showAsync(options, [this](int result)
                                          {
@@ -565,8 +565,8 @@ void Application::Instance::openStartupFiles()
                                  .withIconType(juce::AlertWindow::QuestionIcon)
                                  .withTitle(juce::translate("Do you want to restore your document?"))
                                  .withMessage(juce::translate("The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
-                                 .withButton(juce::translate("Restore"))
-                                 .withButton(juce::translate("Ignore"));
+                                 .withButton(juce::translate("Restore"), 1)
+                                 .withButton(juce::translate("Ignore"), 0);
 
         juce::WeakReference<Instance> weakReference(this);
         juce::AlertWindow::showAsync(options, [=, this](int result)
@@ -639,8 +639,8 @@ void Application::Instance::checkPluginsQuarantine()
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Some plugins may not be loaded due to macOS quarantine!"))
                              .withMessage(juce::translate("Partiels can attempt to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
-                             .withButton(juce::translate("Proceed"))
-                             .withButton(juce::translate("Ignore"));
+                             .withButton(juce::translate("Proceed"), 1)
+                             .withButton(juce::translate("Ignore"), 0);
     mIsPluginListReady = false;
     juce::WeakReference<Instance> weakReference(this);
     juce::AlertWindow::showAsync(options, [this, weakReference, files](int result)

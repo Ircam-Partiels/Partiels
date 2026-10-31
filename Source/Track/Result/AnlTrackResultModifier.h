@@ -57,7 +57,7 @@ namespace Track
                                                  .withIconType(juce::AlertWindow::WarningIcon)
                                                  .withTitle(juce::translate("Results cannot be accessed!"))
                                                  .withMessage(juce::translate("The results are already used by another process and cannot be modified. Please, wait for a valid access before modifying results."))
-                                                 .withButton(juce::translate("Ok"));
+                                                 .withButton(juce::translate("Ok"), 0);
                         juce::AlertWindow::showAsync(options, nullptr);
                         return false;
                     }
