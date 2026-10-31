@@ -23,6 +23,10 @@ namespace Plugin
     namespace Tools
     {
         juce::String rangeToString(float min, float max, bool quantized, float step);
+        //! @brief Gets the tooltip of the property of a parameter
+        //! @param parameter The description of the parameter
+        //! @return The tooltip used by the property created with createProperty()
+        juce::String getParameterTooltip(Parameter const& parameter);
         std::unique_ptr<juce::Component> createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange);
         void setPropertyValue(juce::Component& property, Parameter const& parameter, std::set<float> const& values, juce::NotificationType notification);
 
@@ -37,6 +41,11 @@ namespace Plugin
     public:
         InputProperty(Plugin::Input const& input, std::function<void(Plugin::Input const&, juce::String const&)> fn);
         ~InputProperty() = default;
+
+        //! @brief Gets the tooltip of the property of an input
+        //! @param input The description of the input
+        //! @return The tooltip used by the property
+        static juce::String getInputTooltip(Plugin::Input const& input);
 
         void setInputs(juce::StringPairArray const& availableInputs, juce::StringArray const& selectedInputs);
 

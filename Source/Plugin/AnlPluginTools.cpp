@@ -17,6 +17,20 @@ juce::String Plugin::Tools::rangeToString(float min, float max, bool quantized, 
     return "[" + juce::String(min, 2) + ":" + juce::String(max, 2) + (quantized ? ("-" + juce::String(step, 2)) : "") + "]";
 }
 
+static bool isToggleParameter(Plugin::Parameter const& parameter)
+{
+    return parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon();
+}
+
+juce::String Plugin::Tools::getParameterTooltip(Parameter const& parameter)
+{
+    if(!parameter.valueNames.empty() || isToggleParameter(parameter))
+    {
+        return juce::String(parameter.description);
+    }
+    return juce::String(parameter.description) + " " + rangeToString(parameter.minValue, parameter.maxValue, parameter.isQuantized, parameter.quantizeStep);
+}
+
 std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange)
 {
     auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
@@ -29,7 +43,7 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
         {
             names.add(juce::String(valueName));
         }
-        return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, names, [=](size_t index)
+        return std::make_unique<PropertyList>(name, getParameterTooltip(parameter), parameter.unit, names, [=](size_t index)
                                               {
                                                   if(applyChange == nullptr)
                                                   {
@@ -38,9 +52,9 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                                   applyChange(parameter, static_cast<float>(index) * quantizeStep + minValue);
                                               });
     }
-    else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
+    else if(isToggleParameter(parameter))
     {
-        return std::make_unique<PropertyToggle>(name, parameter.description, [=](bool state)
+        return std::make_unique<PropertyToggle>(name, getParameterTooltip(parameter), [=](bool state)
                                                 {
                                                     if(applyChange == nullptr)
                                                     {
@@ -50,8 +64,7 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                                 });
     }
 
-    auto const description = juce::String(parameter.description) + " " + rangeToString(parameter.minValue, parameter.maxValue, parameter.isQuantized, parameter.quantizeStep);
-    return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<double>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? static_cast<double>(parameter.quantizeStep) : 0.0, [=](double value)
+    return std::make_unique<PropertyNumber>(name, getParameterTooltip(parameter), parameter.unit, juce::Range<double>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? static_cast<double>(parameter.quantizeStep) : 0.0, [=](double value)
                                             {
                                                 if(applyChange == nullptr)
                                                 {
@@ -215,8 +228,13 @@ std::optional<size_t> Plugin::Tools::getFeatureIndex(Vamp::Plugin const& plugin,
     return static_cast<size_t>(std::distance(outputs.cbegin(), it));
 }
 
+juce::String Plugin::InputProperty::getInputTooltip(Plugin::Input const& input)
+{
+    return juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name);
+}
+
 Plugin::InputProperty::InputProperty(Plugin::Input const& input, std::function<void(Plugin::Input const&, juce::String const&)> fn)
-: PropertyList(juce::translate("INPUTNAME input track").replace("INPUTNAME", input.name), juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name), "", {}, [=, this](size_t index)
+: PropertyList(juce::translate("INPUTNAME input track").replace("INPUTNAME", input.name), getInputTooltip(input), "", {}, [=, this](size_t index)
                {
                    if(fn != nullptr)
                    {
