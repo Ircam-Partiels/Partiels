@@ -461,7 +461,14 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
 juce::String Document::FileBased::getPathReplacement(juce::XmlElement const& element)
 {
     auto const oldPath = element.getStringAttribute("path");
-    if(juce::File::isAbsolutePath(oldPath))
+#if JUCE_WINDOWS
+    // JUCE considers a path starting with a forward slash as absolute on Windows,
+    // but such a path comes from another operating system than the current one.
+    auto const isNativeAbsolutePath = juce::File::isAbsolutePath(oldPath) && !oldPath.startsWithChar('/');
+#else
+    auto const isNativeAbsolutePath = juce::File::isAbsolutePath(oldPath);
+#endif
+    if(isNativeAbsolutePath)
     {
         return juce::File::addTrailingSeparator(juce::File(oldPath).getParentDirectory().getFullPathName());
     }
