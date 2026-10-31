@@ -324,96 +324,52 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
             case AttrType::hasPluginColourMap:
             case AttrType::graphicsSettings:
             {
-                for(auto* child : getChildren())
-                {
-                    MiscWeakAssert(child != nullptr);
-                    if(child != nullptr)
-                    {
-                        child->setVisible(false);
-                    }
-                }
-
-                addExtraThresholdProperties();
+                updateExtraThresholdProperties();
                 auto const& channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
                 auto const numChannels = channelsLayout.size();
                 auto const frameType = Tools::getFrameType(acsr);
-                if(frameType.has_value())
+                auto const isLabel = frameType == Track::FrameType::label;
+                auto const isValue = frameType == Track::FrameType::value;
+                auto const isVector = frameType == Track::FrameType::vector;
+                auto const hasPluginColourMap = acsr.getAttr<AttrType::hasPluginColourMap>();
+                if(isValue || isVector)
                 {
-                    switch(frameType.value())
-                    {
-                        case Track::FrameType::label:
-                        {
-                            mPropertyForegroundColour.setVisible(true);
-                            mPropertyDurationColour.setVisible(true);
-                            mPropertyTextColour.setVisible(true);
-                            mPropertyBackgroundColour.setVisible(true);
-                            mPropertyShadowColour.setVisible(true);
-                            mPropertyFontName.setVisible(true);
-                            mPropertyFontStyle.setVisible(true);
-                            mPropertyFontSize.setVisible(true);
-                            mPropertyLineWidth.setVisible(true);
-                            mPropertyLabelJustification.setVisible(true);
-                            mPropertyLabelPosition.setVisible(true);
-                            mPropertyMarkerStyle.setVisible(true);
-                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                            mPropertyShowInGroup.setVisible(true);
-                            mPropertyPreset.setVisible(true);
-                            break;
-                        }
-                        case Track::FrameType::value:
-                        {
-                            auto const unit = Tools::getUnit(acsr);
-                            mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
-                            mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
-                            mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
-                            mPropertyRangeLink.title.setText(juce::translate("Value Range Link"), juce::NotificationType::dontSendNotification);
-                            mPropertyForegroundColour.setVisible(true);
-                            mPropertyTextColour.setVisible(true);
-                            mPropertyBackgroundColour.setVisible(true);
-                            mPropertyShadowColour.setVisible(true);
-                            mPropertyFontName.setVisible(true);
-                            mPropertyFontStyle.setVisible(true);
-                            mPropertyFontSize.setVisible(true);
-                            mPropertyLineWidth.setVisible(true);
-                            mPropertyUnit.setVisible(true);
-                            mPropertyValueRangeMode.setVisible(true);
-                            mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
-                            mPropertyValueRangeMin.setVisible(true);
-                            mPropertyValueRangeMax.setVisible(true);
-                            mPropertyRangeLink.setVisible(true);
-                            mPropertyGrid.setVisible(true);
-                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                            mPropertyShowInGroup.setVisible(true);
-                            mPropertyPreset.setVisible(true);
-                            break;
-                        }
-                        case Track::FrameType::vector:
-                        {
-                            auto const unit = Tools::getUnit(acsr);
-                            mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
-                            mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
-                            mPropertyValueRange.numberFieldLow.setTextValueSuffix(unit);
-                            mPropertyValueRange.numberFieldHigh.setTextValueSuffix(unit);
-                            mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
-                            mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
-                            mPropertyColourMap.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                            mPropertyUnit.setVisible(true);
-                            mPropertyValueRangeMode.setVisible(!acsr.getAttr<AttrType::hasPluginColourMap>());
-                            mPropertyValueRangeLogScale.setVisible(Tools::hasVerticalZoomInHertz(acsr));
-                            mPropertyValueRangeMin.setVisible(true);
-                            mPropertyValueRangeMax.setVisible(true);
-                            mPropertyValueRange.setVisible(true);
-                            mPropertyNumBins.setVisible(true);
-                            mPropertyRangeLink.setVisible(true);
-                            mPropertyGrid.setVisible(true);
-                            mPropertyChannelLayout.setVisible(numChannels > 1_z);
-                            mPropertyShowInGroup.setVisible(true);
-                            mPropertyPreset.setVisible(true);
-                            mProgressBarRendering.setVisible(true);
-                            break;
-                        }
-                    }
+                    auto const unit = Tools::getUnit(acsr);
+                    mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
+                    mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                    mPropertyValueRange.numberFieldLow.setTextValueSuffix(unit);
+                    mPropertyValueRange.numberFieldHigh.setTextValueSuffix(unit);
+                    mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
+                    mPropertyRangeLink.title.setText(isVector ? juce::translate("Bin Range Link") : juce::translate("Value Range Link"), juce::NotificationType::dontSendNotification);
                 }
+
+                // The visibility of each property is set once to preserve the keyboard focus
+                mPropertyColourMap.setVisible(isVector && !hasPluginColourMap);
+                mPropertyForegroundColour.setVisible(isLabel || isValue);
+                mPropertyDurationColour.setVisible(isLabel);
+                mPropertyTextColour.setVisible(isLabel || isValue);
+                mPropertyBackgroundColour.setVisible(isLabel || isValue);
+                mPropertyShadowColour.setVisible(isLabel || isValue);
+                mPropertyFontName.setVisible(isLabel || isValue);
+                mPropertyFontStyle.setVisible(isLabel || isValue);
+                mPropertyFontSize.setVisible(isLabel || isValue);
+                mPropertyLineWidth.setVisible(isLabel || isValue);
+                mPropertyUnit.setVisible(isValue || isVector);
+                mPropertyLabelJustification.setVisible(isLabel);
+                mPropertyLabelPosition.setVisible(isLabel);
+                mPropertyMarkerStyle.setVisible(isLabel);
+                mPropertyValueRangeMode.setVisible(isValue || (isVector && !hasPluginColourMap));
+                mPropertyValueRangeLogScale.setVisible((isValue || isVector) && Tools::hasVerticalZoomInHertz(acsr));
+                mPropertyValueRangeMin.setVisible(isValue || isVector);
+                mPropertyValueRangeMax.setVisible(isValue || isVector);
+                mPropertyValueRange.setVisible(isVector);
+                mPropertyNumBins.setVisible(isVector);
+                mPropertyRangeLink.setVisible(isValue || isVector);
+                mPropertyGrid.setVisible(isValue || isVector);
+                mPropertyChannelLayout.setVisible(frameType.has_value() && numChannels > 1_z);
+                mPropertyShowInGroup.setVisible(frameType.has_value());
+                mPropertyPreset.setVisible(frameType.has_value());
+                mProgressBarRendering.setVisible(isVector);
                 updateZoomMode();
                 updateExtraTheshold();
                 resized();
@@ -672,9 +628,9 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
     setBounds(mPropertyValueRange);
-    for(auto& extraOutput : mPropertyExtraThresholds)
+    for(auto& property : mPropertyExtraThresholds)
     {
-        setBounds(*extraOutput.get());
+        setBounds(*property.second.get());
     }
     setBounds(mPropertyNumBins);
     setBounds(mPropertyRangeLink);
@@ -691,25 +647,24 @@ Zoom::Accessor& Track::PropertyGraphicalSection::getCurrentZoomAcsr()
     return Tools::getFrameType(mAccessor) == FrameType::vector ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
 }
 
-void Track::PropertyGraphicalSection::addExtraThresholdProperties()
+void Track::PropertyGraphicalSection::updateExtraThresholdProperties()
 {
-    if(Tools::getFrameType(mAccessor) == FrameType::vector)
+    // The properties are only recreated if their description changed to preserve the keyboard focus
+    auto const isVector = Tools::getFrameType(mAccessor) == FrameType::vector;
+    auto const extraOutputs = isVector ? std::vector<Plugin::OutputExtra>{} : mAccessor.getAttr<AttrType::description>().extraOutputs;
+    decltype(mPropertyExtraThresholds) properties;
+    for(auto index = 0_z; index < extraOutputs.size(); ++index)
     {
-        return;
-    }
-    mPropertyExtraThresholds.clear();
-    auto const& description = mAccessor.getAttr<AttrType::description>();
-    auto const size = description.extraOutputs.size();
-    for(auto index = 0_z; index < size; ++index)
-    {
-        auto const& output = description.extraOutputs.at(index);
-        auto const range = Tools::getExtraRange(mAccessor, index);
-        auto const tooltip = Tools::getExtraTooltip(mAccessor, index);
+        auto const& output = extraOutputs.at(index);
+        if(index < mPropertyExtraThresholds.size() && mPropertyExtraThresholds.at(index).first == output)
+        {
+            properties.push_back(std::move(mPropertyExtraThresholds.at(index)));
+            continue;
+        }
+
         auto const vname = output.name.empty() ? juce::translate("Extra OUTIDX").replace("OUTIDX", juce::String(index))
                                                : juce::String(output.name);
         auto const name = juce::translate("OUTNAME Threshold").replace("OUTNAME", vname);
-        auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
-        auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
         auto const step = output.isQuantized ? output.quantizeStep : 0.0f;
 
         juce::WeakReference<juce::Component> weakReference(this);
@@ -735,8 +690,10 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             {
                 return;
             }
+            auto const range = Tools::getExtraRange(mAccessor, index);
+            auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
             auto thresholds = mAccessor.getAttr<AttrType::extraThresholds>();
-            thresholds.resize(size);
+            thresholds.resize(mPropertyExtraThresholds.size());
             if(newValue <= start)
             {
                 thresholds[index].reset();
@@ -747,10 +704,26 @@ void Track::PropertyGraphicalSection::addExtraThresholdProperties()
             }
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
-        auto property = std::make_unique<PropertySlider>(name, tooltip, output.unit, juce::Range<float>{start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f)}, step, startChange, applyChange, endChange, true);
-        property->setEnabled(range.has_value() && !range.value().isEmpty());
+        // The range and the tooltip are updated below
+        auto property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
         addAndMakeVisible(property.get());
-        mPropertyExtraThresholds.push_back(std::move(property));
+        properties.push_back(std::make_pair(output, std::move(property)));
+    }
+    mPropertyExtraThresholds = std::move(properties);
+
+    for(auto index = 0_z; index < mPropertyExtraThresholds.size(); ++index)
+    {
+        auto const& output = mPropertyExtraThresholds.at(index).first;
+        auto& property = *mPropertyExtraThresholds.at(index).second.get();
+        auto const range = Tools::getExtraRange(mAccessor, index);
+        auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
+        auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
+        auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
+        juce::Range<double> const sliderRange{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
+        property.entry.setRange(sliderRange, step);
+        property.numberField.setRange(sliderRange, step, juce::NotificationType::dontSendNotification);
+        property.setTooltip(Tools::getExtraTooltip(mAccessor, index));
+        property.setEnabled(range.has_value() && !range.value().isEmpty());
     }
 }
 
@@ -1002,7 +975,7 @@ void Track::PropertyGraphicalSection::updateExtraTheshold()
     for(auto index = 0_z; index < mPropertyExtraThresholds.size(); ++index)
     {
         auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
-        auto& property = mPropertyExtraThresholds[index];
+        auto& property = mPropertyExtraThresholds[index].second;
         auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
         property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
         property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);

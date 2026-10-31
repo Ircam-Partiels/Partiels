@@ -142,30 +142,37 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 mPropertyBlockSize.setVisible(Tools::supportsBlockSize(acsr));
                 mPropertyStepSize.setVisible(Tools::supportsStepSize(acsr));
 
+                // The properties are only recreated if their description changed to preserve the keyboard focus
                 juce::WeakReference<juce::Component> weakReference(this);
                 auto const hasFile = file.file != juce::File{};
-                mPropertyInputTracks.clear();
-                if(!hasFile)
+                auto const applyTrack = [=, this](auto const& input, juce::String const& trackId)
                 {
-                    auto const applyTrack = [=, this](auto const& input, juce::String const& trackId)
+                    if(weakReference.get() == nullptr)
                     {
-                        if(weakReference.get() == nullptr)
-                        {
-                            return;
-                        }
-                        setInputTrack(input.identifier, trackId);
-                        updateState();
-                    };
-                    for(auto const& input : description.inputs)
+                        return;
+                    }
+                    setInputTrack(input.identifier, trackId);
+                    updateState();
+                };
+                auto const inputs = hasFile ? std::vector<Plugin::Input>{} : description.inputs;
+                decltype(mPropertyInputTracks) inputProperties;
+                for(auto const& input : inputs)
+                {
+                    auto& property = inputProperties[input.identifier];
+                    auto it = mPropertyInputTracks.find(input.identifier);
+                    if(it != mPropertyInputTracks.end() && it->second.first == input)
                     {
-                        auto property = std::make_unique<Plugin::InputProperty>(input, applyTrack);
-                        addAndMakeVisible(property.get());
-                        mPropertyInputTracks[input.identifier] = std::move(property);
+                        property = std::move(it->second);
+                    }
+                    else
+                    {
+                        property = std::make_pair(input, std::make_unique<Plugin::InputProperty>(input, applyTrack));
+                        addAndMakeVisible(property.second.get());
                     }
                 }
+                mPropertyInputTracks = std::move(inputProperties);
                 mPropertyUseInputResultsExtraThresholds.setVisible(!mPropertyInputTracks.empty() && !hasFile);
 
-                mParameterProperties.clear();
                 auto const applyValue = [=, this](auto const& parameter, float value)
                 {
                     if(weakReference.get() == nullptr)
@@ -174,13 +181,23 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                     }
                     applyParameterValue(parameter, value);
                 };
+                decltype(mParameterProperties) parameterProperties;
                 for(auto const& parameter : description.parameters)
                 {
-                    auto property = Plugin::Tools::createProperty(parameter, applyValue);
-                    addAndMakeVisible(property.get());
-                    property->setEnabled(hasPlugin);
-                    mParameterProperties[parameter.identifier] = std::move(property);
+                    auto& property = parameterProperties[parameter.identifier];
+                    auto it = mParameterProperties.find(parameter.identifier);
+                    if(it != mParameterProperties.end() && it->second.first == parameter)
+                    {
+                        property = std::move(it->second);
+                    }
+                    else
+                    {
+                        property = std::make_pair(parameter, Plugin::Tools::createProperty(parameter, applyValue));
+                        addAndMakeVisible(property.second.get());
+                    }
+                    property.second->setEnabled(hasPlugin);
                 }
+                mParameterProperties = std::move(parameterProperties);
 
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
@@ -284,12 +301,12 @@ void Track::PropertyProcessorSection::resized()
     setBounds(mPropertyStepSize);
     for(auto& property : mPropertyInputTracks)
     {
-        setBounds(*property.second.get());
+        setBounds(*property.second.second.get());
     }
     setBounds(mPropertyUseInputResultsExtraThresholds);
     for(auto& property : mParameterProperties)
     {
-        setBounds(*property.second.get());
+        setBounds(*property.second.second.get());
     }
     setBounds(mPropertyPreset);
     setBounds(mProgressBarAnalysis);
@@ -643,7 +660,7 @@ void Track::PropertyProcessorSection::updateState()
         auto const& inputs = mAccessor.getAttr<AttrType::inputs>();
         auto const key = juce::String{property.first};
         auto const selectedInput = inputs.count(key) > 0_z ? inputs.at(key) : juce::String{};
-        property.second->setInputs(availableInputs, juce::StringArray{selectedInput});
+        property.second.second->setInputs(availableInputs, juce::StringArray{selectedInput});
     }
     mPropertyUseInputResultsExtraThresholds.entry.setToggleState(mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>(), silent);
 
@@ -662,13 +679,9 @@ void Track::PropertyProcessorSection::updateState()
     for(auto const& parameter : state.parameters)
     {
         auto propertyIt = mParameterProperties.find(parameter.first);
-        auto const parameterIt = std::find_if(description.parameters.cbegin(), description.parameters.cend(), [&](auto const& p)
-                                              {
-                                                  return p.identifier == parameter.first;
-                                              });
-        if(propertyIt != mParameterProperties.end() && parameterIt != description.parameters.cend())
+        if(propertyIt != mParameterProperties.end())
         {
-            Plugin::Tools::setPropertyValue(*propertyIt->second.get(), *parameterIt, {parameter.second}, silent);
+            Plugin::Tools::setPropertyValue(*propertyIt->second.second.get(), propertyIt->second.first, {parameter.second}, silent);
         }
     }
 

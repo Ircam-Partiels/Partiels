@@ -74,7 +74,7 @@ void Group::PropertyProcessorsSection::resized()
     };
     for(auto& property : mPropertyInputTracks)
     {
-        setBounds(*property.second.get());
+        setBounds(*property.second.second.get());
     }
     setBounds(mPropertyUseInputResultsExtraThresholds);
     setBounds(mPropertyWindowType);
@@ -82,7 +82,7 @@ void Group::PropertyProcessorsSection::resized()
     setBounds(mPropertyStepSize);
     for(auto& property : mParameterProperties)
     {
-        setBounds(*property.second.get());
+        setBounds(*property.second.second.get());
     }
     setSize(getWidth(), bounds.getY());
 }
@@ -507,35 +507,43 @@ void Group::PropertyProcessorsSection::updateInputTracks()
 
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
 
-    mPropertyInputTracks.clear();
+    // The properties are only recreated if their description changed to preserve the keyboard focus
+    decltype(mPropertyInputTracks) inputProperties;
     for(auto const& trackAcsr : trackAcsrs)
     {
         auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
         for(auto const& input : description.inputs)
         {
-            if(mPropertyInputTracks.count(input.identifier) == 0_z)
+            if(inputProperties.count(input.identifier) > 0_z)
             {
-                auto property = std::make_unique<Plugin::InputProperty>(input, applyTrack);
-                addAndMakeVisible(property.get());
-                mPropertyInputTracks[input.identifier] = std::move(property);
+                continue;
+            }
+            auto& property = inputProperties[input.identifier];
+            auto it = mPropertyInputTracks.find(input.identifier);
+            if(it != mPropertyInputTracks.end() && it->second.first == input)
+            {
+                property = std::move(it->second);
+            }
+            else
+            {
+                property = std::make_pair(input, std::make_unique<Plugin::InputProperty>(input, applyTrack));
+                addAndMakeVisible(property.second.get());
             }
         }
     }
+    mPropertyInputTracks = std::move(inputProperties);
 
     for(auto& input : mPropertyInputTracks)
     {
-        if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(input.second.get()))
+        juce::StringArray trackNames;
+        for(auto& trackAcsr : trackAcsrs)
         {
-            juce::StringArray trackNames;
-            for(auto& trackAcsr : trackAcsrs)
+            if(Track::Tools::supportsInputTrack(trackAcsr.get(), input.first))
             {
-                if(Track::Tools::supportsInputTrack(trackAcsr.get(), input.first))
-                {
-                    trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
-                }
+                trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
             }
-            tooltipClient->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
         }
+        input.second.second->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + Plugin::InputProperty::getInputTooltip(input.second.first));
     }
 }
 
@@ -558,25 +566,36 @@ void Group::PropertyProcessorsSection::updateParameters()
                                        });
     mPropertyStepSize.setEnabled(hasPlugin);
 
-    mParameterProperties.clear();
+    // The properties are only recreated if their description changed to preserve the keyboard focus
+    decltype(mParameterProperties) parameterProperties;
     for(auto const& trackAcsr : trackAcsrs)
     {
         auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
         for(auto const& parameter : description.parameters)
         {
-            if(mParameterProperties.count(parameter.identifier) == 0_z)
+            if(parameterProperties.count(parameter.identifier) > 0_z)
             {
-                auto property = Plugin::Tools::createProperty(parameter, changeValue);
-                addAndMakeVisible(property.get());
-                property->setEnabled(hasPlugin);
-                mParameterProperties[parameter.identifier] = std::move(property);
+                continue;
             }
+            auto& property = parameterProperties[parameter.identifier];
+            auto it = mParameterProperties.find(parameter.identifier);
+            if(it != mParameterProperties.end() && it->second.first == parameter)
+            {
+                property = std::move(it->second);
+            }
+            else
+            {
+                property = std::make_pair(parameter, Plugin::Tools::createProperty(parameter, changeValue));
+                addAndMakeVisible(property.second.get());
+            }
+            property.second->setEnabled(hasPlugin);
         }
     }
+    mParameterProperties = std::move(parameterProperties);
 
     for(auto& parameter : mParameterProperties)
     {
-        if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(parameter.second.get()))
+        if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(parameter.second.second.get()))
         {
             juce::StringArray trackNames;
             for(auto& trackAcsr : trackAcsrs)
@@ -586,7 +605,7 @@ void Group::PropertyProcessorsSection::updateParameters()
                     trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
                 }
             }
-            tooltipClient->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
+            tooltipClient->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + Plugin::Tools::getParameterTooltip(parameter.second.first));
         }
     }
 }
@@ -629,27 +648,7 @@ void Group::PropertyProcessorsSection::updateState()
             }
         }
 
-        auto propertyIt = mParameterProperties.find(parameter.first);
-        auto const parameterIt = [&]()
-        {
-            for(auto const& trackAcsr : trackAcsrs)
-            {
-                auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
-                auto const it = std::find_if(description.parameters.cbegin(), description.parameters.cend(), [&](auto const& p)
-                                             {
-                                                 return p.identifier == parameter.first;
-                                             });
-                if(it != description.parameters.cend())
-                {
-                    return std::make_optional(it);
-                }
-            }
-            return std::optional<std::vector<Plugin::Parameter>::const_iterator>{};
-        }();
-        if(propertyIt != mParameterProperties.end() && parameterIt.has_value())
-        {
-            Plugin::Tools::setPropertyValue(*propertyIt->second.get(), *parameterIt.value(), values, juce::NotificationType::dontSendNotification);
-        }
+        Plugin::Tools::setPropertyValue(*parameter.second.second.get(), parameter.second.first, values, juce::NotificationType::dontSendNotification);
     }
 
     auto const& hierarchyManager = mDirector.getHierarchyManager();
@@ -678,7 +677,7 @@ void Group::PropertyProcessorsSection::updateState()
                 }
             }
         }
-        input.second->setInputs(availableInputs, selectedInputs);
+        input.second.second->setInputs(availableInputs, selectedInputs);
     }
 }
 

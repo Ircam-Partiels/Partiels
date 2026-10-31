@@ -44,9 +44,9 @@ namespace Track
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
-        std::map<std::string, std::unique_ptr<Plugin::InputProperty>> mPropertyInputTracks;
+        std::map<std::string, std::pair<Plugin::Input, std::unique_ptr<Plugin::InputProperty>>> mPropertyInputTracks;
         PropertyToggle mPropertyUseInputResultsExtraThresholds;
-        std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
+        std::map<std::string, std::pair<Plugin::Parameter, std::unique_ptr<juce::Component>>> mParameterProperties;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};
 
