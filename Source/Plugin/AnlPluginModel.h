@@ -91,6 +91,31 @@ namespace Plugin
     void to_json(nlohmann::json& j, Parameter const& parameter);
     void from_json(nlohmann::json const& j, Parameter& parameter);
 
+    //! @brief Orders descriptions (inputs, parameters, extra outputs...) by identifier
+    //! @details The comparator is transparent so a container using it can be searched with an identifier.
+    struct IdentifierComparator
+    {
+        using is_transparent = void;
+
+        template <typename lhs_t, typename rhs_t>
+        bool operator()(lhs_t const& lhs, rhs_t const& rhs) const noexcept
+        {
+            return getIdentifier(lhs) < getIdentifier(rhs);
+        }
+
+    private:
+        static std::string const& getIdentifier(std::string const& identifier) noexcept
+        {
+            return identifier;
+        }
+
+        template <typename description_t>
+        static std::string const& getIdentifier(description_t const& description) noexcept
+        {
+            return description.identifier;
+        }
+    };
+
     //! @brief The state of a plugin
     //! @details The type of data returned by a plugin.
     struct State

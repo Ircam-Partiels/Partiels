@@ -267,11 +267,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyValueRangeLogScale);
     for(auto const& propertyExtraThreshold : mPropertyExtraThresholds)
     {
-        MiscWeakAssert(propertyExtraThreshold.second != nullptr);
-        if(propertyExtraThreshold.second != nullptr)
-        {
-            setBounds(*propertyExtraThreshold.second);
-        }
+        setBounds(*propertyExtraThreshold.second.get());
     }
     setBounds(mPropertyTrackVisibility);
     setBounds(mPropertyChannelLayout);
@@ -1030,136 +1026,131 @@ void Group::PropertyGraphicalsSection::updateLogScale()
     mPropertyValueRangeLogScale.entry.setAlpha(logScales.size() > 1_z ? 0.5f : 1.0f);
 }
 
+static std::optional<size_t> getExtraOutputIndex(Track::Accessor const& trackAcsr, std::string const& outputIdentifier)
+{
+    auto const& extraOutputs = trackAcsr.getAttr<Track::AttrType::description>().extraOutputs;
+    auto const it = std::find_if(extraOutputs.cbegin(), extraOutputs.cend(), [&](auto const& extraOutput)
+                                 {
+                                     return extraOutput.identifier == outputIdentifier;
+                                 });
+    if(it == extraOutputs.cend())
+    {
+        return {};
+    }
+    return static_cast<size_t>(std::distance(extraOutputs.cbegin(), it));
+}
+
 void Group::PropertyGraphicalsSection::updateExtraThresholds()
 {
-    mPropertyExtraThresholds.clear();
-
-    std::map<juce::String, std::vector<juce::String>> extraOutputsToTracks;
-    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
-                                                {
-                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
-                                                });
-
-    for(auto const& trackAcsr : trackAcsrs)
+    std::map<std::string, std::vector<std::reference_wrapper<Track::Accessor>>> extraOutputsToTracks;
+    for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
     {
-        auto const trackId = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-        for(auto const& extraOutput : trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs)
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
-            extraOutputsToTracks[extraOutput.identifier].emplace_back(trackId);
+            for(auto const& extraOutput : trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs)
+            {
+                extraOutputsToTracks[extraOutput.identifier].push_back(trackAcsr);
+            }
         }
     }
 
+    // The properties are only recreated if their description changed to preserve the keyboard focus
+    decltype(mPropertyExtraThresholds) properties;
     for(auto const& extraOutputsToTrack : extraOutputsToTracks)
     {
         auto const& outputIdentifier = extraOutputsToTrack.first;
-        auto const& trackIdentifiers = extraOutputsToTrack.second;
-        MiscWeakAssert(!trackIdentifiers.empty());
-        if(trackIdentifiers.empty())
+        auto const& referenceTrackAcsr = extraOutputsToTrack.second.front().get();
+        auto const outputIndex = getExtraOutputIndex(referenceTrackAcsr, outputIdentifier);
+        MiscWeakAssert(outputIndex.has_value());
+        if(!outputIndex.has_value())
         {
             continue;
         }
 
-        auto const trackAcsrRef = Tools::getTrackAcsr(mAccessor, trackIdentifiers.front());
-        MiscWeakAssert(trackAcsrRef.has_value());
-        if(!trackAcsrRef.has_value())
+        auto const& output = referenceTrackAcsr.getAttr<Track::AttrType::description>().extraOutputs.at(outputIndex.value());
+        auto& property = properties[output];
+        auto it = mPropertyExtraThresholds.find(output);
+        if(it != mPropertyExtraThresholds.end() && it->first == output)
         {
-            continue;
+            property = std::move(it->second);
+        }
+        else
+        {
+            auto const vname = output.name.empty() ? juce::translate("Extra OUTIDX").replace("OUTIDX", juce::String(outputIndex.value()))
+                                                   : juce::String(output.name);
+            auto const name = juce::translate("OUTNAME Threshold").replace("OUTNAME", vname);
+            auto const step = output.isQuantized ? output.quantizeStep : 0.0f;
+
+            juce::WeakReference<juce::Component> weakReference(this);
+            auto const startChange = [=, this]()
+            {
+                if(weakReference.get() == nullptr)
+                {
+                    return;
+                }
+                mDirector.startAction(true);
+            };
+            auto const endChange = [=, this]()
+            {
+                if(weakReference.get() == nullptr)
+                {
+                    return;
+                }
+                mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the OUTNAME threshold").replace("OUTNAME", vname));
+            };
+            auto const applyChange = [=, this](float newValue)
+            {
+                if(weakReference.get() == nullptr)
+                {
+                    return;
+                }
+                auto const propertyIt = mPropertyExtraThresholds.find(outputIdentifier);
+                MiscWeakAssert(propertyIt != mPropertyExtraThresholds.end());
+                if(propertyIt == mPropertyExtraThresholds.end())
+                {
+                    return;
+                }
+                auto const& slider = propertyIt->second->entry;
+                auto const value = static_cast<float>(std::clamp(static_cast<double>(newValue), slider.getMinimum(), slider.getMaximum()));
+                for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
+                {
+                    if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
+                    {
+                        continue;
+                    }
+                    auto const index = getExtraOutputIndex(trackAcsr.get(), outputIdentifier);
+                    if(!index.has_value())
+                    {
+                        continue;
+                    }
+                    auto thresholds = trackAcsr.get().getAttr<Track::AttrType::extraThresholds>();
+                    thresholds.resize(trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs.size());
+                    thresholds[index.value()] = value;
+                    trackAcsr.get().setAttr<Track::AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
+                }
+            };
+            // The range and the tooltip are updated below
+            property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
+            addAndMakeVisible(property.get());
         }
 
-        auto const& trackAcsr = trackAcsrRef.value().get();
-        auto const& extraOutputs = trackAcsr.getAttr<Track::AttrType::description>().extraOutputs;
-        auto const it = std::find_if(extraOutputs.cbegin(), extraOutputs.cend(), [&](auto const& extraOutput)
-                                     {
-                                         return extraOutput.identifier == outputIdentifier;
-                                     });
-        MiscWeakAssert(it != extraOutputs.cend());
-        if(it == extraOutputs.cend())
-        {
-            continue;
-        }
-        auto const outputIndex = static_cast<size_t>(std::distance(extraOutputs.cbegin(), it));
-
-        auto const srange = Track::Tools::getExtraRange(trackAcsr, outputIndex);
+        auto const srange = Track::Tools::getExtraRange(referenceTrackAcsr, outputIndex.value());
         auto const start = srange.has_value() ? static_cast<float>(srange.value().getStart()) : 0.0f;
         auto const end = srange.has_value() ? static_cast<float>(srange.value().getEnd()) : 0.0f;
-        auto const range = juce::Range<float>(start, std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f));
-        auto const tooltip = Track::Tools::getExtraTooltip(trackAcsr, outputIndex);
-        auto const vname = it->name.empty() ? juce::translate("Extra OUTIDX").replace("OUTIDX", juce::String(outputIndex))
-                                            : juce::String(it->name);
-        auto const name = juce::translate("OUTNAME Threshold").replace("OUTNAME", vname);
-        auto const step = it->isQuantized ? it->quantizeStep : 0.0f;
-
-        // Create tooltip showing which tracks this affects
-        juce::StringArray trackNames;
-        for(auto const& trackIdentifier : trackIdentifiers)
-        {
-            auto const cTrackAcsrRef = Tools::getTrackAcsr(mAccessor, trackIdentifier);
-            MiscWeakAssert(cTrackAcsrRef.has_value());
-            if(!cTrackAcsrRef.has_value())
-            {
-                continue;
-            }
-            trackNames.add(cTrackAcsrRef.value().get().getAttr<Track::AttrType::name>());
-        }
-        auto const fullTooltip = juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + tooltip;
-
-        juce::WeakReference<juce::Component> weakReference(this);
-        auto const startChange = [=, this]()
-        {
-            if(weakReference.get() == nullptr)
-            {
-                return;
-            }
-            mDirector.startAction(true);
-        };
-        auto const endChange = [=, this]()
-        {
-            if(weakReference.get() == nullptr)
-            {
-                return;
-            }
-            mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the OUTNAME threshold").replace("OUTNAME", vname));
-        };
-        auto const applyChange = [=, this](float newValue)
-        {
-            if(weakReference.get() == nullptr)
-            {
-                return;
-            }
-
-            for(auto const& trackIdentifier : trackIdentifiers)
-            {
-                auto const cTrackAcsrRef = Tools::getTrackAcsr(mAccessor, trackIdentifier);
-                MiscWeakAssert(cTrackAcsrRef.has_value());
-                if(!cTrackAcsrRef.has_value())
-                {
-                    continue;
-                }
-                auto& cTrackAcsr = cTrackAcsrRef.value().get();
-                auto const& cExtraOutputs = cTrackAcsr.getAttr<Track::AttrType::description>().extraOutputs;
-                auto const cit = std::find_if(cExtraOutputs.cbegin(), cExtraOutputs.cend(), [=](auto const& extraOutput)
-                                              {
-                                                  return extraOutput.identifier == outputIdentifier;
-                                              });
-                MiscWeakAssert(cit != cExtraOutputs.cend());
-                if(cit == cExtraOutputs.cend())
-                {
-                    continue;
-                }
-                auto const cOutputIndex = static_cast<size_t>(std::distance(cExtraOutputs.cbegin(), cit));
-
-                auto thresholds = cTrackAcsr.getAttr<Track::AttrType::extraThresholds>();
-                thresholds.resize(cExtraOutputs.size());
-                thresholds[cOutputIndex] = range.clipValue(newValue);
-                cTrackAcsr.setAttr<Track::AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
-            }
-        };
-
-        auto property = std::make_unique<PropertySlider>(name, fullTooltip, it->unit, range, step, startChange, applyChange, endChange, true);
+        auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
+        juce::Range<double> const range{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
+        property->entry.setRange(range, step);
+        property->numberField.setRange(range, step, juce::NotificationType::dontSendNotification);
         property->setEnabled(srange.has_value() && !srange.value().isEmpty());
-        addAndMakeVisible(property.get());
-        mPropertyExtraThresholds[outputIdentifier] = std::move(property);
+
+        juce::StringArray trackNames;
+        for(auto const& trackAcsr : extraOutputsToTrack.second)
+        {
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+        property->setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + Track::Tools::getExtraTooltip(referenceTrackAcsr, outputIndex.value()));
     }
+    mPropertyExtraThresholds = std::move(properties);
     updateExtraThresholdStates();
 }
 
@@ -1172,7 +1163,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
 
     for(auto const& propertyExtraThreshold : mPropertyExtraThresholds)
     {
-        auto const& outputIdentifier = propertyExtraThreshold.first;
+        auto const& outputIdentifier = propertyExtraThreshold.first.identifier;
         auto const& property = propertyExtraThreshold.second;
         MiscWeakAssert(property != nullptr);
         if(property != nullptr)
@@ -1180,18 +1171,13 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
             std::set<float> thresholdValues;
             for(auto const& trackAcsr : trackAcsrs)
             {
-                auto const& extraOutputs = trackAcsr.get().getAttr<Track::AttrType::description>().extraOutputs;
-                auto const it = std::find_if(extraOutputs.cbegin(), extraOutputs.cend(), [&](auto const& extraOutput)
-                                             {
-                                                 return extraOutput.identifier == outputIdentifier;
-                                             });
-                if(it != extraOutputs.cend())
+                auto const index = getExtraOutputIndex(trackAcsr.get(), outputIdentifier);
+                if(index.has_value())
                 {
-                    auto const index = static_cast<size_t>(std::distance(extraOutputs.cbegin(), it));
                     auto const& thresholds = trackAcsr.get().getAttr<Track::AttrType::extraThresholds>();
-                    if(index < thresholds.size() && thresholds.at(index).has_value())
+                    if(index.value() < thresholds.size() && thresholds.at(index.value()).has_value())
                     {
-                        thresholdValues.insert(thresholds.at(index).value());
+                        thresholdValues.insert(thresholds.at(index.value()).value());
                     }
                 }
             }
