@@ -337,6 +337,8 @@ countries: fr be
 "Export as FORMATNAME failed!" = "L'exportation sous FORMATNAME a échoué !"
 "Export as FORMATNAME succeeded!" = "L'exportation en tant que FORMATNAME a réussi !"
 "The analyses have been exported as FORMATNAME to FILENAME." = "Les analyses ont été exportées sous FORMATNAME vers FILENAME."
+"Analyses in progress..." = "Analyses en cours..."
+"The export will be available once the analyses of the selected items are complete" = "L'exportation sera disponible une fois les analyses des éléments sélectionnés terminées"
 "File(s) cannot be open!" = "Le(s) fichier(s) ne peut(vent) pas être ouvert(s) !"
 "The file(s) cannot be open by the application:\n FILEPATHS\nEnsure the file(s) exist(s) and you have read access." = "Le(s) fichier(s) ne peut(vent) pas être ouvert(s) par l'application:\n FILEPATHS Assurez-vous que le(s) fichier(s) existe(nt) et que vous avez un accès en lecture."
 "File formats not supported!" = "Formats de fichiers non pris en charge !"
