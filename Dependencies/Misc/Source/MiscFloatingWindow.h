@@ -4,12 +4,9 @@
 
 MISC_FILE_BEGIN
 
-//! @brief A window that floats over the application
+//! @brief A window that floats over the window it is opened from
 class FloatingWindow
 : public juce::DialogWindow
-#ifndef JUCE_MAC
-, private juce::FocusChangeListener
-#endif
 , private juce::Timer
 {
 public:
@@ -34,17 +31,9 @@ private:
     // juce::Component
     void lookAndFeelChanged() override;
     void parentHierarchyChanged() override;
-    void visibilityChanged() override;
     void moved() override;
     void resized() override;
     void paintOverChildren(juce::Graphics& g) override;
-
-#ifdef JUCE_MAC
-    static void setFloatingProperty(juce::Component& component, bool state);
-#else
-    // juce::FocusChangeListener
-    void globalFocusChanged(juce::Component* focusedComponent) override;
-#endif
 
     // juce::Timer
     void timerCallback() override;
@@ -61,8 +50,14 @@ public:
     FloatingWindowContainer(juce::String const& title, juce::Component& content);
     ~FloatingWindowContainer() override = default;
 
-    virtual void show();
-    virtual void showAt(juce::Point<float> const& pt);
+    //! @brief Shows the window centred on the display under the mouse
+    //! @param associatedComponent The component the window is opened from (the window is kept above the window containing it)
+    virtual void show(juce::Component& associatedComponent);
+
+    //! @brief Shows the window at a position
+    //! @param associatedComponent The component the window is opened from (the window is kept above the window containing it)
+    //! @param pt The position of the top left corner of the window in screen coordinates
+    virtual void showAt(juce::Component& associatedComponent, juce::Point<float> const& pt);
     virtual void hide();
 
     void toFront();

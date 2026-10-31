@@ -5,18 +5,10 @@ MISC_FILE_BEGIN
 FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersClose, bool addToDesktop)
 : juce::DialogWindow(name, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(ColourIds::backgroundColourId), escapeKeyTriggersClose, addToDesktop)
 {
-#ifndef JUCE_MAC
-    juce::Desktop::getInstance().addFocusChangeListener(this);
-#endif
     lookAndFeelChanged();
 }
 
-FloatingWindow::~FloatingWindow()
-{
-#ifndef JUCE_MAC
-    juce::Desktop::getInstance().removeFocusChangeListener(this);
-#endif
-}
+FloatingWindow::~FloatingWindow() = default;
 
 void FloatingWindow::highlight()
 {
@@ -53,18 +45,6 @@ void FloatingWindow::parentHierarchyChanged()
 {
     setBackgroundColour(findColour(ColourIds::backgroundColourId, true));
     juce::DialogWindow::parentHierarchyChanged();
-    visibilityChanged();
-}
-
-void FloatingWindow::visibilityChanged()
-{
-    juce::DialogWindow::visibilityChanged();
-#ifdef JUCE_MAC
-    if(isVisible() && isOnDesktop())
-    {
-        FloatingWindow::setFloatingProperty(*this, true);
-    }
-#endif
 }
 
 void FloatingWindow::moved()
@@ -86,25 +66,6 @@ void FloatingWindow::paintOverChildren(juce::Graphics& g)
     }
 }
 
-#ifndef JUCE_MAC
-void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
-{
-    if(isOnDesktop())
-    {
-        auto const isForegroundProcess = juce::Process::isForegroundProcess() || focusedComponent != nullptr;
-#ifdef JUCE_LINUX
-        if(isVisible() && isForegroundProcess)
-        {
-            toFront(false);
-        }
-#elif JUCE_WINDOWS
-        setAlwaysOnTop(isForegroundProcess);
-        setVisible(isForegroundProcess);
-#endif
-    }
-}
-#endif
-
 void FloatingWindow::timerCallback()
 {
     mHighlighting = std::max(0, mHighlighting - timerTime);
@@ -125,7 +86,7 @@ FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 }
 
-void FloatingWindowContainer::show()
+void FloatingWindowContainer::show(juce::Component& associatedComponent)
 {
     auto const& desktop = juce::Desktop::getInstance();
     auto const mousePosition = desktop.getMainMouseSource().getScreenPosition();
@@ -133,11 +94,11 @@ void FloatingWindowContainer::show()
     MiscWeakAssert(display != nullptr);
     if(display != nullptr)
     {
-        showAt((mContent.getBounds().toFloat().withCentre(display->userBounds.getCentre())).getTopLeft());
+        showAt(associatedComponent, (mContent.getBounds().toFloat().withCentre(display->userBounds.getCentre())).getTopLeft());
     }
 }
 
-void FloatingWindowContainer::showAt(juce::Point<float> const& pt)
+void FloatingWindowContainer::showAt(juce::Component& associatedComponent, juce::Point<float> const& pt)
 {
     if(mFloatingWindow.getContentComponent() == nullptr)
     {
@@ -159,6 +120,7 @@ void FloatingWindowContainer::showAt(juce::Point<float> const& pt)
     {
         mContent.setLookAndFeel(&getLookAndFeel());
         mFloatingWindow.setLookAndFeel(&getLookAndFeel());
+        mFloatingWindow.setAssociatedComponent(&associatedComponent);
         mFloatingWindow.addToDesktop();
         mFloatingWindow.setVisible(true);
         mFloatingWindow.toFront(false);

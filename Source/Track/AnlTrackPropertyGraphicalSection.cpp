@@ -264,7 +264,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
                     updateGridPanel();
-                    mZoomGridPropertyWindow.show();
+                    mZoomGridPropertyWindow.show(*this);
                 })
 , mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
                      {

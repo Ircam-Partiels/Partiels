@@ -108,14 +108,14 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             {
                 auto const x = static_cast<float>(value.getProperty("x", 0.0));
                 auto const y = static_cast<float>(value.getProperty("y", 0.0));
-                mPropertyWindowContainer.showAt({x, y});
+                mPropertyWindowContainer.showAt(*this, {x, y});
             }
             break;
             case SignalType::showTable:
             {
                 auto const x = static_cast<float>(value.getProperty("x", 0.0));
                 auto const y = static_cast<float>(value.getProperty("y", 0.0));
-                mResultsWindowContainer.showAt({x, y});
+                mResultsWindowContainer.showAt(*this, {x, y});
             }
             break;
         }

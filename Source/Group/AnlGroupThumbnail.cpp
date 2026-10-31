@@ -169,7 +169,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 auto const x = static_cast<float>(value.getProperty("x", 0.0));
                 auto const y = static_cast<float>(value.getProperty("y", 0.0));
-                mPropertyWindowContainer.showAt({x, y});
+                mPropertyWindowContainer.showAt(*this, {x, y});
             }
             break;
         }
