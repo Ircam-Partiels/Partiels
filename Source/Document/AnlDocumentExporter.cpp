@@ -521,19 +521,18 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, bool sh
         {
             case AcsrType::tracks:
             {
-                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this, isRunning = false](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute) mutable
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this]([[maybe_unused]] Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                                                                  {
-                                                                                     if(trackAttribute == Track::AttrType::name || trackAttribute == Track::AttrType::description)
+                                                                                     if(trackAttribute == Track::AttrType::name)
                                                                                      {
                                                                                          setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
                                                                                      }
                                                                                      else if(trackAttribute == Track::AttrType::processing)
                                                                                      {
-                                                                                         // The selection is only validated when the analysis starts or ends (not when the progress changes)
-                                                                                         auto const running = std::get<0_z>(trackAcsr.getAttr<Track::AttrType::processing>());
-                                                                                         if(running != isRunning)
+                                                                                         // The processing state changes with the progress, so the panel is only updated if the selection or the processing state changes
+                                                                                         auto const identifiers = getValidIdentifiers(mSelectedIdentifiers);
+                                                                                         if(identifiers != mSelectedIdentifiers || hasRunningAnalysis(identifiers) != mIsProcessing)
                                                                                          {
-                                                                                             isRunning = running;
                                                                                              setSelectedIdentifiers(mSelectedIdentifiers, juce::NotificationType::sendNotificationSync);
                                                                                          }
                                                                                      }
@@ -678,43 +677,48 @@ std::set<juce::String> Document::Exporter::Panel::getSelectedIdentifiers() const
     return mSelectedIdentifiers;
 }
 
-void Document::Exporter::Panel::setSelectedIdentifiers(std::set<juce::String> const& identifiers, juce::NotificationType notification)
+std::set<juce::String> Document::Exporter::Panel::getValidIdentifiers(std::set<juce::String> const& identifiers) const
 {
-    auto const validateIdentifier = [this](juce::String const& identifier)
-    {
-        if(!Tools::hasItem(mAccessor, identifier))
-        {
-            return false;
-        }
-        if(Tools::hasGroupAcsr(mAccessor, identifier))
-        {
-            return mOptions.useImageFormat();
-        }
-        if(Tools::hasTrackAcsr(mAccessor, identifier))
-        {
-            return isTrackSelectable(Document::Tools::getTrackAcsr(mAccessor, identifier));
-        }
-        MiscWeakAssert(false);
-        return true;
-    };
+    return copy_with_erased_if(identifiers, [this](auto const& identifier)
+                               {
+                                   if(!Tools::hasItem(mAccessor, identifier))
+                                   {
+                                       return true;
+                                   }
+                                   if(Tools::hasGroupAcsr(mAccessor, identifier))
+                                   {
+                                       return !mOptions.useImageFormat();
+                                   }
+                                   if(Tools::hasTrackAcsr(mAccessor, identifier))
+                                   {
+                                       return !isTrackSelectable(Document::Tools::getTrackAcsr(mAccessor, identifier));
+                                   }
+                                   MiscWeakAssert(false);
+                                   return false;
+                               });
+}
+
+bool Document::Exporter::Panel::hasRunningAnalysis(std::set<juce::String> const& identifiers) const
+{
     auto const isTrackRunning = [this](juce::String const& trackId)
     {
         return Tools::hasTrackAcsr(mAccessor, trackId) && std::get<0_z>(Tools::getTrackAcsr(mAccessor, trackId).getAttr<Track::AttrType::processing>());
     };
-    auto const isItemRunning = [&](juce::String const& identifier)
-    {
-        if(Tools::hasGroupAcsr(mAccessor, identifier))
-        {
-            auto const groupLayout = Tools::getEffectiveTrackIdentifiers(mAccessor, identifier);
-            return std::any_of(groupLayout.cbegin(), groupLayout.cend(), isTrackRunning);
-        }
-        return isTrackRunning(identifier);
-    };
-    auto selectedIdentifiers = copy_with_erased_if(identifiers, [=](auto const& identifier)
-                                                   {
-                                                       return !validateIdentifier(identifier);
-                                                   });
-    auto const isProcessing = std::any_of(selectedIdentifiers.cbegin(), selectedIdentifiers.cend(), isItemRunning);
+    return std::any_of(identifiers.cbegin(), identifiers.cend(), [&](auto const& identifier)
+                       {
+                           if(Tools::hasGroupAcsr(mAccessor, identifier))
+                           {
+                               auto const groupLayout = Tools::getEffectiveTrackIdentifiers(mAccessor, identifier);
+                               return std::any_of(groupLayout.cbegin(), groupLayout.cend(), isTrackRunning);
+                           }
+                           return isTrackRunning(identifier);
+                       });
+}
+
+void Document::Exporter::Panel::setSelectedIdentifiers(std::set<juce::String> const& identifiers, juce::NotificationType notification)
+{
+    auto selectedIdentifiers = getValidIdentifiers(identifiers);
+    auto const isProcessing = hasRunningAnalysis(selectedIdentifiers);
     if(selectedIdentifiers == mSelectedIdentifiers && isProcessing == mIsProcessing)
     {
         notification = juce::NotificationType::dontSendNotification;
