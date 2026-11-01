@@ -1,4 +1,5 @@
 #include "MiscTooltip.h"
+#include "MiscLookAndFeel.h"
 
 MISC_FILE_BEGIN
 
@@ -84,7 +85,7 @@ Tooltip::BubbleWindow::~BubbleWindow()
 
 void Tooltip::BubbleWindow::paint(juce::Graphics& g)
 {
-    auto constexpr cornerSize = 5.0f;
+    auto constexpr cornerSize = LookAndFeel::floatingCornerSize;
     auto bounds = getLocalBounds().toFloat();
     g.setColour(findColour(juce::TooltipWindow::ColourIds::backgroundColourId));
     g.fillRoundedRectangle(bounds, cornerSize);

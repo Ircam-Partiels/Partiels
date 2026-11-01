@@ -47,6 +47,12 @@ public:
     LookAndFeel();
     ~LookAndFeel() override = default;
 
+    //! @brief The corner size of the elements (panels, buttons, fields...)
+    static constexpr float cornerSize = 4.0f;
+
+    //! @brief The corner size of the floating elements (tooltips, call out boxes, alert windows...)
+    static constexpr float floatingCornerSize = 6.0f;
+
     virtual void setColourChart(ColourChart const& colourChart);
     ColourChart getColourChart() const;
 

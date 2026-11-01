@@ -17,7 +17,7 @@ public:
     };
     // clang-format on
 
-    Decorator(juce::Component& content, int borderThickness = 1, float cornerSize = 2.0f);
+    Decorator(juce::Component& content, int borderThickness = 1, float cornerSize = 4.0f);
     ~Decorator() override = default;
 
     void setHighlighted(bool state);
