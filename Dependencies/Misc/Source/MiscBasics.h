@@ -99,6 +99,28 @@ namespace Format
         return text + juce::String::formatted("%03d" + separators[3], values[3]);
     }
 
+    //! @brief Converts a time in seconds to a string with a fixed number of digits (h:mm:ss:mmm or m:ss:mmm)
+    //! @param time The time in seconds
+    //! @param showHours If the hours are shown
+    //! @return The string
+    inline juce::String secondsToClockString(double time, bool showHours)
+    {
+        // The time is rounded to the millisecond before being split so the seconds never reach 60
+        auto const total = std::llround(std::abs(time) * 1000.0);
+        auto const totalSeconds = total / 1000;
+        auto const minutes = showHours ? (totalSeconds / 60) % 60 : totalSeconds / 60;
+        juce::String text(time < 0.0 && total > 0 ? "-" : "");
+        if(showHours)
+        {
+            text += juce::String(totalSeconds / 3600) + ":" + juce::String::formatted("%02lld", minutes);
+        }
+        else
+        {
+            text += juce::String(minutes);
+        }
+        return text + juce::String::formatted(":%02lld:%03lld", totalSeconds % 60, total % 1000);
+    }
+
     inline std::string withFirstCharUpperCase(std::string text)
     {
         text[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(text[0_z])));

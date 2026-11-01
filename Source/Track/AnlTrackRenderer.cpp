@@ -222,11 +222,7 @@ void Track::Renderer::paintClippedImage(juce::Graphics& g, juce::Image const& im
 juce::String Track::Renderer::getStringForTime(Zoom::Accessor const& timeZoomAcsr, double time)
 {
     auto const endTime = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd();
-    auto const hours = endTime > 3600.0 ? ":" : "";
-    auto const minutes = endTime > 60.0 ? ":" : "";
-    auto const seconds = endTime > 1.0 ? (endTime > 60.0 ? ":" : "s") : "";
-    auto const milliseconds = endTime > 0.001 ? (endTime > 60.0 ? "" : "ms") : "";
-    return Format::secondsToString(time, {hours, minutes, seconds, milliseconds});
+    return Format::secondsToClockString(time, endTime >= 3600.0);
 }
 
 std::function<juce::String(double)> Track::Renderer::getGridStringify(Accessor const& accessor)

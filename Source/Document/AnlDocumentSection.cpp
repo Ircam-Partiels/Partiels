@@ -39,11 +39,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [this](double value)
              {
                  auto const endTime = mAccessor.getAcsr<AcsrType::timeZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
-                 auto const hours = endTime > 3600.0 ? ":" : "";
-                 auto const minutes = endTime > 60.0 ? ":" : "";
-                 auto const seconds = endTime > 1.0 ? (endTime > 60.0 ? ":" : "s") : "";
-                 auto const milliseconds = endTime > 0.001 ? (endTime > 60.0 ? "" : "ms") : "";
-                 return Format::secondsToString(value, {hours, minutes, seconds, milliseconds});
+                 return Format::secondsToClockString(value, endTime >= 3600.0);
              })
 , mLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                   {
