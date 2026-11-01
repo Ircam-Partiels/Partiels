@@ -19,6 +19,7 @@ public:
             , inactive
             , active
             , text
+            , accent
         };
         
         enum class Mode
