@@ -6,9 +6,9 @@ ANALYSE_FILE_BEGIN
 
 Group::Thumbnail::Thumbnail(Director& director)
 : mDirector(director)
-, mPropertiesButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
-, mResultsButton(juce::ImageCache::getFromMemory(AnlIconsData::sheetspread_png, AnlIconsData::sheetspread_pngSize))
-, mExpandButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize))
+, mPropertiesButton(ScalableImage::fromSvg(AnlIconsData::Settings_svg, AnlIconsData::Settings_svgSize))
+, mResultsButton(ScalableImage::fromSvg(AnlIconsData::Sheetspread_svg, AnlIconsData::Sheetspread_svgSize))
+, mExpandButton(ScalableImage::fromSvg(AnlIconsData::Expand_svg, AnlIconsData::Expand_svgSize))
 {
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mResultsButton);
@@ -148,12 +148,12 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 if(acsr.getAttr<AttrType::expanded>())
                 {
-                    mExpandButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize));
+                    mExpandButton.setImages(ScalableImage::fromSvg(AnlIconsData::Expand_svg, AnlIconsData::Expand_svgSize));
                     mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
                 }
                 else
                 {
-                    mExpandButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize));
+                    mExpandButton.setImages(ScalableImage::fromSvg(AnlIconsData::Shrink_svg, AnlIconsData::Shrink_svgSize));
                     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
                 }
             }

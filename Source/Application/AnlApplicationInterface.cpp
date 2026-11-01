@@ -43,8 +43,8 @@ bool Application::Interface::PluginSearchPathPanel::escapeKeyPressed()
 
 Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)
 : mTitleLabel("Title", juce::String::fromUTF8("\xf0\x9f\x94\x8c ") + juce::translate("Plugins")) // 🔌
-, mCloseButton(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize))
-, mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
+, mCloseButton(ScalableImage::fromSvg(AnlIconsData::Cancel_svg, AnlIconsData::Cancel_svgSize))
+, mSettingsButton(ScalableImage::fromSvg(AnlIconsData::Settings_svg, AnlIconsData::Settings_svgSize))
 , mContent(content)
 {
     mCloseButton.onClick = []()
@@ -90,7 +90,7 @@ void Application::Interface::PluginListTablePanel::resized()
 }
 
 Application::Interface::RightBorder::RightBorder()
-: pluginListButton(juce::ImageCache::getFromMemory(AnlIconsData::plugin_png, AnlIconsData::plugin_pngSize))
+: pluginListButton(ScalableImage::fromSvg(AnlIconsData::Plugin_svg, AnlIconsData::Plugin_svgSize))
 {
     pluginListButton.setToggleable(true);
     pluginListButton.setPadding(3);

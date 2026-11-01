@@ -8,7 +8,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner, juce::Application
 : mAccessor(accessor)
 , mScanner(scanner)
 , mApplicationCommandManager(applicationCommandManager)
-, mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
+, mSearchIcon(ScalableImage::fromSvg(AnlIconsData::Search_svg, AnlIconsData::Search_svgSize))
 , mIrcamIcon(juce::ImageCache::getFromMemory(AnlResourceData::PompidoulogonoirRS_png, AnlResourceData::PompidoulogonoirRS_pngSize))
 {
     addAndMakeVisible(mSearchIcon);

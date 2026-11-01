@@ -10,8 +10,8 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
 , mTimeZoomAccessor(timeZoomAccessor)
 , mTransportAccessor(transportAcsr)
 , mPropertyPanel(mDirector, presetListAcsr)
-, mPropertiesButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
-, mResultsButton(juce::ImageCache::getFromMemory(AnlIconsData::sheetspread_png, AnlIconsData::sheetspread_pngSize))
+, mPropertiesButton(ScalableImage::fromSvg(AnlIconsData::Settings_svg, AnlIconsData::Settings_svgSize))
+, mResultsButton(ScalableImage::fromSvg(AnlIconsData::Sheetspread_svg, AnlIconsData::Sheetspread_svgSize))
 {
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mResultsButton);

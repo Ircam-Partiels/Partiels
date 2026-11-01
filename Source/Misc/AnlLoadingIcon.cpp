@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 LoadingIcon::LoadingIcon()
-: SpinningIcon(juce::ImageCache::getFromMemory(AnlIconsData::loading_png, AnlIconsData::loading_pngSize))
+: SpinningIcon(ScalableImage::fromSvg(AnlIconsData::Loading_svg, AnlIconsData::Loading_svgSize))
 {
 }
 

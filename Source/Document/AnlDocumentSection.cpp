@@ -32,10 +32,10 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 , mTrackPresetListAccessor(presetListAcsr)
 , mApplicationCommandManager(commandManager)
 , mHeader(director, commandManager)
-, mGridButton(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize))
-, mExpandLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize))
-, mResizeLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::unlocksize_png, AnlIconsData::unlocksize_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::locksize_png, AnlIconsData::locksize_pngSize))
-, mMagnetizeButton(juce::ImageCache::getFromMemory(AnlIconsData::magnet_png, AnlIconsData::magnet_pngSize))
+, mGridButton(ScalableImage::fromSvg(AnlIconsData::GridDisabled_svg, AnlIconsData::GridDisabled_svgSize))
+, mExpandLayoutButton(ScalableImage::fromSvg(AnlIconsData::Expand_svg, AnlIconsData::Expand_svgSize), ScalableImage::fromSvg(AnlIconsData::Shrink_svg, AnlIconsData::Shrink_svgSize))
+, mResizeLayoutButton(ScalableImage::fromSvg(AnlIconsData::UnlockSize_svg, AnlIconsData::UnlockSize_svgSize), ScalableImage::fromSvg(AnlIconsData::LockSize_svg, AnlIconsData::LockSize_svgSize))
+, mMagnetizeButton(ScalableImage::fromSvg(AnlIconsData::Magnet_svg, AnlIconsData::Magnet_svgSize))
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [this](double value)
              {
                  auto const endTime = mAccessor.getAcsr<AcsrType::timeZoom>().getAttr<Zoom::AttrType::globalRange>().getEnd();
@@ -230,17 +230,17 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                 {
                     case GridMode::hidden:
                     {
-                        mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize));
+                        mGridButton.setImages(ScalableImage::fromSvg(AnlIconsData::GridDisabled_svg, AnlIconsData::GridDisabled_svgSize));
                     }
                     break;
                     case GridMode::partial:
                     {
-                        mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridpartial_png, AnlIconsData::gridpartial_pngSize));
+                        mGridButton.setImages(ScalableImage::fromSvg(AnlIconsData::GridPartial_svg, AnlIconsData::GridPartial_svgSize));
                     }
                     break;
                     case GridMode::full:
                     {
-                        mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridfull_png, AnlIconsData::gridfull_pngSize));
+                        mGridButton.setImages(ScalableImage::fromSvg(AnlIconsData::GridFull_svg, AnlIconsData::GridFull_svgSize));
                     }
                     break;
                 }

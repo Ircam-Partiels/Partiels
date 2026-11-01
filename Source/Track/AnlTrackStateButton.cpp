@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 
 Track::StateButton::StateButton(Director& director)
 : mDirector(director)
-, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize))
+, mStateIcon(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize))
 {
     addAndMakeVisible(mProcessingButton);
     addAndMakeVisible(mStateIcon);
@@ -26,8 +26,8 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::warnings:
             {
                 auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + Tools::getStateTootip(acsr);
-                auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
-                auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+                auto const checkedImage = ScalableImage::fromSvg(AnlIconsData::Checked_svg, AnlIconsData::Checked_svgSize);
+                auto const alertImage = ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize);
                 mProcessingButton.setInactiveImage(hasWarning() ? alertImage : checkedImage);
                 mProcessingButton.setTooltip(tooltip);
                 mProcessingButton.setVisible(isProcessingOrRendering());

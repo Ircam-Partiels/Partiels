@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MiscBasics.h"
+#include "MiscScalableImage.h"
 
 MISC_FILE_BEGIN
 
@@ -20,10 +20,10 @@ public:
     };
     // clang-format on
 
-    Icon(juce::Image const image, juce::Image const onImage = {});
+    Icon(ScalableImage image, ScalableImage onImage = {});
     ~Icon() override = default;
 
-    void setImages(juce::Image const image, juce::Image const onImage = {});
+    void setImages(ScalableImage image, ScalableImage onImage = {});
 
     //! @brief Sets the space between the bounds of the icon and its image.
     //! @details The background highlights (mouse over, toggle state on and mouse down) are only drawn if the padding is greater than zero.
@@ -47,8 +47,8 @@ protected:
     void focusLost(juce::Component::FocusChangeType cause) override;
 
 private:
-    juce::Image mImage;
-    juce::Image mOnImage;
+    ScalableImage mImage;
+    ScalableImage mOnImage;
     juce::ModifierKeys mKeys;
     int mPadding{0};
     bool mShowFocus{false};

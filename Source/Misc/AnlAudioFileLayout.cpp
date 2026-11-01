@@ -261,8 +261,8 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
 : mAudioFormatManager(audioFormatManager)
 , mSupportMode(mode)
 , mPreferredChannelLayout(preferredChannelLayout)
-, mAddButton(juce::ImageCache::getFromMemory(AnlIconsData::plus_png, AnlIconsData::plus_pngSize))
-, mAlertButton(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize))
+, mAddButton(ScalableImage::fromSvg(AnlIconsData::Plus_svg, AnlIconsData::Plus_svgSize))
+, mAlertButton(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize))
 {
     mComponentListener.onComponentResized = [this](juce::Component&)
     {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MiscBasics.h"
+#include "MiscScalableImage.h"
 
 MISC_FILE_BEGIN
 
@@ -18,13 +18,13 @@ public:
     };
     // clang-format on
 
-    SpinningIcon(juce::Image const& spinningImage, juce::Image const& inactiveImage = {});
+    SpinningIcon(ScalableImage const& spinningImage, ScalableImage const& inactiveImage = {});
     ~SpinningIcon() override = default;
 
     bool isActive() const;
     void setActive(bool state);
-    void setSpinningImage(juce::Image const& spinningImage);
-    void setInactiveImage(juce::Image const& inactiveImage);
+    void setSpinningImage(ScalableImage const& spinningImage);
+    void setInactiveImage(ScalableImage const& inactiveImage);
 
     // juce::Component
     void paint(juce::Graphics& g) override;
@@ -33,8 +33,8 @@ private:
     // juce::Timer
     void timerCallback() override;
 
-    juce::Image mImageActive;
-    juce::Image mImageInactive;
+    ScalableImage mImageActive;
+    ScalableImage mImageInactive;
     float mRotation = 0.0f;
 };
 
