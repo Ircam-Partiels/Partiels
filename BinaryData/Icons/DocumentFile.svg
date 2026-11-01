@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <path style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-opacity:1;paint-order:stroke fill markers" d="M 6,3 V 45 H 42 V 12 L 32,3 Z" />
+  <path style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" d="M 11.625488,24 V 14 m 24.930397,17.675293 c -4.791006,1.897924 -9.7758,3.947578 -17.018757,-1.723471 -2.185738,-1.50009 -4.780296,-0.720654 -7.973137,2.486915 m 25.02991,6.117035 c -6.62677,2.294576 -10.065435,0.749918 -17.244096,-1.061119 -2.732284,-0.715644 -5.0842,-0.33457 -7.435704,2.371912 M 16.625488,24 v -8 m 15,8 v -7 m -5,7 V 10 m -5,14 v -5 m 15,5 V 14" />
+</svg>

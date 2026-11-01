@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Group::StateButton::StateButton(Director& director)
 : mDirector(director)
-, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize))
+, mStateIcon(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize))
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateTooltip();
@@ -86,7 +86,7 @@ Group::StateButton::StateButton(Director& director)
     };
 
     mProcessingButton.setActive(false);
-    mProcessingButton.setInactiveImage(juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize));
+    mProcessingButton.setInactiveImage(ScalableImage::fromSvg(AnlIconsData::Checked_svg, AnlIconsData::Checked_svgSize));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -151,8 +151,8 @@ void Group::StateButton::updateTooltip()
     auto const changed = mHasWarning != !valid || (processing || rendering) != mProcessingButton.isActive();
     mHasWarning = !valid;
     mProcessingButton.setActive(processing || rendering);
-    auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
-    auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+    auto const checkedImage = ScalableImage::fromSvg(AnlIconsData::Checked_svg, AnlIconsData::Checked_svgSize);
+    auto const alertImage = ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize);
     mProcessingButton.setInactiveImage(valid ? checkedImage : alertImage);
     mStateIcon.setImages(!mHasWarning ? checkedImage : alertImage);
     mStateIcon.setEnabled(mHasWarning);

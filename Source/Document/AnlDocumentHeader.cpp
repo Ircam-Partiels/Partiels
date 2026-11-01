@@ -7,13 +7,13 @@ ANALYSE_FILE_BEGIN
 Document::Header::Header(Director& director, juce::ApplicationCommandManager& commandManager)
 : mDirector(director)
 , mApplicationCommandManager(commandManager)
-, mDocumentFileButton(juce::ImageCache::getFromMemory(AnlIconsData::documentfile_png, AnlIconsData::documentfile_pngSize))
-, mReaderLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize))
+, mDocumentFileButton(ScalableImage::fromSvg(AnlIconsData::DocumentFile_svg, AnlIconsData::DocumentFile_svgSize))
+, mReaderLayoutButton(ScalableImage::fromSvg(AnlIconsData::AudioLayer_svg, AnlIconsData::AudioLayer_svgSize))
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>(), commandManager)
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mOscButton(juce::translate("OSC"), juce::translate("Show OSC Settings"))
-, mBubbleTooltipButton(juce::ImageCache::getFromMemory(AnlIconsData::bubble_png, AnlIconsData::bubble_pngSize))
-, mEditModeButton(juce::ImageCache::getFromMemory(AnlIconsData::edit_png, AnlIconsData::edit_pngSize))
+, mBubbleTooltipButton(ScalableImage::fromSvg(AnlIconsData::Bubble_svg, AnlIconsData::Bubble_svgSize))
+, mEditModeButton(ScalableImage::fromSvg(AnlIconsData::Edit_svg, AnlIconsData::Edit_svgSize))
 {
     addAndMakeVisible(mReaderLayoutButton);
     addAndMakeVisible(mDocumentFileButton);
@@ -64,12 +64,12 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
                 auto const alertMessage = std::get<1>(result).joinIntoString("");
                 if(alertMessage.isEmpty())
                 {
-                    mReaderLayoutButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize));
+                    mReaderLayoutButton.setImages(ScalableImage::fromSvg(AnlIconsData::AudioLayer_svg, AnlIconsData::AudioLayer_svgSize));
                     mReaderLayoutButton.setTooltip(juce::translate("Show audio files layout panel"));
                 }
                 else
                 {
-                    mReaderLayoutButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
+                    mReaderLayoutButton.setImages(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize));
                     mReaderLayoutButton.setTooltip(alertMessage);
                 }
             }

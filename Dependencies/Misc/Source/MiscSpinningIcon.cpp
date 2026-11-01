@@ -3,7 +3,7 @@
 
 MISC_FILE_BEGIN
 
-SpinningIcon::SpinningIcon(juce::Image const& spinningImage, juce::Image const& inactiveImage)
+SpinningIcon::SpinningIcon(ScalableImage const& spinningImage, ScalableImage const& inactiveImage)
 {
     setSpinningImage(spinningImage);
     setInactiveImage(inactiveImage);
@@ -15,14 +15,25 @@ void SpinningIcon::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::backgroundColourId));
     g.setColour(findColour(ColourIds::foregroundColourId));
     auto const localBounds = getLocalBounds().toFloat();
+    auto const scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+    auto const width = juce::roundToInt(localBounds.getWidth() * scale);
+    auto const height = juce::roundToInt(localBounds.getHeight() * scale);
     juce::RectanglePlacement const placement(juce::RectanglePlacement::Flags::stretchToFit);
     if(isTimerRunning())
     {
-        g.drawImageTransformed(mImageActive, placement.getTransformToFit(mImageActive.getBounds().toFloat(), localBounds).rotated(mRotation, localBounds.getCentreX(), localBounds.getCentreY()), true);
+        auto const image = mImageActive.getImage(width, height);
+        if(image.isValid())
+        {
+            g.drawImageTransformed(image, placement.getTransformToFit(image.getBounds().toFloat(), localBounds).rotated(mRotation, localBounds.getCentreX(), localBounds.getCentreY()), true);
+        }
     }
     else if(mImageInactive.isValid())
     {
-        g.drawImageTransformed(mImageInactive, placement.getTransformToFit(mImageInactive.getBounds().toFloat(), localBounds), true);
+        auto const image = mImageInactive.getImage(width, height);
+        if(image.isValid())
+        {
+            g.drawImageTransformed(image, placement.getTransformToFit(image.getBounds().toFloat(), localBounds), true);
+        }
     }
 }
 
@@ -51,12 +62,11 @@ void SpinningIcon::setActive(bool state)
     }
 }
 
-void SpinningIcon::setSpinningImage(juce::Image const& spinningImage)
+void SpinningIcon::setSpinningImage(ScalableImage const& spinningImage)
 {
     if(spinningImage != mImageActive)
     {
         mImageActive = spinningImage;
-        MiscWeakAssert(mImageActive.hasAlphaChannel());
         if(!isTimerRunning())
         {
             repaint();
@@ -64,7 +74,7 @@ void SpinningIcon::setSpinningImage(juce::Image const& spinningImage)
     }
 }
 
-void SpinningIcon::setInactiveImage(juce::Image const& inactiveImage)
+void SpinningIcon::setInactiveImage(ScalableImage const& inactiveImage)
 {
     if(inactiveImage != mImageInactive)
     {

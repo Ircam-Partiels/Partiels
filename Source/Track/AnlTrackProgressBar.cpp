@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 Track::ProgressBar::ProgressBar(Director& director, Mode mode)
 : mDirector(director)
 , mMode(mode)
-, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize))
+, mStateIcon(ScalableImage::fromSvg(AnlIconsData::Checked_svg, AnlIconsData::Checked_svgSize))
 {
     addChildComponent(mProgressBar);
     addAndMakeVisible(mStateIcon);
@@ -57,14 +57,14 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
+                    mStateIcon.setImages(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize));
                     mStateIcon.setEnabled(true);
                 }
                 else if(mDirector.isFileModified())
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
+                    mStateIcon.setImages(ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize));
                     mStateIcon.setEnabled(true);
                     mMessage = juce::translate("Analysis results have been edited!");
                 }
@@ -72,8 +72,8 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
-                    auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+                    auto const checkedImage = ScalableImage::fromSvg(AnlIconsData::Checked_svg, AnlIconsData::Checked_svgSize);
+                    auto const alertImage = ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize);
                     mStateIcon.setImages(warnings != WarningType::none ? alertImage : checkedImage);
                     mStateIcon.setEnabled(warnings != WarningType::none);
                 }

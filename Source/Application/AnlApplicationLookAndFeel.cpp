@@ -58,19 +58,21 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
         switch(alert.getAlertType())
         {
             case juce::AlertWindow::QuestionIcon:
-                return juce::ImageCache::getFromMemory(AnlIconsData::question_png, AnlIconsData::question_pngSize);
+                return ScalableImage::fromSvg(AnlIconsData::Question_svg, AnlIconsData::Question_svgSize);
             case juce::AlertWindow::WarningIcon:
-                return juce::ImageCache::getFromMemory(AnlIconsData::warning_png, AnlIconsData::warning_pngSize);
+                return ScalableImage::fromSvg(AnlIconsData::Alert_svg, AnlIconsData::Alert_svgSize);
             case juce::AlertWindow::InfoIcon:
-                return juce::ImageCache::getFromMemory(AnlIconsData::info_png, AnlIconsData::info_pngSize);
+                return ScalableImage::fromSvg(AnlIconsData::Info_svg, AnlIconsData::Info_svgSize);
             case juce::AlertWindow::NoIcon:
-                return juce::Image();
+                return ScalableImage();
         }
-        return juce::Image();
+        return ScalableImage();
     };
 
+    auto constexpr iconSize = 180.0f;
+    auto const iconPixelSize = juce::roundToInt(iconSize * g.getInternalContext().getPhysicalPixelScaleFactor());
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::outlineColourId));
-    g.drawImage(getIcon(), {-48.0f, -20.0f, 180.0f, 180.0f}, juce::RectanglePlacement::stretchToFit, true);
+    g.drawImage(getIcon().getImage(iconPixelSize, iconPixelSize), {-48.0f, -20.0f, iconSize, iconSize}, juce::RectanglePlacement::stretchToFit, true);
 
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::textColourId));
     textLayout.draw(g, textArea.withX(84).withTop(12).toFloat());
@@ -81,7 +83,7 @@ juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonTyp
     using TitleBarButtons = juce::DocumentWindow::TitleBarButtons;
     if(buttonType == TitleBarButtons::closeButton)
     {
-        return std::make_unique<Icon>(juce::ImageCache::getFromMemory(AnlIconsData::cancel_png, AnlIconsData::cancel_pngSize)).release();
+        return std::make_unique<Icon>(ScalableImage::fromSvg(AnlIconsData::Cancel_svg, AnlIconsData::Cancel_svgSize)).release();
     }
     return LookAndFeel_V4::createDocumentWindowButton(buttonType);
 }

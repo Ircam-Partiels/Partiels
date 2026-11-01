@@ -5,7 +5,7 @@ MISC_FILE_BEGIN
 
 FileSearchPathTable::Directory::Entry::Entry(size_t i, juce::String const& fileName)
 : index(i)
-, revealButton(juce::ImageCache::getFromMemory(AnlIconsData::folder_png, AnlIconsData::folder_pngSize))
+, revealButton(ScalableImage::fromSvg(AnlIconsData::Folder_svg, AnlIconsData::Folder_svgSize))
 {
     addAndMakeVisible(thumbLabel);
     thumbLabel.setEditable(false);
@@ -162,7 +162,7 @@ void FileSearchPathTable::Directory::setSelected(bool state)
 
 FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
 : mDefaultPath(defaultPath)
-, mAddButton(juce::ImageCache::getFromMemory(AnlIconsData::plus_png, AnlIconsData::plus_pngSize))
+, mAddButton(ScalableImage::fromSvg(AnlIconsData::Plus_svg, AnlIconsData::Plus_svgSize))
 {
     mComponentListener.onComponentResized = [this](juce::Component&)
     {

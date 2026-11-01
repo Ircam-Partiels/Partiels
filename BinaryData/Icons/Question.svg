@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <circle style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" cx="24" cy="24" r="21.110235" />
+  <ellipse style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.77951;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" cx="24" cy="-39.212467" rx="1.8900001" ry="1.8897638" transform="scale(1,-1)" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3.77953;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;paint-order:stroke fill markers" d="m 17.767451,19.474643 c 0,0 -0.87918,-1.499051 -0.868081,-3.474643 0.0135,-2.403653 1.669524,-4.865795 3.550822,-6 2.087113,-1.2582878 5.014532,-1.2582878 7.101644,0 1.881299,1.134205 3.76108,3.607997 3.550823,6 C 30.772779,19.752883 24.00671,26.013882 24,28 c -0.01014,2.999978 0,5 0,5" />
+</svg>

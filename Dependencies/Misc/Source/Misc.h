@@ -24,6 +24,7 @@
 #include "MiscNotifier.h"
 #include "MiscNumberField.h"
 #include "MiscPropertyComponent.h"
+#include "MiscScalableImage.h"
 #include "MiscScrollHelper.h"
 #include "MiscSpinningIcon.h"
 #include "MiscTimerClock.h"

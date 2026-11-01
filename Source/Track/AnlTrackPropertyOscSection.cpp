@@ -12,7 +12,7 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
                           mAccessor.setAttr<AttrType::oscIdentifier>(text, NotificationType::synchronous);
                           mDirector.endAction(ActionState::newTransaction, juce::translate("Set track OSC identifier"));
                       })
-, mCopyButton(juce::ImageCache::getFromMemory(AnlIconsData::clipboard_png, AnlIconsData::clipboard_pngSize))
+, mCopyButton(ScalableImage::fromSvg(AnlIconsData::Clipboard_svg, AnlIconsData::Clipboard_svgSize))
 , mPropertySendViaOsc(juce::translate("Send the results via OSC"), juce::translate("Toggle track results to be sent via OSC"), [&](bool state)
                       {
                           mDirector.startAction();

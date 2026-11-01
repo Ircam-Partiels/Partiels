@@ -3,16 +3,16 @@
 
 MISC_FILE_BEGIN
 
-Icon::Icon(juce::Image const image, juce::Image const onImage)
+Icon::Icon(ScalableImage image, ScalableImage onImage)
 : juce::Button("Icon")
 {
-    setImages(image, onImage);
+    setImages(std::move(image), std::move(onImage));
 }
 
-void Icon::setImages(juce::Image const image, juce::Image const onImage)
+void Icon::setImages(ScalableImage image, ScalableImage onImage)
 {
-    mImage = image;
-    mOnImage = onImage;
+    mImage = std::move(image);
+    mOnImage = std::move(onImage);
     setClickingTogglesState(getClickingTogglesState() || mOnImage.isValid());
     repaint();
 }
@@ -48,7 +48,10 @@ void Icon::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bo
 
     auto const isToggled = shouldDrawButtonAsDown || getToggleState();
     auto const hasOnImage = mOnImage.isValid();
-    auto const image = isToggled && hasOnImage ? mOnImage : mImage;
+    auto const area = getLocalBounds().reduced(mPadding);
+    auto const scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+    auto& scalableImage = isToggled && hasOnImage ? mOnImage : mImage;
+    auto const image = scalableImage.getImage(juce::roundToInt(static_cast<float>(area.getWidth()) * scale), juce::roundToInt(static_cast<float>(area.getHeight()) * scale));
     if(!image.isValid())
     {
         return;
@@ -83,7 +86,6 @@ void Icon::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bo
 
     auto const transform = [&]()
     {
-        auto const area = getLocalBounds().reduced(mPadding);
         auto const iw = image.getWidth();
         auto const ih = image.getHeight();
         auto const lw = area.getWidth();

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 12.7 12.7">
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 2.38125,2.38125 h 1.5875 v 1.5875 h -1.5875 z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 0.79375,0.79375 v 11.1125 h 11.1125 V 0.79375 Z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 5.55625,2.3811875 h 1.5875 v 1.5875 h -1.5875 z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 8.73125,2.3811875 h 1.5875 v 1.5875 h -1.5875 z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 2.7019792,5.8770417 h 0.9406251 v 0.940625 H 2.7019792 Z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 5.8769794,5.8769792 h 0.940625 v 0.940625 h -0.940625 z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="m 9.0519793,5.8769792 h 0.9406251 v 0.940625 H 9.0519793 Z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="M 2.7019792,9.0520417 H 3.6426043 V 9.9926665 H 2.7019792 Z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="M 5.8769793,9.0519792 H 6.8176041 V 9.9926044 H 5.8769793 Z" />
+  <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;stroke-dasharray:none;paint-order:stroke fill markers" d="M 9.0519781,9.0519792 H 9.9926026 V 9.9926044 H 9.0519781 Z" />
+</svg>

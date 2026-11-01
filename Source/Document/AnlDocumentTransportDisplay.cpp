@@ -7,9 +7,9 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
 : mTransportAccessor(accessor)
 , mZoomAccessor(zoomAcsr)
 , mApplicationCommandManager(commandManager)
-, mRewindButton(juce::ImageCache::getFromMemory(AnlIconsData::rewind_png, AnlIconsData::rewind_pngSize))
-, mPlaybackButton(juce::ImageCache::getFromMemory(AnlIconsData::play_png, AnlIconsData::play_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::pause_png, AnlIconsData::pause_pngSize))
-, mLoopButton(juce::ImageCache::getFromMemory(AnlIconsData::loop_png, AnlIconsData::loop_pngSize))
+, mRewindButton(ScalableImage::fromSvg(AnlIconsData::Rewind_svg, AnlIconsData::Rewind_svgSize))
+, mPlaybackButton(ScalableImage::fromSvg(AnlIconsData::Play_svg, AnlIconsData::Play_svgSize), ScalableImage::fromSvg(AnlIconsData::Pause_svg, AnlIconsData::Pause_svgSize))
+, mLoopButton(ScalableImage::fromSvg(AnlIconsData::Loop_svg, AnlIconsData::Loop_svgSize))
 {
     mTransportListener.onAttrChanged = [&](Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
