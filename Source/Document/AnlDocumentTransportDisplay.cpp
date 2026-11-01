@@ -139,9 +139,13 @@ void Document::TransportDisplay::resized()
 {
     auto bounds = getLocalBounds();
     auto const buttonSize = bounds.getHeight();
-    mRewindButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
+    // The playback button is the main button so it is larger than the other buttons
+    auto const secondaryButtonSize = buttonSize - 10;
+    // The space saved by the smaller buttons is kept on the left so the position keeps the same width
+    bounds.removeFromLeft((buttonSize - secondaryButtonSize) * 2);
+    mRewindButton.setBounds(bounds.removeFromLeft(secondaryButtonSize).withSizeKeepingCentre(secondaryButtonSize, secondaryButtonSize));
     mPlaybackButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
-    mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
+    mLoopButton.setBounds(bounds.removeFromLeft(secondaryButtonSize).withSizeKeepingCentre(secondaryButtonSize, secondaryButtonSize));
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
     mPosition.setBounds(bounds);
     mPosition.setFont(juce::Font(juce::FontOptions(static_cast<float>(bounds.getHeight()) * 0.8f)));
