@@ -113,7 +113,60 @@ Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.
 
 Video recordings of Partiels presentations are available in this [discussion](https://github.com/orgs/Ircam-Partiels/discussions/213) on our GitHub organization page. These recordings include software demonstrations, feature walkthroughs, and academic presentations that complement the written publications.
 
-The following academic publications present the Partiels software:
+The following academic publications present the Partiels software and its extensions (click on **BibTeX** to display the citation entry):
+
+### SMC 2026 Conference Paper
+
+**Neuralyzer: An AI Chatbot in Partiels**  
+Pierre Guillot  
+*23rd Sound and Music Computing Conference (SMC26)* — Session 3: AI, Co-Creation and Intelligent Musical Interaction  
+Zagreb, Croatia, November 2026  
+[🔗 Programme](https://smc26.mbz.hr/en/conference/programme/day-2/paper-presentations-session-3-ai-co-creation-and-intelligent-musical-interaction)
+
+<details>
+<summary>BibTeX</summary>
+
+```bibtex
+@inproceedings{guillot_smc_2026,
+    author    = {Guillot, Pierre},
+    title     = {{Neuralyzer: An AI Chatbot in Partiels}},
+    booktitle = {Proceedings of the 23rd Sound and Music Computing Conference (SMC26)},
+    address   = {Zagreb, Croatia},
+    year      = {2026},
+    month     = nov,
+    url       = {https://smc26.mbz.hr/en/conference/programme/day-2/paper-presentations-session-3-ai-co-creation-and-intelligent-musical-interaction}
+}
+```
+
+</details>
+
+### JIM 2026 Conference Paper
+
+**Neuralyzer : Un agent conversationnel pour l'analyse audionumérique**  
+Pierre Guillot  
+*Proceedings of the 33rd Journées d'Informatique Musicale*  
+Lille, France, June 2026  
+[📄 PDF](https://hal.science/hal-05663329v1/file/Guillot-Neuralyzer.pdf) | [🔗 HAL](https://hal.science/hal-05663329v1)
+
+<details>
+<summary>BibTeX</summary>
+
+```bibtex
+@inproceedings{guillot:hal-05663329,
+  TITLE = {{Neuralyzer : Un agent conversationnel pour l'analyse audionum{\'e}rique}},
+  AUTHOR = {Guillot, Pierre},
+  URL = {https://hal.science/hal-05663329},
+  BOOKTITLE = {{Journ{\'e}es d'Informatique Musicale}},
+  ADDRESS = {Lille, France},
+  YEAR = {2026},
+  MONTH = Jun,
+  PDF = {https://hal.science/hal-05663329v1/file/Guillot-Neuralyzer.pdf},
+  HAL_ID = {hal-05663329},
+  HAL_VERSION = {v1},
+}
+```
+
+</details>
 
 ### RFIM 2025 Journal Article
 
@@ -122,6 +175,9 @@ Pierre Guillot
 *Revue francophone d'informatique musicale (RFIM), n° 11 — Frugalité, pérennité et création*  
 December 2025  
 [📄 PDF](https://revues.mshparisnord.fr/rfim/pdf/922.pdf) | [🔗 Article](https://revues.mshparisnord.fr/rfim/index.php?id=922)
+
+<details>
+<summary>BibTeX</summary>
 
 ```bibtex
 @article{guillot_rfim_2025,
@@ -137,6 +193,8 @@ December 2025
 }
 ```
 
+</details>
+
 ### DAFx 2025 Conference Paper
 
 **Partiels : Exploring, Analyzing and Understanding Sounds**  
@@ -144,6 +202,9 @@ Pierre Guillot
 *Proceedings of the 28-th Int. Conf. on Digital Audio Effects (DAFx25)*  
 Ancona, Italy, September 2025, pp. 298-303  
 [📄 PDF](https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf)
+
+<details>
+<summary>BibTeX</summary>
 
 ```bibtex
 @inproceedings{DAFx25_paper_66,
@@ -162,6 +223,8 @@ Ancona, Italy, September 2025, pp. 298-303
 }
 ```
 
+</details>
+
 ### JIM 2025 Conference Paper
 
 **Partiels : un logiciel pour analyser et explorer le son**  
@@ -169,6 +232,9 @@ Pierre Guillot
 *Proceedings of the 32nd Journées d'Informatique Musicale*  
 Lyon, France, June 2025  
 [📄 PDF](https://hal.science/hal-05102365v2/file/18.pdf) | [🔗 HAL](https://hal.science/hal-05102365)
+
+<details>
+<summary>BibTeX</summary>
 
 ```bibtex
 @inproceedings{guillot:hal-05102365,
@@ -185,3 +251,5 @@ Lyon, France, June 2025
   HAL_VERSION = {v2},
 }
 ```
+
+</details>
