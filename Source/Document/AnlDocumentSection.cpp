@@ -178,6 +178,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     };
 
     mAddGroupButton.setButtonText("+");
+    mAddGroupButton.getProperties().set("Outlined", true);
     mAddGroupButton.setWantsKeyboardFocus(false);
     mAddGroupButton.setMouseClickGrabsKeyboardFocus(false);
     mAddGroupButton.setCommandToTrigger(std::addressof(mApplicationCommandManager), ApplicationCommandIDs::editNewGroup, true);

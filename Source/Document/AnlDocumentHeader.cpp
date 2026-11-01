@@ -38,6 +38,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
         mAccessor.sendSignal(SignalType::showReaderLayoutPanel, {}, NotificationType::synchronous);
     };
 
+    mOscButton.getProperties().set("Outlined", true);
     mOscButton.setCommandToTrigger(&mApplicationCommandManager, ApplicationCommandIDs::helpOpenOscSettings, true);
 
     mBubbleTooltipButton.setClickingTogglesState(true);
@@ -170,7 +171,15 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
             mEditModeButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
             break;
         case ApplicationCommandIDs::transportOscConnected:
-            mOscButton.setColour(juce::TextButton::ColourIds::buttonColourId, info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked ? juce::Colours::green : findColour(juce::TextButton::ColourIds::buttonColourId));
+            // The colour is removed when disconnected so the button uses the colour of the look and feel again
+            if(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
+            {
+                mOscButton.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::green);
+            }
+            else
+            {
+                mOscButton.removeColour(juce::TextButton::ColourIds::buttonColourId);
+            }
             break;
         default:
             break;
