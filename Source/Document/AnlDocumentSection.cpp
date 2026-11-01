@@ -105,6 +105,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 
     addAndMakeVisible(mExpandLayoutButton);
     mExpandLayoutButton.setClickingTogglesState(false);
+    mExpandLayoutButton.setPadding(3);
     mExpandLayoutButton.setToggleable(true);
     mExpandLayoutButton.setTooltip(juce::translate("Shrink of expand the tracks of all the groups"));
     mExpandLayoutButton.onClick = [this]()
@@ -123,6 +124,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 
     addAndMakeVisible(mResizeLayoutButton);
     mResizeLayoutButton.setClickingTogglesState(false);
+    mResizeLayoutButton.setPadding(3);
     mResizeLayoutButton.setToggleable(true);
     mResizeLayoutButton.setTooltip(juce::translate("Toggle the optimization of the height of groups and tracks to fit the height of the document"));
     mResizeLayoutButton.onClick = [this]()
@@ -144,7 +146,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 
     addAndMakeVisible(mGridButton);
     mGridButton.setClickingTogglesState(false);
-    mGridButton.setToggleable(true);
+    mGridButton.setPadding(3);
     mGridButton.setTooltip(juce::translate("Change the mode of the grid"));
     mGridButton.onClick = [this]()
     {
@@ -171,6 +173,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 
     addAndMakeVisible(mMagnetizeButton);
     mMagnetizeButton.setClickingTogglesState(true);
+    mMagnetizeButton.setPadding(2);
     mMagnetizeButton.setTooltip(juce::translate("Toggle the magnetism mechanism with markers"));
     mMagnetizeButton.onClick = [this]()
     {
@@ -227,19 +230,16 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                 {
                     case GridMode::hidden:
                     {
-                        mGridButton.setToggleState(false, juce::NotificationType::dontSendNotification);
                         mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize));
                     }
                     break;
                     case GridMode::partial:
                     {
-                        mGridButton.setToggleState(true, juce::NotificationType::dontSendNotification);
                         mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridpartial_png, AnlIconsData::gridpartial_pngSize));
                     }
                     break;
                     case GridMode::full:
                     {
-                        mGridButton.setToggleState(true, juce::NotificationType::dontSendNotification);
                         mGridButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::gridfull_png, AnlIconsData::gridfull_pngSize));
                     }
                     break;
@@ -347,9 +347,9 @@ void Document::Section::resized()
 
     {
         auto topPart = bounds.removeFromTop(28);
-        mGridButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
-        mExpandLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
-        mResizeLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
+        mGridButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(26, 26));
+        mExpandLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(26, 26));
+        mResizeLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(26, 26));
         mMagnetizeButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);

@@ -85,15 +85,18 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
         }
     };
 
+    mRewindButton.setPadding(3);
     mRewindButton.setCommandToTrigger(std::addressof(mApplicationCommandManager), ApplicationCommandIDs::transportRewindPlayHead, true);
 
     mPlaybackButton.setClickingTogglesState(true);
+    mPlaybackButton.setPadding(3);
     mPlaybackButton.onClick = [&]()
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::transportTogglePlayback, true);
     };
 
     mLoopButton.setClickingTogglesState(true);
+    mLoopButton.setPadding(3);
     mLoopButton.onClick = [&]()
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::transportToggleLooping, true);
@@ -136,9 +139,9 @@ void Document::TransportDisplay::resized()
 {
     auto bounds = getLocalBounds();
     auto const buttonSize = bounds.getHeight();
-    mRewindButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
-    mPlaybackButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
-    mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
+    mRewindButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
+    mPlaybackButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
+    mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(1));
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
     mPosition.setBounds(bounds);
     mPosition.setFont(juce::Font(juce::FontOptions(static_cast<float>(bounds.getHeight()) * 0.8f)));

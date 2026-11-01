@@ -24,6 +24,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     addAndMakeVisible(mEditModeButton);
 
     mDocumentFileButton.setWantsKeyboardFocus(false);
+    mDocumentFileButton.setPadding(3);
     mDocumentFileButton.onClick = [this]()
     {
         mAccessor.sendSignal(SignalType::showDocumentFilePanel, {}, NotificationType::synchronous);
@@ -31,6 +32,7 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     mDocumentFileButton.setTooltip(juce::translate("Show document file panel"));
 
     mReaderLayoutButton.setWantsKeyboardFocus(false);
+    mReaderLayoutButton.setPadding(3);
     mReaderLayoutButton.onClick = [this]()
     {
         mAccessor.sendSignal(SignalType::showReaderLayoutPanel, {}, NotificationType::synchronous);
@@ -39,12 +41,14 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
     mOscButton.setCommandToTrigger(&mApplicationCommandManager, ApplicationCommandIDs::helpOpenOscSettings, true);
 
     mBubbleTooltipButton.setClickingTogglesState(true);
+    mBubbleTooltipButton.setPadding(2);
     mBubbleTooltipButton.onClick = [this]()
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::viewInfoBubble, true);
     };
 
     mEditModeButton.setClickingTogglesState(true);
+    mEditModeButton.setPadding(2);
     mEditModeButton.onClick = [this]()
     {
         mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::frameToggleDrawing, true);
@@ -100,35 +104,40 @@ void Document::Header::resized()
 {
     auto bounds = getLocalBounds();
     static auto constexpr spaceWidth = 4;
-    static auto constexpr buttonHeight = 24;
+    static auto constexpr buttonHeight = 30;
     static auto constexpr transportDisplayWidth = 284;
+    static auto constexpr rightButtonSize = 20;
+    static auto constexpr rightButtonSpace = 4;
     auto const sideWidth = std::max((bounds.getWidth() - transportDisplayWidth) / 2, 0);
 
     auto leftPart = bounds.removeFromLeft(sideWidth).withSizeKeepingCentre(sideWidth - spaceWidth * 2, buttonHeight);
-    mDocumentFileButton.setVisible(leftPart.getWidth() >= 24);
+    mDocumentFileButton.setVisible(leftPart.getWidth() >= buttonHeight);
     if(mDocumentFileButton.isVisible())
     {
-        mDocumentFileButton.setBounds(leftPart.removeFromLeft(24));
+        mDocumentFileButton.setBounds(leftPart.removeFromLeft(buttonHeight));
         leftPart = leftPart.withTrimmedLeft(spaceWidth);
     }
-    mReaderLayoutButton.setVisible(leftPart.getWidth() >= 24);
+    mReaderLayoutButton.setVisible(leftPart.getWidth() >= buttonHeight);
     if(mReaderLayoutButton.isVisible())
     {
-        mReaderLayoutButton.setBounds(leftPart.removeFromLeft(24));
+        mReaderLayoutButton.setBounds(leftPart.removeFromLeft(buttonHeight));
         leftPart = leftPart.withTrimmedLeft(spaceWidth);
     }
 
-    auto rightPart = bounds.removeFromRight(sideWidth).reduced(spaceWidth, 0);
+    auto rightPart = bounds.removeFromRight(sideWidth);
     auto const scrollbarWidth = getLookAndFeel().getDefaultScrollbarWidth();
-    auto const hasRightButtons = rightPart.getWidth() >= 24 + scrollbarWidth;
+    auto const hasRightButtons = rightPart.getWidth() >= 24 + scrollbarWidth + spaceWidth;
     mBubbleTooltipButton.setVisible(hasRightButtons);
     mEditModeButton.setVisible(hasRightButtons);
     if(hasRightButtons)
     {
-        auto rightButtonBounds = rightPart.removeFromRight(24 + scrollbarWidth).reduced((2 + scrollbarWidth) / 2, 4);
-        mBubbleTooltipButton.setBounds(rightButtonBounds.removeFromTop(rightButtonBounds.getHeight() / 2).withSizeKeepingCentre(20, 20));
-        mEditModeButton.setBounds(rightButtonBounds.withSizeKeepingCentre(20, 20));
+        // The buttons are aligned with the magnetize button of the document section (same column, size and spacing)
+        auto rightButtonBounds = rightPart.removeFromRight(24 + scrollbarWidth);
+        mEditModeButton.setBounds(rightButtonBounds.removeFromBottom(rightButtonSize).withSizeKeepingCentre(rightButtonSize, rightButtonSize));
+        rightButtonBounds.removeFromBottom(rightButtonSpace);
+        mBubbleTooltipButton.setBounds(rightButtonBounds.removeFromBottom(rightButtonSize).withSizeKeepingCentre(rightButtonSize, rightButtonSize));
     }
+    rightPart = rightPart.reduced(spaceWidth, 0);
     mTransportSelectionInfo.setVisible(rightPart.getWidth() >= 164);
     if(mTransportSelectionInfo.isVisible())
     {

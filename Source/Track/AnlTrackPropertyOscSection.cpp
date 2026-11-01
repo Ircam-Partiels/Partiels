@@ -71,6 +71,7 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
         Tooltip::showMessageBox(juce::translate("OSC identifier copied to clipboard"), mCopyButton, mCopyButton.getScreenBounds(), 2000);
     };
     mCopyButton.setTooltip(juce::translate("Copy to clipboard"));
+    mCopyButton.setPadding(3);
 
     addAndMakeVisible(mPropertyIdentifier);
     addAndMakeVisible(mCopyButton);
@@ -96,7 +97,8 @@ void Track::PropertyOscSection::resized()
     };
 
     auto identifierBounds = bounds.removeFromTop(mPropertyIdentifier.getHeight());
-    mCopyButton.setBounds(identifierBounds.removeFromRight(23).withSizeKeepingCentre(15, 23));
+    // The button is aligned with the toggle button of the property below and its image has the same height
+    mCopyButton.setBounds(identifierBounds.removeFromRight(identifierBounds.getHeight()).reduced(2));
     mPropertyIdentifier.setBounds(identifierBounds);
     setBounds(mPropertySendViaOsc);
     setSize(getWidth(), bounds.getY());
