@@ -5,6 +5,19 @@ MISC_FILE_BEGIN
 
 Icon::Icon(ScalableImage image, ScalableImage onImage)
 : juce::Button("Icon")
+, mVBlankAttachment(this, [this](double timestamp)
+                    {
+                        // The ratio moves toward the target at a constant speed so a partial transition takes a partial duration
+                        auto constexpr animationDuration = 0.12;
+                        auto const step = std::max(static_cast<float>((timestamp - mLastTimestamp) / animationDuration), 0.0f);
+                        mLastTimestamp = timestamp;
+                        auto const ratio = std::clamp(mOverTarget, mOverRatio - step, mOverRatio + step);
+                        if(std::abs(ratio - mOverRatio) > 0.0f)
+                        {
+                            mOverRatio = ratio;
+                            repaint();
+                        }
+                    })
 {
     setImages(std::move(image), std::move(onImage));
 }
@@ -62,26 +75,39 @@ void Icon::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bo
         g.beginTransparencyLayer(0.4f);
     }
 
+    auto const colours = [&, this]()
+    {
+        // Only the transition between the normal and the mouse over states is animated
+        if(shouldDrawButtonAsDown || !isEnabled)
+        {
+            return getColours(shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+        }
+
+        auto const interpolateColours = [](juce::Colour start, juce::Colour end, float ratio)
+        {
+            // A transparent colour takes the colour of the other one so the transition does not go through black
+            if(start.isTransparent())
+            {
+                start = end.withAlpha(0.0f);
+            }
+            if(end.isTransparent())
+            {
+                end = start.withAlpha(0.0f);
+            }
+            return start.interpolatedWith(end, ratio);
+        };
+
+        auto const normalColours = getColours(false, false);
+        auto const overColours = getColours(true, false);
+        return Colours{interpolateColours(normalColours.background, overColours.background, mOverRatio), interpolateColours(normalColours.foreground, overColours.foreground, mOverRatio)};
+    }();
+
     auto const bounds = getLocalBounds().toFloat();
     auto const cornerSize = std::min(bounds.getWidth(), bounds.getHeight()) * 0.2f;
-    if(mPadding > 0)
+    if(!colours.background.isTransparent())
     {
-        // If the icon has an image for the toggle state on, the state is already visible so only the mouse down state is highlighted
-        auto const isOn = shouldDrawButtonAsDown || (getToggleState() && !hasOnImage);
-        auto const backgroundColour = [&, this]()
-        {
-            if(isOn)
-            {
-                auto const onColour = findColour(Icon::ColourIds::onBackgroundColourId);
-                return shouldDrawButtonAsHighlighted && !shouldDrawButtonAsDown ? onColour.interpolatedWith(findColour(Icon::ColourIds::overColourId), 0.2f) : onColour;
-            }
-            return shouldDrawButtonAsHighlighted ? findColour(Icon::ColourIds::overBackgroundColourId) : juce::Colours::transparentBlack;
-        }();
-        if(!backgroundColour.isTransparent())
-        {
-            g.setColour(backgroundColour);
-            g.fillRoundedRectangle(bounds, cornerSize);
-        }
+        g.setColour(colours.background);
+        g.fillRoundedRectangle(bounds, cornerSize);
     }
 
     auto const transform = [&]()
@@ -109,15 +135,7 @@ void Icon::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bo
         return juce::AffineTransform{rectanglePlacement.getTransformToFit(image.getBounds().toFloat(), targetBounds)};
     }();
 
-    auto const colour = [&, this]()
-    {
-        if(hasOnImage)
-        {
-            return shouldDrawButtonAsHighlighted ? findColour(Icon::ColourIds::overColourId) : findColour(Icon::ColourIds::normalColourId);
-        }
-        return isToggled ? findColour(Icon::ColourIds::downColourId) : (shouldDrawButtonAsHighlighted ? findColour(Icon::ColourIds::overColourId) : findColour(Icon::ColourIds::normalColourId));
-    }();
-
+    auto const& colour = colours.foreground;
     if(!colour.isOpaque())
     {
         g.setOpacity(1.0f);
@@ -140,6 +158,48 @@ void Icon::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bo
     {
         g.endTransparencyLayer();
     }
+}
+
+Icon::Colours Icon::getColours(bool isHighlighted, bool isDown) const
+{
+    auto const hasOnImage = mOnImage.isValid();
+    auto const background = [&, this]()
+    {
+        if(mPadding <= 0)
+        {
+            return juce::Colours::transparentBlack;
+        }
+        // If the icon has an image for the toggle state on, the state is already visible so only the mouse down state is highlighted
+        auto const isOn = isDown || (getToggleState() && !hasOnImage);
+        if(isOn)
+        {
+            auto const onColour = findColour(Icon::ColourIds::onBackgroundColourId);
+            return isHighlighted && !isDown ? onColour.interpolatedWith(findColour(Icon::ColourIds::overColourId), 0.2f) : onColour;
+        }
+        return isHighlighted ? findColour(Icon::ColourIds::overBackgroundColourId) : juce::Colours::transparentBlack;
+    }();
+
+    auto const foreground = [&, this]()
+    {
+        if(hasOnImage)
+        {
+            return isHighlighted ? findColour(Icon::ColourIds::overColourId) : findColour(Icon::ColourIds::normalColourId);
+        }
+        return isDown || getToggleState() ? findColour(Icon::ColourIds::downColourId) : (isHighlighted ? findColour(Icon::ColourIds::overColourId) : findColour(Icon::ColourIds::normalColourId));
+    }();
+    return {background, foreground};
+}
+
+void Icon::mouseEnter(juce::MouseEvent const& event)
+{
+    mOverTarget = 1.0f;
+    juce::Button::mouseEnter(event);
+}
+
+void Icon::mouseExit(juce::MouseEvent const& event)
+{
+    mOverTarget = 0.0f;
+    juce::Button::mouseExit(event);
 }
 
 void Icon::clicked(juce::ModifierKeys const& keys)

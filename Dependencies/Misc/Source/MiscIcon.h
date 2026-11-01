@@ -38,6 +38,8 @@ public:
 
     // juce::Button
     void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
+    void mouseEnter(juce::MouseEvent const& event) override;
+    void mouseExit(juce::MouseEvent const& event) override;
 
 protected:
     // juce::Button
@@ -47,11 +49,26 @@ protected:
     void focusLost(juce::Component::FocusChangeType cause) override;
 
 private:
+    struct Colours
+    {
+        juce::Colour background;
+        juce::Colour foreground;
+    };
+
+    Colours getColours(bool isHighlighted, bool isDown) const;
+
     ScalableImage mImage;
     ScalableImage mOnImage;
     juce::ModifierKeys mKeys;
     int mPadding{0};
     bool mShowFocus{false};
+
+    float mOverRatio{0.0f};
+    float mOverTarget{0.0f};
+    double mLastTimestamp{0.0};
+
+    // Declared last so it is destroyed first
+    juce::VBlankAttachment mVBlankAttachment;
 };
 
 MISC_FILE_END
