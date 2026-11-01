@@ -5,33 +5,34 @@ MISC_FILE_BEGIN
 
 FontManager::FontManager()
 {
-    auto const createTypeface = [](int index) -> juce::Typeface::Ptr
+    for(auto index = 0; index < MiscFontsData::namedResourceListSize; ++index)
     {
         auto size = 0;
         auto const* name = MiscFontsData::namedResourceList[index];
         MiscWeakAssert(name != nullptr);
         if(name == nullptr)
         {
-            return {};
+            continue;
         }
         auto const* data = MiscFontsData::getNamedResource(name, size);
         MiscWeakAssert(data != nullptr && size != 0);
-        if(data == nullptr && size == 0)
+        if(data == nullptr || size == 0)
         {
-            return {};
+            continue;
         }
-        return juce::Typeface::createSystemTypefaceFor(data, static_cast<size_t>(size));
-    };
-    for(auto index = 0; index < MiscFontsData::namedResourceListSize; ++index)
-    {
-        auto typeface = createTypeface(index);
+        auto typeface = juce::Typeface::createSystemTypefaceFor(data, static_cast<size_t>(size));
         MiscWeakAssert(typeface != nullptr);
         if(typeface != nullptr)
         {
             mFonts.push_back(typeface);
+            // The default typeface reuses the loaded instance to avoid registering the same font twice
+            if(data == MiscFontsData::NunitoSansRegular_ttf)
+            {
+                mDefaultSansSerifTypeface = typeface;
+            }
         }
     }
-    mDefaultSerifTypeface = juce::Typeface::createSystemTypefaceFor(MiscFontsData::NunitoSansRegular_ttf, MiscFontsData::NunitoSansRegular_ttfSize);
+    MiscWeakAssert(mDefaultSansSerifTypeface != nullptr);
 }
 
 juce::Typeface::Ptr FontManager::getDefaultSansSerifTypefaceWithStyle(juce::String const& style)
@@ -49,7 +50,7 @@ juce::Typeface::Ptr FontManager::getDefaultSansSerifTypefaceWithStyle(juce::Stri
 
 juce::Typeface::Ptr FontManager::getDefaultSansSerifTypeface()
 {
-    return mDefaultSerifTypeface;
+    return mDefaultSansSerifTypeface;
 }
 
 juce::String FontManager::getDefaultSansSerifTypefaceName()

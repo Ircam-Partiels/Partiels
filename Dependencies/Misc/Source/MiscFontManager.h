@@ -16,7 +16,7 @@ public:
 
 private:
     std::vector<juce::Typeface::Ptr> mFonts;
-    juce::Typeface::Ptr mDefaultSerifTypeface;
+    juce::Typeface::Ptr mDefaultSansSerifTypeface;
 };
 
 MISC_FILE_END
