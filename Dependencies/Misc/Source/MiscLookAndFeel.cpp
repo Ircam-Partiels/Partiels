@@ -598,6 +598,17 @@ void LookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& button, 
     auto constexpr cornerSize = 2.0f;
     auto const bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
 
+    // The outlined buttons are drawn with an outline and a tinted background of the colour of the button
+    if(button.getProperties().getWithDefault("Outlined", false))
+    {
+        auto const colour = backgroundColour.withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);
+        g.setColour(colour.withMultipliedAlpha(shouldDrawButtonAsDown ? 0.45f : (shouldDrawButtonAsHighlighted ? 0.3f : 0.15f)));
+        g.fillRoundedRectangle(bounds, cornerSize);
+        g.setColour(colour);
+        g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
+        return;
+    }
+
     auto baseColour = backgroundColour.withMultipliedSaturation(button.hasKeyboardFocus(true) ? 1.3f : 0.9f).withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);
 
     if(shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
