@@ -166,7 +166,7 @@ void Track::Thumbnail::paint(juce::Graphics& g)
 
     auto const focused = Tools::isSelected(mAccessor, true);
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
-    g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), LookAndFeel::cornerSize);
 
     auto const width = getWidth();
     auto const height = getHeight();

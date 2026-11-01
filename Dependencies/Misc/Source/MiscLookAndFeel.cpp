@@ -287,12 +287,11 @@ juce::Font LookAndFeel::getHeaderFont(ConcertinaTable const& panel, int headerHe
 
 void LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
 {
-    auto constexpr corner = 2.0f;
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
     g.setColour(panel.findColour(ConcertinaTable::headerBackgroundColourId).brighter(contrast));
-    g.fillRoundedRectangle(area.toFloat(), corner);
+    g.fillRoundedRectangle(area.toFloat(), cornerSize);
     g.setColour(panel.findColour(ConcertinaTable::headerBorderColourId).brighter(contrast));
-    g.drawRoundedRectangle(area.reduced(1).toFloat(), corner, 1.0f);
+    g.drawRoundedRectangle(area.reduced(1).toFloat(), cornerSize, 1.0f);
 }
 
 void LookAndFeel::drawHeaderButton(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
@@ -374,14 +373,18 @@ bool LookAndFeel::areScrollbarButtonsVisible()
 
 void LookAndFeel::drawScrollbar(juce::Graphics& g, juce::ScrollBar& scrollbar, int x, int y, int width, int height, bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, bool isMouseDown)
 {
-    juce::ignoreUnused(isMouseDown);
     g.fillAll(scrollbar.findColour(juce::ScrollBar::ColourIds::backgroundColourId));
 
-    auto const thumbBounds = isScrollbarVertical ? juce::Rectangle<int>{x, thumbStartPosition, width, thumbSize} : juce::Rectangle<int>{thumbStartPosition, y, thumbSize, height};
+    // The thumb is slightly thinner and lighter when the scroll bar is not used
+    auto const isActive = isMouseOver || isMouseDown;
+    auto const thickness = static_cast<float>(isScrollbarVertical ? width : height) - 2.0f;
+    auto const thumbThickness = isActive ? thickness : std::min(std::max(thickness * 0.75f, 4.0f), thickness);
+    auto const thumbLength = static_cast<float>(thumbSize) - 2.0f;
+    auto const thumbBounds = isScrollbarVertical ? juce::Rectangle<int>{x, thumbStartPosition, width, thumbSize}.toFloat().withSizeKeepingCentre(thumbThickness, thumbLength) : juce::Rectangle<int>{thumbStartPosition, y, thumbSize, height}.toFloat().withSizeKeepingCentre(thumbLength, thumbThickness);
 
     auto const colour = scrollbar.findColour(juce::ScrollBar::ColourIds::thumbColourId);
-    g.setColour(isMouseOver ? colour.brighter(0.25f) : colour);
-    g.fillRoundedRectangle(thumbBounds.reduced(1).toFloat(), 2.0f);
+    g.setColour(isActive ? colour : colour.withMultipliedAlpha(0.6f));
+    g.fillRoundedRectangle(thumbBounds, thumbThickness * 0.5f);
 }
 
 void LookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, const bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)
@@ -436,9 +439,9 @@ void LookAndFeel::drawTableHeaderBackground(juce::Graphics& g, juce::TableHeader
     {
         auto const columnBounds = header.getColumnPosition(index).reduced(1).toFloat();
         g.setColour(backgroundColour);
-        g.fillRoundedRectangle(columnBounds, 2.0f);
+        g.fillRoundedRectangle(columnBounds, cornerSize);
         g.setColour(outlineColour);
-        g.drawRoundedRectangle(columnBounds, 2.0f, 1.0f);
+        g.drawRoundedRectangle(columnBounds, cornerSize, 1.0f);
     }
 }
 
@@ -521,19 +524,19 @@ void LookAndFeel::drawProgressBar(juce::Graphics& g, juce::ProgressBar& progress
     juce::ignoreUnused(width, height);
 
     auto const barBounds = progressBar.getLocalBounds().toFloat();
-    auto const cornerSize = static_cast<float>(barBounds.getHeight()) * 0.5f;
+    auto const barCornerSize = static_cast<float>(barBounds.getHeight()) * 0.5f;
 
     auto const backgroundColour = progressBar.findColour(juce::ProgressBar::ColourIds::backgroundColourId);
     auto const foregroundColour = progressBar.findColour(juce::ProgressBar::ColourIds::foregroundColourId);
 
     g.setColour(backgroundColour);
-    g.fillRoundedRectangle(barBounds, cornerSize);
+    g.fillRoundedRectangle(barBounds, barCornerSize);
 
     if(progress > 0.0)
     {
         g.setColour(foregroundColour);
         auto const progressWidth = barBounds.getWidth() * static_cast<float>(std::min(progress, 1.0));
-        g.fillRoundedRectangle(barBounds.withWidth(progressWidth), cornerSize);
+        g.fillRoundedRectangle(barBounds.withWidth(progressWidth), barCornerSize);
     }
 
     if(!textToShow.isEmpty())
@@ -561,13 +564,12 @@ bool LookAndFeel::isProgressBarOpaque(juce::ProgressBar& progressBar)
 void LookAndFeel::drawTooltip(juce::Graphics& g, juce::String const& text, int width, int height)
 {
     juce::Rectangle<float> const bounds(static_cast<float>(width), static_cast<float>(height));
-    auto constexpr cornerSize = 5.0f;
 
     g.setColour(findColour(juce::TooltipWindow::ColourIds::backgroundColourId));
-    g.fillRoundedRectangle(bounds, cornerSize);
+    g.fillRoundedRectangle(bounds, floatingCornerSize);
 
     g.setColour(findColour(juce::TooltipWindow::ColourIds::outlineColourId));
-    g.drawRoundedRectangle(bounds.reduced(0.5f, 0.5f), cornerSize, 1.0f);
+    g.drawRoundedRectangle(bounds.reduced(0.5f, 0.5f), floatingCornerSize, 1.0f);
 
     juce::AttributedString attributedString;
     attributedString.setJustification(juce::Justification::centredLeft);
@@ -595,7 +597,6 @@ juce::Rectangle<int> LookAndFeel::getTooltipBounds(juce::String const& tipText, 
 
 void LookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& button, juce::Colour const& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
 {
-    auto constexpr cornerSize = 2.0f;
     auto const bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
 
     // The outlined buttons are drawn with an outline and a tinted background of the colour of the button
@@ -678,7 +679,7 @@ void LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& button, float 
 
     juce::Rectangle<float> const tickBounds(x + 1.0f, y + 1.0f, w - 2.0f, h - 2.0f);
     g.setColour(borderColour);
-    g.drawRoundedRectangle(tickBounds, 4.0f, 1.0f);
+    g.drawRoundedRectangle(tickBounds, cornerSize, 1.0f);
 
     ticked = hasMultipleValues || ticked;
     if(ticked)
@@ -712,7 +713,7 @@ int LookAndFeel::getCallOutBoxBorderSize([[maybe_unused]] juce::CallOutBox const
 
 float LookAndFeel::getCallOutBoxCornerSize([[maybe_unused]] juce::CallOutBox const& box)
 {
-    return 2.0f;
+    return floatingCornerSize;
 }
 
 void LookAndFeel::drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics& g, [[maybe_unused]] juce::Path const& path, [[maybe_unused]] juce::Image& cachedImage)

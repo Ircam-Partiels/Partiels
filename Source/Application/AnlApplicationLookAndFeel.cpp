@@ -42,16 +42,14 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
 
 void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout)
 {
-    auto constexpr cornerSize = 4.0f;
-
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::outlineColourId));
-    g.drawRoundedRectangle(alert.getLocalBounds().toFloat(), cornerSize, 2.0f);
+    g.drawRoundedRectangle(alert.getLocalBounds().toFloat(), floatingCornerSize, 2.0f);
 
     auto const bounds = alert.getLocalBounds().reduced(1);
     g.reduceClipRegion(bounds);
 
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::backgroundColourId));
-    g.fillRoundedRectangle(bounds.toFloat(), cornerSize);
+    g.fillRoundedRectangle(bounds.toFloat(), floatingCornerSize);
 
     auto const getIcon = [&]()
     {

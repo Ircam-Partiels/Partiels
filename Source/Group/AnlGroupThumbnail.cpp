@@ -233,7 +233,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
 
     auto const focused = Tools::isSelected(mAccessor);
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
-    g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), LookAndFeel::cornerSize);
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
     g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
 
