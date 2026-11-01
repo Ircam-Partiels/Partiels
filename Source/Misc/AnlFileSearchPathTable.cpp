@@ -22,12 +22,13 @@ FileSearchPathTable::Directory::Entry::Entry(size_t i, juce::String const& fileN
 
     addAndMakeVisible(revealButton);
     revealButton.setWantsKeyboardFocus(false);
+    revealButton.setPadding(2);
 }
 
 void FileSearchPathTable::Directory::Entry::resized()
 {
     auto bounds = getLocalBounds();
-    revealButton.setBounds(bounds.removeFromRight(getHeight()).reduced(2));
+    revealButton.setBounds(bounds.removeFromRight(getHeight()).reduced(1));
     replaceButton.setBounds(bounds.removeFromRight(80).reduced(2));
     thumbLabel.setBounds(bounds.removeFromLeft(32));
     fileNameLabel.setBounds(bounds);
@@ -210,6 +211,7 @@ FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
     mAddLabel.setText(juce::translate("Add directories..."), juce::NotificationType::dontSendNotification);
     mAddLabel.setTooltip(juce::translate("Add directories..."));
     mAddButton.setTooltip(juce::translate("Add directories..."));
+    mAddButton.setPadding(3);
 
     mComponentListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
@@ -230,7 +232,7 @@ void FileSearchPathTable::resized()
 {
     auto bounds = getLocalBounds();
     auto addBounds = bounds.removeFromBottom(24);
-    mAddButton.setBounds(addBounds.removeFromLeft(24).reduced(4));
+    mAddButton.setBounds(addBounds.removeFromLeft(24).reduced(1));
     mAddLabel.setBounds(addBounds);
     auto const scrollbarWidth = mViewport.getVerticalScrollBar().isVisible() ? mViewport.getScrollBarThickness() : 0;
     mViewport.setBounds(bounds);

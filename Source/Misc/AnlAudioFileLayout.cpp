@@ -318,6 +318,8 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     mAddLabel.setText(juce::translate("Insert audio files..."), juce::NotificationType::dontSendNotification);
     mAddLabel.setTooltip(juce::translate("Insert audio files..."));
     mAddButton.setTooltip(juce::translate("Insert audio files..."));
+    mAddButton.setPadding(3);
+    mAlertButton.setPadding(3);
 
     mComponentListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
@@ -342,11 +344,11 @@ void AudioFileLayoutTable::resized()
     if(mAlertButton.isVisible())
     {
         auto alertBounds = bounds.removeFromBottom(24);
-        mAlertButton.setBounds(alertBounds.removeFromLeft(24).reduced(4));
+        mAlertButton.setBounds(alertBounds.removeFromLeft(24).reduced(1));
         mAlertLabel.setBounds(alertBounds);
     }
     auto addBounds = bounds.removeFromBottom(24);
-    mAddButton.setBounds(addBounds.removeFromLeft(24).reduced(4));
+    mAddButton.setBounds(addBounds.removeFromLeft(24).reduced(1));
     mAddLabel.setBounds(addBounds);
     auto const scrollbarWidth = mViewport.getVerticalScrollBar().isVisible() ? mViewport.getScrollBarThickness() : 0;
     mViewport.setBounds(bounds);

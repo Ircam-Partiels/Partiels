@@ -108,6 +108,9 @@ void LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(Icon::ColourIds::normalColourId, colourChart.get(Type::inactive));
     setColour(Icon::ColourIds::overColourId, colourChart.get(Type::active));
     setColour(Icon::ColourIds::downColourId, colourChart.get(Type::active));
+    setColour(Icon::ColourIds::overBackgroundColourId, colourChart.get(Type::border).withAlpha(0.4f));
+    setColour(Icon::ColourIds::onBackgroundColourId, colourChart.get(Type::border));
+    setColour(Icon::ColourIds::focusColourId, colourChart.get(Type::active));
 
     setColour(SpinningIcon::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(SpinningIcon::ColourIds::foregroundColourId, colourChart.get(Type::inactive));

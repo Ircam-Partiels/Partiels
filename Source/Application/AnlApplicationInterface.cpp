@@ -61,6 +61,8 @@ Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Compone
             window->getInterface().showPluginSearchPathPanel();
         }
     };
+    mCloseButton.setPadding(3);
+    mSettingsButton.setPadding(3);
     mTitleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(mTitleLabel);
     addAndMakeVisible(mCloseButton);
@@ -80,8 +82,8 @@ void Application::Interface::PluginListTablePanel::resized()
     auto bounds = getLocalBounds();
     mLeftSeparator.setBounds(bounds.removeFromLeft(1));
     auto top = bounds.removeFromTop(24);
-    mCloseButton.setBounds(top.removeFromLeft(24).reduced(4));
-    mSettingsButton.setBounds(top.removeFromRight(24).reduced(4));
+    mCloseButton.setBounds(top.removeFromLeft(24).reduced(1));
+    mSettingsButton.setBounds(top.removeFromRight(24).reduced(1));
     mTitleLabel.setBounds(top);
     mTopSeparator.setBounds(bounds.removeFromTop(1));
     mContent.setBounds(bounds);
@@ -91,6 +93,7 @@ Application::Interface::RightBorder::RightBorder()
 : pluginListButton(juce::ImageCache::getFromMemory(AnlIconsData::plugin_png, AnlIconsData::plugin_pngSize))
 {
     pluginListButton.setToggleable(true);
+    pluginListButton.setPadding(3);
     pluginListButton.onClick = []()
     {
         if(auto* window = Instance::get().getWindow())
@@ -117,7 +120,7 @@ void Application::Interface::RightBorder::paint(juce::Graphics& g)
 void Application::Interface::RightBorder::resized()
 {
     auto bounds = getLocalBounds();
-    pluginListButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(4));
+    pluginListButton.setBounds(bounds.removeFromTop(bounds.getWidth()).reduced(1));
 }
 
 void Application::Interface::RightBorder::applicationCommandInvoked([[maybe_unused]] juce::ApplicationCommandTarget::InvocationInfo const& info)
