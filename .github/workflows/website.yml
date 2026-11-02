@@ -1,0 +1,107 @@
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Website/**'
+      - 'Docs/**'
+      - '.github/workflows/website.yml'
+  pull_request:
+    paths:
+      - 'Website/**'
+      - 'Docs/**'
+      - '.github/workflows/website.yml'
+  # Updates the latest version and the list of plugins
+  release:
+    types: [published]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Whether to deploy the website to GitHub Pages (from a branch other than main, the github-pages environment must allow the branch)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  # Checks whether to deploy the website: from the main branch, or from any branch if requested manually
+  is_deployed: ${{ (github.event_name == 'workflow_dispatch' && inputs.deploy) || (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') }}
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # A release event runs on the tag that the github-pages environment rejects by default,
+  # so the workflow is triggered again on the main branch.
+  Release:
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+    - name: Dispatch
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh workflow run website.yml --repo ${{ github.repository }} --ref main
+
+  # Builds the website. When the website is not deployed, the result is uploaded as an artifact that can be
+  # previewed locally (the website is then built at the root: `python3 -m http.server -d <artifact directory>`).
+  Build:
+    if: ${{ github.event_name != 'release' }}
+    runs-on: ubuntu-latest
+    outputs:
+      is_deployed: ${{ env.is_deployed }}
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: Website/package-lock.json
+    - name: Configure
+      id: pages
+      if: ${{ env.is_deployed == 'true' }}
+      uses: actions/configure-pages@v6
+    - name: Build
+      working-directory: Website
+      env:
+        # Uses the URL of the GitHub Pages site (including a custom domain if defined)
+        SITE_URL: ${{ steps.pages.outputs.origin }}
+        BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        npm ci
+        npm run build
+    - name: Artifact
+      if: ${{ env.is_deployed == 'true' }}
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: Website/dist
+    - name: Preview
+      if: ${{ env.is_deployed != 'true' }}
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: Website
+        path: Website/dist
+
+  # Deploys the website to GitHub Pages.
+  Deploy:
+    if: ${{ needs.Build.outputs.is_deployed == 'true' }}
+    needs: Build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy
+      id: deployment
+      uses: actions/deploy-pages@v5

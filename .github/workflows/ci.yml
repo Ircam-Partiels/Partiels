@@ -2,7 +2,15 @@ name: CI
 
 on:
   push:
+    paths-ignore:
+      - 'Website/**'
+      - '.github/workflows/website.yml'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
+    paths-ignore:
+      - 'Website/**'
+      - '.github/workflows/website.yml'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
     inputs:
       is_notarized:
