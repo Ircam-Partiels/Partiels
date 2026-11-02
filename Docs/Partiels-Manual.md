@@ -860,7 +860,7 @@ Select an audio file by clicking on its name in section (**S1**) to display its 
 
 The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated.
 
-> 💡 **Tip**: If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).
+> 💡 **Tip**: If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#12-audio-settings).
 
 An item of the audio files layout in section (**S1**) is defined by an index, an audio file and a channel configuration. Each item corresponds to a channel of the audio files layout. So different audio files can be assigned to the different channels of the audio files layout using for each a specific channel layout.
 
@@ -1101,4 +1101,4 @@ It is recommended to add the path to the executable in the paths of your command
 <div style="page-break-after: always;"></div>
 
 *[Partiels](https://github.com/Ircam-Partiels/partiels/releases/latest) Manual by Pierre Guillot*  
-*[www.ircam.fr]("www.ircam.fr)*
+*[www.ircam.fr](https://www.ircam.fr)*
