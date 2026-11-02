@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::AboutContent::AboutContent()
-: mImage(juce::ImageCache::getFromMemory(AnlResourceData::Ircamlogo_png, AnlResourceData::Ircamlogo_pngSize))
+: mImage(ScalableImage::fromSvg(AnlResourceData::CPLOGOIRCAMnoir_svg, AnlResourceData::CPLOGOIRCAMnoir_svgSize))
 {
     mImage.onClick = []()
     {
@@ -23,8 +23,8 @@ void Application::AboutContent::paint(juce::Graphics& g)
 
 void Application::AboutContent::resized()
 {
-    auto constexpr imageWidth = 3072.0;
-    auto constexpr imageHeight = 1181.0;
+    auto constexpr imageWidth = 779.21;
+    auto constexpr imageHeight = 170.58;
     auto constexpr imageOffet = 20;
     auto constexpr newWidth = 220;
     auto const newHeight = static_cast<int>(std::round(imageHeight * static_cast<double>(newWidth) / imageWidth));
