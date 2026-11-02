@@ -5,47 +5,23 @@
     <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/release/Ircam-Partiels/partiels.svg" alt="Release"></a>
     <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/downloads/Ircam-Partiels/partiels/total.svg?colorB=007ec6" alt="Downloads"></a>
     <a href="https://github.com/Ircam-Partiels/Partiels?tab=GPL-3.0-1-ov-file"><img src="https://img.shields.io/badge/license-GPL--v3-blue.svg" alt="License"></a>
+    <a href="https://ircam-partiels.github.io/Partiels/"><img src="https://img.shields.io/badge/website-Ircam--Partiels-blue.svg" alt="Website"></a>
 </p>
 
-**[Partiels](https://github.com/Ircam-Partiels/Partiels)** is a software suite for **analysing and exploring the content and characteristics** of sounds.
+**[Partiels](https://ircam-partiels.github.io/Partiels/)** is a free and open-source software suite for **analysing and exploring the content and characteristics** of sounds.
 
 <p align="center"><img src="BinaryData/Resource/Partiels-v2.0.0-Sample-v2.gif"></p>
 
-## Features
+## Website
 
-Partiels allows **analysis** of one or several audio files using Vamp plug-ins **loading** data files, **visualizing**, **editing**, **organizing**, and **exporting** the results as images or text files that can be used in other applications such as Max, Pure Data, Open Music, etc.
+The **[Partiels website](https://ircam-partiels.github.io/Partiels/)** presents the application and gathers all the information for users:
 
-- Windows, Mac & Linux support
-- Multiformat support
-- Multichannel support
-- Multiaudiofile support
-- Analyzing audio with Vamp plug-ins
-- Visualizing results as spectrogram, lines, and markers
-- Textual and graphical editing of results 
-- Organizing and ordering analyses in groups
-- Exporting results to PNG, JPEG, CSV, LAB, JSON, CUE, REAPER, MAX, PUREDATA & SDIF formats
-- Loading results from CSV, LAB, JSON, CUE, REAPER, MAX, PUREDATA & SDIF formats
-- Batch processing
-- Command line interface to analyze, export, and convert results
-- Consolidating documents for sharing
+- [Download](https://ircam-partiels.github.io/Partiels/download/) Partiels and the [Vamp plugins](https://ircam-partiels.github.io/Partiels/plugins/)
+- [Manual](https://ircam-partiels.github.io/Partiels/manual/)
+- [Videos](https://ircam-partiels.github.io/Partiels/resources/videos/) and [publications](https://ircam-partiels.github.io/Partiels/resources/publications/) (with the references to cite Partiels)
+- [Support and feedback](https://ircam-partiels.github.io/Partiels/support/)
 
-Alongside Partiels, a wide range of analyses based on audio engines developed at IRCAM and outside are ported to Vamp plug-ins. These plug-ins allow you to perform FFT, LPC, transient, fundamental, formant, tempo, TTS and many other analyses. You can also find a large number of analysis plug-ins on the [Vamp plug-ins website](https://www.vamp-plugins.org/). 
-
-<p align="center">
-<strong><a href="https://github.com/Ircam-Partiels/partiels/releases/latest">👉 Download Partiels and the plugin suite</a></strong>
-</p>
-
-<p align="center"><img src="BinaryData/Resource/Partiels-Endorsements.png", width=520></p>
-
-> For bug reports or feature requests, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
-
-## Compatibility
-
-Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
-
-<p align="center"><img src="BinaryData/Resource/Partiels-Compatibility.png"></p>
-
-> ⚠️ Some Vamp plugins may not support the same configurations and may have other restrictions.
+> For bug reports or feature requests, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions).
 
 ## Compilation
 
@@ -64,6 +40,16 @@ ctest -C Debug -VV --test-dir build # Note: The `-VV` flag is optional and provi
 > ⚠️ For Linux, JUCE dependencies must be installed: Refer to the file [JUCE/docs/Linux Dependencies.md](<JUCE/docs/Linux Dependencies.md>).
 
 > 💡 You can refer to the [GitHub Actions workflow](.github/workflows/ci.yml) for compilation instructions. 
+
+## Website development
+
+The website is built with [Astro Starlight](https://starlight.astro.build/) from the [Website](Website) directory (Node.js 22.23.4 or higher) and deployed to GitHub Pages by the [Website workflow](.github/workflows/website.yml). The manual and its images are imported from the [Docs](Docs) directory at each build.
+
+```bash
+cd Website
+npm ci
+npm run dev # Local server with live reload, or `npm run build && npm run preview` to check the published version
+```
 
 ## Release versions
 
@@ -104,148 +90,3 @@ Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.
 - **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
 - **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
 - **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
-
-## Publications and Video Presentations
-
-Video recordings of Partiels presentations are available in this [discussion](https://github.com/orgs/Ircam-Partiels/discussions/213) on our GitHub organization page. These recordings include software demonstrations, feature walkthroughs, and academic presentations that complement the written publications.
-
-The following academic publications present the Partiels software and its extensions (click on **BibTeX** to display the citation entry):
-
-### SMC 2026 Conference Paper
-
-**Neuralyzer: An AI Chatbot in Partiels**  
-Pierre Guillot  
-*23rd Sound and Music Computing Conference (SMC26)* — Session 3: AI, Co-Creation and Intelligent Musical Interaction  
-Zagreb, Croatia, November 2026  
-[🔗 Programme](https://smc26.mbz.hr/en/conference/programme/day-2/paper-presentations-session-3-ai-co-creation-and-intelligent-musical-interaction)
-
-<details>
-<summary>BibTeX</summary>
-
-```bibtex
-@inproceedings{guillot_smc_2026,
-    author    = {Guillot, Pierre},
-    title     = {{Neuralyzer: An AI Chatbot in Partiels}},
-    booktitle = {Proceedings of the 23rd Sound and Music Computing Conference (SMC26)},
-    address   = {Zagreb, Croatia},
-    year      = {2026},
-    month     = nov,
-    url       = {https://smc26.mbz.hr/en/conference/programme/day-2/paper-presentations-session-3-ai-co-creation-and-intelligent-musical-interaction}
-}
-```
-
-</details>
-
-### JIM 2026 Conference Paper
-
-**Neuralyzer : Un agent conversationnel pour l'analyse audionumérique**  
-Pierre Guillot  
-*Proceedings of the 33rd Journées d'Informatique Musicale*  
-Lille, France, June 2026  
-[📄 PDF](https://hal.science/hal-05663329v1/file/Guillot-Neuralyzer.pdf) | [🔗 HAL](https://hal.science/hal-05663329v1)
-
-<details>
-<summary>BibTeX</summary>
-
-```bibtex
-@inproceedings{guillot:hal-05663329,
-  TITLE = {{Neuralyzer : Un agent conversationnel pour l'analyse audionum{\'e}rique}},
-  AUTHOR = {Guillot, Pierre},
-  URL = {https://hal.science/hal-05663329},
-  BOOKTITLE = {{Journ{\'e}es d'Informatique Musicale}},
-  ADDRESS = {Lille, France},
-  YEAR = {2026},
-  MONTH = Jun,
-  PDF = {https://hal.science/hal-05663329v1/file/Guillot-Neuralyzer.pdf},
-  HAL_ID = {hal-05663329},
-  HAL_VERSION = {v1},
-}
-```
-
-</details>
-
-### RFIM 2025 Journal Article
-
-**Partiels, une suite logicielle dédiée à l'analyse des fichiers audionumériques**  
-Pierre Guillot  
-*Revue francophone d'informatique musicale (RFIM), n° 11 — Frugalité, pérennité et création*  
-December 2025  
-[📄 PDF](https://revues.mshparisnord.fr/rfim/pdf/922.pdf) | [🔗 Article](https://revues.mshparisnord.fr/rfim/index.php?id=922)
-
-<details>
-<summary>BibTeX</summary>
-
-```bibtex
-@article{guillot_rfim_2025,
-    author  = {Guillot, Pierre},
-    title   = {Partiels, une suite logicielle dédiée à l'analyse des fichiers audionumériques},
-    journal = {Revue Francophone d'Informatique et Musique},
-    number  = {11},
-    year    = {2025},
-    month   = dec,
-    doi     = {10.56698/rfim.922},
-    url     = {https://revues.mshparisnord.fr/rfim/index.php?id=922},
-    pdf     = {https://revues.mshparisnord.fr/rfim/pdf/922.pdf}
-}
-```
-
-</details>
-
-### DAFx 2025 Conference Paper
-
-**Partiels : Exploring, Analyzing and Understanding Sounds**  
-Pierre Guillot  
-*Proceedings of the 28-th Int. Conf. on Digital Audio Effects (DAFx25)*  
-Ancona, Italy, September 2025, pp. 298-303  
-[📄 PDF](https://dafx.de/paper-archive/2025/DAFx25_paper_66.pdf)
-
-<details>
-<summary>BibTeX</summary>
-
-```bibtex
-@inproceedings{DAFx25_paper_66,
-    author = "Guillot, Pierre",
-    title = "{Partiels - Exploring, Analyzing and Understanding Sounds}",
-    booktitle = "Proceedings of the 28-th Int. Conf. on Digital Audio Effects (DAFx25)",
-    editor = "Gabrielli, L. and Cecchi, S.",
-    location = "Ancona, Italy",
-    eventdate = "2025-09-02/2025-09-05",
-    year = "2025",
-    month = "Sept",
-    publisher = "",
-    issn = "2413-6689",
-    doi = "",
-    pages = ""
-}
-```
-
-</details>
-
-### JIM 2025 Conference Paper
-
-**Partiels : un logiciel pour analyser et explorer le son**  
-Pierre Guillot  
-*Proceedings of the 32nd Journées d'Informatique Musicale*  
-Lyon, France, June 2025  
-[📄 PDF](https://hal.science/hal-05102365v2/file/18.pdf) | [🔗 HAL](https://hal.science/hal-05102365)
-
-<details>
-<summary>BibTeX</summary>
-
-```bibtex
-@inproceedings{guillot:hal-05102365,
-  TITLE = {{Partiels : un logiciel pour analyser et explorer le son}},
-  AUTHOR = {Guillot, Pierre},
-  URL = {https://hal.science/hal-05102365},
-  BOOKTITLE = {{Proceedings of the 32nd Journ{\'e}es d'Informatique Musicale}},
-  ADDRESS = {Lyon, France},
-  ORGANIZATION = {{GRAME and Inria}},
-  YEAR = {2025},
-  MONTH = Jun,
-  PDF = {https://hal.science/hal-05102365v2/file/18.pdf},
-  HAL_ID = {hal-05102365},
-  HAL_VERSION = {v2},
-}
-```
-
-</details>
