@@ -51,6 +51,14 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Partiels' own Vamp plugins are implemented in [VampPlugins/AnlVampPlugins.cpp](VampPlugins/AnlVampPlugins.cpp); keep them in sync with the app-side hosting code.
 - CI reference (build, test and packaging on Linux, Windows and macOS): [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
+## Website
+- User-facing website in [Website](Website) (Astro Starlight, Node ≥ 22.23.4), deployed to GitHub Pages by [website.yml](.github/workflows/website.yml).
+- `npm ci` then `npm run dev` (local server) or `npm run build` (output in `Website/dist`), from the `Website` directory.
+- The manual and its images are imported from [Docs](Docs) and [BinaryData/Resource](BinaryData/Resource) by [Website/scripts/sync.mjs](Website/scripts/sync.mjs) at each build: edit the sources, not the generated files.
+- The latest version and the list of Vamp plugins are fetched from the GitHub releases at build time.
+- Keep development-specific content (compilation, CI, code) out of the website, and user-facing content out of the README.
+- Only `main` is deployed (or a branch run manually with the `deploy` input); other runs upload the built website as the `Website` artifact, built at the root (`python3 -m http.server -d <artifact directory>`).
+
 ## Guardrails
 - Only add dependencies whose license is compatible with GPL-3.
 - Keep audio-thread code allocation-free and non-blocking; heavy work belongs on worker threads.
