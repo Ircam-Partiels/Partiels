@@ -1,0 +1,49 @@
+---
+title: Vamp Plugins
+description: The Vamp plugins developed for Partiels, based on audio engines developed at IRCAM and elsewhere.
+---
+
+import { Card, LinkButton } from '@astrojs/starlight/components';
+import PluginList from '../../components/PluginList.astro';
+
+Partiels uses the [Vamp plugin technology](https://www.vamp-plugins.org/), an audio processing plugin system developed at the Centre for Digital Music, Queen Mary, University of London, to extract descriptive information from audio data.
+
+Alongside Partiels, a wide range of analyses based on audio engines developed at IRCAM and elsewhere are ported to Vamp plugins.
+
+## Full bundle
+
+<Card title="Install all the plugins at once" icon="rocket">
+	The full bundle contains all the Partiels Vamp plugins in a single installer. This is the easiest way to get all the analyses available in Partiels.
+
+	<div class="sl-flex not-content bundle-buttons">
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-MacOS.pkg" icon="apple" iconPlacement="start">macOS (.pkg)</LinkButton>
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Windows.exe" icon="seti:windows" iconPlacement="start">Windows (.exe)</LinkButton>
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Linux.zip" icon="linux" iconPlacement="start">Linux (.zip)</LinkButton>
+	</div>
+
+	See the [download page](../download/#vamp-plugins) to install Partiels and its plugins. The [manuals of the plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Manuals.zip) are also available.
+</Card>
+
+## Individual plugins
+
+You can also install only the plugins you need:
+
+<PluginList />
+
+## Installation
+
+The installers copy the plugins to the default Vamp folder of your system, where Partiels finds them at startup:
+
+- **macOS**: `/Library/Audio/Plug-Ins/Vamp`. Plugins that require a more recent version of macOS or an Apple Silicon processor are only offered when they are compatible with your Mac.
+- **Windows**: `C:\Program Files\Vamp Plugins`. The plugins can be uninstalled individually from the Windows settings.
+- **Linux**: `$HOME/vamp`. Run the `Install.sh` script of the archive (with the `--all` option to install all the plugins), and the `Uninstall.sh` script to remove them.
+
+You can change the folders in which Partiels looks for plugins in the [plugins settings](../manual/#13-plugins-settings).
+
+:::caution
+Some Vamp plugins may not support all the configurations and may have other restrictions.
+:::
+
+## Other plugins
+
+Many other analysis plugins are listed on the [Vamp plugins website](https://www.vamp-plugins.org/). The plugins available on internet are also listed in the new track panel of Partiels, with a link to download them.

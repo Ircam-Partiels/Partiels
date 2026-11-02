@@ -1,0 +1,84 @@
+---
+import { Card, CardGrid, Icon } from '@astrojs/starlight/components';
+import type { StarlightIcon } from '@astrojs/starlight/types';
+import { getPlugins, pluginsRepositoryUrl } from '../lib/github';
+
+const plugins = await getPlugins();
+
+interface Download {
+	icon: StarlightIcon;
+	label: string;
+	url?: string;
+	info: string;
+}
+
+function macosInfo(minVersion?: string, architectures?: string[]): string {
+	const info = [];
+	if (minVersion) {
+		info.push(`${minVersion}+`);
+	}
+	if (architectures && architectures.length > 0) {
+		info.push(architectures.includes('x86_64') ? 'Intel & Apple Silicon' : 'Apple Silicon only');
+	}
+	return info.join(', ');
+}
+---
+
+{
+	plugins ? (
+		<CardGrid>
+			{plugins.map((plugin) => {
+				const platforms: Download[] = [
+					{ icon: 'apple', label: 'macOS', url: plugin.downloadUrlMacos, info: macosInfo(plugin.minVersionMacos, plugin.architecturesMacos) },
+					{ icon: 'seti:windows', label: 'Windows', url: plugin.downloadUrlWindows, info: '' },
+					{ icon: 'linux', label: 'Linux', url: plugin.downloadUrlLinux, info: '' },
+				];
+				const downloads = platforms.filter((download) => download.url);
+				return (
+					<Card title={plugin.name}>
+						<p>{plugin.libraryDescription}</p>
+						<p>
+							<strong>Analyses:</strong> {plugin.pluginDescription}
+						</p>
+						<ul class="downloads" aria-label={`Download ${plugin.name}`}>
+							{downloads.map(({ icon, label, url, info }) => (
+								<li>
+									<Icon name={icon} size="1.25rem" />
+									<a href={url}>{label}</a>
+									{info && <span class="info">{info}</span>}
+								</li>
+							))}
+						</ul>
+					</Card>
+				);
+			})}
+		</CardGrid>
+	) : (
+		<p>
+			The list of plugins is available on the <a href={`${pluginsRepositoryUrl}/releases/latest`}>latest release page</a>{' '}
+			of the Partiels Vamp Plugins.
+		</p>
+	)
+}
+
+<style>
+	.downloads {
+		list-style: none;
+		padding: 0;
+	}
+
+	/* The icon is in the first column, the link and the information in the second one */
+	.downloads li {
+		display: grid;
+		grid-template-columns: 1.25rem 1fr;
+		align-items: center;
+		column-gap: 0.5rem;
+		margin: 0.25rem 0;
+	}
+
+	.info {
+		grid-column: 2;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+	}
+</style>

@@ -1,0 +1,70 @@
+---
+title: Partiels
+description: Partiels is a free and open-source software suite for analysing and exploring the content and characteristics of sounds, developed at IRCAM.
+tableOfContents: false
+hero:
+  tagline: A free and open-source software suite for analysing and exploring the content and characteristics of sounds, for signal processing researchers, musicologists, composers, sound designers...
+  image:
+    file: ../../assets/generated/Partiels-v2.0.0-Sample-v2.gif
+    alt: Partiels displaying the analyses of a sound
+  actions:
+    - text: Download
+      link: download/
+      icon: download
+    - text: Read the manual
+      link: manual/
+      icon: open-book
+      variant: secondary
+    - text: Source code
+      link: https://github.com/Ircam-Partiels/Partiels
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Endorsements from '../../components/Endorsements.astro';
+import IrcamLogo from '../../components/IrcamLogo.astro';
+import { withBase } from '../../lib/paths';
+
+## Analyse, visualise, edit and export
+
+Partiels allows **analysis** of one or several audio files using Vamp plugins, **loading** data files, **visualizing**, **editing**, **organizing**, and **exporting** the results as images or text files that can be used in other applications such as Max, Pure Data, Open Music, etc.
+
+<CardGrid>
+	<Card title="Analyse" icon="seti:audio">
+		Analyse one or several multichannel audio files in many formats with Vamp plugins: FFT, LPC,
+		transients, fundamental frequency, formants, tempo, speech-to-text and many more.
+	</Card>
+	<Card title="Visualise and edit" icon="pencil">
+		Display the results as spectrograms, lines and markers, organise them in groups, and edit them
+		graphically or in tables (copy, cut, paste, duplicate...).
+	</Card>
+	<Card title="Export and load" icon="document">
+		Export the results to PNG, JPEG, CSV, LAB, JSON, CUE, REAPER, MAX and PUREDATA formats, and load
+		results from the same text formats.
+	</Card>
+	<Card title="Automate" icon="setting">
+		Apply the same analyses to many files with batch processing, use the command line interface, control
+		Partiels via OSC, and script documents with PartielsPy.
+	</Card>
+</CardGrid>
+
+## Analysis plugins
+
+Alongside Partiels, a wide range of analyses based on audio engines developed at IRCAM and outside are ported to Vamp plugins: SuperVP, Pm2, IrcamBeat, IrcamDescriptor, Whisper, Crepe, and more. You can also use the large number of analysis plugins available on the [Vamp plugins website](https://www.vamp-plugins.org/).
+
+<LinkCard title="Partiels Vamp Plugins" description="Discover and download the plugins developed for Partiels." href={withBase('plugins/')} />
+
+## What users say
+
+<Endorsements />
+
+## Free and open source
+
+Partiels is **free**: you can download it and use it at no cost, for research, teaching, artistic creation or any other purpose. It is also **open source**: its source code is distributed under the [GPL-3 license](https://github.com/Ircam-Partiels/Partiels?tab=GPL-3.0-1-ov-file) on [GitHub](https://github.com/Ircam-Partiels/Partiels), where you can follow its development, [report bugs and suggest features](support/).
+
+Partiels is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr). If you use Partiels in your research, please [cite one of the publications](resources/publications/).
+
+<div class="not-content centered ircam-footer">
+	<IrcamLogo width="28rem" />
+</div>

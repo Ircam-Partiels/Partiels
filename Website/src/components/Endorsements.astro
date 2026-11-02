@@ -1,0 +1,208 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from '@astrojs/starlight/components';
+import salieri from '../assets/endorsements/Salieri.png';
+import viardot from '../assets/endorsements/Viardot.png';
+import hornbostel from '../assets/endorsements/Hornbostel.png';
+
+const endorsements = [
+	{
+		name: 'Antonio Salieri',
+		portrait: salieri,
+		quote: 'The analysis tools offered by Partiels finally reveal the superiority of my music over that of Mozart!',
+	},
+	{
+		name: 'Pauline Viardot',
+		portrait: viardot,
+		quote: 'Partiels is the only software powerful enough to transcribe the full range and power of my voice!',
+	},
+	{
+		name: 'Erich von Hornbostel',
+		portrait: hornbostel,
+		quote: 'The Partiels app is the ultimate tool for any musicologist who works in the field far from the comfort!',
+	},
+];
+---
+
+<section class="endorsements not-content" aria-roledescription="carousel" aria-label="What users say">
+	<div class="track" tabindex="0">
+		{
+			endorsements.map(({ name, portrait, quote }, index) => (
+				<figure class="slide" aria-roledescription="slide" aria-label={`${index + 1} of ${endorsements.length}`}>
+					<Image src={portrait} alt={`Portrait of ${name}`} loading="lazy" />
+					<blockquote>
+						<p>{quote}</p>
+					</blockquote>
+					<figcaption>{name}</figcaption>
+				</figure>
+			))
+		}
+	</div>
+	<div class="controls">
+		<button type="button" class="previous" aria-label="Previous">
+			<Icon name="left-arrow" />
+		</button>
+		<div class="dots">
+			{
+				endorsements.map(({ name }, index) => (
+					<button type="button" class="dot" aria-label={`Show ${name}`} aria-current={index === 0 ? 'true' : undefined} />
+				))
+			}
+		</div>
+		<button type="button" class="next" aria-label="Next">
+			<Icon name="right-arrow" />
+		</button>
+	</div>
+</section>
+
+<script>
+	const delay = 6000;
+	for (const carousel of document.querySelectorAll<HTMLElement>('.endorsements')) {
+		const track = carousel.querySelector<HTMLElement>('.track')!;
+		const slides = Array.from(track.children) as HTMLElement[];
+		const dots = Array.from(carousel.querySelectorAll<HTMLButtonElement>('.dot'));
+		let current = 0;
+		let timer: number | undefined;
+
+		const show = (index: number) => {
+			current = (index + slides.length) % slides.length;
+			track.scrollTo({ left: slides[current].offsetLeft - track.offsetLeft, behavior: 'smooth' });
+		};
+		// The current slide follows the scroll position (buttons, swipe or keyboard)
+		track.addEventListener('scroll', () => {
+			current = Math.round(track.scrollLeft / track.clientWidth);
+			dots.forEach((dot, index) => dot.toggleAttribute('aria-current', index === current));
+		});
+
+		const stop = () => window.clearInterval(timer);
+		const start = () => {
+			stop();
+			if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				timer = window.setInterval(() => show(current + 1), delay);
+			}
+		};
+
+		carousel.querySelector('.previous')!.addEventListener('click', () => show(current - 1));
+		carousel.querySelector('.next')!.addEventListener('click', () => show(current + 1));
+		dots.forEach((dot, index) => dot.addEventListener('click', () => show(index)));
+		track.addEventListener('keydown', (event) => {
+			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+				event.preventDefault();
+				show(current + (event.key === 'ArrowLeft' ? -1 : 1));
+			}
+		});
+		carousel.addEventListener('mouseenter', stop);
+		carousel.addEventListener('mouseleave', start);
+		carousel.addEventListener('focusin', stop);
+		carousel.addEventListener('focusout', start);
+		start();
+	}
+</script>
+
+<style>
+	.endorsements {
+		max-width: 40rem;
+		margin-inline: auto;
+	}
+
+	.track {
+		display: flex;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		border-radius: 0.75rem;
+	}
+
+	.track::-webkit-scrollbar {
+		display: none;
+	}
+
+	.track:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+	}
+
+	.slide {
+		flex: 0 0 100%;
+		scroll-snap-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		margin: 0;
+		padding: 1.5rem;
+		text-align: center;
+	}
+
+	.slide img {
+		width: 9rem;
+		height: auto;
+	}
+
+	blockquote {
+		margin: 0;
+		font-size: var(--sl-text-xl);
+		font-style: italic;
+		color: var(--sl-color-white);
+		max-width: 32rem;
+	}
+
+	blockquote p::before {
+		content: '“';
+	}
+
+	blockquote p::after {
+		content: '”';
+	}
+
+	figcaption {
+		font-weight: 600;
+		color: var(--sl-color-gray-2);
+	}
+
+	.controls {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.controls button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 0;
+		cursor: pointer;
+	}
+
+	.previous,
+	.next {
+		background: none;
+		color: var(--sl-color-gray-2);
+		padding: 0.5rem;
+		font-size: 1.25rem;
+		border-radius: 50%;
+	}
+
+	.previous:hover,
+	.next:hover {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-gray-6);
+	}
+
+	.dots {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.dot {
+		width: 0.625rem;
+		height: 0.625rem;
+		padding: 0;
+		border-radius: 50%;
+		background-color: var(--sl-color-gray-5);
+	}
+
+	.dot[aria-current] {
+		background-color: var(--sl-color-accent);
+	}
+</style>

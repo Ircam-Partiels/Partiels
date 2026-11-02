@@ -1,0 +1,25 @@
+---
+import { getLatestRelease, repositoryUrl } from '../lib/github';
+
+interface Props {
+	class?: string;
+}
+
+const release = await getLatestRelease();
+const date = release
+	? new Date(release.published_at).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
+	: null;
+---
+
+<p class:list={['latest-release', Astro.props.class]}>
+	{
+		release ? (
+			<>
+				Latest version: <strong>{release.tag_name}</strong>, released on {date} (
+				<a href={release.html_url}>release notes</a>)
+			</>
+		) : (
+			<a href={`${repositoryUrl}/releases/latest`}>See the latest release and its notes</a>
+		)
+	}
+</p>

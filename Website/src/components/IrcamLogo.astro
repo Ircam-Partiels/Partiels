@@ -1,0 +1,27 @@
+---
+import { withBase } from '../lib/paths';
+
+interface Props {
+	//! The width of the logo as a CSS length (limited to the available width)
+	width: string;
+}
+---
+
+<a class="ircam-logo" href="https://www.ircam.fr" style={`--ircam-logo-width: ${Astro.props.width}`}>
+	<img class="dark:sl-hidden" src={withBase('media/CP-LOGO-IRCAM-noir.svg')} alt="IRCAM Centre Pompidou" width="779" height="171" />
+	<img class="light:sl-hidden" src={withBase('media/CP-LOGO-IRCAM-blanc.svg')} alt="IRCAM Centre Pompidou" width="779" height="171" />
+</a>
+
+<style>
+	.ircam-logo {
+		display: flex;
+		max-width: 100%;
+	}
+
+	/* The display of the images is controlled by the theme (light:sl-hidden and dark:sl-hidden) */
+	img {
+		width: var(--ircam-logo-width);
+		max-width: 100%;
+		height: auto;
+	}
+</style>
