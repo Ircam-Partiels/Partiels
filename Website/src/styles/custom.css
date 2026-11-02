@@ -1,0 +1,71 @@
+/* Accent colors derived from the "inferno" colormap of the Partiels icon */
+:root {
+	--sl-color-accent-low: #3a1033;
+	--sl-color-accent: #c73e6e;
+	--sl-color-accent-high: #f7c6d6;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f6d5e1;
+	--sl-color-accent: #a02a5c;
+	--sl-color-accent-high: #4b0f2d;
+}
+
+/* A narrower sidebar leaves more space for the content */
+:root {
+	--sl-sidebar-width: 13.5rem;
+}
+
+/* The home page (the only one with a hero) uses a wider content column next to the sidebar */
+:root[data-has-hero] {
+	--sl-content-width: 72rem;
+}
+
+/* Images with dark text on a transparent background remain readable with the dark theme */
+.sl-markdown-content img[src$='Partiels-Endorsements.png'] {
+	background-color: #ffffff;
+	border-radius: 0.75rem;
+	padding: 0.5rem;
+}
+
+.sl-markdown-content .video-subtitle {
+	margin-top: 0.5rem;
+	font-size: var(--sl-text-xl);
+	font-weight: 600;
+	color: var(--sl-color-gray-2);
+}
+
+.video iframe {
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	height: auto;
+	border: 0;
+	border-radius: 0.5rem;
+}
+
+/* The spacing of the buttons is defined by the group instead of the margins of the Markdown content */
+.bundle-buttons {
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-block: 1rem;
+}
+
+.bundle-buttons .sl-link-button {
+	margin: 0;
+}
+
+.credits-logo {
+	margin-block: 1.5rem;
+}
+
+.ircam-footer {
+	margin-block: 4rem 1rem;
+}
+
+.centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}

@@ -1,0 +1,75 @@
+---
+title: Download
+description: Download Partiels for macOS, Windows and Linux, and the Vamp plugins developed for Partiels.
+---
+
+import { LinkButton, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+import LatestRelease from '../../components/LatestRelease.astro';
+
+Partiels is free software, available for macOS, Windows and Linux.
+
+<LatestRelease />
+
+## Partiels
+
+<Tabs syncKey="os">
+	<TabItem label="macOS" icon="apple">
+		Partiels is compatible with macOS 10.15 and higher. Choose the version corresponding to the processor of your Mac (Apple menu → About This Mac).
+
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-MacOS-ARM.dmg" icon="download">Apple Silicon (.dmg)</LinkButton>
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-MacOS-Intel.dmg" icon="download" variant="secondary">Intel (.dmg)</LinkButton>
+
+		Open the disk image and drag the Partiels application into the Applications folder. Installer packages are also available:
+		[Apple Silicon (.pkg)](https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-MacOS-ARM.pkg) and
+		[Intel (.pkg)](https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-MacOS-Intel.pkg).
+	</TabItem>
+	<TabItem label="Windows" icon="seti:windows">
+		Partiels is compatible with Windows 10 & 11 (64-bit).
+
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-Windows.exe" icon="download">Windows installer (.exe)</LinkButton>
+
+		Run the installer and follow the instructions.
+	</TabItem>
+	<TabItem label="Linux" icon="linux">
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-Linux.tar.gz" icon="download">Linux archive (.tar.gz)</LinkButton>
+
+		Extract the archive and run the installation script. Without option, Partiels is installed in `/opt/Partiels` with the desktop integration and the `Partiels` command (root or `sudo` access required). The `--home` option installs Partiels in `$HOME/opt/Partiels` instead.
+
+		```sh
+		tar -xzf Partiels-Linux.tar.gz
+		./Partiels/Partiels-install.sh          # or ./Partiels/Partiels-install.sh --home
+		./Partiels/Partiels-install.sh --uninstall
+		```
+	</TabItem>
+</Tabs>
+
+Each release also includes the [manual](https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-Manual.pdf) as a PDF file and [example documents and patches for Max and Pure Data](https://github.com/Ircam-Partiels/Partiels/releases/latest/download/Partiels-Patchs.zip).
+
+:::note
+At startup, Partiels checks whether a new version has been released and offers to download it. You can disable this check via the main menu `Help → Automatic Check for New Version`.
+:::
+
+## Vamp plugins
+
+Partiels uses Vamp plugins to analyse sounds. A collection of plugins based on audio engines developed at IRCAM and elsewhere is distributed for Partiels. You can install all of them with a single installer, or choose them individually on the [Vamp plugins page](../plugins/).
+
+<Tabs syncKey="os">
+	<TabItem label="macOS" icon="apple">
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-MacOS.pkg" icon="download">All plugins (.pkg)</LinkButton>
+	</TabItem>
+	<TabItem label="Windows" icon="seti:windows">
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Windows.exe" icon="download">All plugins (.exe)</LinkButton>
+	</TabItem>
+	<TabItem label="Linux" icon="linux">
+		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Linux.zip" icon="download">All plugins (.zip)</LinkButton>
+	</TabItem>
+</Tabs>
+
+The [manuals of the plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Manuals.zip) are also available.
+
+## Previous and development versions
+
+<LinkCard title="All releases" description="Previous versions of Partiels with their release notes." href="https://github.com/Ircam-Partiels/Partiels/releases" />
+<LinkCard title="Neuralyzer (beta)" description="Test the AI chat assistant integrated in Partiels and share your feedback." href="https://github.com/orgs/Ircam-Partiels/discussions/348" />
+
+To build Partiels from the source code, please refer to the [repository](https://github.com/Ircam-Partiels/Partiels).

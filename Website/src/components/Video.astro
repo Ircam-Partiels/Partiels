@@ -1,0 +1,20 @@
+---
+interface Props {
+	//! The URL of the embedded player
+	src: string;
+	//! The title of the video (used by assistive technologies)
+	title: string;
+}
+
+const { src, title } = Astro.props;
+---
+
+<div class="video">
+	<iframe
+		{src}
+		{title}
+		loading="lazy"
+		allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
+		referrerpolicy="strict-origin-when-cross-origin"
+		allowfullscreen></iframe>
+</div>
