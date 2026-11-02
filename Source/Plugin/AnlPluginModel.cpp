@@ -464,7 +464,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.version = fromXml(*child, "version", defaultValue.version);
     value.category = fromXml(*child, "category", defaultValue.category);
     value.details = fromXml(*child, "details", defaultValue.details);
-    if(child->getChildByName("copyright") == nullptr)
+    if(!child->hasAttribute("copyright"))
     {
         value.copyright = defaultValue.copyright;
     }
@@ -479,10 +479,15 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     if(child->getChildByName("inputs") == nullptr)
     {
         value.inputs = defaultValue.inputs;
+        // In the legacy format, an input with an empty identifier means that the plugin has no input
         if(child->getChildByName("input") != nullptr)
         {
-            value.inputs.resize(std::max(value.inputs.size(), 1_z));
-            value.inputs.front() = fromXml(*child, "input", value.inputs.front());
+            auto const input = fromXml(*child, "input", Plugin::Input{});
+            if(!input.identifier.empty())
+            {
+                value.inputs.resize(std::max(value.inputs.size(), 1_z));
+                value.inputs.front() = input;
+            }
         }
     }
     else
