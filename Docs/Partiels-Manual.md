@@ -94,7 +94,7 @@ Alongside [Partiels](https://github.com/Ircam-Partiels/partiels/releases/latest)
 
 ### 1.3. System Requirements
 
-Partiels is compatible on MacOS 10.13 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
+Partiels is compatible on MacOS 10.15 and higher (Universal 2 - Intel/Silicon), Windows 10 & 11, and Linux.
 
 <p align="center"><img src="../BinaryData/Resource/Partiels-Compatibility.png"></p>
 
