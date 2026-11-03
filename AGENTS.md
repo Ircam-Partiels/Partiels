@@ -60,7 +60,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Only `main` is deployed (or a branch run manually with the `deploy` input); other runs upload the built website as the `Website` artifact, built at the root (`python3 -m http.server -d <artifact directory>`).
 
 ## Guardrails
-- Only add dependencies whose license is compatible with GPL-3.
+- Only add dependencies whose license is compatible with AGPL-3.
 - Keep audio-thread code allocation-free and non-blocking; heavy work belongs on worker threads.
 - Do not move the test resources in [BinaryData/Tests](BinaryData/Tests): tests reference them by path.
 - Do not commit, push or rewrite history unless explicitly asked. If asked to write a commit message, follow the existing convention `Module::Class: description` (e.g. `PluginList::Scanner: fix forceRescan in getPlugins()`).

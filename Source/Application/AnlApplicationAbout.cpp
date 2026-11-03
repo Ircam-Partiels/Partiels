@@ -12,7 +12,7 @@ Application::AboutContent::AboutContent()
         juce::URL("https://www.ircam.fr/").launchInDefaultBrowser();
     };
     addAndMakeVisible(mImage);
-    setSize(400, 378);
+    setSize(400, 406);
 }
 
 void Application::AboutContent::paint(juce::Graphics& g)

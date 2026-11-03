@@ -4,7 +4,7 @@
     <a href="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml"><img src="https://github.com/Ircam-Partiels/partiels/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
     <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/release/Ircam-Partiels/partiels.svg" alt="Release"></a>
     <a href="https://github.com/Ircam-Partiels/partiels/releases/latest"><img src="https://img.shields.io/github/downloads/Ircam-Partiels/partiels/total.svg?colorB=007ec6" alt="Downloads"></a>
-    <a href="https://github.com/Ircam-Partiels/Partiels?tab=GPL-3.0-1-ov-file"><img src="https://img.shields.io/badge/license-GPL--v3-blue.svg" alt="License"></a>
+    <a href="https://github.com/Ircam-Partiels/Partiels?tab=AGPL-3.0-1-ov-file"><img src="https://img.shields.io/badge/license-AGPL--v3-blue.svg" alt="License"></a>
     <a href="https://ircam-partiels.github.io/Partiels/"><img src="https://img.shields.io/badge/website-Ircam--Partiels-blue.svg" alt="Website"></a>
 </p>
 
@@ -75,10 +75,14 @@ You can manually trigger a debug build from the GitHub Actions UI.
 
 > 💡 The CI workflow also automatically detects `[debug]` in commit messages to build in Debug mode for regular commits.
 
+## License
+
+Partiels is distributed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0). Unless otherwise stated, this license applies to all source files in this repository; the Git submodules and third-party dependencies remain under their own licenses.
+
 ## Credits
 
 **[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.  
-Copyright 2026 IRCAM. All rights reserved.
+Copyright 2026 IRCAM.
 
 Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.  
 

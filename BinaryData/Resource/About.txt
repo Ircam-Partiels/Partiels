@@ -1,9 +1,10 @@
 Partiels is software intended for the analysis of digital audio files. Partiels aims to offer a set of dynamic and ergonomic tools that meet the expectations of research in signal processing, musicology as well as compositional practices. Partiels allows to carry out, load, visualize, edit and export audio analyzes.
 
 Partiels: Design, architecture and development by Pierre Guillot at IRCAM IMR department. 
-Copyright 2026 IRCAM. All rights reserved. https://www.ircam.fr/
-
 Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.
+
+Copyright 2026 IRCAM. https://www.ircam.fr/
+Partiels is free software distributed under the GNU Affero General Public License v3 (AGPL-3.0), without any warranty. https://www.gnu.org/licenses/agpl-3.0.html
 
 Dependencies:
 Vamp SDK by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.

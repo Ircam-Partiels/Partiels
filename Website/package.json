@@ -4,7 +4,7 @@
 	"version": "1.0.0",
 	"private": true,
 	"description": "Website of the Partiels project",
-	"license": "GPL-3.0-only",
+	"license": "AGPL-3.0-only",
 	"scripts": {
 		"sync": "node scripts/sync.mjs",
 		"dev": "npm run sync && astro dev",
