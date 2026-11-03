@@ -75,6 +75,7 @@ Partiels allows **analysis** of one or several audio files using Vamp plugins 
 - Multiformat & multichannel support  
 - Multifile support (useful to compare audio files)  
 - Analyzing audio with *Vamp* plugins  
+- Downloading, installing and updating plugins from the application  
 - Visualizing results as *spectrogram*, *lines*, and *markers*  
 - Drawing and editing results (copy/cut/paste/delete/duplicate/etc.)  
 - Organizing and ordering analyses in groups  
@@ -107,18 +108,20 @@ At startup, Partiels checks for the release of a new version on the project page
 If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`.
 
 <p align="left">
-<strong><a href="https://github.com/Ircam-Partiels/partiels/releases">👉 All versions of Partiels and the plugin collection</a></strong>
+<strong><a href="https://github.com/Ircam-Partiels/partiels/releases">👉 All versions of Partiels and the plugin collection</a></strong><br>
+<strong><a href="https://ircam-partiels.github.io/Partiels">👉 Partiels website</a></strong>
 </p>
 
-### 1.6. Feedback
+### 1.5. Feedback
 
 For bug reports or feature requests, you can create an [issue](https://github.com/Ircam-Partiels/Partiels/issues) on this Github repository. For more general feedback and questions, you can create a [discussion](https://github.com/orgs/Ircam-Partiels/discussions) on this Github repository or on the [IRCAM forum](https://discussion.forum.ircam.fr/).
 
 ### 1.6. Credits
 
 **[Partiels](https://github.com/Ircam-Partiels/partiels)**: Design, architecture and development by Pierre Guillot at IRCAM IMR department.
-Contributions to development by Thomas Barbé and Nolan Dupont.  
-Copyright 2025 IRCAM.
+Contributions to development by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.  
+Copyright 2026 IRCAM.  
+Partiels is free software distributed under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.html) (AGPL-3.0), without any warranty.
 
 #### Dependencies:
 - **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
@@ -207,7 +210,7 @@ Tracks can be created in two ways, from the analysis of a Vamp plugin or from a 
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface, followed by the plugins available on internet as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/). 
+When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface, followed by the plugins available on internet that are not installed, as distributed with the [Partiels Vamp Plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest) and as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/). 
 
 <p><img src="Images/section-add-new-plugin-tracks.1-v2.0.3.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
@@ -215,9 +218,14 @@ You can also search for specific plugins by clicking on the text filter entry (*
 
 > 💡 **Tip**: Click on the Ircam icon (**P2**) to filter only Ircam plugins.
 
-Information on the selected plugin is displayed in the section at the bottom of the panel (**P3**). The installed plugins display their name, feature, maker, version, category, and description. The plugins available on internet display their name, maker, description and a button to access the download website.
+Information on the selected plugin is displayed in the section at the bottom of the panel (**P3**). The installed plugins display their name, feature, maker, version, category, and description. The plugins available on internet display their name, maker, version, description and a button to download the plugin or to access its website:
 
-You can select one or more installed plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+- `Download`: When an installation package is available for your system, the button downloads the package and launches its installer (the *.pkg* installer on Mac, the *.exe* installer on Windows). On Linux, the downloaded package is revealed in the file browser so that you can install it. A progress bar indicates the progress of the download, and clicking the button again during the download cancels it. Once the installer is launched, the [Plugins settings](#13-plugins-settings) window is displayed so that you can rescan the plugins after the installation.
+- `Website`: When no installation package is available, the button opens the website of the plugin in your default browser.
+
+When a newer version of an installed plugin is available, a bell 🔔 is displayed next to its name in the list. Select the plugin and click the `Download` button to update the installed version.
+
+You can select one or more installed plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group. If the vertical axis of a new track corresponds to frequencies and all the tracks of the group with frequencies use the logarithmic scale, the logarithmic scale is automatically enabled for the new track (see the [Ranges](#923-ranges) section).
 
 > For further information about the plugin management, please refer to the [Plug-ins settings](#13-plugins-settings) section.
 
@@ -346,6 +354,8 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
+The `Export` button is disabled when no item is selected or when the options are not valid. While the analyses of the selected tracks (or of the tracks of the selected groups) are running, the button displays *Analyses in progress...* and the export becomes available once the analyses are complete. During the export, the button can be used to abort the operation.
+
 > 💡 **Tip**: You can export the selected tracks and groups to the quick export directory according to the last configuration used via the main menu `Frame → Export Frame(s) to [Directory]`, by right-clicking on the group or track plots to display the popup menu, or by using the `⎇ Option + E` (Mac) or `Alt + E` (Linux/Windows). You can also choose a custom destination using `Frame → Export Frame(s) To...` or by using the `⌘ Command + ⎇ Option + E` (Mac) or `Ctrl + Alt + E` (Linux/Windows). 
 >
 > If you have loaded tracks from result files and want to overwrite those original files with the current frame selection, you can use `Frame → Overwrite Original File(s)`. This command is only available when the selected tracks have result files. A confirmation dialog will be shown before overwriting to prevent accidental data loss.
@@ -389,7 +399,7 @@ The `Format` drop-down menu (**E3**) allows you to select the output format. Thi
 
 ### 7.2. Image options
 
-Exporting to an image format (*JPEG* or *PNG*) offers two rendering options:
+Exporting to an image format (*JPEG* or *PNG*) offers two rendering options. Note that the *JPEG* format doesn't support transparency, so the images are drawn over the background color of the application's theme, while the *PNG* format preserves the transparent background.
 
 The `Preserve Group Overlay` button toggles the preservation of the group overlay display if you are exporting the entire document or a group (so this option is not available when exporting a single track). Each group will be exported as an image including all its tracks. If the option is disabled, each track will be exported separately.
 
@@ -529,6 +539,8 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
+For matrix tracks whose bins correspond to frequencies (e.g. a spectrogram), the vertical zoom is displayed and controlled in hertz: the graduations of the vertical ruler display the frequency followed by the corresponding bin index, and the floating window displayed by right-clicking on the vertical ruler offers the `Low Frequency` and `High Frequency` fields (in hertz) in addition to the `Low Bin` and `High Bin` fields. The frequency range always extends from 0 Hz to the Nyquist frequency, and it is displayed on a logarithmic scale if the corresponding option is enabled in the [track properties](#923-ranges).
+
 #### 8.2.3 Plot
 
 When navigation mode is enabled, the group and track plots allow navigating and zooming horizontally and vertically.
@@ -620,6 +632,8 @@ Zoom information is sent only for point-type tracks (value zoom) and matrix-type
 5. Global range - end (float)
 6. Visible range - start (float)
 7. Visible range - end (float)
+
+For matrix tracks whose bins correspond to frequencies, the bin zoom ranges are expressed in hertz (from 0 Hz to the Nyquist frequency) instead of bin indices. If the logarithmic scale is enabled, the values correspond to the logarithmic scale mapped over the same range.
 
 Additional value thresholds are sent only for tracks with additional values:
 
@@ -752,6 +766,9 @@ Label properties are only available for marker analyses. They allow you to adapt
 
 - Label Justification: Vertical anchoring of the label (top, center, bottom).
 - Label Position: Vertical positioning in pixels of the labels relative to the justification.
+- Marker Style: The style used to render the markers and their durations:
+  - *Bar* (default): Each marker is rendered as a vertical line over the entire height of the track, and its duration as a colored area over the entire height of the track.
+  - *Underline*: Each marker is rendered as a short vertical tick next to its label, and its duration as a horizontal line under the label (the thickness of the line corresponds to the line width). This style is useful to display the durations of the markers as horizontal bars without hiding the other tracks of the group.
 
 #### 9.2.3. Ranges
 
@@ -762,7 +779,7 @@ The value range of point and column results can be adapted to optimize the graph
 </p>
 
 - Value Range Mode: Selects the value range mode: default (if available), results, manual (automatically selected when the range does not match one of the other two modes).
-- Value Log. Scale: If the value range is a frequency (the unit corresponds to hertz), this parameter allows you to use a logarithmic display scale centered on note A 440 Hertz.
+- Value Log. Scale: If the value range is a frequency (the unit corresponds to hertz) or if the bins of the columns correspond to frequencies, this parameter allows you to use a logarithmic display scale centered on note A 440 Hertz. When a new track is added to a group in which all the tracks with frequencies use the logarithmic scale, the option is automatically enabled for the new track.
 - Minimum Range Value: The minimum possible value for the results (the value differs from the visible value which corresponds to the zoom on the vertical axis for point rendering or to the color mapping for column rendering).
 - Maximum Range Value: The maximum possible value for the results (the value differs from the visible value which corresponds to the zoom on the vertical axis for point rendering or to the color mapping for column rendering).
 - Value Range Link: Whether the visible value range of points corresponding to the vertical axis is linked to the vertical axis of the group containing the track.
@@ -950,17 +967,19 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 - Redo changes: Use the redo key commands `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
-- Apply changes: Click on the `Apply` button (**P2**) to save the changes. If you modify the folders, you will be asked to restart the application to scan for plugins.
+- Apply changes: Click on the `Apply` button (**P2**) to save the changes. The plugins are then rescanned using the new settings.
 
 - Reset changes: Click on the `Reset` button (**P3**) to reset the settings to the saved state.
 
 - Reset to default: Click on the `Default` button (**P4**) to reset the settings to the default state.
 
+- Rescan the plugins: Click on the `Rescan` button (next to the `Default` button) to rescan the list of installed plugins without modifying the settings (e.g. after installing or updating a plugin).
+
 - Use environment variable: Enable or disable the use of the `VAMP_PATH` environment variable to define the extra folders. On MacOS, the option is accessible by clicking on the `Option` button (**P5**). On Windows and Linux, a toggle button replaces the button.
 
 - Quarantine management: Control the quarantine management when plugins are not notarized. Either "Keep the default system mechanism", the system will probably suggest you delete the plugins in question. Or "Attempt to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or "Ignore quarantined libraries", the application will ignore the plugins.
 
-> 💡 **Tip**: You can view the list of the plugins available on internet as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/) via the plugin list panel as explained in this [section](#41-analysis-tracks) .
+> 💡 **Tip**: You can view, download and update the plugins available on internet via the plugin list panel as explained in this [section](#41-analysis-tracks).
 
 <div style="page-break-after: always;"></div>
 
@@ -982,7 +1001,7 @@ Track-level presets continue to override these defaults when defined for a speci
 
 ## 15. Translations
 
-Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now only the French version is available).
+Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now the French and Portuguese versions are available).
 By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back to English).
 
 It is also possible to dynamically add new translations by adding the translation files in the directory:
