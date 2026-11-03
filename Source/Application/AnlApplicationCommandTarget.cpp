@@ -1612,7 +1612,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::helpOpenProjectPage:
         {
-            juce::URL const url("https://github.com/Ircam-Partiels/Partiels");
+            juce::URL const url("https://ircam-partiels.github.io/Partiels/");
             if(url.isWellFormed())
             {
                 url.launchInDefaultBrowser();
