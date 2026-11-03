@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest a new feature or an improvement for Partiels or the Partiels Vamp plugins.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your suggestion! Please check that it has not already been [proposed](https://github.com/Ircam-Partiels/Partiels/issues?q=is%3Aissue). To discuss an idea before requesting it, you can use the [Ideas discussions](https://github.com/orgs/Ircam-Partiels/discussions/categories/ideas).
+  - type: textarea
+    id: need
+    attributes:
+      label: Need
+      description: The problem you are trying to solve or the use case that is not covered.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How you imagine the feature or the improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: The workarounds or other solutions you have considered.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, examples, references or any other information.

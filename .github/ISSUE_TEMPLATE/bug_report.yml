@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a problem in Partiels or in the Partiels Vamp plugins.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a problem! Please check that it persists with the [latest version](https://ircam-partiels.github.io/Partiels/download/) and that it has not already been [reported](https://github.com/Ircam-Partiels/Partiels/issues?q=is%3Aissue). For questions about the use of Partiels, please use the [Q&A discussions](https://github.com/orgs/Ircam-Partiels/discussions/categories/q-a).
+  - type: input
+    id: version
+    attributes:
+      label: Partiels version
+      description: The version is displayed in the About Partiels window (in the Partiels menu on macOS, in the Help menu on Windows and Linux).
+      placeholder: e.g. 2.6.0
+    validations:
+      required: true
+  - type: input
+    id: plugins
+    attributes:
+      label: Plugins concerned
+      description: If the problem concerns one or several plugins, their names and versions.
+      placeholder: e.g. SuperVP Spectrogram 2.3.0
+  - type: dropdown
+    id: system
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: system-version
+    attributes:
+      label: Operating system version
+      placeholder: e.g. macOS 15.6, Windows 11, Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the problem, what you expected and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the audio file...
+        2. Create a track with the plugin...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments
+      description: Screenshots, screen recording or, if the problem concerns a specific document, a [consolidated version](https://ircam-partiels.github.io/Partiels/manual/#32-save-and-consolidate) of the document (zip it to attach it).
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: The problem persists with the latest version of Partiels.
+          required: true
+        - label: I searched the existing issues and this problem has not been reported yet.
+          required: true

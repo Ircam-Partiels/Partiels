@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions
+    url: https://github.com/orgs/Ircam-Partiels/discussions/categories/q-a
+    about: Ask your questions about the use of Partiels in the Q&A discussions.
+  - name: IRCAM Forum
+    url: https://discussion.forum.ircam.fr/
+    about: Discuss with the community of IRCAM software users.
+  - name: Support and feedback
+    url: https://ircam-partiels.github.io/Partiels/support/
+    about: All the ways to get help and to give feedback.
