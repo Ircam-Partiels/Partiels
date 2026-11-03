@@ -60,7 +60,11 @@ Table of contents for the main sections of the manual:
 * [13. Plugins settings](#13-plugins-settings)
 * [14. Graphic Preset](#14-graphic-preset)
 * [15. Translations](#15-translations)
-* [16. Command-line tools](#16-command-line-tools)
+* [16. AI agent](#16-ai-agent)
+  * [16.1. Configuration](#161-configuration)
+  * [16.2. Conversation](#162-conversation)
+  * [16.3. MCP server](#163-mcp-server)
+* [17. Command-line tools](#17-command-line-tools)
 
 <div style="page-break-after: always;"></div>
 
@@ -87,6 +91,7 @@ Partiels allows **analysis** of one or several audio files using Vamp plugins 
 - Command line interface to analyze, export and convert results  
 - Consolidating documents (useful to share documents/analysis with other users across different platforms)  
 - Audio playback with loop  
+- AI agent to analyze, explore and edit documents using natural language (beta)  
 
 <p align="center"><img src="../BinaryData/Resource/Partiels-Endorsements.png", width=320></p>
 
@@ -132,6 +137,13 @@ Partiels is free software distributed under the [GNU Affero General Public Licen
 - **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
 - **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
 - **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** by ggml-org organization.
+- **[md4c](https://github.com/mity/md4c)** by Martin Mitáš.
+- **[hnswlib](https://github.com/nmslib/hnswlib)** by Apoorv Sharma, Abhishek Tayal and Yury Malkov.
+
+#### Models (downloaded on demand by the AI agent):
+- **Qwen3.5** and **Qwen3.8** by Qwen Team, Alibaba Cloud (Apache 2.0), GGUF versions by Unsloth.
+- **BGE-M3** (MIT) and **BGE Reranker v2 M3** (Apache 2.0) by BAAI, GGUF versions by GPUStack.
 
 <div style="page-break-after: always;"></div>
 
@@ -1105,7 +1117,82 @@ Follow these steps to create your own language file:
 
 <div style="page-break-after: always;"></div>
 
-## 16. Command-line tools
+## 16. AI agent
+
+> ⚠️ **Beta**: The AI agent is an experimental feature. Its answers can be inaccurate, so check the results and the modifications made to your documents (all modifications can be undone with the action history).
+
+Partiels includes an AI agent that allows you to analyze, explore and edit the current document using natural language. The agent understands your requests (e.g. *"Add a spectrogram and detect the onsets of the audio file"*, *"Which plugin can I use to estimate the tempo?"*, or *"Show the frequencies between 100 Hz and 2 kHz"*) and performs the corresponding actions using a set of tools that give it access to the document. For example, the agent can:
+
+- Get the state of the document, its groups, its tracks, the audio files layout, the time selection and the selected items.
+- Create tracks from Vamp plugins or result files, create groups, and remove tracks and groups.
+- Modify the names, the parameters, the input tracks, the graphical properties, the visibility and the extra thresholds of tracks, and the names and the track order of groups.
+- Modify the audio files layout of the document.
+- Control the time zoom, the vertical zoom of tracks and groups, and the value range of the color maps.
+- Compute summary statistics on the results of tracks, read, modify and save the results.
+- Get the description of the installed Vamp plugins and read files (text, images and audio files when the model supports them).
+- Search the documentation of Partiels (this manual and a set of tutorials) to answer your questions about the application.
+
+The agent panel is displayed on the right side of the main window. You can show or hide it with the agent button on the right border of the main window, via the main menu `View → Show/Hide Agent Panel`, or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + L` (Mac) or `Ctrl + ⇧ Shift + L` (Linux/Windows). The close button at the top left of the panel hides the panel, and the settings button at the top right of the panel opens the agent settings window.
+
+### 16.1. Configuration
+
+The agent requires a large language model to run. The agent settings window, displayed by clicking on the settings button of the agent panel, allows you to configure the model used by the agent. If the agent is not configured when you send a query, Partiels offers to open the settings window.
+
+- Backend: The backend used to run the agent:
+  - *None* (default): The agent is disabled.
+  - *Local*: The model runs on your computer with the engine embedded in Partiels (based on llama.cpp). No data is sent over the network, but the model requires a large amount of memory and a powerful computer (preferably with a GPU) to respond in a reasonable time.
+  - *Remote*: The model runs on a server compatible with the OpenAI API (such as LM Studio or llama.cpp's *llama-server*), on your computer or on another computer of your network.
+- Server URL: The URL of the remote server, with the scheme and the host (e.g. *http://localhost:1234*). This property is only available with the remote backend.
+- Model: The model used by the agent.
+  - With the local backend, the menu lists the recommended models (Qwen3.5 9B and Qwen3.8 27B) and the models installed on your computer. The recommended models that are not installed are marked with a globe 🌐: select one of them to download it (the files are large, several gigabytes, and the download progress is displayed in the settings window). Once the download is complete, Partiels offers to select the model. The menu also lists the models in the *GGUF* format found in the agent data directory and in the Hugging Face cache directories (*~/.cache/huggingface/hub*, *~/huggingface/hub*, and the directories defined by the `HF_HUB_CACHE` and `HF_HOME` environment variables).
+  - With the remote backend, the menu lists the models provided by the server.
+  - The models that support images (multimodal models) are marked with sunglasses 🕶️.
+- Show Advanced Settings: Shows the advanced settings of the agent:
+  - Enable Reasoning: Enables the reasoning mode of the model if supported. In this mode, the model thinks before answering, which can improve the quality of the answers to complex requests but takes more time.
+  - Context size, batch size, minimum probability, temperature, top P, top K, presence penalty and repetition penalty: The sampling parameters of the local model. By default, the values recommended for the model are used. These settings are only available with the local backend.
+- Agent Directory: Reveals the directory where the agent data (models, sessions, caches) is stored. This property is only available with the local backend.
+- Context Directory: Reveals the directory (the *Context* subdirectory of the agent data directory) where you can add your own documentation to the documentation searched by the agent and by the [MCP server](#163-mcp-server) (for instance, notes on your analysis practices or the description of your plugins). Only the Markdown files (*.md*) of the directory and its subdirectories are supported. The files are indexed at startup (and when the RAG models are downloaded): after adding or modifying a file, click on the reload button next to the property to index the documentation again. This requires the RAG models.
+- Download RAG models: Downloads the models used to search the documentation of Partiels (BGE-M3 and BGE Reranker v2 M3). When these models are installed, the agent uses a semantic search engine (RAG) to retrieve the most relevant parts of the documentation, which improves the answers about the use of the application. This button is only displayed when the models are not installed (e.g. if the download failed).
+
+> 💡 **Note**: At startup, if the models are not installed, Partiels asks whether to download the RAG models, as they are used by the agent and by the [MCP server](#163-mcp-server), and then whether to download one of the recommended models of the local agent (Qwen3.5 9B for computers with limited memory, or Qwen3.8 27B for powerful computers). For each question, you can download the models, decline the download, or be reminded at the next startup. The downloads run in the background and their progress is displayed in the settings window. You can also download the models at any time from the settings window.
+
+The agent data is stored in the directory:
+- Mac: `~/Library/Application Support/Ircam/Partiels/Neuralyzer`
+- Linux: `~/Ircam/Partiels/Neuralyzer`
+- Windows: `C:\Users\"username"\AppData\Roaming\Ircam\Partiels\Neuralyzer`
+
+> 💡 **Note**: With the local backend, the model has to process the instructions and the tools of the agent before answering the first query of a conversation, which can take from several seconds to a few minutes depending on the model and the computer. This processing is done when the conversation starts (the status bar displays *Starting session*) and its result is saved in the *Caches* subdirectory of the agent data directory, for each model and for each state of the reasoning mode. The next conversations (after loading the model, resetting the conversation history or reopening a document) then start almost immediately. The processing is done again if the instructions or the tools of the agent change (for instance after an update of Partiels or a change of language), if the model is updated, or the first time the reasoning mode is toggled. Each cache file can take several hundred megabytes: you can delete the *Caches* subdirectory at any time to free disk space.
+
+> ⚠️ If the agent engine crashes, Partiels asks you at the next startup whether you want to keep using the agent or disable it. If you disable it, restart the application to relaunch it.
+
+### 16.2. Conversation
+
+The agent panel displays the conversation with the agent at the top, and the query editor at the bottom.
+
+- Send a query: Type your query in natural language in the query editor, then press the `Return ⏎` key or click on the send button. While the agent is processing the query, the progress of the response and the actions of the agent are displayed above the query editor. Click on the send button again to stop the query.
+- Recall the previous queries: Use the `↑` and `↓` keys at the beginning or the end of the query editor to browse the previous queries.
+- Attach files: Drag and drop files onto the query editor or click on the attachment button and select `Attach...` to attach audio files, result files, Partiels documents or images to the query. The attached files are listed in the tooltip of the button and can be detached via the button's menu. Images and audio files can only be provided directly to the model if it supports them.
+- Tables and graphs: The tables and the graphs (Mermaid diagrams) of the answers are displayed as links in the conversation. Click on a link to display the table or the graph in a floating window: you can copy the table (as CSV) or the graph (as Mermaid code) to the system clipboard, and export the table to a CSV file or the graph to a code file or a PNG image.
+- Links: Click on a link to a file to open it (or reveal it in the file browser of the operating system), or on a link to a website to open it in your default browser.
+- Context menu: Right-click on the conversation to copy the selected text, select all the text, open the history file of the conversation, or reset the conversation history.
+
+The status bar at the bottom of the panel displays the state of the agent and the usage of the model's context. When the context is full, the agent cannot process new queries: reset the conversation history from the context menu of the conversation to continue.
+
+The conversation is saved when you save the document: when you reopen the document, the agent restores the corresponding conversation.
+
+### 16.3. MCP server
+
+Partiels can also be controlled by an external AI application using the *Model Context Protocol* (MCP). In this case, the external application uses the same tools and documentation as the integrated agent to access the document currently open in Partiels. The settings window of the agent offers toggle buttons to register Partiels as an MCP server in the configuration of the following applications:
+
+- MCP for the Claude Desktop Application: Registers Partiels in the configuration file of the Claude desktop application.
+- MCP for the GitHub Copilot: Registers Partiels in the user MCP configuration file of Visual Studio Code (GitHub Copilot).
+- MCP for the Llama.cpp Server: Creates a configuration file for llama.cpp's *llama-server*. Run *llama-server* with the option `--mcp-servers-config` followed by the path of the configuration file (indicated in the tooltip of the button).
+
+When one of these options is enabled, Partiels listens for local connections while it is running, and the external application launches the Partiels executable with the `--mcp-host` argument to communicate with it. Partiels must be running for the external application to access the document. Disabling an option removes Partiels from the corresponding configuration file.
+
+<div style="page-break-after: always;"></div>
+
+## 17. Command-line tools
 
 The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
 
