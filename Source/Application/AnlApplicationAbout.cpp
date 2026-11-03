@@ -12,13 +12,13 @@ Application::AboutContent::AboutContent()
         juce::URL("https://www.ircam.fr/").launchInDefaultBrowser();
     };
     addAndMakeVisible(mImage);
-    setSize(400, 406);
+    setSize(400, 570);
 }
 
 void Application::AboutContent::paint(juce::Graphics& g)
 {
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
-    g.drawFittedText(juce::String::fromUTF8(AnlResourceData::About_txt), getLocalBounds().reduced(4), juce::Justification::topLeft, 40);
+    g.drawFittedText(juce::String::fromUTF8(AnlResourceData::About_txt), getLocalBounds().withBottom(mImage.getY()).reduced(4), juce::Justification::topLeft, 40);
 }
 
 void Application::AboutContent::resized()
