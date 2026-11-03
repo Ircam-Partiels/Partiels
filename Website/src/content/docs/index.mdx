@@ -55,6 +55,27 @@ Alongside Partiels, a wide range of analyses based on audio engines developed at
 
 <LinkCard title="Partiels Vamp Plugins" description="Discover and download the plugins developed for Partiels." href={withBase('plugins/')} />
 
+## AI agent (beta)
+
+Partiels includes an AI agent that analyses, explores and edits the current document from requests in natural language, such as *"Add a spectrogram and detect the onsets of the audio file"*, *"Which plugin can I use to estimate the tempo?"* or *"Show the frequencies between 100 Hz and 2 kHz"*. The agent creates and configures the analyses, reads and summarises their results, controls the display, and answers your questions about Partiels using its documentation.
+
+<CardGrid>
+	<Card title="Local or remote" icon="laptop">
+		The language model runs on your computer with the engine embedded in Partiels, without sending any data
+		over the network, or on a server compatible with the OpenAI API, such as LM Studio or llama-server.
+	</Card>
+	<Card title="MCP server" icon="puzzle">
+		External AI applications, such as the Claude desktop application or GitHub Copilot, can also access the
+		document open in Partiels via the Model Context Protocol, with the same tools and documentation.
+	</Card>
+</CardGrid>
+
+:::caution
+The AI agent is an experimental feature and its answers can be inaccurate: check the results and the modifications made to your documents (all modifications can be undone with the action history).
+:::
+
+<LinkCard title="Use the AI agent" description="Configure the language model and converse with the agent." href={withBase('manual/#17-ai-agent')} />
+
 ## What users say
 
 <Endorsements />
