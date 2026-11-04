@@ -234,6 +234,8 @@ countries: pt br
 "Anchors the time zoom on the start playhead" = "Ancora o zoom de tempo no cursor de reprodução inicial"
 "Info Bubble" = "Balão de Informação"
 "Toggles display of the information bubble" = "Alterna a exibição do balão de informação"
+"Tooltip Bubble" = "Balão de Dicas"
+"Toggles display of the tooltips in a bubble next to the mouse" = "Alterna a exibição das dicas num balão junto ao cursor"
 "Show Group(s) Properties" = "Mostrar Propriedades do(s) Grupo(s)"
 "Shows the group(s) properties window" = "Mostra a janela de propriedades do(s) grupo(s)"
 "Show Track(s) Properties" = "Mostrar Propriedades da(s) Pista(s)"

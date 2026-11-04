@@ -234,6 +234,8 @@ countries: fr be
 "Anchors the time zoom on the start playhead" = "Ancre le zoom temporel sur la tête de lecture de départ"
 "Info Bubble" = "Info-bulle"
 "Toggles display of the information bubble" = "Bascule l'affichage de la bulle d'information"
+"Tooltip Bubble" = "Bulle d'aide"
+"Toggles display of the tooltips in a bubble next to the mouse" = "Bascule l'affichage des bulles d'aide à côté de la souris"
 "Show Group(s) Properties" = "Afficher les propriétés du (des) groupe(s)"
 "Shows the group(s) properties window" = "Affiche la fenêtre des propriétés du/des groupe(s)"
 "Show Track(s) Properties" = "Afficher les propriétés de la (des) piste(s)"
