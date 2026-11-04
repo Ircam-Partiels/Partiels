@@ -39,6 +39,20 @@ namespace Tooltip
         Server mServer;
     };
 
+    //! @brief A tooltip window that displays the tooltips in a bubble next to the mouse
+    //! @details The tooltips of the bubble clients are ignored because their information is already displayed by the
+    //! bubble window. Without parent component, the tooltips of all the windows of the application are displayed.
+    class Window
+    : public juce::TooltipWindow
+    {
+    public:
+        using juce::TooltipWindow::TooltipWindow;
+        ~Window() override = default;
+
+        // juce::TooltipWindow
+        juce::String getTipFor(juce::Component& component) override;
+    };
+
     class BubbleClient
     {
     protected:
