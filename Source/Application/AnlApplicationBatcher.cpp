@@ -64,6 +64,7 @@ Application::BatcherContent::BatcherContent()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::showTooltipBubble:
                 break;
             case AttrType::exportOptions:
             {

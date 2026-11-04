@@ -108,6 +108,7 @@ namespace Application
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
+        std::unique_ptr<Tooltip::Window> mTooltipWindow;
 
         std::unique_ptr<CommandLine> mCommandLine;
 

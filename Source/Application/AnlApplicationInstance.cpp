@@ -171,6 +171,19 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 mDocumentDirector->setPreserveFullDurationWhenEditing(acsr.getAttr<AttrType::preserveFullDurationWhenEditing>());
                 break;
             }
+            case AttrType::showTooltipBubble:
+            {
+                updateMainMenu();
+                if(!acsr.getAttr<AttrType::showTooltipBubble>())
+                {
+                    mTooltipWindow.reset();
+                }
+                else if(mTooltipWindow == nullptr)
+                {
+                    mTooltipWindow = std::make_unique<Tooltip::Window>();
+                }
+                break;
+            }
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
@@ -335,6 +348,7 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mTooltipWindow.reset();
     mMainMenuModel.reset();
     mWindow.reset();
 

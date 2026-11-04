@@ -38,6 +38,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::showTooltipBubble:
                 break;
         }
     };
@@ -180,6 +181,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewVerticalZoomOut
         , CommandIDs::viewTimeZoomAnchorOnPlayhead
         , CommandIDs::viewInfoBubble
+        , CommandIDs::viewTooltipBubble
         , CommandIDs::viewShowItemProperties
         
         , CommandIDs::helpOpenAudioSettings
@@ -627,6 +629,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
+            break;
+        }
+        case CommandIDs::viewTooltipBubble:
+        {
+            result.setInfo(juce::translate("Tooltip Bubble"), juce::translate("Toggles display of the tooltips in a bubble next to the mouse"), "View", 0);
+            result.setActive(true);
+            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showTooltipBubble>());
             break;
         }
         case CommandIDs::viewShowItemProperties:
@@ -1540,6 +1549,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto& accessor = Instance::get().getApplicationAccessor();
             accessor.setAttr<AttrType::showInfoBubble>(!accessor.getAttr<AttrType::showInfoBubble>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::viewTooltipBubble:
+        {
+            auto& accessor = Instance::get().getApplicationAccessor();
+            accessor.setAttr<AttrType::showTooltipBubble>(!accessor.getAttr<AttrType::showTooltipBubble>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::viewShowItemProperties:

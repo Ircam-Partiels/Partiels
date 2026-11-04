@@ -40,6 +40,7 @@ namespace Application
         , globalGraphicPreset
         , ignoreTimeSelectionDuringQuickExport
         , preserveFullDurationWhenEditing
+        , showTooltipBubble
     };
     
     enum class AcsrType : size_t
@@ -68,6 +69,7 @@ namespace Application
     , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::ignoreTimeSelectionDuringQuickExport, bool, Model::Flag::basic>
     , Model::Attr<AttrType::preserveFullDurationWhenEditing, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::showTooltipBubble, bool, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -104,6 +106,7 @@ namespace Application
             , {}
             , {false}
             , {false}
+            , {true}
         }))
         {
         }
