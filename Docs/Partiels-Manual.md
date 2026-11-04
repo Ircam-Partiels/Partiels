@@ -486,6 +486,8 @@ You can change the general theme of the application via the `View → Theme` men
 
 Modify the global scale of the application via the `View → Scale` menu to enlarge the overall view of the application.
 
+The tooltips of the interface elements are displayed at the bottom of the main window and, by default, in a bubble next to the mouse, in the main window as in the floating windows. You can enable or disable the bubble via the `View → Tooltip Bubble` menu. Over the analysis representations of the tracks and groups, the information is displayed by the info bubble instead (see [View](#81-view)).
+
 Enable or disable the magnetize option by clicking the `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. When the magnetize option is enabled, the position snaps to the nearest markers of the selected channels in the document.
 
 ### 8.1. View
