@@ -38,6 +38,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::showTooltipBubble:
                 break;
         }
     };
@@ -283,6 +284,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::globalGraphicPreset:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::showTooltipBubble:
                 break;
             case AttrType::adaptationToSampleRate:
             {

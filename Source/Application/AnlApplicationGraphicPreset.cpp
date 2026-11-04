@@ -127,6 +127,7 @@ Application::GraphicPresetContent::GraphicPresetContent()
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::ignoreTimeSelectionDuringQuickExport:
             case AttrType::preserveFullDurationWhenEditing:
+            case AttrType::showTooltipBubble:
                 break;
         }
     };
