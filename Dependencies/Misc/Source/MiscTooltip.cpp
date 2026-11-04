@@ -51,6 +51,15 @@ void Tooltip::Display::resized()
     mLabel.setBounds(getLocalBounds());
 }
 
+juce::String Tooltip::Window::getTipFor(juce::Component& component)
+{
+    if(dynamic_cast<BubbleClient*>(&component) != nullptr)
+    {
+        return {};
+    }
+    return juce::TooltipWindow::getTipFor(component);
+}
+
 void Tooltip::BubbleClient::setTooltip(juce::String const& tooltip)
 {
     mTooltip = tooltip;
