@@ -1140,6 +1140,7 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
         auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
         juce::Range<double> const range{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
         property->entry.setRange(range, step);
+        property->entry.setDoubleClickReturnValue(true, range.getStart());
         property->numberField.setRange(range, step, juce::NotificationType::dontSendNotification);
         property->setEnabled(srange.has_value() && !srange.value().isEmpty());
 
