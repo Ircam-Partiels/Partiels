@@ -1,6 +1,7 @@
 #pragma once
 
 #include <IvePluginAdapter.hpp>
+#include <optional>
 
 namespace AnlVampPlugin
 {
@@ -93,5 +94,45 @@ namespace AnlVampPlugin
 
     private:
         size_t mNumChannels{0_z};
+    };
+
+    // Base must remain the first base class: the IVE adapter reinterprets
+    // the Vamp plugin handle (a Vamp::Plugin pointer) as a NoteAggregator pointer.
+    class NoteAggregator
+    : public Base
+    , public Ive::PluginExtension
+    {
+    public:
+        NoteAggregator(float sampleRate);
+        ~NoteAggregator() override = default;
+
+        std::string getIdentifier() const override;
+        std::string getName() const override;
+        std::string getDescription() const override;
+
+        InputDomain getInputDomain() const override;
+        size_t getPreferredBlockSize() const override;
+        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
+        void reset() override;
+
+        OutputList getOutputDescriptors() const override;
+        ParameterList getParameterDescriptors() const override;
+        float getParameter(std::string paramid) const override;
+        void setParameter(std::string paramid, float newval) override;
+
+        // Ive::PluginExtension
+        InputList getInputDescriptors() const override;
+        void setPreComputingFeatures(FeatureSet const& fs) override;
+
+        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
+        FeatureSet getRemainingFeatures() override;
+
+    private:
+        bool mUseMarkersDurations{false};
+        Vamp::RealTime mEndOffset;
+        std::optional<Vamp::RealTime> mEndTime;
+        bool mHasMarkers{false};
+        FeatureList mPoints;
+        FeatureList mMarkers;
     };
 } // namespace AnlVampPlugin
