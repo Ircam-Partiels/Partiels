@@ -29,6 +29,7 @@ Table of contents for the main sections of the manual:
 * [4. Create new tracks](#4-create-new-tracks)
   * [4.1. Analysis tracks](#41-analysis-tracks)
   * [4.2. File tracks](#42-file-tracks)
+  * [4.3. Factory plugins](#43-factory-plugins)
 * [5. Organize the tracks by groups](#5-organize-the-tracks-by-groups)
   * [5.1. Edition](#51-edition)
   * [5.2. Layout](#52-layout)
@@ -248,6 +249,36 @@ If you are importing a file in JSON format containing an extra description of th
 If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
 
 > ⚠️ **Warning**: The SDIF support may soon become obsolete.
+
+### 4.3. Factory plugins
+
+Partiels is installed with a set of Vamp plugins that provide the basic representations of the audio files and tools to create and process tracks. These plugins are listed with the maker *Factory* in the panel for adding analysis tracks (type *factory* in the text filter to display only these plugins). They should not be confused with the [Partiels Vamp Plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest), a separate package of analysis plugins that can be downloaded.
+
+#### 4.3.1. Waveform
+
+The *Waveform Peak* track displays the waveform of each channel of the audio file as points with values between -1 and 1. The analysis is performed directly by Partiels from the audio samples, so the block size and step size parameters are not used. The samples are used as is for audio files shorter than 480000 samples (10 seconds at 48 kHz). For longer audio files, each point corresponds to the sample with the highest absolute value of a portion of the audio file.
+
+#### 4.3.2. Spectrogram
+
+The *Spectrogram Energy* track displays the spectrogram of each channel of the audio file as a matrix. Each column contains the energies, in decibels between -120 dB and 12 dB, of the frequency bins obtained by a Fast Fourier Transform of the audio signal. The window type, the block size (the size of the FFT) and the step size can be modified in the [processor parameters](#912-parameters) of the track. The number of bins of each column is equal to half the block size plus one.
+
+#### 4.3.3. New Track
+
+The *New Track* plugin creates an empty track to be filled manually: *New Track Marker* creates a markers track, and *New Track Point* creates a points track with a value range between 0 and 1. The analysis only produces a first result at the beginning of each channel (a marker, or a point without value), then you can add, move, modify, or delete results using the [plot](#61-plot) and the [table](#62-table).
+
+#### 4.3.4. Aggregator
+
+The *Aggregator Notes* track segments frequency points (e.g. the results of a fundamental frequency estimation) into notes using markers (e.g. the results of a transient detection). The plugin doesn't analyze the audio signal but uses the results of other tracks of the document, which you select in the [processor parameters](#912-parameters) of the track:
+
+- Frequencies input track: A points track whose values are frequencies in hertz.
+
+- Transients input track: A markers track whose markers define the beginning of each note. If no track is selected, the frequencies are aggregated into a single note that covers the whole audio file.
+
+Each marker produces a note that starts at the time of the marker and ends at the time of the next marker (or at the end of the audio file for the last marker). The value of the note is the median of the frequencies of the points within the note. The points without value or with a value less than or equal to zero (that usually correspond to the unvoiced parts of the signal) are ignored. If a note doesn't contain any valid frequency, the note has no value and interrupts the succession of segments.
+
+- Use markers duration: If enabled, each note ends at the end of the duration of its marker instead of the time of the next marker, which allows gaps or overlaps between the notes.
+
+If the input tracks have a single channel, their results are used for all the channels of the audio file. If the input tracks have as many channels as the audio file, each channel uses the results of the corresponding channel of the input tracks.
 
 <div style="page-break-after: always;"></div>
 
@@ -691,7 +722,9 @@ Depending on the plugin characteristics, the section provides access to the defa
 <img src="Images/section-track-properties.3.b-v1.1.0.png" width="232"/>
 </p>
 
-- Input Track: The input track property allows you to use another document analysis track as the input for the current analysis track. To do this, the analysis plugin must allow it, and the input data type must match the data type expected by the plugin. Changing the input track or changing the results of this track automatically triggers a new analysis of the current track.
+- Input Tracks: Some plugins use the results of other analysis tracks of the document as inputs. For each input expected by the plugin, the section displays a dropdown menu named after the input (e.g. *Frequencies input track* and *Transients input track* for the [Aggregator](#434-aggregator) plugin) that lists the tracks of the document whose results match the type of data expected by the input (the tracks that depend on the results of the current track are excluded to avoid loops). Changing an input track or changing the results of an input track automatically triggers a new analysis of the current track.
+
+- Use Input Track Extra Thresholds: If the plugin uses input tracks, this toggle button allows you to filter the results of the input tracks with their extra output thresholds (see the [Ranges](#923-ranges) section) before they are used by the analysis.
 
 The section provides access to the plugin-specific parameters that are used to perform the analysis. According to their specifications, parameter values can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been modified, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking if you wish to continue (you can always cancel the operation to recover the previous analysis results).
 
