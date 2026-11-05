@@ -176,11 +176,12 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
         out << std::fixed << value;
         return out.str();
     };
-    auto const binWidth = getInputSampleRate() / (static_cast<double>(d.binCount) * 2.0);
+    // The bin names are the center frequencies of the bins, from 0 Hz to the Nyquist frequency inclusive
+    auto const binWidth = getInputSampleRate() / (static_cast<double>(d.binCount - 1_z) * 2.0);
     d.binNames.resize(d.binCount);
     for(auto i = 0_z; i < d.binNames.size(); ++i)
     {
-        d.binNames[i] = toString((static_cast<double>(i) + 1.0) * binWidth) + "Hz";
+        d.binNames[i] = toString(static_cast<double>(i) * binWidth) + "Hz";
     }
     return {d};
 }
