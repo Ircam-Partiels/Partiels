@@ -1,6 +1,12 @@
 [
     {
         "key": {
+            "feature": "notes",
+            "identifier": "partiels-vamp-plugins:noteaggregator"
+        }
+    },
+    {
+        "key": {
             "feature": "markers",
             "identifier": "partiels-vamp-plugins:partielsnewtrack"
         }

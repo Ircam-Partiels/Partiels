@@ -2,6 +2,9 @@
 
 <plugins>
   <plugin>
+    <key identifier="partiels-vamp-plugins:noteaggregator" feature="notes"/>
+  </plugin>
+  <plugin>
     <key identifier="partiels-vamp-plugins:partielsnewtrack" feature="markers"/>
   </plugin>
   <plugin>
