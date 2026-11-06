@@ -58,7 +58,6 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
             case AttrType::zoomAcsr:
             case AttrType::zoomLink:
             case AttrType::extraThresholds:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

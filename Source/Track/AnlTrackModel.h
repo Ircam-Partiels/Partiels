@@ -246,7 +246,6 @@ namespace Track
         , processing
         , focused
         , grid
-        , hasPluginColourMap
     };
 
     enum class AcsrType : size_t
@@ -292,7 +291,6 @@ namespace Track
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, FocusInfo, Model::Flag::notifying>
     , Model::Attr<AttrType::grid, GridMode, Model::Flag::notifying>
-    , Model::Attr<AttrType::hasPluginColourMap, bool, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -340,7 +338,6 @@ namespace Track
                                  , {{false, 0.0, false, 0.0}}
                                  , {}
                                  , {GridMode::partial}
-                                 , {false}
                                  ))
         {
         }

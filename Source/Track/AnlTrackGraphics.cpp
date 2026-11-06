@@ -1,5 +1,4 @@
 #include "AnlTrackGraphics.h"
-#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -16,14 +15,13 @@ void Track::Graphics::stopRendering()
     abortRendering();
 }
 
-bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin)
+void Track::Graphics::runRendering(Accessor const& accessor)
 {
-    auto hasPluginColorMap = accessor.getAttr<AttrType::hasPluginColourMap>();
     std::unique_lock<std::mutex> lock(mRenderingMutex, std::try_to_lock);
     MiscStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return hasPluginColorMap;
+        return;
     }
     abortRendering();
 
@@ -35,7 +33,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return hasPluginColorMap;
+        return;
     }
 
     auto const columns = results.getColumns();
@@ -45,7 +43,7 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return hasPluginColorMap;
+        return;
     }
 
     auto const& output = accessor.getAttr<AttrType::description>().output;
@@ -58,26 +56,11 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
         {
             onRenderingEnded({});
         }
-        return hasPluginColorMap;
+        return;
     }
 
     mData = results;
     mAccess = std::make_unique<Result::Access>(access);
-
-    auto featureIndex = 0;
-    if(plugin != nullptr)
-    {
-        auto const feature = Plugin::Tools::getFeatureIndex(*plugin.get(), accessor.getAttr<AttrType::key>().feature);
-        hasPluginColorMap = feature.has_value() && plugin->supportColorMap(static_cast<int>(feature.value()));
-        if(!hasPluginColorMap)
-        {
-            plugin.reset();
-        }
-        else
-        {
-            featureIndex = static_cast<int>(feature.value());
-        }
-    }
 
     auto const colourMap = accessor.getAttr<AttrType::graphicsSettings>().colours.map;
     DrawInfo info;
@@ -86,16 +69,12 @@ bool Track::Graphics::runRendering(Accessor const& accessor, std::unique_ptr<Ive
     info.logScale = accessor.getAttr<AttrType::zoomLogScale>() && Tools::hasVerticalZoomInHertz(accessor);
     info.sampleRate = accessor.getAttr<AttrType::sampleRate>();
     info.range = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    info.plugin = plugin.get();
-    info.featureIndex = featureIndex;
-    info.hasDuration = output.hasDuration;
     mChrono.start();
-    mRenderingProcess = std::thread([this, columns, plug = std::move(plugin), colourMap, info]()
+    mRenderingProcess = std::thread([this, columns, colourMap, info]()
                                     {
                                         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
                                         performRendering(*columns, colourMap, info);
                                     });
-    return hasPluginColorMap;
 }
 
 bool Track::Graphics::isRunning() const
@@ -344,121 +323,58 @@ juce::Image Track::Graphics::createImage(std::vector<Track::Result::Data::Column
         else
         {
             auto const& result = channel.at(columnIndex);
-            if(info.plugin != nullptr)
+            auto const& values = std::get<2>(result);
+            if(info.logScale)
             {
-                Vamp::Plugin::Feature feature;
-                feature.hasTimestamp = true;
-                feature.timestamp = Vamp::RealTime::fromSeconds(std::get<0>(result));
-                feature.hasDuration = info.hasDuration;
-                feature.duration = Vamp::RealTime::fromSeconds(std::get<1>(result));
-                feature.values.reserve(std::get<2>(result).size() + std::get<3>(result).size());
-                feature.values = std::get<2>(result);
-                feature.values.insert(feature.values.end(), std::get<3>(result).cbegin(), std::get<3>(result).cend());
-                auto const colorMap = info.plugin->getColorMap(info.featureIndex, feature, std::make_tuple(info.range.getStart(), info.range.getEnd()));
-                if(info.logScale)
+                auto const hertzRatio = static_cast<double>(imageHeight) / (info.sampleRate / 2.0);
+                auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
+                for(int j = 0; j < imageHeight; ++j)
                 {
-                    auto const hertzRatio = static_cast<double>(imageHeight) / (info.sampleRate / 2.0);
-                    auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
-                    for(int j = 0; j < imageHeight; ++j)
-                    {
-                        auto const startMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio), 0.0);
-                        auto const startRow = static_cast<size_t>(std::round(startMidi * hertzRatio));
+                    auto const startMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio), 0.0);
+                    auto const startRow = static_cast<size_t>(std::round(startMidi * hertzRatio));
 
-                        auto const endMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio), 0.0);
-                        auto const endRow = std::min(static_cast<size_t>(std::round(endMidi * hertzRatio)), colorMap.size());
-                        MiscWeakAssert(startRow < colorMap.size());
-                        if(startRow >= colorMap.size())
-                        {
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
-                        }
-                        else
-                        {
-                            using diff_t = decltype(colorMap.cbegin())::difference_type;
-                            auto const startIt = std::next(colorMap.cbegin(), static_cast<diff_t>(startRow));
-                            auto const endIt = std::next(colorMap.cbegin(), static_cast<diff_t>(endRow));
-                            auto const rval = *std::max_element(startIt, endIt);
-                            auto const value = std::round((static_cast<float>(rval) - valueStart) * valueScale);
-                            auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
-                            auto const colour = juce::Colour(colorMap.at(colorIndex));
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
-                        }
-                        pixel -= lineStride;
-                    }
-                }
-                else
-                {
-                    for(int j = 0; j < imageHeight; ++j)
+                    auto const endMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio), 0.0);
+                    auto const endRow = std::min(static_cast<size_t>(std::round(endMidi * hertzRatio)), values.size());
+                    MiscWeakAssert(startRow < values.size());
+                    if(startRow >= values.size())
                     {
-                        auto const rowIndex = static_cast<size_t>(std::round(j * hd));
-                        MiscWeakAssert(rowIndex < colorMap.size());
-                        if(rowIndex >= colorMap.size())
-                        {
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
-                        }
-                        else
-                        {
-                            auto const colour = juce::Colour(colorMap.at(rowIndex));
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colour.getPixelARGB());
-                        }
-                        pixel -= lineStride;
+                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
                     }
+                    else
+                    {
+                        using diff_t = decltype(values.cbegin())::difference_type;
+                        auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
+                        auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
+                        auto const rval = *std::max_element(startIt, endIt);
+                        auto const value = std::round((rval - valueStart) * valueScale);
+                        auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
+                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
+                    }
+                    pixel -= lineStride;
                 }
             }
             else
             {
-                auto const& values = std::get<2>(result);
-                if(info.logScale)
+                for(int j = 0; j < imageHeight; ++j)
                 {
-                    auto const hertzRatio = static_cast<double>(imageHeight) / (info.sampleRate / 2.0);
-                    auto const midiRatio = Tools::getMidiFromHertz(info.sampleRate / 2.0) / static_cast<double>(imageHeight);
-                    for(int j = 0; j < imageHeight; ++j)
+                    auto const startRow = static_cast<size_t>(std::round(j * hd));
+                    auto const endRow = std::min(static_cast<size_t>(std::round((j + 1) * hd)), values.size());
+                    MiscWeakAssert(startRow < values.size());
+                    if(startRow >= values.size())
                     {
-                        auto const startMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j) * midiRatio), 0.0);
-                        auto const startRow = static_cast<size_t>(std::round(startMidi * hertzRatio));
-
-                        auto const endMidi = std::max(Tools::getHertzFromMidi(static_cast<double>(j + 1) * midiRatio), 0.0);
-                        auto const endRow = std::min(static_cast<size_t>(std::round(endMidi * hertzRatio)), values.size());
-                        MiscWeakAssert(startRow < values.size());
-                        if(startRow >= values.size())
-                        {
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
-                        }
-                        else
-                        {
-                            using diff_t = decltype(values.cbegin())::difference_type;
-                            auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
-                            auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
-                            auto const rval = *std::max_element(startIt, endIt);
-                            auto const value = std::round((rval - valueStart) * valueScale);
-                            auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
-                        }
-                        pixel -= lineStride;
+                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
                     }
-                }
-                else
-                {
-                    for(int j = 0; j < imageHeight; ++j)
+                    else
                     {
-                        auto const startRow = static_cast<size_t>(std::round(j * hd));
-                        auto const endRow = std::min(static_cast<size_t>(std::round((j + 1) * hd)), values.size());
-                        MiscWeakAssert(startRow < values.size());
-                        if(startRow >= values.size())
-                        {
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(0_z));
-                        }
-                        else
-                        {
-                            using diff_t = decltype(values.cbegin())::difference_type;
-                            auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
-                            auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
-                            auto const rval = *std::max_element(startIt, endIt);
-                            auto const value = std::round((rval - valueStart) * valueScale);
-                            auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
-                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
-                        }
-                        pixel -= lineStride;
+                        using diff_t = decltype(values.cbegin())::difference_type;
+                        auto const startIt = std::next(values.cbegin(), static_cast<diff_t>(startRow));
+                        auto const endIt = std::next(values.cbegin(), static_cast<diff_t>(endRow));
+                        auto const rval = *std::max_element(startIt, endIt);
+                        auto const value = std::round((rval - valueStart) * valueScale);
+                        auto const colorIndex = static_cast<size_t>(std::clamp(value, 0.0f, 255.0f));
+                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours.at(colorIndex));
                     }
+                    pixel -= lineStride;
                 }
             }
         }

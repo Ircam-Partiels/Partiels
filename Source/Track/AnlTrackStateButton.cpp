@@ -62,7 +62,6 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::extraThresholds:
             case AttrType::focused:
             case AttrType::grid:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

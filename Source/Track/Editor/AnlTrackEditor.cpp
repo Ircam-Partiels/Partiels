@@ -75,7 +75,6 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
-            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::graphicsSettings:
             {

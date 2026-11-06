@@ -93,7 +93,6 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
             case AttrType::grid:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

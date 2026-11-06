@@ -38,7 +38,6 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
             case AttrType::grid:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
             case AttrType::name:

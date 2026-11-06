@@ -207,14 +207,11 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 break;
             case AttrType::graphicsSettings:
             {
-                if(!mAccessor.getAttr<AttrType::hasPluginColourMap>())
+                auto const colourMap = mAccessor.getAttr<AttrType::graphicsSettings>().colours.map;
+                if(!mLastColourMap.has_value() || mLastColourMap.value() != colourMap)
                 {
-                    auto const colourMap = mAccessor.getAttr<AttrType::graphicsSettings>().colours.map;
-                    if(!mLastColourMap.has_value() || mLastColourMap.value() != colourMap)
-                    {
-                        mLastColourMap = colourMap;
-                        runRendering();
-                    }
+                    mLastColourMap = colourMap;
+                    runRendering();
                 }
             }
             break;
@@ -272,7 +269,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::zoomValueMode:
-            case AttrType::hasPluginColourMap:
             case AttrType::fileDescription:
                 break;
             case AttrType::extraThresholds:
@@ -853,30 +849,7 @@ void Track::Director::runLoading()
 
 void Track::Director::runRendering()
 {
-    auto const createPlugin = [this]() -> std::unique_ptr<Ive::PluginWrapper>
-    {
-        auto const& key = mAccessor.getAttr<AttrType::key>();
-        if(key.identifier.empty() || key.feature.empty())
-        {
-            return nullptr;
-        }
-        if(mAudioFormatReader == nullptr)
-        {
-            return nullptr;
-        }
-        auto const sampleRate = mAccessor.getAttr<AttrType::sampleRate>();
-        try
-        {
-            return Plugin::Tools::createPluginWrapper(key, sampleRate);
-        }
-        catch(...)
-        {
-        }
-        return nullptr;
-    };
-
-    auto const result = mGraphics.runRendering(mAccessor, createPlugin());
-    mAccessor.setAttr<AttrType::hasPluginColourMap>(result, NotificationType::synchronous);
+    mGraphics.runRendering(mAccessor);
     startTimer(50);
     timerCallback();
 }

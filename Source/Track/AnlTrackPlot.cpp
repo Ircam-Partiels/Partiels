@@ -30,7 +30,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::showInGroup:
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
-            case AttrType::hasPluginColourMap:
                 break;
             case AttrType::description:
             case AttrType::grid:

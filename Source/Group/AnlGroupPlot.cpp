@@ -32,7 +32,6 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::warnings:
             case Track::AttrType::processing:
             case Track::AttrType::focused:
-            case Track::AttrType::hasPluginColourMap:
             case Track::AttrType::oscIdentifier:
             case Track::AttrType::sendViaOsc:
                 break;
