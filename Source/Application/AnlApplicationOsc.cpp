@@ -419,7 +419,6 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             case Track::AttrType::processing:
             case Track::AttrType::focused:
             case Track::AttrType::grid:
-            case Track::AttrType::hasPluginColourMap:
                 break;
             case Track::AttrType::extraThresholds:
             {

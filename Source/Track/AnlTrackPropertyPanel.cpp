@@ -64,7 +64,6 @@ Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& pr
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::extraThresholds:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

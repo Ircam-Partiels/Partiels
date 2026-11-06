@@ -247,7 +247,6 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
             case AttrType::grid:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

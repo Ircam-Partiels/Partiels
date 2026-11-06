@@ -321,7 +321,6 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
             case AttrType::results:
             case AttrType::channelsLayout:
             case AttrType::zoomValueMode:
-            case AttrType::hasPluginColourMap:
             case AttrType::graphicsSettings:
             {
                 updateExtraThresholdProperties();
@@ -331,7 +330,6 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 auto const isLabel = frameType == Track::FrameType::label;
                 auto const isValue = frameType == Track::FrameType::value;
                 auto const isVector = frameType == Track::FrameType::vector;
-                auto const hasPluginColourMap = acsr.getAttr<AttrType::hasPluginColourMap>();
                 if(isValue || isVector)
                 {
                     auto const unit = Tools::getUnit(acsr);
@@ -344,7 +342,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 }
 
                 // The visibility of each property is set once to preserve the keyboard focus
-                mPropertyColourMap.setVisible(isVector && !hasPluginColourMap);
+                mPropertyColourMap.setVisible(isVector);
                 mPropertyForegroundColour.setVisible(isLabel || isValue);
                 mPropertyDurationColour.setVisible(isLabel);
                 mPropertyTextColour.setVisible(isLabel || isValue);
@@ -358,7 +356,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
                 mPropertyLabelJustification.setVisible(isLabel);
                 mPropertyLabelPosition.setVisible(isLabel);
                 mPropertyMarkerStyle.setVisible(isLabel);
-                mPropertyValueRangeMode.setVisible(isValue || (isVector && !hasPluginColourMap));
+                mPropertyValueRangeMode.setVisible(isValue || isVector);
                 mPropertyValueRangeLogScale.setVisible((isValue || isVector) && Tools::hasVerticalZoomInHertz(acsr));
                 mPropertyValueRangeMin.setVisible(isValue || isVector);
                 mPropertyValueRangeMax.setVisible(isValue || isVector);

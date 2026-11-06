@@ -13,7 +13,7 @@ namespace Track
         Graphics() = default;
         ~Graphics() override;
 
-        bool runRendering(Accessor const& accessor, std::unique_ptr<Ive::PluginWrapper> plugin);
+        void runRendering(Accessor const& accessor);
         void stopRendering();
         bool isRunning() const;
         float getAdvancement() const;
@@ -30,9 +30,6 @@ namespace Track
             bool logScale{false};
             double sampleRate{0.0};
             juce::Range<double> range;
-            Ive::PluginWrapper* plugin{nullptr};
-            int featureIndex{0};
-            bool hasDuration{false};
         };
 
         void abortRendering();

@@ -207,7 +207,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::graphicsSettings, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::hasPluginColourMap, Track::AttrType::zoomLogScale})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::graphicsSettings, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results, Track::AttrType::zoomLogScale})
 , mThresholdsNotifier(mAccessor, [this]()
                       {
                           updateExtraThresholdStates();
@@ -278,7 +278,7 @@ void Group::PropertyGraphicalsSection::setColourMap(Track::ColourMap const& colo
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector || trackAcsr.get().template getAttr<Track::AttrType::hasPluginColourMap>();
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -696,7 +696,7 @@ void Group::PropertyGraphicalsSection::updateColourMap()
     std::set<Track::ColourMap> colourMaps;
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector && !trackAcsr.get().getAttr<Track::AttrType::hasPluginColourMap>())
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
         {
             auto const colourMap = trackAcsr.get().getAttr<Track::AttrType::graphicsSettings>().colours.map;
             colourMaps.insert(colourMap);

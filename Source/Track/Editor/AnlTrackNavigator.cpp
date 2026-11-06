@@ -47,7 +47,6 @@ Track::Navigator::Navigator(Accessor& accessor, Zoom::Accessor& timeZoomAccessor
             case AttrType::oscIdentifier:
             case AttrType::sendViaOsc:
             case AttrType::grid:
-            case AttrType::hasPluginColourMap:
             case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;

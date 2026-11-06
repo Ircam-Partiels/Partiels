@@ -777,8 +777,6 @@ A color can be modified using the color picker that appears when clicking on the
 - Shadow Color: The shadow color used to render the shadow of markers or segments between points.
 - Duration Color: The shadow color used for marker durations.
 
-> 💡 **Tip**: The plugin may support its own color mapping. In this case, the color map property is not accessible.
-
 #### 9.2.2. Font, Label and Line Width
 
 Font properties are only available for marker or point type analyses. By default, the *Nunito Sans* font with a size of 14 and a regular style is used. You can change the font depending on those available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if certain characters are not supported.
