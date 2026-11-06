@@ -127,6 +127,22 @@ juce::Result Document::Executor::exportTo(juce::File const& outputDir, juce::Str
         MiscDebug("Executor", "Cannot export while running analysis or file parsing");
         return juce::Result::fail(juce::translate("Cannot export while running analysis or file parsing"));
     }
+
+    // The warnings are checked again because some analyses are launched asynchronously (e.g. linked tracks)
+    MiscDebug("Executor", "Check for warnings...");
+    {
+        auto const trackAcsrs = mAccessor.getAcsrs<Document::AcsrType::tracks>();
+        auto const warningTrackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                                 {
+                                                     return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
+                                                 });
+        if(warningTrackIt != trackAcsrs.cend())
+        {
+            auto const trackName = warningTrackIt->get().getAttr<Track::AttrType::name>();
+            auto const warningType = std::string(magic_enum::enum_name(warningTrackIt->get().getAttr<Track::AttrType::warnings>()));
+            return juce::Result::fail(juce::translate("Error: The track TRACKNAME contains the error type 'ERRORTYPE'").replace("TRACKNAME", trackName).replace("ERRORTYPE", warningType));
+        }
+    }
     std::atomic<bool> shouldAbort{false};
     std::set<juce::String> identifiers;
     juce::MessageManager::Lock lock;
