@@ -181,6 +181,11 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["extraOutputs"] = description.extraOutputs;
     j["inputs"] = description.inputs;
     j["programs"] = description.programs;
+    j["voices"] = description.voices;
+    if(description.hasVoices())
+    {
+        j["voiceDescriptor"] = description.voiceDescriptor;
+    }
 }
 
 void Plugin::from_json(nlohmann::json const& j, Description& description)
@@ -206,6 +211,8 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
         description.inputs = j.value("inputs", description.inputs);
     }
     description.programs = j.value("programs", description.programs);
+    description.voices = j.value("voices", description.voices);
+    description.voiceDescriptor = j.value("voiceDescriptor", description.voiceDescriptor);
 }
 
 void Plugin::to_json(nlohmann::json& j, WebReference const& info)
@@ -444,6 +451,11 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     toXml(*child, "extraOutputs", value.extraOutputs);
     toXml(*child, "inputs", value.inputs);
     toXml(*child, "programs", value.programs);
+    toXml(*child, "voices", value.voices);
+    if(value.hasVoices())
+    {
+        toXml(*child, "voiceDescriptor", value.voiceDescriptor);
+    }
     xml.addChildElement(child.release());
 }
 
@@ -495,6 +507,11 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
         value.inputs = fromXml(*child, "inputs", defaultValue.inputs);
     }
     value.programs = fromXml(*child, "programs", defaultValue.programs);
+    value.voices = fromXml(*child, "voices", defaultValue.voices);
+    if(child->getChildByName("voiceDescriptor") != nullptr)
+    {
+        value.voiceDescriptor = fromXml(*child, "voiceDescriptor", defaultValue.voiceDescriptor);
+    }
     return value;
 }
 
@@ -569,6 +586,32 @@ auto XmlParser::fromXml<Plugin::WebReference>(juce::XmlElement const& xml, juce:
     return info;
 }
 
+std::vector<std::string> Plugin::getVoices(Ive::PluginWrapper const& plugin, size_t outputIndex)
+{
+    auto const outputs = plugin.getOutputDescriptors();
+    auto index = 0_z;
+    while(index < outputs.size())
+    {
+        auto const count = std::clamp(plugin.getOutputVoiceCount(index), 1_z, outputs.size() - index);
+        if(outputIndex < index + count)
+        {
+            if(count <= 1_z && !plugin.getOutputVoiceDescriptor(index).has_value())
+            {
+                return {};
+            }
+            std::vector<std::string> voices;
+            voices.reserve(count);
+            for(auto voiceIndex = index; voiceIndex < index + count; ++voiceIndex)
+            {
+                voices.push_back(outputs.at(voiceIndex).identifier);
+            }
+            return voices;
+        }
+        index += count;
+    }
+    return {};
+}
+
 Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
@@ -587,7 +630,27 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     {
         return {};
     }
+    auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
+
     Plugin::Description description;
+    description.voices = getVoices(plugin, outputIndex);
+    if(!description.voices.empty())
+    {
+        auto const firstVoiceIt = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
+                                               {
+                                                   return output.identifier == description.voices.front();
+                                               });
+        auto const firstVoiceIndex = static_cast<size_t>(std::distance(outputs.cbegin(), firstVoiceIt));
+        auto const voiceDescriptor = firstVoiceIt != outputs.cend() ? plugin.getOutputVoiceDescriptor(firstVoiceIndex) : std::optional<Ive::PluginWrapper::VoiceDescriptor>{};
+        if(voiceDescriptor.has_value())
+        {
+            description.voiceDescriptor = voiceDescriptor.value();
+            if(description.voiceDescriptor.identifier.empty())
+            {
+                description.voiceDescriptor.identifier = "voices";
+            }
+        }
+    }
     description.name = plugin.getName();
     description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
     if(auto* inputDomainAdapter = plugin.getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
@@ -616,10 +679,29 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     };
     initializeState(description.defaultState, true);
     auto const programNames = plugin.getPrograms();
-    for(auto const& programName : programNames)
+    if(!programNames.empty())
     {
-        plugin.selectProgram(programName);
-        initializeState(description.programs[programName], false);
+        // The selection of the programs changes the parameters (and potentially the outputs)
+        // so the current program and parameters are restored afterwards
+        auto const currentProgram = plugin.getCurrentProgram();
+        std::map<std::string, float> currentValues;
+        for(auto const& parameter : parameters)
+        {
+            currentValues[parameter.identifier] = plugin.getParameter(parameter.identifier);
+        }
+        for(auto const& programName : programNames)
+        {
+            plugin.selectProgram(programName);
+            initializeState(description.programs[programName], false);
+        }
+        if(!currentProgram.empty())
+        {
+            plugin.selectProgram(currentProgram);
+        }
+        for(auto const& currentValue : currentValues)
+        {
+            plugin.setParameter(currentValue.first, currentValue.second);
+        }
     }
 
     description.output = *outputIt;
@@ -632,7 +714,6 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     {
         description.output.binNames.clear();
     }
-    auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
     description.extraOutputs = plugin.getOutputExtraDescriptors(outputIndex);
     auto const inputs = plugin.getInputDescriptors();
     description.inputs.clear();

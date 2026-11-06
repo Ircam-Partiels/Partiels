@@ -119,85 +119,134 @@ void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentif
                                 });
 }
 
-std::tuple<juce::Result, juce::String> Application::Tools::addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key)
+std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key, size_t const voiceCount)
 {
-    auto const name = [&]() -> juce::String
+    auto const& procPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::processor>();
+    auto const procPresetIt = procPresets.find(key);
+    auto const& graphicPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::graphic>();
+    auto const graphicPresetIt = graphicPresets.find(key);
+
+    // The descriptions of the voices of the output (or the description of the output if it has no voices),
+    // the outputs can depend on the parameters so the processor preset is used if defined
+    auto const descriptions = [&]()
     {
         try
         {
-            auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
-            return description.output.name.empty() ? description.name : description.name + " - " + description.output.name;
+            auto const state = procPresetIt != procPresets.cend() ? procPresetIt->second : Plugin::State{};
+            auto const defaultDescriptions = PluginList::Scanner::loadVoiceDescriptions(key, 48000.0, state, {});
+            if(voiceCount == 0_z || defaultDescriptions.empty() || !defaultDescriptions.front().hasVoices() || defaultDescriptions.front().voices.empty())
+            {
+                return defaultDescriptions;
+            }
+            auto const& description = defaultDescriptions.front();
+            auto const& firstVoice = description.voices.front();
+            return PluginList::Scanner::loadVoiceDescriptions({key.identifier, firstVoice}, 48000.0, state, {{firstVoice, Plugin::Tools::clampVoiceCount(description.voiceDescriptor, voiceCount)}});
         }
         catch(...)
         {
-            return "";
         }
+        return std::vector<Plugin::Description>{};
     }();
-    if(name.isEmpty())
+    if(descriptions.empty() || std::any_of(descriptions.cbegin(), descriptions.cend(), [](auto const& description)
+                                           {
+                                               return !description.valid();
+                                           }))
     {
-        return std::make_tuple(juce::Result::fail(juce::translate("Failed to load plugin description for key {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}.").replace("PLUGINID", key.identifier).replace("PLUGINFEATURE", key.feature)), juce::String());
+        return std::make_tuple(juce::Result::fail(juce::translate("Failed to load plugin description for key {\"identifier\": \"PLUGINID\", \"feature\": \"PLUGINFEATURE\"}.").replace("PLUGINID", key.identifier).replace("PLUGINFEATURE", key.feature)), std::vector<juce::String>{});
     }
 
-    auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
-    if(result.failed())
-    {
-        return std::make_tuple(result, juce::String());
-    }
+    // The tracks of the voices are linked so they share the same analysis and processor properties (even with a
+    // single voice so that the number of voices can be changed)
+    auto const hasVoices = descriptions.front().hasVoices() && !descriptions.front().voices.empty();
+    auto const voiceLink = hasVoices ? juce::Uuid().toString() : juce::String{};
+    auto const voiceCounts = hasVoices ? Plugin::VoiceCounts{{descriptions.front().voices.front(), descriptions.size()}} : Plugin::VoiceCounts{};
     auto& documentAcsr = documentDir.getAccessor();
-    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-    auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier);
-    auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
-
-    std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
-    std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
-                   {
-                       return visibleState == Group::ChannelVisibilityState::visible;
-                   });
-
-    trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::synchronous);
-    trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
-
-    // Apply default presets if defined
-    auto const& procPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::processor>();
-    auto const procPresetIt = procPresets.find(key);
-    if(procPresetIt != procPresets.cend())
+    std::vector<juce::String> trackIdentifiers;
+    for(auto const& description : descriptions)
     {
-        trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
-    }
-    auto const& graphicPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::graphic>();
-    auto const graphicPresetIt = graphicPresets.find(key);
-    if(graphicPresetIt != graphicPresets.cend())
-    {
-        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(graphicPresetIt->second, NotificationType::synchronous);
-    }
-    else
-    {
-        // Use global graphic preset as fallback
-        trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalGraphicPreset, NotificationType::synchronous);
-    }
-
-    trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
-
-    // Enable the logarithmic scale if the vertical zoom of the new track allows it and if the
-    // tracks of the group already use it
-    if(Track::Tools::hasVerticalZoomInHertz(trackAcsr))
-    {
-        auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
-        std::erase(layout, trackIdentifier);
-        std::erase_if(layout, [&](juce::String const& otherTrackIdentifier)
-                      {
-                          return !Track::Tools::hasVerticalZoomInHertz(Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier));
-                      });
-        auto const groupUsesLogScale = !layout.empty() && std::all_of(layout.cbegin(), layout.cend(), [&](juce::String const& otherTrackIdentifier)
-                                                                      {
-                                                                          return Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier).getAttr<Track::AttrType::zoomLogScale>();
-                                                                      });
-        if(groupUsesLogScale)
+        auto const name = description.output.name.empty() ? description.name : description.name + " - " + description.output.name;
+        // The tracks of the voices are inserted from the bottom to the top (the first voice at the bottom)
+        auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
+        if(result.failed())
         {
-            trackAcsr.setAttr<Track::AttrType::zoomLogScale>(true, NotificationType::synchronous);
+            for(auto const& identifier : trackIdentifiers)
+            {
+                [[maybe_unused]] auto const removeResult = documentDir.removeTrack(identifier, NotificationType::synchronous);
+            }
+            return std::make_tuple(result, std::vector<juce::String>{});
+        }
+        trackIdentifiers.push_back(trackIdentifier);
+        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
+        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, trackIdentifier);
+        auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
+
+        std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
+        std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
+                       {
+                           return visibleState == Group::ChannelVisibilityState::visible;
+                       });
+
+        trackAcsr.setAttr<Track::AttrType::name>(name, NotificationType::synchronous);
+        if(hasVoices)
+        {
+            // The link, the numbers of voices, the description and the state are set before the key so that a single analysis is requested
+            auto state = procPresetIt != procPresets.cend() ? procPresetIt->second : description.defaultState;
+            if(state.blockSize == 0_z)
+            {
+                state.blockSize = description.defaultState.blockSize == 0_z ? 64_z : description.defaultState.blockSize;
+            }
+            if(state.stepSize == 0_z)
+            {
+                state.stepSize = description.defaultState.stepSize == 0_z ? state.blockSize : description.defaultState.stepSize;
+            }
+            trackAcsr.setAttr<Track::AttrType::voiceLink>(voiceLink, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::voiceCounts>(voiceCounts, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::key>(Plugin::Key{key.identifier, description.output.identifier}, NotificationType::synchronous);
+        }
+        else
+        {
+            trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+            // Apply default presets if defined
+            if(procPresetIt != procPresets.cend())
+            {
+                trackAcsr.setAttr<Track::AttrType::state>(procPresetIt->second, NotificationType::synchronous);
+            }
+        }
+
+        if(graphicPresetIt != graphicPresets.cend())
+        {
+            trackAcsr.setAttr<Track::AttrType::graphicsSettings>(graphicPresetIt->second, NotificationType::synchronous);
+        }
+        else
+        {
+            // Use global graphic preset as fallback
+            trackAcsr.setAttr<Track::AttrType::graphicsSettings>(globalGraphicPreset, NotificationType::synchronous);
+        }
+
+        trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+
+        // Enable the logarithmic scale if the vertical zoom of the new track allows it and if the
+        // tracks of the group already use it
+        if(Track::Tools::hasVerticalZoomInHertz(trackAcsr))
+        {
+            auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+            std::erase_if(layout, [&](juce::String const& otherTrackIdentifier)
+                          {
+                              return std::find(trackIdentifiers.cbegin(), trackIdentifiers.cend(), otherTrackIdentifier) != trackIdentifiers.cend() || !Track::Tools::hasVerticalZoomInHertz(Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier));
+                          });
+            auto const groupUsesLogScale = !layout.empty() && std::all_of(layout.cbegin(), layout.cend(), [&](juce::String const& otherTrackIdentifier)
+                                                                          {
+                                                                              return Document::Tools::getTrackAcsr(documentAcsr, otherTrackIdentifier).getAttr<Track::AttrType::zoomLogScale>();
+                                                                          });
+            if(groupUsesLogScale)
+            {
+                trackAcsr.setAttr<Track::AttrType::zoomLogScale>(true, NotificationType::synchronous);
+            }
         }
     }
-    return std::make_tuple(juce::Result::ok(), trackIdentifier);
+    return std::make_tuple(juce::Result::ok(), trackIdentifiers);
 }
 
 std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(Document::Director& documentDir, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file)
@@ -269,11 +318,11 @@ void Application::Tools::addGroups(size_t numGroups, size_t firstGroupPosition)
     documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
 }
 
-void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<Plugin::Key> const& keys)
+static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<Plugin::Key> const& keys, std::map<Plugin::Key, size_t> const& voiceCounts)
 {
-    auto& documentDir = Instance::get().getDocumentDirector();
+    auto& documentDir = Application::Instance::get().getDocumentDirector();
     documentDir.startAction();
-    auto const prepareResult = prepareForNewTracks(groupIdentifier, trackFirstPosition);
+    auto const prepareResult = Application::Tools::prepareForNewTracks(groupIdentifier, trackFirstPosition);
     if(std::get<0_z>(prepareResult).failed())
     {
         documentDir.endAction(ActionState::abort);
@@ -292,21 +341,23 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
     juce::StringArray failMessages;
     for(auto const& key : keys)
     {
-        auto const [result, identifier] = addPluginTrack(documentDir, Instance::get().getTrackPresetListAccessor(), Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>(), group, position, key);
+        auto const voiceCountIt = voiceCounts.find(key);
+        auto const voiceCount = voiceCountIt != voiceCounts.cend() ? voiceCountIt->second : 0_z;
+        auto const [result, identifiers] = Application::Tools::addPluginTrack(documentDir, Application::Instance::get().getTrackPresetListAccessor(), Application::Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>(), group, position, key, voiceCount);
         if(result.failed())
         {
             failMessages.add(juce::String(key.identifier + ":" + key.feature) + ": " + result.getErrorMessage());
         }
         else
         {
-            trackIdentifiers.insert(identifier);
-            ++position;
+            trackIdentifiers.insert(identifiers.cbegin(), identifiers.cend());
+            position += identifiers.size();
         }
     }
 
     if(!trackIdentifiers.empty())
     {
-        revealTracks(trackIdentifiers);
+        Application::Tools::revealTracks(trackIdentifiers);
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track(s)"));
     }
     else
@@ -322,6 +373,158 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
                                  .withButton(juce::translate("Ok"), 0);
         juce::AlertWindow::showAsync(options, nullptr);
     }
+}
+
+// Requests the numbers of voices of the outputs one after the other with call out boxes at the mouse position, the
+// tracks are created when the numbers of voices of all the outputs are defined (or canceled if a box is dismissed)
+static void requestVoiceCounts(juce::String const& groupIdentifier, size_t const trackFirstPosition, std::vector<Plugin::Key> const& keys, std::vector<std::tuple<Plugin::Key, Plugin::Description>> const& voiceOutputs, std::map<Plugin::Key, size_t> const& voiceCounts, juce::Component& associatedComponent)
+{
+    if(voiceCounts.size() >= voiceOutputs.size())
+    {
+        addPluginTracksWithVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceCounts);
+        return;
+    }
+
+    class VoiceCountEditor
+    : public juce::Component
+    {
+    public:
+        VoiceCountEditor(Plugin::Description const& description, std::function<void(size_t)> fn)
+        : mVoiceDescriptor(description.voiceDescriptor)
+        , mDefaultCount(Plugin::Tools::clampVoiceCount(mVoiceDescriptor, static_cast<size_t>(std::max(std::round(mVoiceDescriptor.defaultValue), 0.0f))))
+        , mApply(std::move(fn))
+        , mName("Name", juce::translate("Number of voices of PLUGINNAME to create").replace("PLUGINNAME", description.name))
+        {
+            mProperty = Plugin::Tools::createProperty(mVoiceDescriptor, [this]([[maybe_unused]] auto const& parameter, float value)
+                                                      {
+                                                          apply(static_cast<size_t>(std::max(std::round(value), 0.0f)));
+                                                      });
+            Plugin::Tools::setPropertyValue(*mProperty.get(), mVoiceDescriptor, {static_cast<float>(mDefaultCount)}, juce::NotificationType::dontSendNotification);
+            // The return key of the text editor applies the displayed number of voices even if it is unchanged
+            if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(mProperty.get()))
+            {
+                propertyNumber->entry.onEditorReturnKey = [this]()
+                {
+                    apply(getDisplayedCount());
+                };
+            }
+            addAndMakeVisible(mName);
+            addAndMakeVisible(mProperty.get());
+            addAndMakeVisible(mCreate);
+            setWantsKeyboardFocus(true);
+            auto const textWidth = juce::GlyphArrangement::getStringWidthInt(mName.getFont(), mName.getText());
+            setSize(std::max(240, textWidth + mName.getBorderSize().getLeftAndRight() + 8), 0);
+            resized();
+        }
+
+        ~VoiceCountEditor() override = default;
+
+        // juce::Component
+        void resized() override
+        {
+            auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+            mName.setBounds(bounds.removeFromTop(24));
+            mProperty->setBounds(bounds.removeFromTop(mProperty->getHeight()));
+            mCreate.setBounds(bounds.removeFromTop(mCreate.getHeight()));
+            setSize(getWidth(), bounds.getY() + 2);
+        }
+
+        bool keyPressed(juce::KeyPress const& key) override
+        {
+            // The return key applies the displayed number of voices
+            if(key == juce::KeyPress::returnKey)
+            {
+                apply(getDisplayedCount());
+                return true;
+            }
+            return false;
+        }
+
+    private:
+        size_t getDisplayedCount() const
+        {
+            if(auto const* propertyNumber = dynamic_cast<PropertyNumber const*>(mProperty.get()))
+            {
+                return static_cast<size_t>(std::max(std::round(propertyNumber->entry.getValue()), 0.0));
+            }
+            return mDefaultCount;
+        }
+
+        void apply(size_t count)
+        {
+            if(mApply == nullptr)
+            {
+                return;
+            }
+            // The function is called after the dismissal of the call out box (that deletes the editor)
+            auto const fn = std::exchange(mApply, nullptr);
+            auto const voiceCount = Plugin::Tools::clampVoiceCount(mVoiceDescriptor, count);
+            if(auto* box = findParentComponentOfClass<juce::CallOutBox>())
+            {
+                box->dismiss();
+            }
+            juce::MessageManager::callAsync([=]()
+                                            {
+                                                fn(voiceCount);
+                                            });
+        }
+
+        Plugin::Parameter const mVoiceDescriptor;
+        size_t const mDefaultCount;
+        std::function<void(size_t)> mApply;
+        juce::Label mName;
+        std::unique_ptr<juce::Component> mProperty;
+        PropertyTextButton mCreate{juce::translate("Create"), juce::translate("Create the tracks of the voices"), [this]()
+                                   {
+                                       apply(getDisplayedCount());
+                                   }};
+    };
+
+    auto const& voiceOutput = voiceOutputs.at(voiceCounts.size());
+    auto const key = std::get<0_z>(voiceOutput);
+    juce::Component::SafePointer<juce::Component> safeComponent(&associatedComponent);
+    auto editor = std::make_unique<VoiceCountEditor>(std::get<1_z>(voiceOutput), [=](size_t count)
+                                                     {
+                                                         if(safeComponent.getComponent() == nullptr)
+                                                         {
+                                                             return;
+                                                         }
+                                                         auto newVoiceCounts = voiceCounts;
+                                                         newVoiceCounts[key] = count;
+                                                         requestVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceOutputs, newVoiceCounts, *safeComponent.getComponent());
+                                                     });
+    auto const mousePosition = juce::Desktop::getMousePosition();
+    Tooltip::showCallOutBox(std::move(editor), associatedComponent, juce::Rectangle<int>(mousePosition.x - 2, mousePosition.y - 2, 4, 4));
+}
+
+void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<Plugin::Key> const& keys, juce::Component* associatedComponent)
+{
+    // The numbers of voices of the outputs with voices are requested before creating the tracks
+    std::vector<std::tuple<Plugin::Key, Plugin::Description>> voiceOutputs;
+    if(associatedComponent != nullptr)
+    {
+        for(auto const& key : keys)
+        {
+            try
+            {
+                auto const description = Instance::get().getPluginListScanner().getDescription(key, 48000.0);
+                if(description.hasVoices() && !description.voices.empty())
+                {
+                    voiceOutputs.push_back({key, description});
+                }
+            }
+            catch(...)
+            {
+            }
+        }
+    }
+    if(voiceOutputs.empty())
+    {
+        addPluginTracksWithVoiceCounts(groupIdentifier, trackFirstPosition, keys, {});
+        return;
+    }
+
+    requestVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceOutputs, {}, *associatedComponent);
 }
 
 void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<juce::File> const& files)

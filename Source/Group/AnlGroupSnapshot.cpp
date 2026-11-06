@@ -20,6 +20,8 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::identifier:
             case Track::AttrType::file:
             case Track::AttrType::fileDescription:
+            case Track::AttrType::voiceLink:
+            case Track::AttrType::voiceCounts:
             case Track::AttrType::name:
             case Track::AttrType::key:
             case Track::AttrType::inputs:

@@ -59,6 +59,8 @@ Track::Editor::Editor(Director& director, Zoom::Accessor& timeZoomAccessor, Tran
             case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomValueMode:

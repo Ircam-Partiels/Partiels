@@ -1,4 +1,5 @@
 #include "AnlPluginListTable.h"
+#include "AnlPluginTools.h"
 #include <AnlIconsData.h>
 #include <AnlResourceData.h>
 
@@ -268,7 +269,8 @@ void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int w
             auto const index = static_cast<size_t>(rowNumber);
             auto const& description = mFilteredList.at(index).second;
             auto const updateAvailable = index < mFilteredUpdates.size() && mFilteredUpdates.at(index).getDownloadUrl().isNotEmpty();
-            auto const name = description.name + " - " + description.output.name + (updateAvailable ? juce::String(updateIndicator) : juce::String{});
+            auto const outputName = description.hasVoices() ? juce::translate("OUTPUTNAME (multitrack)").replace("OUTPUTNAME", Plugin::Tools::getVoicesName(description)) : juce::String(description.output.name);
+            auto const name = description.name + " - " + outputName + (updateAvailable ? juce::String(updateIndicator) : juce::String{});
             return std::make_tuple(name, false);
         }
         else if(rowNumber < totalPlugins) // Web Plugins

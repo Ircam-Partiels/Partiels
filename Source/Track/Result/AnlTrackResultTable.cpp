@@ -26,6 +26,8 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             break;
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::key:
@@ -170,6 +172,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::state:
             case AttrType::height:
             case AttrType::channelsLayout:

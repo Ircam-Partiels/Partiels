@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis(lock);
 }
 
-bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, InputStates inputStates)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, InputStates inputStates, std::vector<std::string> const& features)
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
     MiscWeakAssert(lock.owns_lock());
@@ -37,7 +37,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
     {
         mChrono.start();
         auto description = PluginList::Scanner::loadDescription(key, reader.sampleRate);
-        mAnalysisProcess = std::async(std::launch::async, [this, desc = std::move(description), &reader]()
+        mAnalysisProcess = std::async(std::launch::async, [this, desc = std::move(description), feature = key.feature, &reader]()
                                       {
                                           MiscDebug("Track", "Processor thread launched");
                                           juce::Thread::setCurrentThreadName("Track::Processor::Process");
@@ -46,7 +46,9 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                                                                 mAdvancement.store(advancement);
                                                                                 return !mShouldAbort.load();
                                                                             });
-                                          auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), std::move(desc));
+                                          std::vector<FeatureResult> featureResults;
+                                          featureResults.push_back({feature, std::move(std::get<1>(result)), std::move(desc)});
+                                          auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(featureResults));
                                           if(!mShouldAbort.load())
                                           {
                                               triggerAsyncUpdate();
@@ -66,7 +68,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
         state.stepSize = state.blockSize;
     }
 
-    auto processor = Plugin::Processor::create(key, state, reader);
+    auto processor = Plugin::Processor::create(key, state, accessor.getAttr<AttrType::voiceCounts>(), reader, features);
     MiscWeakAssert(processor != nullptr);
     if(processor == nullptr)
     {
@@ -84,7 +86,19 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                                                           mAdvancement.store(advancement);
                                                                           return !mShouldAbort.load();
                                                                       });
-                                      auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(std::get<1>(result)), proc->getDescription());
+                                      std::vector<FeatureResult> featureResults;
+                                      auto& results = std::get<1>(result);
+                                      if(std::get<0>(result).wasOk())
+                                      {
+                                          MiscWeakAssert(results.size() == proc->getNumFeatures());
+                                          for(auto featureIndex = 0_z; featureIndex < std::min(results.size(), proc->getNumFeatures()); ++featureIndex)
+                                          {
+                                              auto feature = proc->getOutput(featureIndex).identifier;
+                                              auto description = proc->getDescription(featureIndex);
+                                              featureResults.push_back({std::move(feature), std::move(results[featureIndex]), std::move(description)});
+                                          }
+                                      }
+                                      auto fresult = std::make_tuple(std::move(std::get<0>(result)), std::move(featureResults));
                                       if(!mShouldAbort.load())
                                       {
                                           triggerAsyncUpdate();
@@ -110,7 +124,7 @@ void Track::Processor::handleAsyncUpdate()
         {
             mChrono.stop("Processor analysis ended");
             lock.unlock();
-            onAnalysisEnded(std::get<0>(results), std::get<1>(results), std::get<2>(results));
+            onAnalysisEnded(std::get<0>(results), std::get<1>(results));
             lock.lock();
         }
         mAdvancement.store(0.0f);
@@ -268,7 +282,7 @@ Track::Processor::ProcessResult Track::Processor::runWaveformAnalysis(juce::Audi
     return std::make_tuple(juce::Result::ok(), Track::Results(std::move(points)));
 }
 
-Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, InputStates const& inputStates, std::function<bool(float)> callback)
+Track::Processor::PluginProcessResult Track::Processor::runPluginAnalysis(Plugin::Processor& processor, InputStates const& inputStates, std::function<bool(float)> callback)
 {
     auto const tryProcess = [&](std::function<juce::Result(void)> fn) -> juce::Result
     {
@@ -288,18 +302,18 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
 
     if(callback != nullptr && !callback(0.0f))
     {
-        return createEmptyProcessResult(createError(juce::translate("Aborted")));
+        return createEmptyPluginProcessResult(createError(juce::translate("Aborted")));
     }
 
     MiscDebug("Track::Processor", "Preparing analysis...");
-    std::vector<std::vector<Plugin::Result>> results;
+    Plugin::Processor::Results results;
     auto result = tryProcess([&]()
                              {
                                  return processor.prepareToAnalyze(results);
                              });
     if(result.failed())
     {
-        return createEmptyProcessResult(std::move(result));
+        return createEmptyPluginProcessResult(std::move(result));
     }
 
     MiscDebug("Track::Processor", "Setting inputs...");
@@ -336,7 +350,7 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
                         });
     if(result.failed())
     {
-        return createEmptyProcessResult(std::move(result));
+        return createEmptyPluginProcessResult(std::move(result));
     }
     MiscDebug("Track::Processor", "Performing analysis...");
 
@@ -345,25 +359,35 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
     {
         if(callback != nullptr && !callback(processor.getAdvancement()))
         {
-            return std::make_tuple(juce::Result::fail(juce::translate("Aborted")), Track::Results{});
+            return createEmptyPluginProcessResult(juce::Result::fail(juce::translate("Aborted")));
         }
         performResult = processor.performNextAudioBlock(results);
     }
     if(std::get<0>(performResult).failed())
     {
-        return createEmptyProcessResult(std::get<0>(performResult));
+        return createEmptyPluginProcessResult(std::get<0>(performResult));
     }
 
     MiscDebug("Track::Processor", "Converting results...");
-    auto processed = false;
-    auto const cresults = Tools::convert(processor.getOutput(), results, [&]()
-                                         {
-                                             processed = callback == nullptr || callback(1.0f);
-                                             return processed;
-                                         });
-    if(!processed)
+    MiscWeakAssert(!results.empty() && results.size() == processor.getNumFeatures());
+    if(results.empty() || results.size() != processor.getNumFeatures())
     {
-        return createEmptyProcessResult(createError(juce::translate("Aborted")));
+        return createEmptyPluginProcessResult(createError(juce::translate("The processor has no feature to analyze")));
+    }
+    std::vector<Results> cresults;
+    cresults.reserve(results.size());
+    for(auto featureIndex = 0_z; featureIndex < results.size(); ++featureIndex)
+    {
+        auto processed = false;
+        cresults.push_back(Tools::convert(processor.getOutput(featureIndex), results[featureIndex], [&]()
+                                          {
+                                              processed = callback == nullptr || callback(1.0f);
+                                              return processed;
+                                          }));
+        if(!processed)
+        {
+            return createEmptyPluginProcessResult(createError(juce::translate("Aborted")));
+        }
     }
     MiscDebug("Track::Processor", "Analysis completed");
     return std::make_tuple(juce::Result::ok(), std::move(cresults));
@@ -372,6 +396,11 @@ Track::Processor::ProcessResult Track::Processor::runPluginAnalysis(Plugin::Proc
 Track::Processor::ProcessResult Track::Processor::createEmptyProcessResult(juce::Result result)
 {
     return std::make_tuple(std::move(result), Track::Results{});
+}
+
+Track::Processor::PluginProcessResult Track::Processor::createEmptyPluginProcessResult(juce::Result result)
+{
+    return std::make_tuple(std::move(result), std::vector<Results>{});
 }
 
 juce::Result Track::Processor::createError(juce::String const& reason)

@@ -45,6 +45,8 @@ Track::PropertyPanel::PropertyPanel(Director& director, PresetList::Accessor& pr
             case AttrType::description:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:

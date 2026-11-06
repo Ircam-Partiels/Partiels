@@ -439,6 +439,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director, Pr
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::state:
             case AttrType::graphics:
             case AttrType::processing:

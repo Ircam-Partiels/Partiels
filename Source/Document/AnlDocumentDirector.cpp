@@ -1,5 +1,7 @@
 #include "AnlDocumentDirector.h"
 #include "../Group/AnlGroupTools.h"
+#include "../Plugin/AnlPluginListScanner.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlDocumentAudioReader.h"
 #include "AnlDocumentTools.h"
 
@@ -167,6 +169,69 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     updateMarkers(localNotification);
                 };
+                director->onLinkedAnalysisRequested = [this, ptr = director.get()]([[maybe_unused]] NotificationType localNotification)
+                {
+                    mLinkedAnalysisRequests.insert(ptr->getAccessor().getAttr<Track::AttrType::voiceLink>());
+                    triggerAsyncUpdate();
+                };
+                director->onLinkedAnalysisEnded = [this, ptr = director.get()](juce::Result const& result, std::vector<Track::Processor::FeatureResult> const& featureResults)
+                {
+                    dispatchLinkedAnalysisResults(*ptr, result, featureResults);
+                };
+                director->onLinkedAnalysisInterrupted = [this](juce::String const& voiceLink)
+                {
+                    for(auto linkedDirector : getLinkedTrackDirectors(voiceLink))
+                    {
+                        linkedDirector.get().requestLinkedAnalysis();
+                    }
+                };
+                director->onVoiceCountRequested = [this, ptr = director.get()](size_t count)
+                {
+                    // The action is performed asynchronously because it can remove the track that requests the change
+                    // (and the component of the track that performs the request)
+                    auto const voiceLink = ptr->getAccessor().getAttr<Track::AttrType::voiceLink>();
+                    juce::WeakReference<Director> weakReference(this);
+                    juce::MessageManager::callAsync([=, this]()
+                                                    {
+                                                        if(weakReference.get() == nullptr || mIsPerformingAction)
+                                                        {
+                                                            return;
+                                                        }
+                                                        startAction();
+                                                        auto const result = setVoiceCount(voiceLink, count, NotificationType::synchronous);
+                                                        endAction(result.wasOk() ? ActionState::newTransaction : ActionState::abort, juce::translate("Change the number of voices"));
+                                                        if(result.failed())
+                                                        {
+                                                            auto const options = juce::MessageBoxOptions()
+                                                                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                                                                     .withTitle(juce::translate("The number of voices cannot be changed!"))
+                                                                                     .withMessage(result.getErrorMessage())
+                                                                                     .withButton(juce::translate("Ok"), 0);
+                                                            juce::AlertWindow::showAsync(options, nullptr);
+                                                        }
+                                                    });
+                };
+                director->onLinkedAttrUpdated = [this, ptr = director.get()](Track::AttrType attribute, NotificationType localNotification)
+                {
+                    synchronizeLinkedTracks(*ptr, attribute, localNotification);
+                };
+                director->onLinkedActionStarted = [this]()
+                {
+                    if(mLinkedActionDepth++ == 0_z && !mIsPerformingAction)
+                    {
+                        startAction();
+                        mIsLinkedActionStarted = true;
+                    }
+                };
+                director->onLinkedActionEnded = [this](ActionState state, juce::String const& name)
+                {
+                    MiscWeakAssert(mLinkedActionDepth > 0_z);
+                    mLinkedActionDepth = mLinkedActionDepth > 0_z ? mLinkedActionDepth - 1_z : 0_z;
+                    if(mLinkedActionDepth == 0_z && std::exchange(mIsLinkedActionStarted, false))
+                    {
+                        endAction(state, name);
+                    }
+                };
 
                 Track::SafeAccessorRetriever sav;
                 sav.getAccessorFn = getSafeTrackAccessorFn(trackAcsr.getAttr<Track::AttrType::identifier>());
@@ -242,7 +307,18 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
                 updateMarkers(notification);
                 mHierarchyManager.notifyHierarchyChanged(notification);
+                // If the track performs the analysis of linked tracks, the analysis must be performed by another track
+                auto const& erasedDirector = mTracks.at(index);
+                auto const voiceLink = erasedDirector != nullptr ? erasedDirector->getAccessor().getAttr<Track::AttrType::voiceLink>() : juce::String{};
+                auto const wasAnalyzing = erasedDirector != nullptr && erasedDirector->getAnalysisAdvancement().has_value();
                 mTracks.erase(mTracks.begin() + static_cast<long>(index));
+                if(voiceLink.isNotEmpty() && wasAnalyzing)
+                {
+                    for(auto linkedDirector : getLinkedTrackDirectors(voiceLink))
+                    {
+                        linkedDirector.get().requestLinkedAnalysis();
+                    }
+                }
             }
             break;
             case AcsrType::groups:
@@ -348,6 +424,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 
 Document::Director::~Director()
 {
+    cancelPendingUpdate();
     setPluginTable(nullptr, nullptr);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = nullptr;
@@ -718,6 +795,8 @@ std::tuple<juce::Result, juce::String> Document::Director::copyTrack(juce::Strin
     Track::Accessor copy;
     copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), NotificationType::synchronous);
     copy.setAttr<Track::AttrType::identifier>(newTrackIdentifier, NotificationType::synchronous);
+    // The copy of a track is not linked to the other voices of the analysis
+    copy.setAttr<Track::AttrType::voiceLink>(juce::String{}, NotificationType::synchronous);
     newTrackAcsr.copyFrom(copy, notification);
     return std::make_tuple(juce::Result::ok(), newTrackIdentifier);
 }
@@ -825,15 +904,22 @@ std::tuple<juce::Result, juce::String> Document::Director::copyGroup(juce::Strin
     auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, newGroupIdentifier);
     newGroupAcsr.copyFrom(copyAcsr, notification);
 
-    // Copy all the tracks of the original group into the new group
+    // Copy all the tracks of the original group into the new group, the copies
+    // of linked tracks are linked together (but not with the original tracks)
     auto const trackIdentifiers = groupAcsr.getAttr<Group::AttrType::layout>();
+    std::map<juce::String, juce::String> voiceLinks;
     for(size_t i = 0; i < trackIdentifiers.size(); ++i)
     {
         auto const [newTrackResult, trackIdentifier] = copyTrack(newGroupIdentifier, i, trackIdentifiers.at(i), notification);
-        juce::ignoreUnused(trackIdentifier);
         if(newTrackResult.failed())
         {
             return std::make_tuple(newTrackResult, juce::String());
+        }
+        auto const voiceLink = Tools::getTrackAcsr(mAccessor, trackIdentifiers.at(i)).getAttr<Track::AttrType::voiceLink>();
+        if(voiceLink.isNotEmpty())
+        {
+            auto const it = voiceLinks.try_emplace(voiceLink, juce::Uuid().toString()).first;
+            Tools::getTrackAcsr(mAccessor, trackIdentifier).setAttr<Track::AttrType::voiceLink>(it->second, notification);
         }
     }
     return std::make_tuple(juce::Result::ok(), newGroupIdentifier);
@@ -1274,5 +1360,483 @@ juce::String Document::Director::createNextUuid() const
     }
     return identifier;
 }
+
+std::vector<std::reference_wrapper<Track::Director>> Document::Director::getLinkedTrackDirectors(juce::String const& voiceLink)
+{
+    std::vector<std::reference_wrapper<Track::Director>> directors;
+    if(voiceLink.isEmpty())
+    {
+        return directors;
+    }
+    for(auto& director : mTracks)
+    {
+        if(director != nullptr && director->isLinked() && director->getAccessor().getAttr<Track::AttrType::voiceLink>() == voiceLink)
+        {
+            directors.push_back(*director.get());
+        }
+    }
+    return directors;
+}
+
+void Document::Director::synchronizeLinkedTracks(Track::Director& source, Track::AttrType attribute, NotificationType notification)
+{
+    // The linked tracks are only synchronized during the actions, the other changes (undo, redo, loading...)
+    // restore the complete state of the document
+    if(!mIsPerformingAction || mIsSynchronizingLinkedTracks)
+    {
+        return;
+    }
+    auto const& sourceAcsr = source.getAccessor();
+    auto const voiceLink = sourceAcsr.getAttr<Track::AttrType::voiceLink>();
+    if(voiceLink.isEmpty())
+    {
+        return;
+    }
+
+    juce::ScopedValueSetter<bool> const scopedValue(mIsSynchronizingLinkedTracks, true);
+    auto const sourceIdentifier = sourceAcsr.getAttr<Track::AttrType::identifier>();
+    for(auto director : getLinkedTrackDirectors(voiceLink))
+    {
+        auto& trackAcsr = director.get().getAccessor();
+        if(trackAcsr.getAttr<Track::AttrType::identifier>() == sourceIdentifier)
+        {
+            continue;
+        }
+        if(attribute == Track::AttrType::state)
+        {
+            trackAcsr.setAttr<Track::AttrType::state>(sourceAcsr.getAttr<Track::AttrType::state>(), notification);
+        }
+        else if(attribute == Track::AttrType::inputs)
+        {
+            trackAcsr.setAttr<Track::AttrType::inputs>(sourceAcsr.getAttr<Track::AttrType::inputs>(), notification);
+        }
+        else if(attribute == Track::AttrType::useInputResultsExtraThresholds)
+        {
+            trackAcsr.setAttr<Track::AttrType::useInputResultsExtraThresholds>(sourceAcsr.getAttr<Track::AttrType::useInputResultsExtraThresholds>(), notification);
+        }
+        else
+        {
+            MiscWeakAssert(false && "unsupported attribute");
+        }
+    }
+}
+
+juce::Result Document::Director::setVoiceCount(juce::String const& voiceLink, size_t count, NotificationType const notification)
+{
+    // The tracks are already synchronized and the new tracks are copies of the existing ones
+    juce::ScopedValueSetter<bool> const scopedValue(mIsSynchronizingLinkedTracks, true);
+    auto const directors = getLinkedTrackDirectors(voiceLink);
+    if(directors.empty())
+    {
+        return juce::Result::fail(juce::translate("The linked tracks cannot be found."));
+    }
+
+    // The reference track is the track of the highest voice that is used to create the new tracks
+    auto const getVoiceIndex = [](Track::Director& director)
+    {
+        auto const& trackAcsr = director.getAccessor();
+        auto const& voices = trackAcsr.getAttr<Track::AttrType::description>().voices;
+        auto const it = std::find(voices.cbegin(), voices.cend(), trackAcsr.getAttr<Track::AttrType::key>().feature);
+        return static_cast<size_t>(std::distance(voices.cbegin(), it));
+    };
+    auto const referenceIt = std::max_element(directors.cbegin(), directors.cend(), [&](auto const& lhs, auto const& rhs)
+                                              {
+                                                  return getVoiceIndex(lhs.get()) < getVoiceIndex(rhs.get());
+                                              });
+    auto const& referenceAcsr = referenceIt->get().getAccessor();
+    auto const referenceIdentifier = referenceAcsr.getAttr<Track::AttrType::identifier>();
+    auto const& referenceDescription = referenceAcsr.getAttr<Track::AttrType::description>();
+    if(!referenceDescription.hasVoices() || referenceDescription.voices.empty())
+    {
+        return juce::Result::fail(juce::translate("The tracks have no voices."));
+    }
+    auto const key = referenceAcsr.getAttr<Track::AttrType::key>();
+    auto const previousVoices = referenceDescription.voices;
+    auto voiceCounts = referenceAcsr.getAttr<Track::AttrType::voiceCounts>();
+    voiceCounts[previousVoices.front()] = Plugin::Tools::clampVoiceCount(referenceDescription.voiceDescriptor, count);
+
+    auto const descriptions = [&]()
+    {
+        try
+        {
+            return PluginList::Scanner::loadVoiceDescriptions({key.identifier, previousVoices.front()}, referenceAcsr.getAttr<Track::AttrType::sampleRate>(), referenceAcsr.getAttr<Track::AttrType::state>(), voiceCounts);
+        }
+        catch(...)
+        {
+        }
+        return std::vector<Plugin::Description>{};
+    }();
+    if(descriptions.empty())
+    {
+        return juce::Result::fail(juce::translate("The voices of the plugin cannot be loaded."));
+    }
+    std::vector<std::string> voices;
+    for(auto const& description : descriptions)
+    {
+        voices.push_back(description.output.identifier);
+    }
+
+    // Updates the numbers of voices and the voices of the descriptions of the tracks (without waiting for the
+    // results of the analysis) and removes the tracks of the voices that no longer exist
+    std::vector<juce::String> removedTracks;
+    for(auto director : directors)
+    {
+        auto& trackAcsr = director.get().getAccessor();
+        if(std::find(voices.cbegin(), voices.cend(), trackAcsr.getAttr<Track::AttrType::key>().feature) == voices.cend())
+        {
+            removedTracks.push_back(trackAcsr.getAttr<Track::AttrType::identifier>());
+            continue;
+        }
+        auto description = trackAcsr.getAttr<Track::AttrType::description>();
+        description.voices = voices;
+        trackAcsr.setAttr<Track::AttrType::description>(description, notification);
+        trackAcsr.setAttr<Track::AttrType::voiceCounts>(voiceCounts, notification);
+    }
+
+    // Adds the tracks of the new voices (the voices that existed but whose tracks have been removed are ignored)
+    auto const isNewVoice = [&](std::string const& voice)
+    {
+        return std::find(previousVoices.cbegin(), previousVoices.cend(), voice) == previousVoices.cend() &&
+               std::none_of(directors.cbegin(), directors.cend(), [&](auto const& director)
+                            {
+                                return director.get().getAccessor().template getAttr<Track::AttrType::key>().feature == voice;
+                            });
+    };
+    if(std::any_of(voices.cbegin(), voices.cend(), isNewVoice))
+    {
+        // The new tracks are inserted above the reference track from the bottom to the top (the reference track must be
+        // copied before being removed)
+        Track::Accessor copy;
+        copy.copyFrom(referenceAcsr, NotificationType::synchronous);
+        copy.setAttr<Track::AttrType::voiceCounts>(voiceCounts, NotificationType::synchronous);
+        auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, referenceIdentifier);
+        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+        auto const layout = groupAcsr.getAttr<Group::AttrType::layout>();
+        auto const it = std::find(layout.cbegin(), layout.cend(), referenceIdentifier);
+        auto const position = it != layout.cend() ? static_cast<size_t>(std::distance(layout.cbegin(), it)) : 0_z;
+        for(auto const& description : descriptions)
+        {
+            if(!isNewVoice(description.output.identifier))
+            {
+                continue;
+            }
+            auto const [result, newTrackIdentifier] = addTrack(groupIdentifier, position, notification);
+            MiscWeakAssert(result.wasOk());
+            if(result.failed())
+            {
+                continue;
+            }
+            copy.setAttr<Track::AttrType::identifier>(newTrackIdentifier, NotificationType::synchronous);
+            copy.setAttr<Track::AttrType::name>(description.name + " - " + description.output.name, NotificationType::synchronous);
+            copy.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
+            copy.setAttr<Track::AttrType::key>(Plugin::Key{key.identifier, description.output.identifier}, NotificationType::synchronous);
+            Tools::getTrackAcsr(mAccessor, newTrackIdentifier).copyFrom(copy, notification);
+        }
+    }
+
+    for(auto const& identifier : removedTracks)
+    {
+        [[maybe_unused]] auto const result = removeTrack(identifier, notification);
+        MiscWeakAssert(result.wasOk());
+    }
+    return juce::Result::ok();
+}
+
+void Document::Director::dispatchLinkedAnalysisResults(Track::Director& source, juce::Result const& result, std::vector<Track::Processor::FeatureResult> const& featureResults)
+{
+    auto const& sourceAcsr = source.getAccessor();
+    auto const sourceIdentifier = sourceAcsr.getAttr<Track::AttrType::identifier>();
+    auto const voiceLink = sourceAcsr.getAttr<Track::AttrType::voiceLink>();
+    for(auto director : getLinkedTrackDirectors(voiceLink))
+    {
+        auto const& trackAcsr = director.get().getAccessor();
+        if(trackAcsr.getAttr<Track::AttrType::identifier>() == sourceIdentifier)
+        {
+            continue;
+        }
+        auto const& feature = trackAcsr.getAttr<Track::AttrType::key>().feature;
+        auto const it = std::find_if(featureResults.cbegin(), featureResults.cend(), [&](auto const& featureResult)
+                                     {
+                                         return featureResult.feature == feature;
+                                     });
+        if(result.failed())
+        {
+            director.get().setLinkedAnalysisResults(result, {});
+        }
+        else if(it != featureResults.cend())
+        {
+            director.get().setLinkedAnalysisResults(result, *it);
+        }
+        else
+        {
+            // The track has been linked during the analysis so a new analysis is required
+            mLinkedAnalysisRequests.insert(voiceLink);
+            triggerAsyncUpdate();
+        }
+    }
+}
+
+void Document::Director::runLinkedAnalyses()
+{
+    auto const requests = std::exchange(mLinkedAnalysisRequests, {});
+    for(auto const& voiceLink : requests)
+    {
+        auto const directors = getLinkedTrackDirectors(voiceLink);
+        if(directors.empty())
+        {
+            continue;
+        }
+        std::vector<std::string> features;
+        for(auto const& director : directors)
+        {
+            auto const& feature = director.get().getAccessor().getAttr<Track::AttrType::key>().feature;
+            if(std::find(features.cbegin(), features.cend(), feature) == features.cend())
+            {
+                features.push_back(feature);
+            }
+        }
+
+        // The first linked track performs the analysis of all the linked tracks
+        auto& leader = directors.front().get();
+        auto const launched = leader.runLinkedAnalysis(features);
+        juce::WeakReference<Track::Director> weakLeader(&leader);
+        for(auto index = 1_z; index < directors.size(); ++index)
+        {
+            auto& follower = directors.at(index).get();
+            if(launched)
+            {
+                follower.setLinkedAnalysisAdvancementFn([weakLeader]() -> std::optional<float>
+                                                        {
+                                                            return weakLeader != nullptr ? weakLeader->getAnalysisAdvancement() : std::optional<float>{};
+                                                        });
+            }
+            else
+            {
+                follower.setLinkedAnalysisAdvancementFn(nullptr);
+                follower.getAccessor().setAttr<Track::AttrType::warnings>(leader.getAccessor().getAttr<Track::AttrType::warnings>(), NotificationType::synchronous);
+            }
+        }
+    }
+}
+
+void Document::Director::handleAsyncUpdate()
+{
+    runLinkedAnalyses();
+}
+
+class Document::Director::LinkedTracksUnitTest
+: public juce::UnitTest
+{
+public:
+    LinkedTracksUnitTest()
+    : juce::UnitTest("LinkedTracks", "Document")
+    {
+    }
+
+    ~LinkedTracksUnitTest() override = default;
+
+    void runTest() override
+    {
+        // The test requires the IVE example plugins (VAMP_PATH must contain their directory)
+        static auto const identifier = std::string("ive_plugin_example:ivemultivoices");
+        auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+        auto const pluginKeys = pluginLoader != nullptr ? pluginLoader->listPlugins(false) : std::vector<std::string>{};
+        if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), identifier) == pluginKeys.cend())
+        {
+            logMessage("The plugin " + identifier + " cannot be found, the test is skipped");
+            return;
+        }
+
+        Accessor accessor;
+        juce::AudioFormatManager audioFormatManager;
+        juce::UndoManager undoManager;
+        Director director(accessor, audioFormatManager, undoManager);
+
+        auto const getTracks = [&](juce::String const& groupIdentifier)
+        {
+            std::vector<std::reference_wrapper<Track::Accessor>> trackAcsrs;
+            for(auto const& trackIdentifier : Tools::getGroupAcsr(accessor, groupIdentifier).getAttr<Group::AttrType::layout>())
+            {
+                trackAcsrs.push_back(Tools::getTrackAcsr(accessor, trackIdentifier));
+            }
+            return trackAcsrs;
+        };
+
+        auto const getFeatures = [&](juce::String const& groupIdentifier)
+        {
+            std::vector<std::string> features;
+            for(auto const& trackAcsr : getTracks(groupIdentifier))
+            {
+                features.push_back(trackAcsr.get().getAttr<Track::AttrType::key>().feature);
+            }
+            return features;
+        };
+
+        auto const getVoiceCount = [&](Track::Accessor const& trackAcsr)
+        {
+            auto const& voiceCounts = trackAcsr.getAttr<Track::AttrType::voiceCounts>();
+            auto const it = voiceCounts.find("voice1");
+            return it != voiceCounts.cend() ? it->second : 0_z;
+        };
+
+        // The features are expected from the bottom to the top of the group (the first voice at the bottom)
+        auto const expectVoices = [&](juce::String const& groupIdentifier, std::vector<std::string> const& features, size_t voiceCount)
+        {
+            auto bottomToTopFeatures = getFeatures(groupIdentifier);
+            std::reverse(bottomToTopFeatures.begin(), bottomToTopFeatures.end());
+            expect(bottomToTopFeatures == features);
+            std::vector<std::string> voices;
+            for(auto index = 1_z; index <= voiceCount; ++index)
+            {
+                voices.push_back("voice" + std::to_string(index));
+            }
+            for(auto const& trackAcsr : getTracks(groupIdentifier))
+            {
+                expectEquals(getVoiceCount(trackAcsr.get()), voiceCount);
+                expect(trackAcsr.get().getAttr<Track::AttrType::description>().voices == voices);
+            }
+        };
+
+        auto const changeVoices = [&](juce::String const& link, size_t voiceCount)
+        {
+            director.startAction();
+            expect(director.setVoiceCount(link, voiceCount, NotificationType::synchronous).wasOk());
+            director.endAction(ActionState::newTransaction, "Change voices");
+        };
+
+        static auto const voiceLink = juce::String("link");
+        juce::String groupIdentifier;
+        beginTest("creation");
+        {
+            director.startAction();
+            auto const [groupResult, newGroupIdentifier] = director.addGroup(0_z, NotificationType::synchronous);
+            expect(groupResult.wasOk());
+            groupIdentifier = newGroupIdentifier;
+            auto const descriptions = PluginList::Scanner::loadVoiceDescriptions({identifier, "voice1"}, 48000.0, {}, {});
+            expectEquals(descriptions.size(), 3_z);
+            for(auto const& description : descriptions)
+            {
+                auto state = description.defaultState;
+                state.stepSize = state.blockSize;
+                auto const [result, trackIdentifier] = director.addTrack(groupIdentifier, 0_z, NotificationType::synchronous);
+                expect(result.wasOk());
+                auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+                trackAcsr.setAttr<Track::AttrType::voiceLink>(voiceLink, NotificationType::synchronous);
+                trackAcsr.setAttr<Track::AttrType::voiceCounts>(Plugin::VoiceCounts{{"voice1", descriptions.size()}}, NotificationType::synchronous);
+                trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
+                trackAcsr.setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+                trackAcsr.setAttr<Track::AttrType::key>(Plugin::Key{identifier, description.output.identifier}, NotificationType::synchronous);
+            }
+            director.endAction(ActionState::newTransaction, "New tracks");
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3"}, 3_z);
+        }
+
+        beginTest("new voices");
+        {
+            changeVoices(voiceLink, 5_z);
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5"}, 5_z);
+            for(auto const& trackAcsr : getTracks(groupIdentifier))
+            {
+                expect(trackAcsr.get().getAttr<Track::AttrType::voiceLink>() == voiceLink);
+            }
+        }
+
+        beginTest("undo and redo");
+        {
+            expect(undoManager.undo());
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3"}, 3_z);
+            expect(undoManager.redo());
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5"}, 5_z);
+        }
+
+        beginTest("state synchronization");
+        {
+            // The modification of the state of a track is synchronized with the other tracks without changing the voices
+            auto& trackDirector = director.getTrackDirector(getTracks(groupIdentifier).at(1_z).get().getAttr<Track::AttrType::identifier>());
+            auto state = trackDirector.getAccessor().getAttr<Track::AttrType::state>();
+            auto const previousWindowType = state.windowType;
+            state.windowType = Plugin::WindowType::HammingWindow;
+            expect(state.windowType != previousWindowType);
+            trackDirector.startAction();
+            trackDirector.getAccessor().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+            trackDirector.endAction(ActionState::newTransaction, "Change state");
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5"}, 5_z);
+            for(auto const& trackAcsr : getTracks(groupIdentifier))
+            {
+                expect(trackAcsr.get().getAttr<Track::AttrType::state>().windowType == state.windowType);
+            }
+            expect(undoManager.undo());
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5"}, 5_z);
+            for(auto const& trackAcsr : getTracks(groupIdentifier))
+            {
+                expect(trackAcsr.get().getAttr<Track::AttrType::state>().windowType == previousWindowType);
+            }
+        }
+
+        beginTest("removed voices");
+        {
+            changeVoices(voiceLink, 2_z);
+            expectVoices(groupIdentifier, {"voice1", "voice2"}, 2_z);
+            expect(undoManager.undo());
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5"}, 5_z);
+            expect(undoManager.redo());
+            expectVoices(groupIdentifier, {"voice1", "voice2"}, 2_z);
+        }
+
+        beginTest("copies");
+        {
+            auto const trackIdentifier = getTracks(groupIdentifier).at(0_z).get().getAttr<Track::AttrType::identifier>();
+            director.startAction();
+            auto const [trackResult, copiedTrackIdentifier] = director.copyTrack(groupIdentifier, 2_z, trackIdentifier, NotificationType::synchronous);
+            expect(trackResult.wasOk());
+            expect(Tools::getTrackAcsr(accessor, copiedTrackIdentifier).getAttr<Track::AttrType::voiceLink>().isEmpty());
+            expect(director.removeTrack(copiedTrackIdentifier, NotificationType::synchronous).wasOk());
+
+            auto const [groupResult, copiedGroupIdentifier] = director.copyGroup(groupIdentifier, 1_z, NotificationType::synchronous);
+            expect(groupResult.wasOk());
+            director.endAction(ActionState::newTransaction, "Copy");
+            auto const copiedTracks = getTracks(copiedGroupIdentifier);
+            expectEquals(copiedTracks.size(), 2_z);
+            auto const copiedVoiceLink = copiedTracks.empty() ? juce::String{} : copiedTracks.front().get().getAttr<Track::AttrType::voiceLink>();
+            expect(copiedVoiceLink.isNotEmpty() && copiedVoiceLink != voiceLink);
+            for(auto const& trackAcsr : copiedTracks)
+            {
+                expect(trackAcsr.get().getAttr<Track::AttrType::voiceLink>() == copiedVoiceLink);
+            }
+
+            // The tracks of the copied group are not synchronized with the original tracks
+            changeVoices(copiedVoiceLink, 3_z);
+            expectVoices(copiedGroupIdentifier, {"voice1", "voice2", "voice3"}, 3_z);
+            expectVoices(groupIdentifier, {"voice1", "voice2"}, 2_z);
+        }
+
+        beginTest("removed track");
+        {
+            // The voice whose track has been removed is not restored
+            auto const trackIdentifier = getTracks(groupIdentifier).at(0_z).get().getAttr<Track::AttrType::identifier>();
+            expect(Tools::getTrackAcsr(accessor, trackIdentifier).getAttr<Track::AttrType::key>().feature == "voice2");
+            director.startAction();
+            expect(director.removeTrack(trackIdentifier, NotificationType::synchronous).wasOk());
+            director.endAction(ActionState::newTransaction, "Remove track");
+            changeVoices(voiceLink, 4_z);
+            expectVoices(groupIdentifier, {"voice1", "voice3", "voice4"}, 4_z);
+        }
+
+        beginTest("range of the number of voices");
+        {
+            changeVoices(voiceLink, 0_z);
+            expectVoices(groupIdentifier, {"voice1"}, 1_z);
+            changeVoices(voiceLink, 20_z);
+            expectVoices(groupIdentifier, {"voice1", "voice2", "voice3", "voice4", "voice5", "voice6", "voice7", "voice8"}, 8_z);
+        }
+
+        beginTest("unlinked tracks");
+        {
+            expect(director.setVoiceCount("unknown", 2_z, NotificationType::synchronous).failed());
+        }
+    }
+};
+
+static Document::Director::LinkedTracksUnitTest documentDirectorLinkedTracksUnitTest;
 
 ANALYSE_FILE_END

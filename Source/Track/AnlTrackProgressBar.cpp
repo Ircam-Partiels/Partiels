@@ -90,6 +90,8 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::description:
             case AttrType::state:
             case AttrType::graphics:

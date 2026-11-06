@@ -204,6 +204,47 @@ std::optional<size_t> Plugin::Tools::getFeatureIndex(Vamp::Plugin const& plugin,
     return static_cast<size_t>(std::distance(outputs.cbegin(), it));
 }
 
+void Plugin::Tools::setParameters(Vamp::Plugin& plugin, State const& state)
+{
+    auto const descriptors = plugin.getParameterDescriptors();
+    for(auto const& parameter : state.parameters)
+    {
+        if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+                       {
+                           return descriptor.identifier == parameter.first;
+                       }))
+        {
+            plugin.setParameter(parameter.first, parameter.second);
+        }
+    }
+}
+
+void Plugin::Tools::setVoiceCounts(Ive::PluginWrapper& plugin, VoiceCounts const& voiceCounts)
+{
+    for(auto const& voiceCount : voiceCounts)
+    {
+        plugin.setOutputVoiceCount(voiceCount.first, voiceCount.second);
+    }
+}
+
+size_t Plugin::Tools::clampVoiceCount(Parameter const& voiceDescriptor, size_t count)
+{
+    auto const minCount = static_cast<size_t>(std::max(std::round(voiceDescriptor.minValue), 1.0f));
+    auto const maxCount = std::max(static_cast<size_t>(std::max(std::round(voiceDescriptor.maxValue), 1.0f)), minCount);
+    return std::clamp(count, minCount, maxCount);
+}
+
+juce::String Plugin::Tools::getVoicesName(Description const& description)
+{
+    auto const outputName = juce::String(description.output.name);
+    if(!description.hasVoices() || !outputName.containsAnyOf("0123456789"))
+    {
+        return outputName;
+    }
+    auto const name = outputName.trimCharactersAtEnd("0123456789").trimCharactersAtEnd(" -_#.:");
+    return name.isEmpty() ? outputName : name;
+}
+
 juce::String Plugin::InputProperty::getInputTooltip(Plugin::Input const& input)
 {
     return juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name);

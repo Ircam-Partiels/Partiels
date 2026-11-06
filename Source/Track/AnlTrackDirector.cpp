@@ -101,8 +101,35 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 }
             }
             break;
+            case AttrType::voiceLink:
+            {
+                // If the track leaves the link while performing the analysis of the linked tracks,
+                // the analysis is stopped and must be performed by one of the other linked tracks
+                auto const previousVoiceLink = std::exchange(mVoiceLink, mAccessor.getAttr<AttrType::voiceLink>());
+                if(previousVoiceLink != mVoiceLink)
+                {
+                    mIsLinkedAnalysisPending = false;
+                    mLinkedAnalysisAdvancementFn = nullptr;
+                    if(std::exchange(mIsRunningLinkedAnalysis, false))
+                    {
+                        mProcessor.stopAnalysis();
+                        if(onLinkedAnalysisInterrupted != nullptr)
+                        {
+                            onLinkedAnalysisInterrupted(previousVoiceLink);
+                        }
+                    }
+                }
+                runAnalysis(notification);
+            }
+            break;
+            case AttrType::voiceCounts:
+            {
+                runAnalysis(notification);
+            }
+            break;
             case AttrType::inputs:
             {
+                notifyLinkedAttrUpdated(attr, notification);
                 if(onInputUpdated != nullptr)
                 {
                     onInputUpdated(notification);
@@ -112,11 +139,13 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             break;
             case AttrType::useInputResultsExtraThresholds:
             {
+                notifyLinkedAttrUpdated(attr, notification);
                 runAnalysis(notification);
             }
             break;
             case AttrType::state:
             {
+                notifyLinkedAttrUpdated(attr, notification);
                 auto const& description = mAccessor.getAttr<AttrType::description>();
                 auto state = mAccessor.getAttr<AttrType::state>();
                 if(description.inputDomain == Plugin::InputDomain::TimeDomain && description.defaultState.blockSize != 0_z && state.blockSize != description.defaultState.blockSize)
@@ -151,6 +180,11 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             break;
             case AttrType::file:
             {
+                // A track that loads its results from a file is no more linked to the voices of an analysis
+                if(!mAccessor.getAttr<AttrType::file>().isEmpty())
+                {
+                    mAccessor.setAttr<AttrType::voiceLink>(juce::String{}, notification);
+                }
                 auto const file = getEffectiveFile();
                 FileWatcher::clearAllFiles();
                 saveBackup();
@@ -381,18 +415,27 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
 
-    mProcessor.onAnalysisEnded = [&](juce::Result const& result, Results const& data, Plugin::Description const& description)
+    mProcessor.onAnalysisEnded = [&](juce::Result const& result, std::vector<Processor::FeatureResult> const& featureResults)
     {
-        if(result.wasOk())
+        auto const isLinkedAnalysis = std::exchange(mIsRunningLinkedAnalysis, false);
+        auto const& feature = mAccessor.getAttr<AttrType::key>().feature;
+        auto const it = std::find_if(featureResults.cbegin(), featureResults.cend(), [&](auto const& featureResult)
+                                     {
+                                         return featureResult.feature == feature;
+                                     });
+        MiscWeakAssert(result.failed() || it != featureResults.cend());
+        if(result.wasOk() && it != featureResults.cend())
         {
-            mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
-            mAccessor.setAttr<AttrType::results>(data, NotificationType::synchronous);
-            runRendering();
+            applyAnalysisResults(result, it->results, it->description, true);
         }
         else
         {
-            mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, NotificationType::synchronous);
-            warmAboutPlugin(result.getErrorMessage());
+            applyAnalysisResults(result.wasOk() ? juce::Result::fail(juce::translate("The results of the feature FEATURE cannot be found").replace("FEATURE", feature)) : result, {}, {}, true);
+        }
+        // The other linked tracks are notified at the end to avoid accessing the track if it has been deleted
+        if(isLinkedAnalysis && onLinkedAnalysisEnded != nullptr)
+        {
+            onLinkedAnalysisEnded(result, featureResults);
         }
     };
 
@@ -472,6 +515,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
     mHierarchyManager.addHierarchyListener(mHierarchyListener, NotificationType::synchronous);
+    mVoiceLink = mAccessor.getAttr<AttrType::voiceLink>();
 
     // Make sure the sample rate of the track matches the one of the audio format reader, the
     // analyses, the plugin descriptions and the vertical zoom in hertz depend on it
@@ -562,6 +606,17 @@ void Track::Director::startAction()
 {
     MiscDebug("Track", "Director::startAction");
     MiscWeakAssert(mIsPerformingAction == false);
+    // The action of a linked track is performed by the document because it can modify the other linked tracks
+    if(isLinked() && onLinkedActionStarted != nullptr)
+    {
+        if(!std::exchange(mIsPerformingAction, true))
+        {
+            mIsPerformingLinkedAction = true;
+            resetSavedState();
+            onLinkedActionStarted();
+        }
+        return;
+    }
     if(!std::exchange(mIsPerformingAction, true))
     {
 #if PARTIELS_DEBUG_DIFF
@@ -580,6 +635,15 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     MiscDebug("Track", "Director::endAction");
     MiscWeakAssert(mIsPerformingAction == true);
     mIsPerformingAction = false;
+    if(std::exchange(mIsPerformingLinkedAction, false))
+    {
+        resetSavedState();
+        if(onLinkedActionEnded != nullptr)
+        {
+            onLinkedActionEnded(state, name);
+        }
+        return;
+    }
     if(!hasChanged())
     {
         return;
@@ -767,13 +831,55 @@ void Track::Director::runAnalysis(NotificationType const notification)
         return;
     }
 
+    // The analysis of linked tracks is shared and performed by one of the tracks so the
+    // request is forwarded and the track is considered as processing until the results
+    if(isLinked() && onLinkedAnalysisRequested != nullptr)
+    {
+        mProcessor.stopAnalysis();
+        mIsRunningLinkedAnalysis = false;
+        mLinkedAnalysisAdvancementFn = nullptr;
+        mIsLinkedAnalysisPending = true;
+        onLinkedAnalysisRequested(notification);
+        startTimer(50);
+        timerCallback();
+        return;
+    }
+
+    mIsLinkedAnalysisPending = false;
+    mLinkedAnalysisAdvancementFn = nullptr;
+    launchAnalysis({}, notification);
+}
+
+bool Track::Director::runLinkedAnalysis(std::vector<std::string> const& features)
+{
+    mIsLinkedAnalysisPending = false;
+    mLinkedAnalysisAdvancementFn = nullptr;
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    if(!isLinked() || mAudioFormatReader == nullptr || key.identifier.empty() || key.feature.empty())
+    {
+        timerCallback();
+        return false;
+    }
+    mGraphics.stopRendering();
+    auto const launched = launchAnalysis(features, NotificationType::synchronous);
+    mIsRunningLinkedAnalysis = launched;
+    if(!launched)
+    {
+        timerCallback();
+    }
+    return launched;
+}
+
+bool Track::Director::launchAnalysis(std::vector<std::string> const& features, NotificationType const notification)
+{
+    mIsRunningLinkedAnalysis = false;
     auto const inputs = mAccessor.getAttr<AttrType::inputs>();
     if(std::any_of(inputs.cbegin(), inputs.cend(), [this](auto const& pair)
                    {
                        return pair.second.isNotEmpty() && !mHierarchyManager.hasAccessor(pair.second);
                    }))
     {
-        return;
+        return false;
     }
 
     auto const useExtraThresholds = mAccessor.getAttr<AttrType::useInputResultsExtraThresholds>();
@@ -793,7 +899,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
 
     try
     {
-        auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputStates);
+        auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputStates, features);
         if(result)
         {
             MiscDebug("Track", "analysis launched");
@@ -801,6 +907,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
             startTimer(50);
             timerCallback();
         }
+        return result;
     }
     catch(Plugin::LoadingError& e)
     {
@@ -821,6 +928,84 @@ void Track::Director::runAnalysis(NotificationType const notification)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
         warmAboutPlugin("The plugin cannot be allocated!");
+    }
+    return false;
+}
+
+void Track::Director::applyAnalysisResults(juce::Result const& result, Results const& results, Plugin::Description const& description, bool showWarning)
+{
+    if(result.wasOk())
+    {
+        // The warning of a previous analysis is cleared (the warning of the tracks that receive
+        // the results of a linked analysis is not cleared when the analysis is launched)
+        mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        runRendering();
+    }
+    else
+    {
+        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, NotificationType::synchronous);
+        if(showWarning)
+        {
+            warmAboutPlugin(result.getErrorMessage());
+        }
+    }
+}
+
+bool Track::Director::isLinked() const
+{
+    return mAccessor.getAttr<AttrType::voiceLink>().isNotEmpty() && mAccessor.getAttr<AttrType::file>().isEmpty();
+}
+
+std::optional<float> Track::Director::getAnalysisAdvancement() const
+{
+    if(!mProcessor.isRunning())
+    {
+        return {};
+    }
+    return mProcessor.getAdvancement();
+}
+
+void Track::Director::setLinkedAnalysisAdvancementFn(std::function<std::optional<float>()> fn)
+{
+    mIsLinkedAnalysisPending = false;
+    mLinkedAnalysisAdvancementFn = std::move(fn);
+    startTimer(50);
+    timerCallback();
+}
+
+void Track::Director::requestLinkedAnalysis()
+{
+    if(isLinked())
+    {
+        runAnalysis(NotificationType::synchronous);
+    }
+}
+
+void Track::Director::requestVoiceCount(size_t count)
+{
+    if(isLinked() && onVoiceCountRequested != nullptr)
+    {
+        onVoiceCountRequested(count);
+    }
+}
+
+void Track::Director::setLinkedAnalysisResults(juce::Result const& result, Processor::FeatureResult const& featureResult)
+{
+    mIsLinkedAnalysisPending = false;
+    mLinkedAnalysisAdvancementFn = nullptr;
+    // The warning is only displayed by the track that performed the analysis
+    MiscWeakAssert(result.failed() || featureResult.feature == mAccessor.getAttr<AttrType::key>().feature);
+    applyAnalysisResults(result, featureResult.results, featureResult.description, false);
+    timerCallback();
+}
+
+void Track::Director::notifyLinkedAttrUpdated(AttrType attribute, NotificationType const notification)
+{
+    if(onLinkedAttrUpdated != nullptr && isLinked())
+    {
+        onLinkedAttrUpdated(attribute, notification);
     }
 }
 
@@ -1112,8 +1297,10 @@ void Track::Director::fileHasBeenModified(juce::File const& file)
 
 void Track::Director::timerCallback()
 {
-    auto const processorRunning = mProcessor.isRunning() || mLoader.isRunning();
-    auto const processorProgress = mProcessor.isRunning() ? mProcessor.getAdvancement() : (mLoader.isRunning() ? mLoader.getAdvancement() : 0.0);
+    // The progress of the analysis of a linked track can be performed by another linked track
+    auto const linkedAdvancement = mLinkedAnalysisAdvancementFn != nullptr ? mLinkedAnalysisAdvancementFn() : std::optional<float>{};
+    auto const processorRunning = mProcessor.isRunning() || mLoader.isRunning() || mIsLinkedAnalysisPending || linkedAdvancement.has_value();
+    auto const processorProgress = mProcessor.isRunning() ? mProcessor.getAdvancement() : (mLoader.isRunning() ? mLoader.getAdvancement() : linkedAdvancement.value_or(0.0f));
     auto const graphicsRunning = mGraphics.isRunning();
     auto const graphicsProgress = mGraphics.getAdvancement();
     if(!processorRunning && !graphicsRunning)
@@ -1197,7 +1384,11 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                                                  mPluginTableShowHideFn(false);
                                              }
                                              startAction();
+                                             // The replacement plugin is analyzed by the track alone because
+                                             // the shared analysis of the linked tracks uses the plugin of the link
+                                             mAccessor.setAttr<AttrType::voiceCounts>(Plugin::VoiceCounts{}, NotificationType::synchronous);
                                              mAccessor.setAttr<AttrType::key>(keys.front(), NotificationType::synchronous);
+                                             mAccessor.setAttr<AttrType::voiceLink>(juce::String{}, NotificationType::synchronous);
                                              endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
                                          };
                                          mPluginTableShowHideFn(true);

@@ -1,4 +1,5 @@
 #include "AnlPluginListScanner.h"
+#include "AnlPluginTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -62,8 +63,9 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
             auto* plugin = loadPlugin(pluginKey, static_cast<float>(sampleRate));
             if(plugin != nullptr)
             {
+                // The voices of an output are represented by the first voice
                 auto const outputs = plugin->getOutputDescriptors();
-                for(size_t feature = 0; feature < outputs.size(); ++feature)
+                for(auto feature = 0_z; feature < outputs.size(); feature += std::clamp(plugin->getOutputVoiceCount(feature), 1_z, outputs.size() - feature))
                 {
                     Plugin::Key const key{pluginKey, outputs[feature].identifier};
                     MiscWeakAssert(list.count(key) == 0_z);
@@ -115,6 +117,63 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
     }
     auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key.identifier);
     return Plugin::loadDescription(*wrapper.get(), key);
+}
+
+Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key, double sampleRate, Plugin::State const& state, Plugin::VoiceCounts const& voiceCounts)
+{
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    MiscStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        return {};
+    }
+    auto* plugin = pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE);
+    if(plugin == nullptr)
+    {
+        return {};
+    }
+    auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key.identifier);
+    // The numbers of voices must be set before retrieving the outputs
+    Plugin::Tools::setVoiceCounts(*wrapper.get(), voiceCounts);
+    Plugin::Tools::setParameters(*wrapper.get(), state);
+    return Plugin::loadDescription(*wrapper.get(), key);
+}
+
+std::vector<Plugin::Description> PluginList::Scanner::loadVoiceDescriptions(Plugin::Key const& key, double sampleRate, Plugin::State const& state, Plugin::VoiceCounts const& voiceCounts)
+{
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    MiscStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        return {};
+    }
+    auto* plugin = pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE);
+    if(plugin == nullptr)
+    {
+        return {};
+    }
+    auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key.identifier);
+    // The numbers of voices must be set before retrieving the outputs
+    Plugin::Tools::setVoiceCounts(*wrapper.get(), voiceCounts);
+    Plugin::Tools::setParameters(*wrapper.get(), state);
+
+    auto const featureIndex = Plugin::Tools::getFeatureIndex(*wrapper.get(), key.feature);
+    if(!featureIndex.has_value())
+    {
+        return {};
+    }
+    auto voices = Plugin::getVoices(*wrapper.get(), featureIndex.value());
+    if(voices.empty())
+    {
+        voices.push_back(key.feature);
+    }
+    std::vector<Plugin::Description> descriptions;
+    descriptions.reserve(voices.size());
+    for(auto const& voice : voices)
+    {
+        descriptions.push_back(Plugin::loadDescription(*wrapper.get(), {key.identifier, voice}));
+    }
+    return descriptions;
 }
 
 ANALYSE_FILE_END

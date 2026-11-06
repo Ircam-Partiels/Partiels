@@ -398,6 +398,8 @@ void Application::Osc::TrackDispatcher::synchronize(bool connect)
             case Track::AttrType::sendViaOsc:
             case Track::AttrType::file:
             case Track::AttrType::fileDescription:
+            case Track::AttrType::voiceLink:
+            case Track::AttrType::voiceCounts:
             case Track::AttrType::results:
             case Track::AttrType::edit:
             case Track::AttrType::description:

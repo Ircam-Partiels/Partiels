@@ -42,6 +42,8 @@ Track::PropertyOscSection::PropertyOscSection(Director& director)
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::state:

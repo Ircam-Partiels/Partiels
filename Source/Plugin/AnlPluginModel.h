@@ -142,6 +142,12 @@ namespace Plugin
     void to_json(nlohmann::json& j, State const& state);
     void from_json(nlohmann::json const& j, State& state);
 
+    //! @brief The numbers of voices of the outputs of a plugin
+    //! @details The keys are the identifiers of the first voices of the outputs (that don't depend on the number of
+    //! voices) and the values are the numbers of voices. The outputs that are not in the container use the default
+    //! number of voices of the plugin.
+    using VoiceCounts = std::map<std::string, size_t>;
+
     //! @brief The full description of a plugin
     //! @details The structure contains all the informations to represent and to describe how to control
     //! a plugin but it doesn't contain any control data or any result.
@@ -161,6 +167,14 @@ namespace Plugin
         std::vector<OutputExtra> extraOutputs;   //!< The extra outputs of the plugin
         std::vector<Input> inputs;               //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
+        std::vector<std::string> voices{};       //!< The identifiers of the outputs that are the voices of the output (empty if the output has no voices)
+        Parameter voiceDescriptor{};             //!< The descriptor of the number of voices of the output (the identifier is empty if the output has no voices)
+
+        //! @brief Gets if the output has voices
+        bool hasVoices() const noexcept
+        {
+            return !voiceDescriptor.identifier.empty();
+        }
 
         //! @brief Check if the description is valid
         bool valid() const noexcept
@@ -182,7 +196,9 @@ namespace Plugin
                    output == rhs.output &&
                    extraOutputs == rhs.extraOutputs &&
                    inputs == rhs.inputs &&
-                   programs == rhs.programs;
+                   programs == rhs.programs &&
+                   voices == rhs.voices &&
+                   voiceDescriptor == rhs.voiceDescriptor;
         }
 
         inline bool operator!=(Description const& rhs) const noexcept
@@ -193,6 +209,14 @@ namespace Plugin
 
     void to_json(nlohmann::json& j, Description const& description);
     void from_json(nlohmann::json const& j, Description& description);
+
+    //! @brief Gets the voices of an output of a plugin
+    //! @details The voices of an output are the consecutive outputs that share the same nature (e.g. the pitches
+    //! of a polyphonic analysis) as defined by the plugin with the current numbers of voices.
+    //! @param plugin The plugin
+    //! @param outputIndex The index of an output
+    //! @return The identifiers of the outputs that are the voices of the output (empty if the output has no voices)
+    std::vector<std::string> getVoices(Ive::PluginWrapper const& plugin, size_t outputIndex);
 
     Description loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key);
 

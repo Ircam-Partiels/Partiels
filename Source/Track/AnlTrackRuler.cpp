@@ -15,6 +15,8 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::name:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::edit:
             case AttrType::key:
             case AttrType::inputs:
@@ -154,6 +156,8 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::name:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::edit:
             case AttrType::key:
             case AttrType::inputs:

@@ -120,6 +120,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
         switch(attribute)
         {
             case AttrType::identifier:
+            case AttrType::voiceLink:
             case AttrType::key:
             case AttrType::inputs:
             case AttrType::description:
@@ -199,6 +200,40 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 }
                 mParameterProperties = std::move(parameterProperties);
 
+                // The number of voices is changed by the document because it adds or removes linked tracks
+                // (the property is only recreated if the descriptor changed to preserve the keyboard focus)
+                auto const showVoices = description.hasVoices() && mDirector.isLinked();
+                if(!showVoices || mVoiceProperty == nullptr || mVoiceDescriptor != description.voiceDescriptor)
+                {
+                    if(mVoiceProperty != nullptr)
+                    {
+                        removeChildComponent(mVoiceProperty.get());
+                        mVoiceProperty.reset();
+                    }
+                    mVoiceDescriptor = description.voiceDescriptor;
+                    if(showVoices)
+                    {
+                        mVoiceProperty = Plugin::Tools::createProperty(mVoiceDescriptor, [=, this]([[maybe_unused]] auto const& parameter, float value)
+                                                                       {
+                                                                           if(weakReference.get() == nullptr)
+                                                                           {
+                                                                               return;
+                                                                           }
+                                                                           mDirector.requestVoiceCount(static_cast<size_t>(std::max(std::round(value), 1.0f)));
+                                                                           // The displayed value is updated after the change that is performed
+                                                                           // asynchronously (and that can be clamped or rejected)
+                                                                           juce::MessageManager::callAsync([=, this]()
+                                                                                                           {
+                                                                                                               if(weakReference.get() != nullptr)
+                                                                                                               {
+                                                                                                                   updateState();
+                                                                                                               }
+                                                                                                           });
+                                                                       });
+                        addAndMakeVisible(mVoiceProperty.get());
+                    }
+                }
+
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
 
@@ -222,6 +257,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 resized();
                 [[fallthrough]];
             }
+            case AttrType::voiceCounts:
             case AttrType::state:
             case AttrType::useInputResultsExtraThresholds:
             {
@@ -303,6 +339,10 @@ void Track::PropertyProcessorSection::resized()
         setBounds(*property.second.get());
     }
     setBounds(mPropertyUseInputResultsExtraThresholds);
+    if(mVoiceProperty != nullptr)
+    {
+        setBounds(*mVoiceProperty.get());
+    }
     for(auto& property : mParameterProperties)
     {
         setBounds(*property.second.get());
@@ -682,6 +722,14 @@ void Track::PropertyProcessorSection::updateState()
         {
             Plugin::Tools::setPropertyValue(*propertyIt->second.get(), propertyIt->first, {parameter.second}, silent);
         }
+    }
+
+    if(mVoiceProperty != nullptr && !description.voices.empty())
+    {
+        auto const& voiceCounts = mAccessor.getAttr<AttrType::voiceCounts>();
+        auto const it = voiceCounts.find(description.voices.front());
+        auto const voiceCount = it != voiceCounts.cend() ? it->second : description.voices.size();
+        Plugin::Tools::setPropertyValue(*mVoiceProperty.get(), mVoiceDescriptor, {static_cast<float>(voiceCount)}, silent);
     }
 
     auto const& key = mAccessor.getAttr<AttrType::key>();

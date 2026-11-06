@@ -78,6 +78,8 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::useInputResultsExtraThresholds:
             case AttrType::state:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::graphics:

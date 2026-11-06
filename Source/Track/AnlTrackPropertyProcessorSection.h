@@ -47,6 +47,8 @@ namespace Track
         std::map<Plugin::Input, std::unique_ptr<Plugin::InputProperty>, Plugin::IdentifierComparator> mPropertyInputTracks;
         PropertyToggle mPropertyUseInputResultsExtraThresholds;
         std::map<Plugin::Parameter, std::unique_ptr<juce::Component>, Plugin::IdentifierComparator> mParameterProperties;
+        Plugin::Parameter mVoiceDescriptor;
+        std::unique_ptr<juce::Component> mVoiceProperty;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};
 

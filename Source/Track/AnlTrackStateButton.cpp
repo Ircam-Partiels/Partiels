@@ -46,6 +46,8 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::state:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::results:
             case AttrType::edit:
             case AttrType::graphics:
