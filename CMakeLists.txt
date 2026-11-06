@@ -473,6 +473,7 @@ elseif(UNIX)
 endif()
 
 add_test(NAME UnitTests COMMAND Partiels --unit-tests)
+set_tests_properties(UnitTests PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:ive_plugin_example>")
 
 add_test(NAME Version COMMAND Partiels --version)
 set_tests_properties(Version PROPERTIES PASS_REGULAR_EXPRESSION "${PARTIELS_BUILD_TAG}")
@@ -554,6 +555,19 @@ set_tests_properties(ExportCsvWithFileNoColour PROPERTIES ENVIRONMENT "VAMP_PATH
 add_test(NAME ExportCsvWithInvalidFile COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateWithInvalidFile.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/CSV/ --format=csv --nogrids --header=generic --separator=,)
 set_tests_properties(ExportCsvWithInvalidFile PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(ExportCsvWithInvalidFile PROPERTIES WILL_FAIL TRUE)
+
+# The voices of an output are analyzed by linked tracks that share the same analysis (with a number of voices
+# defined by the tracks, the output that follows the voices is moved according to the number of voices)
+add_test(NAME ExportVoicesCsv COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/TemplateVoices.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/Voices/ --format=csv --nogrids --header=generic --separator=,)
+set_tests_properties(ExportVoicesCsv PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:ive_plugin_example>")
+add_test(NAME ExportVoicesCsvCompareVoice1 COMMAND ${CMAKE_COMMAND} -E compare_files "${TESTS_EXPECTED_DIRECTORY}/Voices/Group_1_Voice_1.csv" "${TESTS_OUTPUT_DIRECTORY}/Voices/Group_1_Voice_1.csv")
+set_tests_properties(ExportVoicesCsvCompareVoice1 PROPERTIES DEPENDS "ExportVoicesCsv")
+add_test(NAME ExportVoicesCsvCompareVoice2 COMMAND ${CMAKE_COMMAND} -E compare_files "${TESTS_OUTPUT_DIRECTORY}/Voices/Group_1_Single_Voice_2.csv" "${TESTS_OUTPUT_DIRECTORY}/Voices/Group_1_Voice_2.csv")
+set_tests_properties(ExportVoicesCsvCompareVoice2 PROPERTIES DEPENDS "ExportVoicesCsv")
+add_test(NAME ExportVoicesCsvCompareVoice3 COMMAND ${CMAKE_COMMAND} -E compare_files "${TESTS_EXPECTED_DIRECTORY}/Voices/Group_1_Voice_3.csv" "${TESTS_OUTPUT_DIRECTORY}/Voices/Group_1_Voice_3.csv")
+set_tests_properties(ExportVoicesCsvCompareVoice3 PROPERTIES DEPENDS "ExportVoicesCsv")
+add_test(NAME ExportVoicesCsvCompareActive COMMAND ${CMAKE_COMMAND} -E compare_files "${TESTS_EXPECTED_DIRECTORY}/Voices/Group_1_Active_Voices.csv" "${TESTS_OUTPUT_DIRECTORY}/Voices/Group_1_Active_Voices.csv")
+set_tests_properties(ExportVoicesCsvCompareActive PROPERTIES DEPENDS "ExportVoicesCsv")
 
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${TESTS_OUTPUT_DIRECTORY}/JSON/ --format=json)
 set_tests_properties(ExportJson PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:vamp-example-plugins>")
