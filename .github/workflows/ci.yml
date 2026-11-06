@@ -180,6 +180,7 @@ jobs:
       run: |
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target ive_plugin_example | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Build
       if: ${{ env.is_notarized == 'true' }}
@@ -188,6 +189,7 @@ jobs:
         security set-keychain-settings -lut 7200 buildagent
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target partiels-vamp-plugins | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target vamp-example-plugins | xcbeautify --renderer github-actions --disable-logging
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} --target ive_plugin_example | xcbeautify --renderer github-actions --disable-logging
         set -o pipefail && xcodebuild archive -project "${{ github.workspace }}/build/Partiels.xcodeproj" -configuration ${{ env.build_type }} -scheme "Partiels" -archivePath "${{ github.workspace }}/build/Partiels.xcarchive" -destination platform=macOS | xcbeautify --renderer github-actions --disable-logging
     - name: Test
       run: |
