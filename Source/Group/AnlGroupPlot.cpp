@@ -20,6 +20,8 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAcsr)
             case Track::AttrType::name:
             case Track::AttrType::file:
             case Track::AttrType::fileDescription:
+            case Track::AttrType::voiceLink:
+            case Track::AttrType::voiceCounts:
             case Track::AttrType::key:
             case Track::AttrType::inputs:
             case Track::AttrType::useInputResultsExtraThresholds:

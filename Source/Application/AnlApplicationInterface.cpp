@@ -137,10 +137,10 @@ Application::Interface::DocumentContainer::DocumentContainer()
 , mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner(), Instance::get().getApplicationCommandManager())
 {
     mPluginListTable.setMultipleSelectionEnabled(true);
-    mPluginListTable.onAddPlugins = [](std::vector<Plugin::Key> keys)
+    mPluginListTable.onAddPlugins = [this](std::vector<Plugin::Key> keys)
     {
         auto const position = Tools::getNewTrackPosition();
-        Tools::addPluginTracks(std::get<0_z>(position), std::get<1_z>(position), keys);
+        Tools::addPluginTracks(std::get<0_z>(position), std::get<1_z>(position), keys, &mPluginListTable);
     };
 
     addAndMakeVisible(mDocumentSection);

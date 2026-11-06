@@ -19,6 +19,8 @@ Track::Section::Section(Director& director, juce::ApplicationCommandManager& com
             case AttrType::identifier:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::key:
             case AttrType::inputs:
             case AttrType::useInputResultsExtraThresholds:

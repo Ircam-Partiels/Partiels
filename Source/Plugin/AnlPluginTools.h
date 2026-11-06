@@ -32,6 +32,32 @@ namespace Plugin
 
         std::vector<std::unique_ptr<Ive::PluginWrapper>> createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate);
         std::optional<size_t> getFeatureIndex(Vamp::Plugin const& plugin, std::string const& feature);
+
+        //! @brief Sets the parameters of a plugin with the values of a state
+        //! @details The parameters of the state that are not supported by the plugin are ignored.
+        //! @param plugin The plugin
+        //! @param state The state that contains the values of the parameters
+        void setParameters(Vamp::Plugin& plugin, State const& state);
+
+        //! @brief Sets the numbers of voices of the outputs of a plugin
+        //! @details The outputs that have no voices are ignored. The numbers of voices must be set before retrieving
+        //! the outputs of the plugin (because the Vamp plugin adapter caches them) and before its initialisation.
+        //! @param plugin The plugin
+        //! @param voiceCounts The numbers of voices of the outputs
+        void setVoiceCounts(Ive::PluginWrapper& plugin, VoiceCounts const& voiceCounts);
+
+        //! @brief Clamps a number of voices to the range of the descriptor of the number of voices
+        //! @param voiceDescriptor The descriptor of the number of voices
+        //! @param count The number of voices
+        //! @return The number of voices in the range of the descriptor (at least 1)
+        size_t clampVoiceCount(Parameter const& voiceDescriptor, size_t count);
+
+        //! @brief Gets the name of an output with voices
+        //! @details The name is the name of the first voice without the trailing number of the voice (e.g. "Pitch"
+        //! for "Pitch 1") or the name of the output if it has no voices.
+        //! @param description The description of the output
+        //! @return The name of the output
+        juce::String getVoicesName(Description const& description);
     } // namespace Tools
 
     class InputProperty

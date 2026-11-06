@@ -113,16 +113,18 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     return mOutputBuffer.data();
 }
 
-Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, Key const& key, size_t const feature, State const& state)
+Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, Key const& key, std::vector<std::string> const& features, std::vector<size_t> const& featureIndices, State const& state, VoiceCounts const& voiceCounts)
 : mPlugins(std::move(plugins))
 , mCircularReader(audioFormatReader, state.blockSize, state.stepSize)
 , mKey(key)
-, mFeature(feature)
+, mFeatures(features)
+, mFeatureIndices(featureIndices)
 , mState(state)
+, mVoiceCounts(voiceCounts)
 {
 }
 
-juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& results)
+juce::Result Plugin::Processor::prepareToAnalyze(Results& results)
 {
     MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty())
@@ -154,17 +156,12 @@ juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>
             adapter->setWindowType(mState.windowType);
         }
 
-        auto const descriptors = plugin->getParameterDescriptors();
-        for(auto const& parameter : mState.parameters)
+        // The numbers of voices of the first plugin are already set (and its outputs retrieved)
+        if(plugin != mPlugins.front())
         {
-            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                           {
-                               return descriptor.identifier == parameter.first;
-                           }))
-            {
-                plugin->setParameter(parameter.first, parameter.second);
-            }
+            Tools::setVoiceCounts(*plugin.get(), mVoiceCounts);
         }
+        Tools::setParameters(*plugin.get(), mState);
 
         auto const numChannels = std::min(maxChannels, numReaderChannels);
         numReaderChannels -= numChannels;
@@ -175,31 +172,45 @@ juce::Result Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
-    MiscStrongAssert(mFeature < descriptors.size());
-    if(mFeature >= descriptors.size())
+    MiscStrongAssert(!mFeatureIndices.empty());
+    if(mFeatureIndices.empty())
     {
+        return juce::Result::fail(juce::translate("The processor has no feature to analyze"));
+    }
+    if(std::any_of(mFeatureIndices.cbegin(), mFeatureIndices.cend(), [&](auto const featureIndex)
+                   {
+                       return featureIndex >= descriptors.size();
+                   }))
+    {
+        MiscStrongAssert(false && "invalid feature index");
         return juce::Result::fail(juce::translate("The processor has an invalid feature index"));
     }
 
-    results.resize(mPlugins.size());
-    auto const& descriptor = descriptors[mFeature];
-    if(descriptor.sampleType == Output::SampleType::OneSamplePerStep)
+    results.clear();
+    results.resize(mFeatureIndices.size());
+    for(auto featureIndex = 0_z; featureIndex < mFeatureIndices.size(); ++featureIndex)
     {
-        auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
-        auto const size = static_cast<size_t>(std::ceil(length / static_cast<double>(mState.stepSize)));
-        for(auto& channelResults : results)
+        auto& featureResults = results[featureIndex];
+        featureResults.resize(mPlugins.size());
+        auto const& descriptor = descriptors[mFeatureIndices[featureIndex]];
+        if(descriptor.sampleType == Output::SampleType::OneSamplePerStep)
         {
-            channelResults.reserve(size);
+            auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
+            auto const size = static_cast<size_t>(std::ceil(length / static_cast<double>(mState.stepSize)));
+            for(auto& channelResults : featureResults)
+            {
+                channelResults.reserve(size);
+            }
         }
-    }
-    else if(descriptor.sampleType == Output::SampleType::FixedSampleRate)
-    {
-        auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
-        auto const duration = length / mCircularReader.getSampleRate();
-        auto const size = static_cast<size_t>(std::ceil(duration * descriptor.sampleRate));
-        for(auto& channelResults : results)
+        else if(descriptor.sampleType == Output::SampleType::FixedSampleRate)
         {
-            channelResults.reserve(size);
+            auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
+            auto const duration = length / mCircularReader.getSampleRate();
+            auto const size = static_cast<size_t>(std::ceil(duration * descriptor.sampleRate));
+            for(auto& channelResults : featureResults)
+            {
+                channelResults.reserve(size);
+            }
         }
     }
     return juce::Result::ok();
@@ -256,7 +267,7 @@ juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<s
     return (results.empty() || results.size() == 1_z || results.size() == mPlugins.size()) ? juce::Result::ok() : juce::Result::fail(juce::translate("The precomputed results size is invalid"));
 }
 
-std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& results)
+std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(Results& results)
 {
     MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty())
@@ -270,8 +281,18 @@ std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vec
     {
         return std::make_tuple(juce::Result::fail(juce::translate("The processor has a null plugin")), false);
     }
+    MiscStrongAssert(results.size() == mFeatureIndices.size() && std::all_of(results.cbegin(), results.cend(), [this](auto const& featureResults)
+                                                                             {
+                                                                                 return featureResults.size() == mPlugins.size();
+                                                                             }));
+    if(results.size() != mFeatureIndices.size() || std::any_of(results.cbegin(), results.cend(), [this](auto const& featureResults)
+                                                               {
+                                                                   return featureResults.size() != mPlugins.size();
+                                                               }))
+    {
+        return std::make_tuple(juce::Result::fail(juce::translate("The processor results are not prepared")), false);
+    }
 
-    auto const feature = mFeature;
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
     MiscStrongAssert(blockSize > 0 && stepSize > 0);
@@ -284,14 +305,14 @@ std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vec
     auto const sampleRate = mCircularReader.getSampleRate();
     auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
 
-    if(mCircularReader.hasReachedEnd())
+    auto const addResults = [&](Vamp::Plugin::FeatureSet& featureSet, size_t channelIndex)
     {
-        for(size_t index = 0; index < mPlugins.size(); ++index)
+        for(auto featureIndex = 0_z; featureIndex < mFeatureIndices.size(); ++featureIndex)
         {
-            auto result = mPlugins[index]->getRemainingFeatures();
-            auto it = result.find(static_cast<int>(feature));
-            if(it != result.end())
+            auto it = featureSet.find(static_cast<int>(mFeatureIndices[featureIndex]));
+            if(it != featureSet.end())
             {
+                auto& channelResults = results[featureIndex][channelIndex];
                 for(auto& that : it->second)
                 {
                     if(!that.hasTimestamp)
@@ -299,9 +320,18 @@ std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vec
                         that.hasTimestamp = true;
                         that.timestamp = rt;
                     }
-                    results[index].emplace_back(std::move(that));
+                    channelResults.emplace_back(std::move(that));
                 }
             }
+        }
+    };
+
+    if(mCircularReader.hasReachedEnd())
+    {
+        for(size_t index = 0; index < mPlugins.size(); ++index)
+        {
+            auto featureSet = mPlugins[index]->getRemainingFeatures();
+            addResults(featureSet, index);
         }
         return std::make_tuple(juce::Result::ok(), false);
     }
@@ -309,20 +339,8 @@ std::tuple<juce::Result, bool> Plugin::Processor::performNextAudioBlock(std::vec
     auto const** block = mCircularReader.getNextBlock();
     for(size_t index = 0; index < mPlugins.size(); ++index)
     {
-        auto result = mPlugins[index]->process(block, rt);
-        auto it = result.find(static_cast<int>(feature));
-        if(it != result.end())
-        {
-            for(auto& that : it->second)
-            {
-                if(!that.hasTimestamp)
-                {
-                    that.hasTimestamp = true;
-                    that.timestamp = rt;
-                }
-                results[index].emplace_back(std::move(that));
-            }
-        }
+        auto featureSet = mPlugins[index]->process(block, rt);
+        addResults(featureSet, index);
         block += mPlugins[index]->getMaxChannelCount();
     }
     return std::make_tuple(juce::Result::ok(), true);
@@ -335,14 +353,20 @@ float Plugin::Processor::getAdvancement() const
     return position / length;
 }
 
-Plugin::Description Plugin::Processor::getDescription() const
+size_t Plugin::Processor::getNumFeatures() const
+{
+    return mFeatures.size();
+}
+
+Plugin::Description Plugin::Processor::getDescription(size_t featureIndex) const
 {
     MiscStrongAssert(!mPlugins.empty());
-    if(mPlugins.empty() || mPlugins.at(0) == nullptr)
+    MiscStrongAssert(featureIndex < mFeatures.size());
+    if(mPlugins.empty() || mPlugins.at(0) == nullptr || featureIndex >= mFeatures.size())
     {
         return {};
     }
-    return loadDescription(*mPlugins.at(0), mKey);
+    return loadDescription(*mPlugins.at(0), Key{mKey.identifier, mFeatures.at(featureIndex)});
 }
 
 std::vector<Plugin::Input> Plugin::Processor::getInputs() const
@@ -363,32 +387,45 @@ std::vector<Plugin::Input> Plugin::Processor::getInputs() const
     return inputs;
 }
 
-Plugin::Output Plugin::Processor::getOutput() const
+Plugin::Output Plugin::Processor::getOutput(size_t featureIndex) const
 {
     MiscStrongAssert(!mPlugins.empty());
-    if(mPlugins.empty() || mPlugins.at(0) == nullptr)
+    MiscStrongAssert(featureIndex < mFeatureIndices.size());
+    if(mPlugins.empty() || mPlugins.at(0) == nullptr || featureIndex >= mFeatureIndices.size())
     {
         return {};
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
-    MiscStrongAssert(descriptors.size() > mFeature);
-    return descriptors.size() > mFeature ? descriptors.at(mFeature) : Plugin::Output{};
+    auto const descriptorIndex = mFeatureIndices.at(featureIndex);
+    MiscStrongAssert(descriptorIndex < descriptors.size());
+    return descriptorIndex < descriptors.size() ? descriptors.at(descriptorIndex) : Plugin::Output{};
 }
 
-std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
+std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, VoiceCounts const& voiceCounts, juce::AudioFormatReader& audioFormatReader, std::vector<std::string> const& features)
 {
     auto plugins = Tools::createPluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
     if(plugins.empty())
     {
         return nullptr;
     }
-    auto const feature = Tools::getFeatureIndex(*plugins.at(0_z).get(), key.feature);
-    if(!feature.has_value())
+    // The outputs can depend on the parameters and the numbers of voices so they must be set before retrieving the feature indices
+    auto& plugin = *plugins.at(0_z).get();
+    Tools::setVoiceCounts(plugin, voiceCounts);
+    Tools::setParameters(plugin, state);
+    auto const effectiveFeatures = features.empty() ? std::vector<std::string>{key.feature} : features;
+    std::vector<size_t> featureIndices;
+    featureIndices.reserve(effectiveFeatures.size());
+    for(auto const& feature : effectiveFeatures)
     {
-        throw LoadingError("plugin feature is invalid");
+        auto const featureIndex = Tools::getFeatureIndex(plugin, feature);
+        if(!featureIndex.has_value())
+        {
+            throw LoadingError("plugin feature is invalid");
+        }
+        featureIndices.push_back(featureIndex.value());
     }
-    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), key, feature.value(), state));
+    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), key, effectiveFeatures, featureIndices, state, voiceCounts));
 }
 
 class Plugin::Processor::CircularReaderUnitTest
@@ -484,5 +521,153 @@ public:
 };
 
 static Plugin::Processor::CircularReaderUnitTest pluginProcessorCircularReaderUnitTest;
+
+class Plugin::Processor::FeaturesUnitTest
+: public juce::UnitTest
+{
+public:
+    FeaturesUnitTest()
+    : juce::UnitTest("Features", "Plugin")
+    {
+    }
+
+    ~FeaturesUnitTest() override = default;
+
+    void runTest() override
+    {
+        class Reader
+        : public juce::AudioFormatReader
+        {
+        public:
+            Reader(double sr, juce::int64 l)
+            : juce::AudioFormatReader(nullptr, "InternalTest")
+            {
+                sampleRate = sr;
+                bitsPerSample = sizeof(float);
+                numChannels = 1;
+                lengthInSamples = l;
+                usesFloatingPointData = true;
+            }
+
+            ~Reader() override = default;
+
+            bool readSamples(int* const* destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64, int numSamples) override
+            {
+                for(int channelIndex = 0; channelIndex < numDestChannels; ++channelIndex)
+                {
+                    auto* channel = reinterpret_cast<float*>(destChannels[channelIndex]) + startOffsetInDestBuffer;
+                    std::fill(channel, channel + numSamples, 0.0f);
+                }
+                return true;
+            }
+        };
+
+        // The test requires the IVE example plugins (VAMP_PATH must contain their directory)
+        static auto const identifier = std::string("ive_plugin_example:ivemultivoices");
+        auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+        auto const pluginKeys = pluginLoader != nullptr ? pluginLoader->listPlugins(false) : std::vector<std::string>{};
+        if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), identifier) == pluginKeys.cend())
+        {
+            logMessage("The plugin " + identifier + " cannot be found, the test is skipped");
+            return;
+        }
+
+        Reader reader(44100.0, 44100 * 2);
+        State state;
+        state.blockSize = 256_z;
+        state.stepSize = 256_z;
+        VoiceCounts const voiceCounts{{"voice1", 5_z}};
+
+        auto const analyze = [&](std::unique_ptr<Processor> processor)
+        {
+            Results results;
+            expect(processor != nullptr);
+            if(processor == nullptr)
+            {
+                return results;
+            }
+            expect(processor->prepareToAnalyze(results).wasOk());
+            auto performResult = processor->performNextAudioBlock(results);
+            while(std::get<1>(performResult))
+            {
+                performResult = processor->performNextAudioBlock(results);
+            }
+            expect(std::get<0>(performResult).wasOk());
+            return results;
+        };
+
+        beginTest("features depending on the numbers of voices");
+        {
+            expectDoesNotThrow(Processor::create({identifier, "voice5"}, state, voiceCounts, reader));
+            expectThrowsType(Processor::create({identifier, "voice6"}, state, voiceCounts, reader), LoadingError);
+            expectThrowsType(Processor::create({identifier, "voice4"}, state, {}, reader), LoadingError);
+            expectThrowsType(Processor::create({identifier, "voice2"}, state, {{"voice1", 1_z}}, reader), LoadingError);
+            // The output that follows the voices is moved
+            auto processor = Processor::create({identifier, "active"}, state, voiceCounts, reader);
+            expect(processor != nullptr && processor->getDescription().output.identifier == "active");
+            expect(processor != nullptr && !processor->getDescription().hasVoices());
+            expect(processor != nullptr && Tools::getVoicesName(processor->getDescription()) == "Active Voices");
+        }
+
+        beginTest("description of the voices");
+        {
+            auto processor = Processor::create({identifier, "voice1"}, state, {{"voice1", 1_z}}, reader);
+            expect(processor != nullptr);
+            if(processor != nullptr)
+            {
+                // An output with a single voice keeps its voices (so the number of voices can be changed)
+                auto const description = processor->getDescription();
+                expect(description.hasVoices());
+                expect(description.voices == std::vector<std::string>{"voice1"});
+                expectEquals(description.voiceDescriptor.identifier, std::string("voices"));
+                expectEquals(description.voiceDescriptor.minValue, 1.0f);
+                expectEquals(description.voiceDescriptor.maxValue, 8.0f);
+                expectEquals(description.voiceDescriptor.defaultValue, 3.0f);
+                expectEquals(Tools::getVoicesName(description), juce::String("Voice"));
+            }
+        }
+
+        beginTest("several features analyzed by the same processor");
+        {
+            std::vector<std::string> const features{"voice1", "voice2", "voice3", "voice4", "voice5"};
+            auto processor = Processor::create({identifier, "voice1"}, state, voiceCounts, reader, features);
+            expect(processor != nullptr);
+            if(processor == nullptr)
+            {
+                return;
+            }
+            expectEquals(processor->getNumFeatures(), features.size());
+            for(auto featureIndex = 0_z; featureIndex < features.size(); ++featureIndex)
+            {
+                auto const description = processor->getDescription(featureIndex);
+                expect(description.output.identifier == features.at(featureIndex));
+                expect(description.voices == features);
+            }
+
+            auto const results = analyze(std::move(processor));
+            expectEquals(results.size(), features.size());
+            for(auto featureIndex = 0_z; featureIndex < std::min(results.size(), features.size()); ++featureIndex)
+            {
+                // The results of a feature must be the same as with a processor that analyzes only this feature
+                auto const expected = analyze(Processor::create({identifier, features.at(featureIndex)}, state, voiceCounts, reader));
+                expectEquals(expected.size(), 1_z);
+                expectEquals(results.at(featureIndex).size(), 1_z);
+                if(!expected.empty() && expected.front().size() == 1_z && results.at(featureIndex).size() == 1_z)
+                {
+                    auto const& featureResults = results.at(featureIndex).front();
+                    expect(!featureResults.empty());
+                    auto const& expectedResults = expected.front().front();
+                    auto const equals = featureResults.size() == expectedResults.size() && std::equal(featureResults.cbegin(), featureResults.cend(), expectedResults.cbegin(), [](Result const& lhs, Result const& rhs)
+                                                                                                      {
+                                                                                                          return lhs == rhs;
+                                                                                                      });
+                    expect(equals, "voice " + juce::String(featureIndex + 1_z));
+                }
+            }
+        }
+    }
+};
+
+static Plugin::Processor::FeaturesUnitTest pluginProcessorFeaturesUnitTest;
 
 ANALYSE_FILE_END

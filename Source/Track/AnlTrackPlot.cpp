@@ -15,6 +15,8 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::identifier:
             case AttrType::file:
             case AttrType::fileDescription:
+            case AttrType::voiceLink:
+            case AttrType::voiceCounts:
             case AttrType::name:
             case AttrType::key:
             case AttrType::inputs:

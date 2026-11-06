@@ -220,6 +220,8 @@ namespace Track
         , name
         , file
         , fileDescription
+        , voiceLink
+        , voiceCounts
         , results
         , edit
         , description
@@ -265,6 +267,12 @@ namespace Track
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::file, FileInfo, Model::Flag::basic>
     , Model::Attr<AttrType::fileDescription, FileDescription, Model::Flag::basic>
+    // The identifier shared by the tracks of the voices of the same analysis (empty if the track is not linked), it
+    // must be declared before the key so that the track is linked before the analysis is requested when restored
+    , Model::Attr<AttrType::voiceLink, juce::String, Model::Flag::basic>
+    // The numbers of voices of the analysis of the linked tracks (shared by the linked tracks), it is independent of the
+    // state so that the presets and the programs don't change the number of voices (and the number of tracks)
+    , Model::Attr<AttrType::voiceCounts, Plugin::VoiceCounts, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::edit, Edition, Model::Flag::notifying>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
@@ -311,6 +319,8 @@ namespace Track
         : Accessor(AttrContainer(  {""}
                                  , {""}
                                  , {}
+                                 , {}
+                                 , {""}
                                  , {}
                                  , {}
                                  , {}

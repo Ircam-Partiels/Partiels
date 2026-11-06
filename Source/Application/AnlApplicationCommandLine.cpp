@@ -220,12 +220,14 @@ Application::CommandLine::CommandLine()
                  juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
                  auto const result = mExecutor->exportTo(outputDir, "", options, useGroupOverview, ignoreGridResults);
                  mShouldWait = false;
+                 juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+                 // The method fail() cannot be used because the exception is not caught outside the command
                  if(result.failed())
                  {
-                     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-                     fail(result.getErrorMessage());
+                     std::cerr << result.getErrorMessage() << std::endl;
+                     sendQuitSignal(1);
+                     return;
                  }
-                 juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
                  sendQuitSignal(0);
              };
 
