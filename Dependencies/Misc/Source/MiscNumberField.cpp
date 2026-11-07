@@ -54,6 +54,16 @@ void NumberField::Label::editorAboutToBeHidden(juce::TextEditor* ed)
     setValue(getValue(), juce::NotificationType::dontSendNotification);
 }
 
+void NumberField::Label::textEditorReturnKeyPressed(juce::TextEditor& ed)
+{
+    juce::WeakReference<juce::Component> weakReference(this);
+    juce::Label::textEditorReturnKeyPressed(ed);
+    if(weakReference.get() != nullptr && onReturnKey != nullptr)
+    {
+        onReturnKey();
+    }
+}
+
 double NumberField::Label::getCorrespondingValue(double value) const
 {
     MiscWeakAssert(!std::isnan(value) && std::isfinite(value));
@@ -311,6 +321,13 @@ NumberField::NumberField()
         if(onEditorHide != nullptr)
         {
             onEditorHide();
+        }
+    };
+    mLabel.onReturnKey = [this]()
+    {
+        if(onEditorReturnKey != nullptr)
+        {
+            onEditorReturnKey();
         }
     };
     mLabel.onTextChange = [this]()

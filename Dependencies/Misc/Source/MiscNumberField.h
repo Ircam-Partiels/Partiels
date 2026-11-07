@@ -48,6 +48,8 @@ public:
     void setFont(juce::Font const& newFont);
     std::function<void()> onEditorShow = nullptr;
     std::function<void()> onEditorHide = nullptr;
+    //! @brief Called when the return key validates the text editor, even if the value doesn't change.
+    std::function<void()> onEditorReturnKey = nullptr;
 
     // juce::Component
     void resized() override;
@@ -68,6 +70,7 @@ public:
         void textWasChanged() override;
         void editorShown(juce::TextEditor* editor) override;
         void editorAboutToBeHidden(juce::TextEditor* editor) override;
+        void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
 
         void setValue(double value, juce::NotificationType const notification);
         double getValue() const;
@@ -88,6 +91,7 @@ public:
 
         std::function<juce::String(double value)> stringFromValue = nullptr;
         std::function<double(juce::String const& text)> valueFromString = nullptr;
+        std::function<void()> onReturnKey = nullptr;
 
     private:
         // juce::TextEditor::InputFilter
