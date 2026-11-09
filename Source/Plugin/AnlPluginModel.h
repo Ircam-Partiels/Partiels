@@ -81,6 +81,8 @@ namespace Plugin
         {
         }
 
+        bool isAlias{false}; //!< Whether the parameter defines and represents other parameters (its value isn't part of the state)
+
         bool operator==(Parameter const& rhd) const noexcept;
         inline bool operator!=(Parameter const& rhd) const noexcept
         {
