@@ -9,6 +9,13 @@ namespace Track
     namespace Tools
     {
         bool hasPluginKey(Accessor const& acsr);
+        //! @brief Gets the key used to save and retrieve the default presets of a track
+        //! @details The tracks of the voices of an output share the presets of the output, which is represented by
+        //! its first voice (that doesn't depend on the number of voices) as in the plugin list.
+        //! @param acsr The accessor of the track
+        //! @return The key of the plugin with the first voice as feature if the output has voices, the key of the
+        //! plugin otherwise
+        Plugin::Key getPresetKey(Accessor const& acsr);
         bool hasResultFile(Accessor const& acsr);
         bool supportsWindowType(Accessor const& acsr);
         bool supportsBlockSize(Accessor const& acsr);

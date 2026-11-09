@@ -7,6 +7,17 @@ bool Track::Tools::hasPluginKey(Accessor const& acsr)
     return !acsr.getAttr<AttrType::key>().identifier.empty();
 }
 
+Plugin::Key Track::Tools::getPresetKey(Accessor const& acsr)
+{
+    auto const& key = acsr.getAttr<AttrType::key>();
+    auto const& description = acsr.getAttr<AttrType::description>();
+    if(description.hasVoices() && !description.voices.empty())
+    {
+        return {key.identifier, description.voices.front()};
+    }
+    return key;
+}
+
 bool Track::Tools::hasResultFile(Accessor const& acsr)
 {
     return !acsr.getAttr<AttrType::file>().isEmpty();
