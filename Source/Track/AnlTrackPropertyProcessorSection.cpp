@@ -264,7 +264,9 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
             case AttrType::voiceCounts:
             case AttrType::state:
             case AttrType::useInputResultsExtraThresholds:
+            case AttrType::sampleRate:
             {
+                // The values of the alias parameters also depend on the sample rate
                 updateState();
             }
             break;
@@ -287,7 +289,6 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
             case AttrType::grid:
             case AttrType::zoomValueMode:
             case AttrType::zoomLink:
-            case AttrType::sampleRate:
             case AttrType::zoomLogScale:
                 break;
         }
@@ -419,9 +420,8 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                          },
                          [=, this]()
                          {
-                             auto state = mAccessor.getAttr<AttrType::state>();
                              MiscWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
-                             state.parameters[parameter.identifier] = std::clamp(value, parameter.minValue, parameter.maxValue);
+                             auto const state = mDirector.getStateWithParameterValue(parameter.identifier, std::clamp(value, parameter.minValue, parameter.maxValue));
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
                          });
@@ -719,10 +719,13 @@ void Track::PropertyProcessorSection::updateState()
     }
     mPropertyStepSize.entry.setText(juce::String(state.stepSize) + "samples", silent);
 
+    // The values of the alias parameters are not part of the state (they depend on the real parameters)
+    auto const aliasValues = mDirector.getAliasParameterValues();
     for(auto const& property : mParameterProperties)
     {
-        auto const it = state.parameters.find(property.first.identifier);
-        if(it != state.parameters.cend())
+        auto const& values = property.first.isAlias ? aliasValues : state.parameters;
+        auto const it = values.find(property.first.identifier);
+        if(it != values.cend())
         {
             Plugin::Tools::setPropertyValue(*property.second.get(), property.first, {it->second}, silent);
         }
