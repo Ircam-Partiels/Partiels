@@ -573,13 +573,19 @@ void Group::PropertyProcessorsSection::updateParameters()
         auto const& description = trackAcsr.get().getAttr<Track::AttrType::description>();
         for(auto const& parameter : description.parameters)
         {
-            if(parameterProperties.count(parameter) > 0_z)
+            if(std::any_of(parameterProperties.cbegin(), parameterProperties.cend(), [&](auto const& property)
+                           {
+                               return property.first.identifier == parameter.identifier;
+                           }))
             {
                 continue;
             }
-            auto& property = parameterProperties[parameter];
-            auto it = mParameterProperties.find(parameter);
-            if(it != mParameterProperties.end() && it->first == parameter)
+            auto it = std::find_if(mParameterProperties.begin(), mParameterProperties.end(), [&](auto const& property)
+                                   {
+                                       return property.first == parameter && property.second != nullptr;
+                                   });
+            std::unique_ptr<juce::Component> property;
+            if(it != mParameterProperties.end())
             {
                 property = std::move(it->second);
             }
@@ -589,6 +595,7 @@ void Group::PropertyProcessorsSection::updateParameters()
                 addAndMakeVisible(property.get());
             }
             property->setEnabled(hasPlugin);
+            parameterProperties.emplace_back(parameter, std::move(property));
         }
     }
     mParameterProperties = std::move(parameterProperties);

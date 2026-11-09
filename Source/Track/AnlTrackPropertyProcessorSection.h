@@ -46,7 +46,7 @@ namespace Track
         PropertyList mPropertyStepSize;
         std::map<Plugin::Input, std::unique_ptr<Plugin::InputProperty>, Plugin::IdentifierComparator> mPropertyInputTracks;
         PropertyToggle mPropertyUseInputResultsExtraThresholds;
-        std::map<Plugin::Parameter, std::unique_ptr<juce::Component>, Plugin::IdentifierComparator> mParameterProperties;
+        std::vector<std::pair<Plugin::Parameter, std::unique_ptr<juce::Component>>> mParameterProperties;
         Plugin::Parameter mVoiceDescriptor;
         std::unique_ptr<juce::Component> mVoiceProperty;
         PropertyList mPropertyPreset;
