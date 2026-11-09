@@ -1,4 +1,5 @@
 #include "AnlApplicationTools.h"
+#include "../Document/AnlDocumentAudioReader.h"
 #include "../Document/AnlDocumentSelection.h"
 #include "../Track/AnlTrackTools.h"
 #include "AnlApplicationInstance.h"
@@ -126,6 +127,14 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPlugi
     auto const& graphicPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::graphic>();
     auto const graphicPresetIt = graphicPresets.find(key);
 
+    // The descriptions (the ranges and the default values of the parameters) can depend on the sample rate so the
+    // sample rate of the audio files of the document is used (the tracks use 48kHz without audio files)
+    auto const sampleRate = [&]()
+    {
+        auto const reader = std::get<0>(Document::createAudioFormatReader(documentDir.getAccessor(), documentDir.getAudioFormatManager()));
+        return reader != nullptr ? reader->sampleRate : 48000.0;
+    }();
+
     // The descriptions of the voices of the output (or the description of the output if it has no voices),
     // the outputs can depend on the parameters so the processor preset is used if defined
     auto const descriptions = [&]()
@@ -133,14 +142,14 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPlugi
         try
         {
             auto const state = procPresetIt != procPresets.cend() ? procPresetIt->second : Plugin::State{};
-            auto const defaultDescriptions = PluginList::Scanner::loadVoiceDescriptions(key, 48000.0, state, {});
+            auto const defaultDescriptions = PluginList::Scanner::loadVoiceDescriptions(key, sampleRate, state, {});
             if(voiceCount == 0_z || defaultDescriptions.empty() || !defaultDescriptions.front().hasVoices() || defaultDescriptions.front().voices.empty())
             {
                 return defaultDescriptions;
             }
             auto const& description = defaultDescriptions.front();
             auto const& firstVoice = description.voices.front();
-            return PluginList::Scanner::loadVoiceDescriptions({key.identifier, firstVoice}, 48000.0, state, {{firstVoice, Plugin::Tools::clampVoiceCount(description.voiceDescriptor, voiceCount)}});
+            return PluginList::Scanner::loadVoiceDescriptions({key.identifier, firstVoice}, sampleRate, state, {{firstVoice, Plugin::Tools::clampVoiceCount(description.voiceDescriptor, voiceCount)}});
         }
         catch(...)
         {
