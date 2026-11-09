@@ -1839,4 +1839,135 @@ public:
 
 static Document::Director::LinkedTracksUnitTest documentDirectorLinkedTracksUnitTest;
 
+class DocumentDirectorAliasParametersUnitTest
+: public juce::UnitTest
+{
+public:
+    DocumentDirectorAliasParametersUnitTest()
+    : juce::UnitTest("AliasParameters", "Document")
+    {
+    }
+
+    ~DocumentDirectorAliasParametersUnitTest() override = default;
+
+    void runTest() override
+    {
+        // The test requires the IVE example plugins (VAMP_PATH must contain their directory)
+        static auto const identifier = std::string("ive_plugin_example:ivealiasparameters");
+        auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+        auto const pluginKeys = pluginLoader != nullptr ? pluginLoader->listPlugins(false) : std::vector<std::string>{};
+        if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), identifier) == pluginKeys.cend())
+        {
+            logMessage("The plugin " + identifier + " cannot be found, the test is skipped");
+            return;
+        }
+
+        Document::Accessor accessor;
+        juce::AudioFormatManager audioFormatManager;
+        juce::UndoManager undoManager;
+        Document::Director director(accessor, audioFormatManager, undoManager);
+
+        static auto constexpr sampleRate = 48000.0;
+        Plugin::Key const key{identifier, "window"};
+        juce::String trackIdentifier;
+
+        auto const getTrackAcsr = [&]() -> Track::Accessor&
+        {
+            return Document::Tools::getTrackAcsr(accessor, trackIdentifier);
+        };
+
+        auto const getDuration = [&]()
+        {
+            auto const& parameters = getTrackAcsr().getAttr<Track::AttrType::state>().parameters;
+            auto const it = parameters.find("duration");
+            return it != parameters.cend() ? it->second : -1.0f;
+        };
+
+        auto const getSize = [&]()
+        {
+            auto const values = director.getTrackDirector(trackIdentifier).getAliasParameterValues();
+            auto const it = values.find("size");
+            return it != values.cend() ? it->second : -1.0f;
+        };
+
+        auto const changeParameter = [&](std::string const& parameter, float value)
+        {
+            auto& trackDirector = director.getTrackDirector(trackIdentifier);
+            auto const state = trackDirector.getStateWithParameterValue(parameter, value);
+            trackDirector.startAction();
+            trackDirector.getAccessor().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+            trackDirector.endAction(ActionState::newTransaction, "Change parameter");
+        };
+
+        beginTest("description");
+        {
+            auto const description = PluginList::Scanner::loadDescription(key, sampleRate);
+            expect(description.parameters.size() == 2_z && !description.parameters.at(0_z).isAlias && description.parameters.at(1_z).isAlias);
+            expect(description.defaultState.parameters.size() == 1_z && description.defaultState.parameters.count("duration") > 0_z);
+        }
+
+        beginTest("creation");
+        {
+            director.startAction();
+            auto const [groupResult, groupIdentifier] = director.addGroup(0_z, NotificationType::synchronous);
+            expect(groupResult.wasOk());
+            auto const [trackResult, newTrackIdentifier] = director.addTrack(groupIdentifier, 0_z, NotificationType::synchronous);
+            expect(trackResult.wasOk());
+            trackIdentifier = newTrackIdentifier;
+            getTrackAcsr().setAttr<Track::AttrType::sampleRate>(sampleRate, NotificationType::synchronous);
+            getTrackAcsr().setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+            director.endAction(ActionState::newTransaction, "New track");
+            expectEquals(getDuration(), 20.0f);
+            expectEquals(getSize(), 960.0f);
+            expect(getTrackAcsr().getAttr<Track::AttrType::state>() == getTrackAcsr().getAttr<Track::AttrType::description>().defaultState);
+        }
+
+        beginTest("parameters");
+        {
+            changeParameter("duration", 50.0f);
+            expectEquals(getDuration(), 50.0f);
+            expectEquals(getSize(), 2400.0f);
+            changeParameter("size", 4800.0f);
+            expectEquals(getDuration(), 100.0f);
+            expectEquals(getSize(), 4800.0f);
+            expect(getTrackAcsr().getAttr<Track::AttrType::state>().parameters.count("size") == 0_z);
+        }
+
+        beginTest("undo and redo");
+        {
+            expect(undoManager.undo());
+            expectEquals(getDuration(), 50.0f);
+            expectEquals(getSize(), 2400.0f);
+            expect(undoManager.redo());
+            expectEquals(getDuration(), 100.0f);
+            expectEquals(getSize(), 4800.0f);
+        }
+
+        beginTest("sample rate");
+        {
+            // The real parameter doesn't depend on the sample rate, only the alias parameter does
+            getTrackAcsr().setAttr<Track::AttrType::sampleRate>(44100.0, NotificationType::synchronous);
+            expectEquals(getDuration(), 100.0f);
+            expectEquals(getSize(), 4410.0f);
+            getTrackAcsr().setAttr<Track::AttrType::sampleRate>(sampleRate, NotificationType::synchronous);
+            expectEquals(getDuration(), 100.0f);
+            expectEquals(getSize(), 4800.0f);
+        }
+
+        beginTest("state with alias values");
+        {
+            // The values of the alias parameters are removed from the states (e.g. loaded from a preset)
+            auto state = getTrackAcsr().getAttr<Track::AttrType::state>();
+            state.parameters["duration"] = 10.0f;
+            state.parameters["size"] = 1200.0f;
+            getTrackAcsr().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+            expect(getTrackAcsr().getAttr<Track::AttrType::state>().parameters.count("size") == 0_z);
+            expectEquals(getDuration(), 10.0f);
+            expectEquals(getSize(), 480.0f);
+        }
+    }
+};
+
+static DocumentDirectorAliasParametersUnitTest documentDirectorAliasParametersUnitTest;
+
 ANALYSE_FILE_END

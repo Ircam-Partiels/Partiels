@@ -145,14 +145,27 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             break;
             case AttrType::state:
             {
-                notifyLinkedAttrUpdated(attr, notification);
                 auto const& description = mAccessor.getAttr<AttrType::description>();
                 auto state = mAccessor.getAttr<AttrType::state>();
+                // The values of the alias parameters are not part of the state (they depend on the real parameters)
+                for(auto const& parameter : description.parameters)
+                {
+                    if(parameter.isAlias)
+                    {
+                        state.parameters.erase(parameter.identifier);
+                    }
+                }
                 if(description.inputDomain == Plugin::InputDomain::TimeDomain && description.defaultState.blockSize != 0_z && state.blockSize != description.defaultState.blockSize)
                 {
                     state.blockSize = description.defaultState.blockSize;
-                    mAccessor.setAttr<AttrType::state>(state, notification);
                 }
+                if(state != mAccessor.getAttr<AttrType::state>())
+                {
+                    // The nested notification synchronizes the linked tracks and runs the analysis
+                    mAccessor.setAttr<AttrType::state>(state, notification);
+                    break;
+                }
+                notifyLinkedAttrUpdated(attr, notification);
                 runAnalysis(notification);
             }
             break;
@@ -160,11 +173,16 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             {
                 auto const& description = mAccessor.getAttr<AttrType::description>();
                 auto state = mAccessor.getAttr<AttrType::state>();
-                // Update the default values of the parameters if they are not already set
-                // to avoid overwriting user values when changing the plugin key for example
+                // Update the default values of the parameters if they are not already set to avoid overwriting user
+                // values when changing the plugin key for example (the values of the alias parameters are not part of
+                // the state because they depend on the real parameters)
                 for(auto const& parameter : description.parameters)
                 {
-                    if(!state.parameters.count(parameter.identifier))
+                    if(parameter.isAlias)
+                    {
+                        state.parameters.erase(parameter.identifier);
+                    }
+                    else if(!state.parameters.count(parameter.identifier))
                     {
                         state.parameters[parameter.identifier] = parameter.defaultValue;
                     }
@@ -999,6 +1017,76 @@ void Track::Director::setLinkedAnalysisResults(juce::Result const& result, Proce
     MiscWeakAssert(result.failed() || featureResult.feature == mAccessor.getAttr<AttrType::key>().feature);
     applyAnalysisResults(result, featureResult.results, featureResult.description, false);
     timerCallback();
+}
+
+Ive::PluginWrapper* Track::Director::getAliasParameterPlugin()
+{
+    // The instance is recreated if the plugin or the sample rate changed
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const sampleRate = mAccessor.getAttr<AttrType::sampleRate>();
+    if(mAliasParameterPlugin != nullptr && mAliasParameterKey == key && std::abs(mAliasParameterSampleRate - sampleRate) <= std::numeric_limits<double>::epsilon())
+    {
+        return mAliasParameterPlugin.get();
+    }
+    mAliasParameterPlugin.reset();
+    mAliasParameterKey = key;
+    mAliasParameterSampleRate = sampleRate;
+    if(key.identifier.empty() || key.feature.empty() || sampleRate <= 0.0)
+    {
+        return nullptr;
+    }
+    try
+    {
+        mAliasParameterPlugin = Plugin::Tools::createPluginWrapper(key, sampleRate);
+    }
+    catch(std::exception const& e)
+    {
+        MiscDebug("Track", e.what());
+    }
+    catch(...)
+    {
+    }
+    return mAliasParameterPlugin.get();
+}
+
+Plugin::State Track::Director::getStateWithParameterValue(std::string const& identifier, float value)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    auto const& parameters = mAccessor.getAttr<AttrType::description>().parameters;
+    auto const it = std::find_if(parameters.cbegin(), parameters.cend(), [&](auto const& parameter)
+                                 {
+                                     return parameter.identifier == identifier;
+                                 });
+    if(it == parameters.cend() || !it->isAlias)
+    {
+        state.parameters[identifier] = value;
+        return state;
+    }
+    // If the plugin cannot be loaded, the error is reported by the analysis
+    auto* plugin = getAliasParameterPlugin();
+    if(plugin == nullptr)
+    {
+        return state;
+    }
+    return Plugin::Tools::applyAliasParameterValue(*plugin, state, identifier, value);
+}
+
+std::map<std::string, float> Track::Director::getAliasParameterValues()
+{
+    auto const& parameters = mAccessor.getAttr<AttrType::description>().parameters;
+    if(std::none_of(parameters.cbegin(), parameters.cend(), [](auto const& parameter)
+                    {
+                        return parameter.isAlias;
+                    }))
+    {
+        return {};
+    }
+    auto* plugin = getAliasParameterPlugin();
+    if(plugin == nullptr)
+    {
+        return {};
+    }
+    return Plugin::Tools::getAliasParameterValues(*plugin, mAccessor.getAttr<AttrType::state>());
 }
 
 void Track::Director::notifyLinkedAttrUpdated(AttrType attribute, NotificationType const notification)

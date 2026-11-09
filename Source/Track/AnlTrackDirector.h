@@ -79,6 +79,21 @@ namespace Track
         //! @brief Sets the results of the analysis performed by another linked track
         void setLinkedAnalysisResults(juce::Result const& result, Processor::FeatureResult const& featureResult);
 
+        //! @brief Gets the state of the plugin with a new value of a parameter
+        //! @details If the parameter is an alias parameter, the value is applied to an instance of the plugin and
+        //! the values of the real parameters are retrieved from it (the state is returned as is if the plugin cannot
+        //! be loaded). Otherwise, the value is set in the state.
+        //! @param identifier The identifier of the parameter
+        //! @param value The new value of the parameter
+        //! @return The state with the new value of the parameter
+        Plugin::State getStateWithParameterValue(std::string const& identifier, float value);
+
+        //! @brief Gets the values of the alias parameters that correspond to the current state
+        //! @details The values are retrieved from an instance of the plugin (the container is empty if the plugin has
+        //! no alias parameters or if it cannot be loaded).
+        //! @return The values of the alias parameters
+        std::map<std::string, float> getAliasParameterValues();
+
         //! @brief Requests the change of the number of voices of the linked tracks
         //! @details The change is performed by the document (with onVoiceCountRequested) because it adds or removes
         //! linked tracks (potentially this track).
@@ -115,6 +130,10 @@ namespace Track
     private:
         void sanitizeZooms(NotificationType const notification);
         void sanitizeExtraOutputs(NotificationType const notification);
+        //! @brief Gets the instance of the plugin used for the alias parameters
+        //! @details The instance is created when needed and kept while the key and the sample rate don't change.
+        //! @return The instance of the plugin or nullptr if it cannot be loaded
+        Ive::PluginWrapper* getAliasParameterPlugin();
         void runAnalysis(NotificationType const notification);
         bool launchAnalysis(std::vector<std::string> const& features, NotificationType const notification);
         void applyAnalysisResults(juce::Result const& result, Results const& results, Plugin::Description const& description, bool showWarning);
@@ -143,6 +162,9 @@ namespace Track
         bool mIsLinkedAnalysisPending{false};
         bool mIsRunningLinkedAnalysis{false};
         juce::String mVoiceLink;
+        std::unique_ptr<Ive::PluginWrapper> mAliasParameterPlugin; //!< The instance used for the alias parameters
+        Plugin::Key mAliasParameterKey;                            //!< The key of the instance used for the alias parameters
+        double mAliasParameterSampleRate{0.0};                     //!< The sample rate of the instance used for the alias parameters
         std::function<std::optional<float>()> mLinkedAnalysisAdvancementFn;
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
         Processor mProcessor;

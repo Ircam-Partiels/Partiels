@@ -30,6 +30,12 @@ namespace Plugin
         std::unique_ptr<juce::Component> createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange);
         void setPropertyValue(juce::Component& property, Parameter const& parameter, std::set<float> const& values, juce::NotificationType notification);
 
+        //! @brief Creates an instance of a plugin
+        //! @details The instance is not initialised. An exception is thrown if the plugin cannot be loaded.
+        //! @param key The key of the plugin
+        //! @param sampleRate The sample rate of the instance
+        //! @return The instance of the plugin
+        std::unique_ptr<Ive::PluginWrapper> createPluginWrapper(Key const& key, double sampleRate);
         std::vector<std::unique_ptr<Ive::PluginWrapper>> createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate);
         std::optional<size_t> getFeatureIndex(Vamp::Plugin const& plugin, std::string const& feature);
 
@@ -38,6 +44,23 @@ namespace Plugin
         //! @param plugin The plugin
         //! @param state The state that contains the values of the parameters
         void setParameters(Vamp::Plugin& plugin, State const& state);
+
+        //! @brief Applies the value of an alias parameter to a state
+        //! @details An alias parameter defines and represents other parameters (the real parameters), so its value
+        //! isn't part of the state: the parameters of the state are set to the plugin, then the alias parameter is set
+        //! and the values of the real parameters are retrieved from the plugin.
+        //! @param plugin The plugin (not initialised)
+        //! @param state The state that contains the values of the real parameters
+        //! @param identifier The identifier of the alias parameter
+        //! @param value The value of the alias parameter
+        //! @return The state with the new values of the real parameters
+        State applyAliasParameterValue(Ive::PluginWrapper& plugin, State const& state, std::string const& identifier, float value);
+
+        //! @brief Gets the values of the alias parameters that correspond to a state
+        //! @param plugin The plugin (not initialised)
+        //! @param state The state that contains the values of the real parameters
+        //! @return The values of the alias parameters
+        std::map<std::string, float> getAliasParameterValues(Ive::PluginWrapper& plugin, State const& state);
 
         //! @brief Sets the numbers of voices of the outputs of a plugin
         //! @details The outputs that have no voices are ignored. The numbers of voices must be set before retrieving

@@ -722,6 +722,8 @@ The result file information is displayed if the analysis results were loaded fro
 
 Depending on the plugin characteristics, the section provides access to the default plugin parameters. If the plugin expects a frequency domain input signal, the section gives access to the window type, block size, and step size in order to transform the time domain signal into a frequency domain signal with a Fast Fourier Transform. Otherwise, if the plugin expects a time domain input signal, the section gives access to the block type if the plugin has no preferred block size, to the step size if the plugin has no preferred step size or doesn't expect the step size to be equal to the block size.
 
+Some plugins define parameters that are alternative ways of setting other parameters, for example a window size in samples that sets a window duration in milliseconds. The tooltip of such a parameter indicates it. Modifying it updates the parameters it represents, and only these parameters are saved in the documents and the presets, so the window duration is preserved if the sample rate of the audio files changes while the window size is adapted.
+
 <p align="center">
 <img src="Images/section-track-properties.3-v1.0.5.png" width="232"/>
 </p>

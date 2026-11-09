@@ -15,6 +15,20 @@ static juce::StringArray getWindowTypeNames()
     return names;
 }
 
+// The values of the alias parameters are not part of the states of the tracks (they depend on the real parameters)
+static bool hasParameter(Track::Accessor const& trackAcsr, std::string const& identifier)
+{
+    if(trackAcsr.getAttr<Track::AttrType::state>().parameters.count(identifier) > 0_z)
+    {
+        return true;
+    }
+    auto const& parameters = trackAcsr.getAttr<Track::AttrType::description>().parameters;
+    return std::any_of(parameters.cbegin(), parameters.cend(), [&](auto const& parameter)
+                       {
+                           return parameter.isAlias && parameter.identifier == identifier;
+                       });
+}
+
 static juce::StringArray getBlockSizeNames()
 {
     return {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
@@ -49,7 +63,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                  {
                      updateState();
                  },
-                 {Track::AttrType::state, Track::AttrType::inputs, Track::AttrType::useInputResultsExtraThresholds})
+                 {Track::AttrType::state, Track::AttrType::inputs, Track::AttrType::useInputResultsExtraThresholds, Track::AttrType::sampleRate})
 {
     mPropertyBlockSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyBlockSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
@@ -167,12 +181,11 @@ void Group::PropertyProcessorsSection::applyParameterValue(Plugin::Parameter con
                               auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
                               for(auto& trackAcsr : trackAcsrs)
                               {
-                                  auto state = trackAcsr.get().getAttr<Track::AttrType::state>();
-                                  auto it = state.parameters.find(parameter.identifier);
-                                  if(it != state.parameters.end())
+                                  if(hasParameter(trackAcsr.get(), parameter.identifier))
                                   {
                                       MiscWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
-                                      it->second = std::min(std::max(value, parameter.minValue), parameter.maxValue);
+                                      auto& trackDirector = mDirector.getTrackDirector(trackAcsr.get().getAttr<Track::AttrType::identifier>());
+                                      auto const state = trackDirector.getStateWithParameterValue(parameter.identifier, std::min(std::max(value, parameter.minValue), parameter.maxValue));
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
                               }
@@ -180,7 +193,7 @@ void Group::PropertyProcessorsSection::applyParameterValue(Plugin::Parameter con
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
-                              return trackAcsr.getAttr<Track::AttrType::state>().parameters.count(parameter.identifier) > 0_z;
+                              return hasParameter(trackAcsr, parameter.identifier);
                           });
 }
 
@@ -607,7 +620,7 @@ void Group::PropertyProcessorsSection::updateParameters()
             juce::StringArray trackNames;
             for(auto& trackAcsr : trackAcsrs)
             {
-                if(trackAcsr.get().getAttr<Track::AttrType::state>().parameters.count(parameter.first.identifier))
+                if(hasParameter(trackAcsr.get(), parameter.first.identifier))
                 {
                     trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
                 }
@@ -642,14 +655,21 @@ void Group::PropertyProcessorsSection::updateState()
     }
     mPropertyUseInputResultsExtraThresholds.entry.setAlpha(inputResultsExtraThresholdStates.size() > 1_z ? 0.5f : 1.0f);
 
+    // The values of the alias parameters are not part of the states of the tracks (they depend on the real parameters)
+    std::vector<std::map<std::string, float>> trackAliasValues;
+    trackAliasValues.reserve(trackAcsrs.size());
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        trackAliasValues.push_back(mDirector.getTrackDirector(trackAcsr.get().getAttr<Track::AttrType::identifier>()).getAliasParameterValues());
+    }
     for(auto const& parameter : mParameterProperties)
     {
         std::set<float> values;
-        for(auto& trackAcsr : trackAcsrs)
+        for(auto trackIndex = 0_z; trackIndex < trackAcsrs.size(); ++trackIndex)
         {
-            auto const& state = trackAcsr.get().getAttr<Track::AttrType::state>();
-            auto const it = state.parameters.find(parameter.first.identifier);
-            if(it != state.parameters.cend())
+            auto const& trackValues = parameter.first.isAlias ? trackAliasValues.at(trackIndex) : trackAcsrs.at(trackIndex).get().getAttr<Track::AttrType::state>().parameters;
+            auto const it = trackValues.find(parameter.first.identifier);
+            if(it != trackValues.cend())
             {
                 values.insert(it->second);
             }
