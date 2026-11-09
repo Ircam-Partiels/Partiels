@@ -88,6 +88,15 @@ namespace Track
         //! @return The state with the new value of the parameter
         Plugin::State getStateWithParameterValue(std::string const& identifier, float value);
 
+        //! @brief Gets a state of the plugin with a new value of a parameter
+        //! @details Same as getStateWithParameterValue(identifier, value) but from another state than the current
+        //! state of the track (e.g. to apply several values before modifying the track).
+        //! @param state The state to modify
+        //! @param identifier The identifier of the parameter
+        //! @param value The new value of the parameter
+        //! @return The state with the new value of the parameter
+        Plugin::State getStateWithParameterValue(Plugin::State const& state, std::string const& identifier, float value);
+
         //! @brief Gets the values of the alias parameters that correspond to the current state
         //! @details The values are retrieved from an instance of the plugin (the container is empty if the plugin has
         //! no alias parameters or if it cannot be loaded).
