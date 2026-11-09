@@ -43,7 +43,8 @@ bool Plugin::Parameter::operator==(Parameter const& rhs) const noexcept
            std::abs(defaultValue - rhs.defaultValue) < std::numeric_limits<float>::epsilon() &&
            isQuantized == rhs.isQuantized &&
            (!isQuantized || std::abs(quantizeStep - rhs.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
-           valueNames == rhs.valueNames;
+           valueNames == rhs.valueNames &&
+           isAlias == rhs.isAlias;
 }
 
 void Plugin::to_json(nlohmann::json& j, Key const& key)
@@ -134,6 +135,7 @@ void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
     j["isQuantized"] = parameter.isQuantized;
     j["quantizeStep"] = parameter.quantizeStep;
     j["valueNames"] = parameter.valueNames;
+    j["isAlias"] = parameter.isAlias;
 }
 
 void Plugin::from_json(nlohmann::json const& j, Parameter& parameter)
@@ -148,6 +150,7 @@ void Plugin::from_json(nlohmann::json const& j, Parameter& parameter)
     parameter.isQuantized = j.value("isQuantized", parameter.isQuantized);
     parameter.quantizeStep = j.value("quantizeStep", parameter.quantizeStep);
     parameter.valueNames = j.value("valueNames", parameter.valueNames);
+    parameter.isAlias = j.value("isAlias", parameter.isAlias);
 }
 
 void Plugin::to_json(nlohmann::json& j, State const& state)
@@ -310,6 +313,7 @@ void XmlParser::toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier
     toXml(*child, "isQuantized", value.isQuantized);
     toXml(*child, "quantizeStep", value.quantizeStep);
     toXml(*child, "valueNames", value.valueNames);
+    toXml(*child, "isAlias", value.isAlias);
     xml.addChildElement(child.release());
 }
 
@@ -334,6 +338,7 @@ auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Id
     value.isQuantized = fromXml(*child, "isQuantized", defaultValue.isQuantized);
     value.quantizeStep = fromXml(*child, "quantizeStep", defaultValue.quantizeStep);
     value.valueNames = fromXml(*child, "valueNames", defaultValue.valueNames);
+    value.isAlias = fromXml(*child, "isAlias", defaultValue.isAlias);
     return value;
 }
 
@@ -667,14 +672,22 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     description.copyright = juce::String(plugin.getCopyright());
     auto const parameters = plugin.getParameterDescriptors();
     description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
+    for(auto& parameter : description.parameters)
+    {
+        parameter.isAlias = plugin.isAliasParameter(parameter.identifier);
+    }
 
+    // The values of the alias parameters are not part of the states (they depend on the real parameters)
     auto initializeState = [&](Plugin::State& state, bool defaultValues)
     {
         state.blockSize = plugin.getPreferredBlockSize();
         state.stepSize = plugin.getPreferredStepSize();
         for(auto const& parameter : parameters)
         {
-            state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
+            if(!plugin.isAliasParameter(parameter.identifier))
+            {
+                state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
+            }
         }
     };
     initializeState(description.defaultState, true);
@@ -687,7 +700,10 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
         std::vector<std::pair<std::string, float>> currentValues;
         for(auto const& parameter : parameters)
         {
-            currentValues.emplace_back(parameter.identifier, plugin.getParameter(parameter.identifier));
+            if(!plugin.isAliasParameter(parameter.identifier))
+            {
+                currentValues.emplace_back(parameter.identifier, plugin.getParameter(parameter.identifier));
+            }
         }
         for(auto const& programName : programNames)
         {
