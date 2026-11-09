@@ -684,10 +684,10 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
         // The selection of the programs changes the parameters (and potentially the outputs)
         // so the current program and parameters are restored afterwards
         auto const currentProgram = plugin.getCurrentProgram();
-        std::map<std::string, float> currentValues;
+        std::vector<std::pair<std::string, float>> currentValues;
         for(auto const& parameter : parameters)
         {
-            currentValues[parameter.identifier] = plugin.getParameter(parameter.identifier);
+            currentValues.emplace_back(parameter.identifier, plugin.getParameter(parameter.identifier));
         }
         for(auto const& programName : programNames)
         {

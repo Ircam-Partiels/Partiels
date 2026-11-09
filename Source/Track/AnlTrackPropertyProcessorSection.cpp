@@ -185,9 +185,12 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                 decltype(mParameterProperties) parameterProperties;
                 for(auto const& parameter : description.parameters)
                 {
-                    auto& property = parameterProperties[parameter];
-                    auto it = mParameterProperties.find(parameter);
-                    if(it != mParameterProperties.end() && it->first == parameter)
+                    auto it = std::find_if(mParameterProperties.begin(), mParameterProperties.end(), [&](auto const& property)
+                                           {
+                                               return property.first == parameter && property.second != nullptr;
+                                           });
+                    std::unique_ptr<juce::Component> property;
+                    if(it != mParameterProperties.end())
                     {
                         property = std::move(it->second);
                     }
@@ -197,6 +200,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director, Pr
                         addAndMakeVisible(property.get());
                     }
                     property->setEnabled(hasPlugin);
+                    parameterProperties.emplace_back(parameter, std::move(property));
                 }
                 mParameterProperties = std::move(parameterProperties);
 
@@ -715,12 +719,12 @@ void Track::PropertyProcessorSection::updateState()
     }
     mPropertyStepSize.entry.setText(juce::String(state.stepSize) + "samples", silent);
 
-    for(auto const& parameter : state.parameters)
+    for(auto const& property : mParameterProperties)
     {
-        auto propertyIt = mParameterProperties.find(parameter.first);
-        if(propertyIt != mParameterProperties.end())
+        auto const it = state.parameters.find(property.first.identifier);
+        if(it != state.parameters.cend())
         {
-            Plugin::Tools::setPropertyValue(*propertyIt->second.get(), propertyIt->first, {parameter.second}, silent);
+            Plugin::Tools::setPropertyValue(*property.second.get(), property.first, {it->second}, silent);
         }
     }
 

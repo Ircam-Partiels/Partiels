@@ -206,15 +206,14 @@ std::optional<size_t> Plugin::Tools::getFeatureIndex(Vamp::Plugin const& plugin,
 
 void Plugin::Tools::setParameters(Vamp::Plugin& plugin, State const& state)
 {
+    // The parameters are set in the order defined by the plugin
     auto const descriptors = plugin.getParameterDescriptors();
-    for(auto const& parameter : state.parameters)
+    for(auto const& descriptor : descriptors)
     {
-        if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                       {
-                           return descriptor.identifier == parameter.first;
-                       }))
+        auto const it = state.parameters.find(descriptor.identifier);
+        if(it != state.parameters.cend())
         {
-            plugin.setParameter(parameter.first, parameter.second);
+            plugin.setParameter(it->first, it->second);
         }
     }
 }
