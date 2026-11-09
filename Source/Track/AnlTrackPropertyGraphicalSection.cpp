@@ -1073,7 +1073,7 @@ void Track::PropertyGraphicalSection::savePreset()
 void Track::PropertyGraphicalSection::saveAsDefaultPreset()
 {
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
-    preset[mAccessor.getAttr<AttrType::key>()] = mAccessor.getAttr<AttrType::graphicsSettings>();
+    preset[Tools::getPresetKey(mAccessor)] = mAccessor.getAttr<AttrType::graphicsSettings>();
     mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
     updatePresetState();
 }
@@ -1081,14 +1081,14 @@ void Track::PropertyGraphicalSection::saveAsDefaultPreset()
 void Track::PropertyGraphicalSection::deleteDefaultPreset()
 {
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
-    preset.erase(mAccessor.getAttr<AttrType::key>());
+    preset.erase(Tools::getPresetKey(mAccessor));
     mPresetListAccessor.setAttr<PresetList::AttrType::graphic>(preset, NotificationType::synchronous);
     updatePresetState();
 }
 
 void Track::PropertyGraphicalSection::updatePresetState()
 {
-    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const key = Tools::getPresetKey(mAccessor);
     auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::graphic>();
     mPropertyPreset.entry.setItemEnabled(MenuPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
     // There is nothing to mark as selected

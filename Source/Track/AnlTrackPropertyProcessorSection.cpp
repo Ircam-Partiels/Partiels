@@ -669,7 +669,7 @@ void Track::PropertyProcessorSection::changePreset(int presetId)
 void Track::PropertyProcessorSection::saveAsDefaultPreset()
 {
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
-    preset[mAccessor.getAttr<AttrType::key>()] = mAccessor.getAttr<AttrType::state>();
+    preset[Tools::getPresetKey(mAccessor)] = mAccessor.getAttr<AttrType::state>();
     mPresetListAccessor.setAttr<PresetList::AttrType::processor>(preset, NotificationType::synchronous);
     updateState();
 }
@@ -677,7 +677,7 @@ void Track::PropertyProcessorSection::saveAsDefaultPreset()
 void Track::PropertyProcessorSection::deleteDefaultPreset()
 {
     auto preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
-    preset.erase(mAccessor.getAttr<AttrType::key>());
+    preset.erase(Tools::getPresetKey(mAccessor));
     mPresetListAccessor.setAttr<PresetList::AttrType::processor>(preset, NotificationType::synchronous);
     updateState();
 }
@@ -736,7 +736,7 @@ void Track::PropertyProcessorSection::updateState()
         Plugin::Tools::setPropertyValue(*mVoiceProperty.get(), mVoiceDescriptor, {static_cast<float>(voiceCount)}, silent);
     }
 
-    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto const key = Tools::getPresetKey(mAccessor);
     auto const& preset = mPresetListAccessor.getAttr<PresetList::AttrType::processor>();
     mPropertyPreset.entry.setItemEnabled(MenuPresetId::deleteDefaultPresetId, preset.count(key) > 0_z);
 
