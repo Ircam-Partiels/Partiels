@@ -199,12 +199,12 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                                                         }
                                                         startAction();
                                                         auto const result = setVoiceCount(voiceLink, count, NotificationType::synchronous);
-                                                        endAction(result.wasOk() ? ActionState::newTransaction : ActionState::abort, juce::translate("Change the number of voices"));
+                                                        endAction(result.wasOk() ? ActionState::newTransaction : ActionState::abort, juce::translate("Change the number of tracks"));
                                                         if(result.failed())
                                                         {
                                                             auto const options = juce::MessageBoxOptions()
                                                                                      .withIconType(juce::AlertWindow::WarningIcon)
-                                                                                     .withTitle(juce::translate("The number of voices cannot be changed!"))
+                                                                                     .withTitle(juce::translate("The number of tracks cannot be changed!"))
                                                                                      .withMessage(result.getErrorMessage())
                                                                                      .withButton(juce::translate("Ok"), 0);
                                                             juce::AlertWindow::showAsync(options, nullptr);
@@ -1448,7 +1448,7 @@ juce::Result Document::Director::setVoiceCount(juce::String const& voiceLink, si
     auto const& referenceDescription = referenceAcsr.getAttr<Track::AttrType::description>();
     if(!referenceDescription.hasVoices() || referenceDescription.voices.empty())
     {
-        return juce::Result::fail(juce::translate("The tracks have no voices."));
+        return juce::Result::fail(juce::translate("The tracks don't belong to a multitrack output."));
     }
     auto const key = referenceAcsr.getAttr<Track::AttrType::key>();
     auto const previousVoices = referenceDescription.voices;
@@ -1468,7 +1468,7 @@ juce::Result Document::Director::setVoiceCount(juce::String const& voiceLink, si
     }();
     if(descriptions.empty())
     {
-        return juce::Result::fail(juce::translate("The voices of the plugin cannot be loaded."));
+        return juce::Result::fail(juce::translate("The tracks of the plugin output cannot be loaded."));
     }
     std::vector<std::string> voices;
     for(auto const& description : descriptions)

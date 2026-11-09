@@ -236,17 +236,17 @@ You can select one or more installed plugins and then press the `Return ⏎` key
 
 If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#9-track-properties) section.
 
-#### 4.1.1. Voices
+#### 4.1.1. Multitrack outputs
 
-Some plugins return several voices for the same output, for example the pitches of a polyphonic analysis or the partials of a sinusoidal analysis, each voice corresponding to a monophonic sequence of results. In the list of plugins, these outputs are marked as multitrack (e.g. *Basic Pitch - Pitch (multitrack)*). When you add such an output, a pop-up at the mouse position asks for the number of voices (the default number of voices of the plugin is displayed): enter the number of voices, press the return key or click on the `Create` button (click outside the pop-up to cancel), then a track is created for each voice in the group (from the bottom to the top, the first voice being at the bottom) and the tracks of the voices are linked:
+Some plugins return several tracks for the same output, for example the pitches of a polyphonic analysis or the partials of a sinusoidal analysis, each track corresponding to a monophonic sequence of results. In the list of plugins, these outputs are marked as multitrack (e.g. *Basic Pitch - Pitch (multitrack)*). When you add such an output, a pop-up at the mouse position asks for the number of tracks (the default number of tracks of the plugin is displayed): enter the number of tracks, press the return key or click on the `Create` button (click outside the pop-up to cancel), then the tracks are created in the group (from the bottom to the top, the first track being at the bottom) and linked together:
 
-- The voices are computed by a single analysis that is performed once for all the tracks of the voices.
-- The processor properties (the plugin parameters, the window type, the block size, the step size and the input tracks) are shared by the tracks of the voices: modifying the processor properties of one of the tracks modifies the processor properties of all the tracks.
-- The graphical properties remain specific to each track, so you can, for example, use a different color for each voice.
+- The results of the linked tracks are computed by a single analysis that is performed once for all the tracks.
+- The processor properties (the plugin parameters, the window type, the block size, the step size and the input tracks) are shared by the linked tracks: modifying the processor properties of one of the tracks modifies the processor properties of all the tracks.
+- The graphical properties remain specific to each track, so you can, for example, use a different color for each track.
 
-The number of voices is defined by a dedicated property in the processor properties of the tracks of the voices (its name and its range are defined by the plugin, e.g. the *Voices* property of the Basic Pitch plugin). This property is independent of the plugin parameters, so the presets and the programs don't modify the number of voices. When you modify the number of voices, the tracks of the new voices are automatically inserted above the track of the highest existing voice and the tracks of the voices that no longer exist are removed. You can undo the modification to restore the tracks and their properties.
+The number of tracks is defined by a dedicated property in the processor properties of the linked tracks (its name and its range are defined by the plugin, e.g. the *Voices* property of the Basic Pitch plugin). This property is independent of the plugin parameters, so the presets and the programs don't modify the number of tracks. When you modify the number of tracks, the new tracks are automatically inserted above the last existing track of the output and the tracks that no longer exist are removed. You can undo the modification to restore the tracks and their properties.
 
-You can remove the track of a voice that you don't need, the track is not created again when the number of voices increases (unless the voice has been removed by reducing the number of voices in the meantime). If you copy the track of a voice, the new track is no longer linked to the other voices and performs its own analysis. If you copy a group that contains the tracks of voices, the new tracks are linked together but not with the original tracks. If you load a result file in the track of a voice, the track is no longer linked to the other voices.
+You can remove a linked track that you don't need, the track is not created again when the number of tracks increases (unless it has been removed by reducing the number of tracks in the meantime). If you copy a linked track, the new track is no longer linked to the other tracks and performs its own analysis. If you copy a group that contains linked tracks, the new tracks are linked together but not with the original tracks. If you load a result file in a linked track, the track is no longer linked to the other tracks.
 
 ### 4.2. File tracks
 
@@ -704,7 +704,7 @@ The first property of a track is its name. The default name of the track corresp
 
 The processor section allows you to modify all the properties that control the analysis engine or result file loading for the track. Thus, the properties are related to the result file, the plugin parameters, and the state of the track.
 
-> 💡 **Tip**: If the track corresponds to a voice of an output with several voices, the processor properties are shared by all the tracks of the voices (see the [Voices](#411-voices) section).
+> 💡 **Tip**: If the track is one of the linked tracks of a multitrack output, the processor properties are shared by all the linked tracks (see the [Multitrack outputs](#411-multitrack-outputs) section).
 
 #### 9.1.1. File
 

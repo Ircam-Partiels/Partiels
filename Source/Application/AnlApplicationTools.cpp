@@ -393,7 +393,7 @@ static void requestVoiceCounts(juce::String const& groupIdentifier, size_t const
         : mVoiceDescriptor(description.voiceDescriptor)
         , mDefaultCount(Plugin::Tools::clampVoiceCount(mVoiceDescriptor, static_cast<size_t>(std::max(std::round(mVoiceDescriptor.defaultValue), 0.0f))))
         , mApply(std::move(fn))
-        , mName("Name", juce::translate("Number of voices of PLUGINNAME to create").replace("PLUGINNAME", description.name))
+        , mName("Name", juce::translate("Number of tracks of PLUGINNAME to create").replace("PLUGINNAME", description.name))
         {
             mProperty = Plugin::Tools::createProperty(mVoiceDescriptor, [this]([[maybe_unused]] auto const& parameter, float value)
                                                       {
@@ -474,7 +474,7 @@ static void requestVoiceCounts(juce::String const& groupIdentifier, size_t const
         std::function<void(size_t)> mApply;
         juce::Label mName;
         std::unique_ptr<juce::Component> mProperty;
-        PropertyTextButton mCreate{juce::translate("Create"), juce::translate("Create the tracks of the voices"), [this]()
+        PropertyTextButton mCreate{juce::translate("Create"), juce::translate("Create the tracks"), [this]()
                                    {
                                        apply(getDisplayedCount());
                                    }};
