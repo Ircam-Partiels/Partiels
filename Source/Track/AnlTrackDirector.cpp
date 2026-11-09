@@ -1051,7 +1051,11 @@ Ive::PluginWrapper* Track::Director::getAliasParameterPlugin()
 
 Plugin::State Track::Director::getStateWithParameterValue(std::string const& identifier, float value)
 {
-    auto state = mAccessor.getAttr<AttrType::state>();
+    return getStateWithParameterValue(mAccessor.getAttr<AttrType::state>(), identifier, value);
+}
+
+Plugin::State Track::Director::getStateWithParameterValue(Plugin::State const& state, std::string const& identifier, float value)
+{
     auto const& parameters = mAccessor.getAttr<AttrType::description>().parameters;
     auto const it = std::find_if(parameters.cbegin(), parameters.cend(), [&](auto const& parameter)
                                  {
@@ -1059,8 +1063,9 @@ Plugin::State Track::Director::getStateWithParameterValue(std::string const& ide
                                  });
     if(it == parameters.cend() || !it->isAlias)
     {
-        state.parameters[identifier] = value;
-        return state;
+        auto newState = state;
+        newState.parameters[identifier] = value;
+        return newState;
     }
     // If the plugin cannot be loaded, the error is reported by the analysis
     auto* plugin = getAliasParameterPlugin();
