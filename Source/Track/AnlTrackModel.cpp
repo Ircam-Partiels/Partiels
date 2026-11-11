@@ -1,4 +1,5 @@
 #include "AnlTrackModel.h"
+#include "AnlTrackPluginUpgrader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -173,6 +174,7 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
             }
         }
     }
+    PluginUpgrader::upgradeTrack(*copy.get());
     return copy;
 }
 
