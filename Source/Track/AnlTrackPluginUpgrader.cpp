@@ -26,14 +26,21 @@ namespace
 
     std::vector<Rule> const& getRules()
     {
-        // SuperVP 8 and PM2 6 renamed their libraries (supervp.dylib to ircamsvp.vamp and PM2.dylib to ircampm2.vamp),
-        // replaced the Window Size parameter (in milliseconds) with the Window Duration parameter (the new Window Size
-        // parameter in samples being an alias of the Window Duration parameter) and replaced the index parameters with
-        // the voices of the outputs (Peak Index and Formant Index for SuperVP, Partial ID and Maximum Number of
-        // Partials for PM2 since version 5)
-        static std::vector<Rule> const rules{
-            {"supervp", "ircamsvp", 8u, {{"windowsize", "windowduration"}}, {{"peakindex", ""}, {"formantindex", ""}}},
-            {"pm2", "ircampm2", 6u, {{"windowsize", "windowduration"}}, {{"partialid", "maximumnumberofpartials"}}}};
+        // The keys use the lowercase name of the library (IrcamBeat.dylib and ircambeat.vamp give the same keys) and
+        // the new Window Size parameter (in samples) is an alias of the Window Duration parameter (in milliseconds)
+        // clang-format off
+        static std::vector<Rule> const rules
+        {
+            // SuperVP 8: library renamed, Window Size renamed, Peak Index and Formant Index replaced with voices
+            {"supervp",         "ircamsvp",        8u, {{"windowsize", "windowduration"}}, {{"peakindex", ""}, {"formantindex", ""}}},
+            // PM2 6: library renamed, Window Size renamed, Partial ID replaced with voices (since PM2 5)
+            {"pm2",             "ircampm2",        6u, {{"windowsize", "windowduration"}}, {{"partialid", "maximumnumberofpartials"}}},
+            // IrcamDescriptor 3: Window Size renamed
+            {"ircamdescriptor", "ircamdescriptor", 3u, {{"windowsize", "windowduration"}}, {}},
+            // IrcamBeat 4: only the version of the description changes
+            {"ircambeat",       "ircambeat",       4u, {},                                 {}}
+        };
+        // clang-format on
         return rules;
     }
 
@@ -329,7 +336,9 @@ public:
                 {"ircamsvp:supervpspectrogramfft", {"spectrogram", 8u, false}},
                 {"ircamsvp:supervppeak", {"peakfreq", 8u, true}},
                 {"ircamsvp:supervpformantlpc", {"formant", 8u, true}},
-                {"ircampm2:pm2harmonicpartialtracking", {"frequency", 6u, true}}};
+                {"ircampm2:pm2harmonicpartialtracking", {"frequency", 6u, true}},
+                {"ircamdescriptor:ircamdescriptorspectralcentroid", {"centroid", 3u, false}},
+                {"ircambeat:ircambeatdetection", {"beatmarker", 4u, false}}};
             auto const it = plugins.find(key.identifier);
             if(it == plugins.cend())
             {
@@ -411,7 +420,7 @@ public:
 
         beginTest("unrelated tracks");
         {
-            for(auto const& [key, version] : std::vector<std::pair<Plugin::Key, unsigned int>>{{{"vamp-example-plugins:spectralcentroid", "linearcentroid"}, 2u}, {{"supervp:supervpspectrogramfft", "spectrogram"}, 8u}, {{"pm2:pm2harmonicpartialtracking", "frequency"}, 6u}, {{"ircamsvp:supervpspectrogramfft", "spectrogram"}, 8u}})
+            for(auto const& [key, version] : std::vector<std::pair<Plugin::Key, unsigned int>>{{{"vamp-example-plugins:spectralcentroid", "linearcentroid"}, 2u}, {{"supervp:supervpspectrogramfft", "spectrogram"}, 8u}, {{"pm2:pm2harmonicpartialtracking", "frequency"}, 6u}, {{"ircamsvp:supervpspectrogramfft", "spectrogram"}, 8u}, {{"ircamdescriptor:ircamdescriptorspectralcentroid", "centroid"}, 3u}, {{"ircambeat:ircambeatdetection", "beatmarker"}, 4u}})
             {
                 auto const original = createTrackXml("track", key, version, {{"windowsize", 1024.0f}});
                 auto xml = std::make_unique<juce::XmlElement>(*original);
@@ -452,6 +461,48 @@ public:
             auto const copy = std::make_unique<juce::XmlElement>(*xml);
             expect(!PluginUpgrader::upgradeTrack(*xml, loader));
             expect(xml->isEquivalentTo(copy.get(), false));
+
+            // The library keeps the same identifier
+            auto descriptorXml = createTrackXml("track", {"ircamdescriptor:ircamdescriptorspectralcentroid", "centroid"}, 2u, {{"windowsize", 23.2199546485f}, {"windowoverlapping", 1.0f}});
+            expect(PluginUpgrader::upgradeTrack(*descriptorXml, loader));
+            expect(getKey(*descriptorXml) == Plugin::Key{"ircamdescriptor:ircamdescriptorspectralcentroid", "centroid"});
+            expect(getParameters(*descriptorXml) == std::map<std::string, float>{{"windowduration", 23.2199546485f}, {"windowoverlapping", 1.0f}});
+            expect(getVoiceCounts(*descriptorXml).empty());
+            expect(getVersion(*descriptorXml) == 3u);
+
+            auto const descriptorCopy = std::make_unique<juce::XmlElement>(*descriptorXml);
+            expect(!PluginUpgrader::upgradeTrack(*descriptorXml, loader));
+            expect(descriptorXml->isEquivalentTo(descriptorCopy.get(), false));
+        }
+
+        beginTest("version only");
+        {
+            // The library keeps the same identifier and the parameters remain unchanged
+            std::map<std::string, float> const parameters{{"tempoestimation", 120.0f}, {"tempodeviation", 30.0f}, {"meterestimation", 3.0f}, {"constanttempo", 0.0f}};
+            auto xml = createTrackXml("track", {"ircambeat:ircambeatdetection", "beatmarker"}, 3u, parameters);
+            expect(PluginUpgrader::upgradeTrack(*xml, loader));
+            expect(getKey(*xml) == Plugin::Key{"ircambeat:ircambeatdetection", "beatmarker"});
+            expect(getParameters(*xml) == parameters);
+            expect(getVoiceCounts(*xml).empty());
+            expect(getVersion(*xml) == 4u);
+            expect(xml->getStringAttribute("voiceLink").isEmpty());
+
+            // The track is not upgraded twice
+            auto const copy = std::make_unique<juce::XmlElement>(*xml);
+            expect(!PluginUpgrader::upgradeTrack(*xml, loader));
+            expect(xml->isEquivalentTo(copy.get(), false));
+
+            // The track is not upgraded if the new version is not installed
+            auto const original = createTrackXml("track", {"ircambeat:ircambeatdetection", "beatmarker"}, 3u, parameters);
+            auto formerXml = std::make_unique<juce::XmlElement>(*original);
+            auto const formerVersionLoader = [&](Plugin::Key const& key, double sampleRate, Plugin::State const& state, Plugin::VoiceCounts const& voiceCounts)
+            {
+                auto description = loader(key, sampleRate, state, voiceCounts);
+                description.version = 3u;
+                return description;
+            };
+            expect(!PluginUpgrader::upgradeTrack(*formerXml, formerVersionLoader));
+            expect(formerXml->isEquivalentTo(original.get(), false));
         }
 
         beginTest("index parameters");
