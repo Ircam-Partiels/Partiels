@@ -3,6 +3,7 @@
 #include "../Group/AnlGroupModel.h"
 #include "../Misc/AnlMisc.h"
 #include "../Track/AnlTrackModel.h"
+#include "../Track/AnlTrackPluginUpgrader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -139,6 +140,8 @@ namespace Document
                     XmlParser::toXml(*copy.get(), "reader", std::vector<AudioFileLayout>{{file}});
                 }
             }
+            // The tracks are upgraded by the document to link the tracks of the voices of the same analysis
+            Track::PluginUpgrader::upgradeTracks(*copy.get());
             return copy;
         }
     };
