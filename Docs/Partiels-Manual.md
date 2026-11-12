@@ -292,6 +292,22 @@ Each marker produces a note that starts at the time of the marker and ends at th
 
 If the input tracks have a single channel, their results are used for all the channels of the audio file. If the input tracks have as many channels as the audio file, each channel uses the results of the corresponding channel of the input tracks.
 
+#### 4.3.5. Self-Similarity
+
+The *Self-Similarity Matrix* track displays the self-similarity matrix of the columns of a matrix track (e.g. the results of a spectrogram, a chromagram or MFCCs). The plugin doesn't analyze the audio signal but uses the results of another track of the document, which you select in the [processor parameters](#912-parameters) of the track:
+
+- Columns input track: A matrix track whose columns are compared with each other.
+
+The matrix contains one column per frame (positioned at the time of the frame) and one bin per frame (the bin index corresponds to the frame index), so the value at column *i* and bin *j* is the similarity between the frames *i* and *j*. The diagonal of the matrix, where each frame is compared with itself, has the maximum similarity.
+
+- Metric: The metric used to compare the frames. *Cosine* computes the cosine similarity of the frames (between -1 and 1). *Correlation* computes the Pearson correlation of the frames, which is the cosine similarity of the frames centered on their mean (between -1 and 1). *Euclidean* computes the Euclidean distance between the frames, converted into a similarity between 0 and 1 by normalizing it by the maximum distance of the matrix (1 for identical frames, 0 for the most distant frames).
+
+- Normalization: The normalization of each bin over time applied before the comparison of the frames. *None* uses the frames as is. *Centering* (default) subtracts the mean of each bin over time, which removes the components shared by all the frames (e.g. the offset of the decibels and the spectral envelope of a spectrogram) that would otherwise make all the frames similar. *Standardization* also divides each bin by its standard deviation over time, so that all the bins have the same weight in the comparison. The centering doesn't modify the *Euclidean* metric.
+
+- Downsampling: The number of consecutive columns of the input track averaged into one frame. As the size of the matrix is the square of the number of frames, increasing the downsampling reduces the computation time and the memory used by the track, especially for long audio files.
+
+If the input track has a single channel, its results are used for all the channels of the audio file. If the input track has as many channels as the audio file, each channel uses the results of the corresponding channel of the input track.
+
 <div style="page-break-after: always;"></div>
 
 ## 5. Organize the tracks by groups
