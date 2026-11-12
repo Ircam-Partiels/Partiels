@@ -59,8 +59,10 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
+    // The access must refer to the copy of the results owned by the graphics: an access keeps a reference to its data,
+    // so an access to the results of the accessor would be released on the new results if they are replaced meanwhile
     mData = results;
-    mAccess = std::make_unique<Result::Access>(access);
+    mAccess = std::make_unique<Result::Access>(mData, Result::Access::Mode::read);
 
     auto const colourMap = accessor.getAttr<AttrType::graphicsSettings>().colours.map;
     DrawInfo info;
