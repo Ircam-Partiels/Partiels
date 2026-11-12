@@ -31,6 +31,12 @@
     },
     {
         "key": {
+            "feature": "matrix",
+            "identifier": "partiels-vamp-plugins:selfsimilarity"
+        }
+    },
+    {
+        "key": {
             "feature": "amplitude",
             "identifier": "vamp-example-plugins:amplitudefollower"
         }
