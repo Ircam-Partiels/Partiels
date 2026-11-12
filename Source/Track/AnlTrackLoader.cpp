@@ -1040,6 +1040,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
 
     std::vector<Results::Markers> markers;
     std::vector<Results::Points> points;
+    auto hasEmptyValues = false;
 
     auto addNewChannel = true;
     std::string line;
@@ -1087,7 +1088,26 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 auto const timevalue = std::stod(time);
                 auto const durationvalue = std::max(useEndTime ? std::stod(duration) - timevalue : std::stod(duration), 0.0);
                 auto pointvalue = mode == Mode::marker ? std::optional<float>{} : getFloatValue(value);
-                if(pointvalue.has_value())
+                if(mode != Mode::marker && trimString(value).empty())
+                {
+                    // An empty value is a point without value (a break) or a marker without label, the mode is defined by the other rows
+                    std::vector<float> extraValues;
+                    while(getline(linestream, value, separator))
+                    {
+                        pointvalue = getFloatValue(value);
+                        if(pointvalue.has_value())
+                        {
+                            extraValues.push_back(pointvalue.value());
+                        }
+                    }
+                    pointChannel.push_back({timevalue, durationvalue, std::optional<float>{}, extraValues});
+                    if(mode == Mode::undefined)
+                    {
+                        markerChannel.push_back({timevalue, durationvalue, std::string{}, extraValues});
+                    }
+                    hasEmptyValues = true;
+                }
+                else if(pointvalue.has_value())
                 {
                     mode = Mode::point;
                     pointChannel.push_back({});
@@ -1128,7 +1148,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     }
 
     advancement.store(1.0f);
-    if(mode == Mode::marker)
+    // If all the values are empty, the results are markers without labels
+    if(mode == Mode::marker || (mode == Mode::undefined && hasEmptyValues))
     {
         return Track::Results(std::move(markers));
     }
@@ -1597,6 +1618,64 @@ public:
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
             checkPoints(loadFromCsv(stream, ' ', false, '\n', false, shouldAbort, advancement));
+        }
+
+        auto const loadCsv = [](std::string const& text)
+        {
+            std::istringstream stream(text);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            auto const vResult = loadFromCsv(stream, ',', false, '\n', false, shouldAbort, advancement);
+            auto const* results = std::get_if<Results>(&vResult);
+            return results != nullptr ? std::optional<Results>(*results) : std::optional<Results>{};
+        };
+
+        beginTest("load csv points with breaks");
+        {
+            // The empty values are points without value (breaks), before or after the first value
+            auto const results = loadCsv("0.5,0,\n1.0,0.5,1.0\n1.5,0.5,,0.3\n2.0,0.5,2.0\n");
+            expect(results.has_value());
+            if(results.has_value())
+            {
+                auto const access = results->getReadAccess();
+                auto const points = results->getPoints();
+                expect(points != nullptr && points->size() == 1_z && points->front().size() == 4_z);
+                if(points != nullptr && points->size() == 1_z && points->front().size() == 4_z)
+                {
+                    auto const& channel = points->front();
+                    expect(!std::get<2_z>(channel.at(0_z)).has_value());
+                    expect(std::get<2_z>(channel.at(1_z)).has_value());
+                    expect(!std::get<2_z>(channel.at(2_z)).has_value());
+                    expectWithinAbsoluteError(std::get<1_z>(channel.at(2_z)), 0.5, 1e-9);
+                    expect(std::get<3_z>(channel.at(2_z)) == std::vector<float>{0.3f});
+                    expect(std::get<2_z>(channel.at(3_z)).has_value());
+                }
+            }
+        }
+
+        beginTest("load csv markers with empty labels");
+        {
+            // The empty values are markers without label if the other values are labels or if all the values are empty
+            for(auto const& [text, count] : std::vector<std::tuple<std::string, size_t>>{{"0.5,0,\n1.0,0,A\n2.0,0,\n", 3_z}, {"0.5,0,\n2.0,0,\n", 2_z}})
+            {
+                auto const results = loadCsv(text);
+                expect(results.has_value());
+                if(results.has_value())
+                {
+                    auto const access = results->getReadAccess();
+                    auto const markers = results->getMarkers();
+                    expect(markers != nullptr && markers->size() == 1_z);
+                    if(markers != nullptr && markers->size() == 1_z)
+                    {
+                        auto const& channel = markers->front();
+                        expect(std::all_of(channel.cbegin(), channel.cend(), [](auto const& marker)
+                                           {
+                                               return std::get<2_z>(marker).empty() || std::get<2_z>(marker) == "A";
+                                           }));
+                        expectEquals(channel.size(), count);
+                    }
+                }
+            }
         }
 
         beginTest("load lab markers");
