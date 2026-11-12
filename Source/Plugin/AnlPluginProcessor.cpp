@@ -169,6 +169,12 @@ juce::Result Plugin::Processor::prepareToAnalyze(Results& results)
         {
             return juce::Result::fail(juce::translate("The processor failed to initialise the plugin"));
         }
+
+        // The window depends on the block size so it is only available after the initialisation
+        if(auto* adapter = plugin->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
+        {
+            plugin->setFrequencyDomainWindow(adapter->getWindowCoefficients());
+        }
     }
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
