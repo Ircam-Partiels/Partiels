@@ -135,4 +135,55 @@ namespace AnlVampPlugin
         FeatureList mPoints;
         FeatureList mMarkers;
     };
+
+    // Base must remain the first base class: the IVE adapter reinterprets
+    // the Vamp plugin handle (a Vamp::Plugin pointer) as a SelfSimilarity pointer.
+    class SelfSimilarity
+    : public Base
+    , public Ive::PluginExtension
+    {
+    public:
+        enum class Metric : size_t
+        {
+            cosine = 0_z,
+            correlation = 1_z,
+            euclidean = 2_z
+        };
+
+        enum class Normalization : size_t
+        {
+            none = 0_z,
+            centering = 1_z,
+            standardization = 2_z
+        };
+
+        SelfSimilarity(float sampleRate);
+        ~SelfSimilarity() override = default;
+
+        std::string getIdentifier() const override;
+        std::string getName() const override;
+        std::string getDescription() const override;
+
+        InputDomain getInputDomain() const override;
+        size_t getPreferredBlockSize() const override;
+        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
+
+        OutputList getOutputDescriptors() const override;
+        ParameterList getParameterDescriptors() const override;
+        float getParameter(std::string paramid) const override;
+        void setParameter(std::string paramid, float newval) override;
+
+        // Ive::PluginExtension
+        InputList getInputDescriptors() const override;
+        void setPreComputingFeatures(FeatureSet const& fs) override;
+
+        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
+        FeatureSet getRemainingFeatures() override;
+
+    private:
+        Metric mMetric{Metric::cosine};
+        Normalization mNormalization{Normalization::centering};
+        size_t mDownsampling{1_z};
+        FeatureList mColumns;
+    };
 } // namespace AnlVampPlugin

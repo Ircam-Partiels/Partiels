@@ -17,6 +17,9 @@
     <key identifier="partiels-vamp-plugins:partielswaveform" feature="peaks"/>
   </plugin>
   <plugin>
+    <key identifier="partiels-vamp-plugins:selfsimilarity" feature="matrix"/>
+  </plugin>
+  <plugin>
     <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
   </plugin>
   <plugin>

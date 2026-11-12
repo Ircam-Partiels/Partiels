@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
+#include <numeric>
 #include <random>
 #include <sstream>
 #include <vamp-sdk/PluginAdapter.h>
@@ -561,6 +563,335 @@ void AnlVampPlugin::NoteAggregator::setPreComputingFeatures(FeatureSet const& fs
     sortByTime(mMarkers);
 }
 
+AnlVampPlugin::SelfSimilarity::SelfSimilarity(float inputSampleRate)
+: Base(inputSampleRate)
+{
+}
+
+std::string AnlVampPlugin::SelfSimilarity::getIdentifier() const
+{
+    return "selfsimilarity";
+}
+
+std::string AnlVampPlugin::SelfSimilarity::getName() const
+{
+    return "Self-Similarity";
+}
+
+std::string AnlVampPlugin::SelfSimilarity::getDescription() const
+{
+    return "The plugin generates the self-similarity matrix of the columns of an input matrix.";
+}
+
+size_t AnlVampPlugin::SelfSimilarity::getPreferredBlockSize() const
+{
+    // The audio is not analysed, a large block size reduces the number of calls to process()
+    return 4096_z;
+}
+
+Vamp::Plugin::InputDomain AnlVampPlugin::SelfSimilarity::getInputDomain() const
+{
+    return TimeDomain;
+}
+
+bool AnlVampPlugin::SelfSimilarity::initialise(size_t channels, size_t, size_t)
+{
+    return channels == 1;
+}
+
+Vamp::Plugin::OutputList AnlVampPlugin::SelfSimilarity::getOutputDescriptors() const
+{
+    OutputDescriptor d;
+    d.identifier = "matrix";
+    d.name = "Matrix";
+    d.description = "The self-similarity matrix of the input columns";
+    d.unit = "";
+    // The number of bins is the number of frames of the matrix that depends on the input
+    d.hasFixedBinCount = false;
+    d.binCount = 0;
+    d.hasKnownExtents = true;
+    d.minValue = mMetric == Metric::euclidean ? 0.0f : -1.0f;
+    d.maxValue = 1.0f;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+    d.sampleRate = 0.0f;
+    d.hasDuration = false;
+    return {d};
+}
+
+Vamp::Plugin::ParameterList AnlVampPlugin::SelfSimilarity::getParameterDescriptors() const
+{
+    ParameterList list;
+    {
+        ParameterDescriptor param;
+        param.identifier = "metric";
+        param.name = "Metric";
+        param.description = "The metric used to compare the columns";
+        param.unit = "";
+        param.minValue = 0.0f;
+        param.maxValue = 2.0f;
+        param.defaultValue = 0.0f;
+        param.isQuantized = true;
+        param.quantizeStep = 1.0f;
+        param.valueNames = {"Cosine", "Correlation", "Euclidean"};
+        list.push_back(std::move(param));
+    }
+    {
+        ParameterDescriptor param;
+        param.identifier = "normalization";
+        param.name = "Normalization";
+        param.description = "The normalization of each bin over time applied before the comparison of the columns";
+        param.unit = "";
+        param.minValue = 0.0f;
+        param.maxValue = 2.0f;
+        param.defaultValue = 1.0f;
+        param.isQuantized = true;
+        param.quantizeStep = 1.0f;
+        param.valueNames = {"None", "Centering", "Standardization"};
+        list.push_back(std::move(param));
+    }
+    {
+        ParameterDescriptor param;
+        param.identifier = "downsampling";
+        param.name = "Downsampling";
+        param.description = "The number of consecutive input columns averaged into one frame of the matrix";
+        param.unit = "";
+        param.minValue = 1.0f;
+        param.maxValue = 64.0f;
+        param.defaultValue = 1.0f;
+        param.isQuantized = true;
+        param.quantizeStep = 1.0f;
+        list.push_back(std::move(param));
+    }
+    return list;
+}
+
+float AnlVampPlugin::SelfSimilarity::getParameter(std::string paramid) const
+{
+    if(paramid == "metric")
+    {
+        return static_cast<float>(static_cast<size_t>(mMetric));
+    }
+    if(paramid == "normalization")
+    {
+        return static_cast<float>(static_cast<size_t>(mNormalization));
+    }
+    if(paramid == "downsampling")
+    {
+        return static_cast<float>(mDownsampling);
+    }
+    std::cerr << "Invalid parameter : " << paramid << "\n";
+    return 0.0f;
+}
+
+void AnlVampPlugin::SelfSimilarity::setParameter(std::string paramid, float newval)
+{
+    if(paramid == "metric")
+    {
+        mMetric = static_cast<Metric>(static_cast<size_t>(std::clamp(std::round(newval), 0.0f, 2.0f)));
+    }
+    else if(paramid == "normalization")
+    {
+        mNormalization = static_cast<Normalization>(static_cast<size_t>(std::clamp(std::round(newval), 0.0f, 2.0f)));
+    }
+    else if(paramid == "downsampling")
+    {
+        mDownsampling = static_cast<size_t>(std::clamp(std::round(newval), 1.0f, 64.0f));
+    }
+    else
+    {
+        std::cerr << "Invalid parameter : " << paramid << "\n";
+    }
+}
+
+Ive::PluginExtension::InputList AnlVampPlugin::SelfSimilarity::getInputDescriptors() const
+{
+    OutputDescriptor d;
+    d.identifier = "columns";
+    d.name = "Columns";
+    d.description = "The columns of the matrix to compare (e.g. the energies of a spectrogram)";
+    d.unit = "";
+    // A fixed bin count greater than one only specifies that the input expects a matrix: the columns can have any size
+    d.hasFixedBinCount = true;
+    d.binCount = 2;
+    d.hasKnownExtents = false;
+    d.minValue = 0.0f;
+    d.maxValue = 0.0f;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+    d.hasDuration = false;
+    return {d};
+}
+
+void AnlVampPlugin::SelfSimilarity::setPreComputingFeatures(FeatureSet const& fs)
+{
+    // The input is only stored here, the matrix is computed in getRemainingFeatures()
+    // so the result doesn't depend on the order of the calls and of the parameters.
+    auto const it = fs.find(0);
+    mColumns = it != fs.cend() ? it->second : FeatureList{};
+    std::stable_sort(mColumns.begin(), mColumns.end(), [](Feature const& lhs, Feature const& rhs)
+                     {
+                         return lhs.timestamp < rhs.timestamp;
+                     });
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::SelfSimilarity::process(const float* const*, Vamp::RealTime)
+{
+    // The audio is not analysed, the matrix only depends on the input columns
+    return {};
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::SelfSimilarity::getRemainingFeatures()
+{
+    if(mColumns.empty())
+    {
+        return {};
+    }
+
+    // Averages the groups of consecutive input columns into frames of the same size (the missing bins and the
+    // non-finite values are replaced by zero)
+    auto const numBins = std::max_element(mColumns.cbegin(), mColumns.cend(), [](Feature const& lhs, Feature const& rhs)
+                                          {
+                                              return lhs.values.size() < rhs.values.size();
+                                          })
+                             ->values.size();
+    auto const numFrames = (mColumns.size() + mDownsampling - 1_z) / mDownsampling;
+    std::vector<std::vector<double>> frames(numFrames, std::vector<double>(numBins, 0.0));
+    std::vector<Vamp::RealTime> timestamps(numFrames);
+    for(auto frameIndex = 0_z; frameIndex < numFrames; ++frameIndex)
+    {
+        auto& frame = frames[frameIndex];
+        auto const start = frameIndex * mDownsampling;
+        auto const end = std::min(start + mDownsampling, mColumns.size());
+        timestamps[frameIndex] = mColumns.at(start).timestamp;
+        for(auto columnIndex = start; columnIndex < end; ++columnIndex)
+        {
+            auto const& values = mColumns.at(columnIndex).values;
+            for(auto binIndex = 0_z; binIndex < values.size(); ++binIndex)
+            {
+                frame[binIndex] += std::isfinite(values[binIndex]) ? static_cast<double>(values[binIndex]) : 0.0;
+            }
+        }
+        auto const scale = 1.0 / static_cast<double>(end - start);
+        for(auto& value : frame)
+        {
+            value *= scale;
+        }
+    }
+
+    // Normalizes each bin over time: the centering removes the components shared by all the frames (e.g. the offset
+    // of the decibels and the spectral envelope of a spectrogram) that make all the frames similar, and the
+    // standardization also gives the same weight to all the bins
+    if(mNormalization != Normalization::none)
+    {
+        for(auto binIndex = 0_z; binIndex < numBins; ++binIndex)
+        {
+            auto mean = 0.0;
+            for(auto const& frame : frames)
+            {
+                mean += frame[binIndex];
+            }
+            mean /= static_cast<double>(numFrames);
+            auto variance = 0.0;
+            for(auto& frame : frames)
+            {
+                frame[binIndex] -= mean;
+                variance += frame[binIndex] * frame[binIndex];
+            }
+            variance /= static_cast<double>(numFrames);
+            // A constant bin is null once centered and doesn't need to be scaled
+            if(mNormalization == Normalization::standardization && variance > std::numeric_limits<double>::epsilon())
+            {
+                auto const scale = 1.0 / std::sqrt(variance);
+                for(auto& frame : frames)
+                {
+                    frame[binIndex] *= scale;
+                }
+            }
+        }
+    }
+
+    // The correlation is the cosine similarity of the centered frames
+    if(mMetric == Metric::correlation && numBins > 0_z)
+    {
+        for(auto& frame : frames)
+        {
+            auto const mean = std::accumulate(frame.cbegin(), frame.cend(), 0.0) / static_cast<double>(numBins);
+            for(auto& value : frame)
+            {
+                value -= mean;
+            }
+        }
+    }
+
+    // Computes the upper triangle of the symmetric matrix and copies it to the lower triangle
+    std::vector<std::vector<float>> matrix(numFrames, std::vector<float>(numFrames, 0.0f));
+    if(mMetric == Metric::euclidean)
+    {
+        // The distances are normalized by the maximum distance so the similarity is between 0 and 1
+        auto maxDistance = 0.0f;
+        for(auto i = 0_z; i < numFrames; ++i)
+        {
+            for(auto j = i + 1_z; j < numFrames; ++j)
+            {
+                auto sum = 0.0;
+                for(auto binIndex = 0_z; binIndex < numBins; ++binIndex)
+                {
+                    auto const diff = frames[i][binIndex] - frames[j][binIndex];
+                    sum += diff * diff;
+                }
+                auto const distance = static_cast<float>(std::sqrt(sum));
+                matrix[i][j] = distance;
+                maxDistance = std::max(maxDistance, distance);
+            }
+        }
+        for(auto i = 0_z; i < numFrames; ++i)
+        {
+            matrix[i][i] = 1.0f;
+            for(auto j = i + 1_z; j < numFrames; ++j)
+            {
+                matrix[i][j] = matrix[j][i] = maxDistance > 0.0f ? 1.0f - matrix[i][j] / maxDistance : 1.0f;
+            }
+        }
+    }
+    else
+    {
+        std::vector<double> norms(numFrames);
+        std::transform(frames.cbegin(), frames.cend(), norms.begin(), [](std::vector<double> const& frame)
+                       {
+                           return std::sqrt(std::inner_product(frame.cbegin(), frame.cend(), frame.cbegin(), 0.0));
+                       });
+        for(auto i = 0_z; i < numFrames; ++i)
+        {
+            for(auto j = i; j < numFrames; ++j)
+            {
+                // Two null frames are similar but a null frame is not similar to a non-null frame
+                auto const similarity = [&]()
+                {
+                    if(norms[i] <= 0.0 || norms[j] <= 0.0)
+                    {
+                        return norms[i] <= 0.0 && norms[j] <= 0.0 ? 1.0 : 0.0;
+                    }
+                    auto const dot = std::inner_product(frames[i].cbegin(), frames[i].cend(), frames[j].cbegin(), 0.0);
+                    return std::clamp(dot / (norms[i] * norms[j]), -1.0, 1.0);
+                }();
+                matrix[i][j] = matrix[j][i] = static_cast<float>(similarity);
+            }
+        }
+    }
+
+    FeatureList features(numFrames);
+    for(auto frameIndex = 0_z; frameIndex < numFrames; ++frameIndex)
+    {
+        auto& feature = features[frameIndex];
+        feature.hasTimestamp = true;
+        feature.timestamp = timestamps[frameIndex];
+        feature.hasDuration = false;
+        feature.values = std::move(matrix[frameIndex]);
+    }
+    return {{0, std::move(features)}};
+}
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -593,6 +924,11 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::NoteAggregator> adaptater;
                 return adaptater.getDescriptor();
             }
+            case 4:
+            {
+                static Vamp::PluginAdapter<AnlVampPlugin::SelfSimilarity> adaptater;
+                return adaptater.getDescriptor();
+            }
             default:
             {
                 return nullptr;
@@ -611,6 +947,10 @@ extern "C"
             case 0:
             {
                 return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::NoteAggregator>();
+            }
+            case 1:
+            {
+                return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::SelfSimilarity>();
             }
             default:
             {
