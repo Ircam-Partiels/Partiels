@@ -590,6 +590,11 @@ Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn,
 
 bool Track::Result::Modifier::ActionErase::perform()
 {
+    // An empty time range would target the frame at time zero
+    if(isEmpty(mSavedData))
+    {
+        return true;
+    }
     if(eraseFrames(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mPreserveFullDuration, mEndTime, mNewCommit))
     {
         return true;
@@ -631,6 +636,11 @@ bool Track::Result::Modifier::ActionPaste::perform()
 bool Track::Result::Modifier::ActionPaste::undo()
 {
     auto& accessor = mGetAccessorFn();
+    // An empty time range would target the frame at time zero
+    if(isEmpty(mChannelData))
+    {
+        return true;
+    }
     if(eraseFrames(accessor, mChannel, getTimeRange(mChannelData), mPreserveFullDuration, mEndTime, mCurrentCommit))
     {
         if(insertFrames(accessor, mChannel, mSavedData, false, 0.0, mCurrentCommit))
@@ -663,6 +673,11 @@ Track::Result::Modifier::ActionResetDuration::ActionResetDuration(std::function<
 
 bool Track::Result::Modifier::ActionResetDuration::perform()
 {
+    // An empty time range would target the frame at time zero
+    if(isEmpty(mSavedData))
+    {
+        return true;
+    }
     if(resetFrameDurations(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mResetMode, mEndTime, mNewCommit))
     {
         return true;
