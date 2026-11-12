@@ -47,8 +47,11 @@ namespace AnlVampPlugin
         size_t mStepSize{0_z};
     };
 
+    // Base must remain the first base class: the IVE adapter reinterprets
+    // the Vamp plugin handle (a Vamp::Plugin pointer) as a Spectrogram pointer.
     class Spectrogram
     : public Base
+    , public Ive::PluginExtension
     {
     public:
         Spectrogram(float sampleRate);
@@ -63,12 +66,16 @@ namespace AnlVampPlugin
 
         OutputList getOutputDescriptors() const override;
 
+        // Ive::PluginExtension
+        void setFrequencyDomainWindow(std::vector<float> const& window) override;
+
         FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
 
     private:
         size_t mNumChannels{0_z};
         size_t mBlockSize{0_z};
         size_t mStepSize{0_z};
+        double mWindowSum{0.0};
     };
 
     class NewTrack

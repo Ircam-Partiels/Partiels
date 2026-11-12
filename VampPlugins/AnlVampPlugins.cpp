@@ -133,6 +133,9 @@ bool AnlVampPlugin::Spectrogram::initialise(size_t channels, size_t stepSize, si
     mNumChannels = channels;
     mStepSize = stepSize;
     mBlockSize = blockSize;
+    // The sum of the coefficients of the Hann window (the default window of the Vamp SDK) used if the host doesn't
+    // transmit the window with setFrequencyDomainWindow() after the initialisation
+    mWindowSum = static_cast<double>(blockSize) / 2.0;
     return true;
 }
 
@@ -161,13 +164,13 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
     OutputDescriptor d;
     d.identifier = "energies";
     d.name = "Energy";
-    d.description = "Energy from the input signal";
+    d.description = "Amplitude of the frequency bins in decibels relative to full scale (a full-scale sinusoid is at 0 dB)";
     d.unit = "dB";
     d.hasFixedBinCount = true;
     d.binCount = mBlockSize == 0_z ? 513_z : mBlockSize / 2_z + 1_z;
     d.hasKnownExtents = true;
     d.minValue = -120.0f;
-    d.maxValue = 12.0f;
+    d.maxValue = 6.0f;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::SampleType::OneSamplePerStep;
     d.hasDuration = false;
@@ -188,27 +191,45 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
     return {d};
 }
 
+void AnlVampPlugin::Spectrogram::setFrequencyDomainWindow(std::vector<float> const& window)
+{
+    auto const sum = std::accumulate(window.cbegin(), window.cend(), 0.0);
+    if(window.size() != mBlockSize || !std::isfinite(sum) || sum <= 0.0)
+    {
+        std::cerr << "AnlVampPlugin::Spectrogram::setFrequencyDomainWindow invalid window.\n";
+        return;
+    }
+    mWindowSum = sum;
+}
+
 Vamp::Plugin::FeatureSet AnlVampPlugin::Spectrogram::process(const float* const* inputBuffers, Vamp::RealTime)
 {
-    if(mBlockSize == 0 || mStepSize == 0)
+    if(mBlockSize == 0 || mStepSize == 0 || mWindowSum <= 0.0)
     {
-        std::cerr << "AnlVampPlugin::Waveform::process invalid parameters.\n";
+        std::cerr << "AnlVampPlugin::Spectrogram::process invalid parameters.\n";
         return {};
     }
 
+    // The amplitudes are normalized by the gain of the window so a full-scale sinusoid is at 0 dB whatever the window
+    // and the block size: the amplitude of a sinusoid is 2|X|/sum(w), except for the bins at 0 Hz and at the Nyquist
+    // frequency that are real (|X|/sum(w)). The power is used directly to avoid the square root.
+    auto const numBins = mBlockSize / 2_z + 1_z;
+    auto const powerScale = 4.0 / (mWindowSum * mWindowSum);
+    auto const realPowerScale = 1.0 / (mWindowSum * mWindowSum);
     FeatureSet fs;
     for(auto channel = 0_z; channel < mNumChannels; ++channel)
     {
         Feature feature;
         feature.hasTimestamp = false;
-        feature.values.resize(mBlockSize / 2_z + 1_z);
-        const float* inputBuffer = inputBuffers[channel];
-        for(auto& value : feature.values)
+        feature.values.resize(numBins);
+        float const* inputBuffer = inputBuffers[channel];
+        for(auto bin = 0_z; bin < numBins; ++bin)
         {
-            auto const real = *inputBuffer++;
-            auto const imag = *inputBuffer++;
-            auto const amp = std::sqrt(real * real + imag * imag);
-            value = std::clamp(std::log10(amp) * 20.0f, -120.0f, 12.0f);
+            auto const real = static_cast<double>(*inputBuffer++);
+            auto const imag = static_cast<double>(*inputBuffer++);
+            auto const scale = bin == 0_z || bin == numBins - 1_z ? realPowerScale : powerScale;
+            auto const decibels = 10.0 * std::log10((real * real + imag * imag) * scale);
+            feature.values[bin] = static_cast<float>(std::clamp(decibels, -120.0, 6.0));
         }
         fs[0].push_back(std::move(feature));
     }
@@ -951,6 +972,10 @@ extern "C"
             case 1:
             {
                 return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::SelfSimilarity>();
+            }
+            case 2:
+            {
+                return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::Spectrogram>();
             }
             default:
             {
