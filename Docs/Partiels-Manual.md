@@ -272,7 +272,9 @@ The *Waveform Peak* track displays the waveform of each channel of the audio fil
 
 #### 4.3.2. Spectrogram
 
-The *Spectrogram Energy* track displays the spectrogram of each channel of the audio file as a matrix. Each column contains the energies, in decibels between -120 dB and 12 dB, of the frequency bins obtained by a Fast Fourier Transform of the audio signal. The window type, the block size (the size of the FFT) and the step size can be modified in the [processor parameters](#912-parameters) of the track. The number of bins of each column is equal to half the block size plus one.
+The *Spectrogram Energy* track displays the spectrogram of each channel of the audio file as a matrix. Each column contains the amplitudes, in decibels relative to full scale between -120 dB and 6 dB, of the frequency bins obtained by a Fast Fourier Transform of the audio signal. The window type, the block size (the size of the FFT) and the step size can be modified in the [processor parameters](#912-parameters) of the track. The number of bins of each column is equal to half the block size plus one.
+
+The amplitudes are normalized by the gain of the window, so a sinusoid with an amplitude of 1 (full scale) is at 0 dB whatever the window type and the block size. The level of a noise, whose energy is spread over all the frequency bins, decreases by 3 dB each time the block size doubles.
 
 #### 4.3.3. New Track
 
