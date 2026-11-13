@@ -615,7 +615,7 @@ void Application::ConverterContent::exportToJson()
     }
 
     auto const loadInDocument = mPropertyToJsonLoadInDocument.entry.getToggleState();
-    auto const position = Tools::getNewTrackPosition();
+    auto const groupIdentifier = Tools::getNewTrackGroup();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
@@ -633,7 +633,7 @@ void Application::ConverterContent::exportToJson()
                                   {
                                       if(loadInDocument)
                                       {
-                                          Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), {jsonFile});
+                                          Tools::addFileTracks(groupIdentifier, {jsonFile});
                                       }
                                       else
                                       {

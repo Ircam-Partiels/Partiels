@@ -858,7 +858,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentImport:
         {
-            auto const position = Tools::getNewTrackPosition();
+            auto const groupIdentifier = Tools::getNewTrackGroup();
             mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, Instance::getWildCardForImportFormats());
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
             mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
@@ -873,7 +873,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                           {
                                               files.push_back(result);
                                           }
-                                          Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), files);
+                                          Tools::addFileTracks(groupIdentifier, files);
                                       });
             return true;
         }
