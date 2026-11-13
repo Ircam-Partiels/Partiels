@@ -308,6 +308,7 @@ Application::Interface::Interface()
                              , std::ref<HideablePanel>(mConverterPanel)
                              , std::ref<HideablePanel>(mExporterPanel)
                              , std::ref<HideablePanel>(mPluginSearchPathPanel)
+                             , std::ref<HideablePanel>(mGlobalSettingsPanel)
                              , std::ref<HideablePanel>(mGraphicPresetPanel)
                              , std::ref<HideablePanel>(mReaderLayoutPanel)
                              , std::ref<HideablePanel>(mDocumentFileInfoPanel)
@@ -401,6 +402,11 @@ void Application::Interface::showExporterPanel()
 void Application::Interface::showPluginSearchPathPanel()
 {
     mPanelManager.show(mPluginSearchPathPanel);
+}
+
+void Application::Interface::showGlobalSettingsPanel()
+{
+    mPanelManager.show(mGlobalSettingsPanel);
 }
 
 void Application::Interface::showReaderLayoutPanel()
