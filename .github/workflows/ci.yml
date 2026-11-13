@@ -56,10 +56,28 @@ jobs:
       with:
         clang-format-version: '20'
         check-path: ${{ matrix.path }}
+  # Checks that the translation files match the translation keys of the sources.
+  Translations:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Checkout JUCE
+      run: git submodule update --init --depth 1 JUCE
+    - name: Extract
+      run: cmake -DKEYS_FILE="${{ runner.temp }}/TranslationKeys.txt" -DQUOTED_KEY_LIST=ON -P BinaryData/Resource/TranslationKeysExtractor.cmake
+    - name: Check
+      # Blocking only on pull requests, informative otherwise.
+      continue-on-error: ${{ github.event_name != 'pull_request' }}
+      run: |
+        status=0
+        for language in French Portuguese; do
+          cmake -DKEYS_FILE="${{ runner.temp }}/TranslationKeys.txt" -DTRANS_FILE="BinaryData/Translations/$language.txt" -P BinaryData/Resource/TranslationKeysChecker.cmake || status=1
+        done
+        exit $status
   # Compiles, tests and packages the plugin for Ubuntu.
   Ubuntu:
     runs-on: ubuntu-22.04
-    needs: Format
+    needs: [Format, Translations]
     steps:
     - uses: actions/checkout@v7
       with:
@@ -93,7 +111,7 @@ jobs:
   # Compiles, tests and packages the plugin for Windows.
   Windows:
     runs-on: windows-2022
-    needs: Format
+    needs: [Format, Translations]
     steps:
     - uses: actions/checkout@v7
       with:
@@ -128,7 +146,7 @@ jobs:
   MacOS:
     name: ${{ matrix.name }}
     runs-on: macos-latest
-    needs: Format
+    needs: [Format, Translations]
     strategy:
       fail-fast: false
       matrix:
