@@ -192,7 +192,6 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
         , CommandIDs::helpSdifConverter
-        , CommandIDs::helpAutoUpdate
         , CommandIDs::helpCheckForUpdate
         , CommandIDs::helpOpenKeyMappings
     });
@@ -717,13 +716,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
             result.setActive(true);
-            break;
-        }
-        case CommandIDs::helpAutoUpdate:
-        {
-            result.setInfo(juce::translate("Automatic Check for New Version"), juce::translate("Toggles the automatic check for a new version"), "Help", 0);
-            result.setActive(true);
-            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>());
             break;
         }
         case CommandIDs::helpCheckForUpdate:
@@ -1641,12 +1633,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 window->getInterface().showConverterPanel();
             }
-            return true;
-        }
-        case CommandIDs::helpAutoUpdate:
-        {
-            auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>();
-            Instance::get().getApplicationAccessor().setAttr<AttrType::autoUpdate>(!state, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::helpCheckForUpdate:
