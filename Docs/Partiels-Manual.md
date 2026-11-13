@@ -58,9 +58,10 @@ Table of contents for the main sections of the manual:
   * [11.3. Audio files recovery](#113-audio-files-recovery)
 * [12. Audio settings](#12-audio-settings)
 * [13. Plugins settings](#13-plugins-settings)
-* [14. Graphic Preset](#14-graphic-preset)
-* [15. Translations](#15-translations)
-* [16. Command-line tools](#16-command-line-tools)
+* [14. Global settings](#14-global-settings)
+* [15. Graphic Preset](#15-graphic-preset)
+* [16. Translations](#16-translations)
+* [17. Command-line tools](#17-command-line-tools)
 
 <div style="page-break-after: always;"></div>
 
@@ -106,7 +107,7 @@ Partiels is compatible on MacOS 10.15 and higher (Universal 2 - Intel/Silicon), 
 
 At startup, Partiels checks for the release of a new version on the project page. If a new version has been released, you can either go to the Partiels project page to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
 
-If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`. By default, only the stable releases are considered; to also be notified of the pre-releases (such as beta versions), toggle the option via the main menu `Partiels → Global Settings → Include Pre-Release Versions in Update Checks` (Mac) or `Help → Global Settings → Include Pre-Release Versions in Update Checks` (Linux/Windows).
+If you don't want Partiels to check for a new release on startup, you can disable the **Automatic Check for New Version** option of the [global settings](#14-global-settings). You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`. By default, only the stable releases are considered; to also be notified of the pre-releases (such as beta versions), enable the **Include Pre-Release Versions in Update Checks** option of the [global settings](#14-global-settings).
 
 <p align="left">
 <strong><a href="https://github.com/Ircam-Partiels/partiels/releases">👉 All versions of Partiels and the plugin collection</a></strong><br>
@@ -165,11 +166,11 @@ If you have loaded one or more audio files, a second interface prompts you to ad
 
 <p align="center"><img src="Images/section-manage-documents.2-v1.3.2.png" alt="Example" width="412"/></p>
 
-You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the main menu `Partiels → Global Settings → Default Template` (Mac) or `Help → Global Settings → Default Template`.
+You can define a default template to be used when loading an audio file using the drop-down menu (**A3**) or via the **Default Template** option of the [global settings](#14-global-settings).
 
-You can also configure the quick export directory used for exporting frames with the keyboard shortcut via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows). The default quick export directory is the Desktop, but you can select any directory on your system.
+You can also configure the quick export directory used for exporting frames with the keyboard shortcut via the **Quick Export Directory** option of the [global settings](#14-global-settings). The default quick export directory is the Desktop, but you can select any directory on your system.
 
-Additionally, you can enable the option to ignore the current time selection during quick export operations via the main menu `Partiels → Global Settings → Ignore Time Selection During Quick Export` (Mac) or `Help → Global Settings → Ignore Time Selection During Quick Export` (Linux/Windows). When enabled, all quick export commands (including keyboard shortcuts `⎇ Option + E` / `Alt + E`, `⌘ Command + ⎇ Option + E` / `Ctrl + Alt + E`, overwrite original, and copy to system clipboard) will export all frames regardless of any active time selection. This prevents accidentally exporting only a subset of results when using keyboard shortcuts repeatedly.
+Additionally, you can enable the option to ignore the current time selection during quick export operations via the **Ignore Time Selection During Quick Export** option of the [global settings](#14-global-settings). When enabled, all quick export commands (including keyboard shortcuts `⎇ Option + E` / `Alt + E`, `⌘ Command + ⎇ Option + E` / `Ctrl + Alt + E`, overwrite original, and copy to system clipboard) will export all frames regardless of any active time selection. This prevents accidentally exporting only a subset of results when using keyboard shortcuts repeatedly.
 
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A7**) if the sample rate used in the initial document differs from that of your audio files.
 
@@ -421,9 +422,9 @@ The `Export` button is disabled when no item is selected or when the options are
 >
 > If you have loaded tracks from result files and want to overwrite those original files with the current frame selection, you can use `Frame → Overwrite Original File(s)`. This command is only available when the selected tracks have result files. A confirmation dialog will be shown before overwriting to prevent accidental data loss.
 >
-> The quick export directory can be configured via the main menu `Partiels → Global Settings → Quick Export Directory` (Mac) or `Help → Global Settings → Quick Export Directory` (Linux/Windows), and defaults to the Desktop.
+> The quick export directory can be configured via the **Quick Export Directory** option of the [global settings](#14-global-settings), and defaults to the Desktop.
 >
-> The `Preserve Full Duration When Editing` setting automatically preserves frame durations to their maximum value during editing operations. This is useful for lab format workflows where marker end times should correspond to the start of the next marker or file end. The setting can be toggled via `Partiels → Global Settings → Preserve Full Duration When Editing` (Mac) or `Help → Global Settings → Preserve Full Duration When Editing` (Linux/Windows).
+> The `Preserve Full Duration When Editing` setting automatically preserves frame durations to their maximum value during editing operations. This is useful for lab format workflows where marker end times should correspond to the start of the next marker or file end. The setting can be toggled via the **Preserve Full Duration When Editing** option of the [global settings](#14-global-settings).
 
 ### 7.1. General options
 
@@ -543,7 +544,7 @@ Once you have selected the desired configuration, click on the `Process` button 
 
 This section covers aspects related to visualization, navigation, and audio playback in the application.
 
-You can change the general theme of the application via the `View → Theme` menu. By default, the automatic mode adapts to your operating system's theme changes (light and dark).
+You can change the general theme of the application via the **Theme** option of the [global settings](#14-global-settings). By default, the automatic mode adapts to your operating system's theme changes (light and dark).
 
 Modify the global scale of the application via the `View → Scale` menu to enlarge the overall view of the application.
 
@@ -893,7 +894,7 @@ The presets menu allows you to manage graphical rendering configurations:
 
 Default graphical presets are stored per-plugin and persist across application sessions, enabling consistent visual representation across multiple analysis sessions.
 
-> 💡 **Tip**: Use the [global graphic preset](#14-graphic-preset) to define the default graphical state for newly created tracks whenever a plugin-specific preset is not available.
+> 💡 **Tip**: Use the [global graphic preset](#15-graphic-preset) to define the default graphical state for newly created tracks whenever a plugin-specific preset is not available.
 
 > 💡 **Tip**: Processor and graphical presets are stored separately, allowing you to mix and match analysis parameters with different visual styles. Both types of default presets are automatically applied when creating new tracks with the corresponding plugin.
 
@@ -1052,7 +1053,25 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 <div style="page-break-after: always;"></div>
 
-## 14. Graphic Preset
+## 14. Global settings
+
+The global settings window allows you to configure the general behavior of the application. The global settings window can be displayed via the main menu `Partiels → Global Settings...` (Mac) or `Help → Global Settings...` (Linux/Windows).
+
+- Theme: The dropdown menu allows you to select the general theme of the application: `Night`, `Day`, `Grass` or `Automatic`. The automatic mode (default) follows the light or dark appearance of the operating system.
+- Silent File Management: When enabled, the results files of the tracks are automatically reloaded when they are modified or restored, and no warning is displayed when they are removed. Otherwise, the application warns you when a results file is removed and asks you whether to reload it when it is modified or restored.
+- Ignore Time Selection During Quick Export: When enabled, the quick export commands export all the frames regardless of the time selection (see [Export analyses](#7-export-analyses)).
+- Preserve Full Duration When Editing: When enabled, the durations of the frames are preserved to their maximum value during the editing operations, so that the end of a marker corresponds to the start of the next marker or to the end of the file (see [Export analyses](#7-export-analyses)).
+- Automatic Check for New Version: When enabled (default), the application checks for the release of a new version at startup (see [Versions and updates](#14-versions-and-updates)).
+- Include Pre-Release Versions in Update Checks: When enabled, the pre-releases (such as beta versions) are also considered when checking for a new version.
+- Default Template: The dropdown menu allows you to select the template used when loading an audio file: `None`, `Factory` or a Partiels document selected with the `Select...` item (see [Create and open](#31-create-and-open)).
+- Quick Export Directory: The dropdown menu allows you to select the directory used by the quick export commands: the `Desktop` (default) or a directory selected with the `Select...` item (see [Export analyses](#7-export-analyses)).
+- Language: The dropdown menu allows you to select the language of the application. The default item uses the language of the operating system if a translation is available (otherwise, it falls back to English). The other items correspond to the translations embedded with the application and to your own translations (see [Translations](#16-translations)).
+
+The global settings are saved automatically on the computer and restored when reopening the application.
+
+<div style="page-break-after: always;"></div>
+
+## 15. Graphic Preset
 
 The global graphic preset defines the default visual properties applied to newly created tracks whenever no plugin-specific graphical preset is available (see the [Graphical](#92-graphical) section).
 
@@ -1068,7 +1087,7 @@ Track-level presets continue to override these defaults when defined for a speci
 
 <div style="page-break-after: always;"></div>
 
-## 15. Translations
+## 16. Translations
 
 Partiels was developed in English, but possesses a translation system. Some translations are embedded with the application (for now the French and Portuguese versions are available).
 By default, Partiels uses the language corresponding to the one in use by the operating system if it is available (otherwise, it falls back to English).
@@ -1127,7 +1146,7 @@ Follow these steps to create your own language file:
 
 <div style="page-break-after: always;"></div>
 
-## 16. Command-line tools
+## 17. Command-line tools
 
 The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
 
