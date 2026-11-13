@@ -36,7 +36,14 @@ namespace Application
         void addPluginTracks(juce::String const& groupIdentifier, std::vector<Plugin::Key> const& keys, juce::Component* associatedComponent = nullptr);
         void addFileTracks(juce::String const& groupIdentifier, std::vector<juce::File> const& files);
 
-        void notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback);
+        //! @brief Notify the user if a new version is available
+        //! @param upstreamVersion The newest version available (invalid if unknown)
+        //! @param currentVersion The version compared with the newest version (the pre-release suffixes are considered)
+        //! @param warnIfUpToDate If the user is also notified when the current version is up to date
+        //! @param product The name of the product
+        //! @param project The name of the project page
+        //! @param callback Called with the button selected by the user (0 to close, 1 to proceed to the download page, 2 to ignore the version)
+        void notifyForNewVersion(Release::Version const& upstreamVersion, Release::Version const& currentVersion, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback);
     } // namespace Tools
 } // namespace Application
 

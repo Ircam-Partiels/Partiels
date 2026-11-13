@@ -59,6 +59,7 @@ Application::BatcherContent::BatcherContent()
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:

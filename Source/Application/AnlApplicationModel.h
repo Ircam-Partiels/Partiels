@@ -36,6 +36,7 @@ namespace Application
         , routingMatrix
         , autoUpdate
         , lastVersion
+        , includePreReleases
         , timeZoomAnchorOnPlayhead
         , globalGraphicPreset
         , ignoreTimeSelectionDuringQuickExport
@@ -65,6 +66,7 @@ namespace Application
     , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Model::Flag::basic>
     , Model::Attr<AttrType::autoUpdate, bool, Model::Flag::basic>
     , Model::Attr<AttrType::lastVersion, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::includePreReleases, bool, Model::Flag::basic>
     , Model::Attr<AttrType::timeZoomAnchorOnPlayhead, bool, Model::Flag::basic>
     , Model::Attr<AttrType::globalGraphicPreset, Track::GraphicsSettings, Model::Flag::basic>
     , Model::Attr<AttrType::ignoreTimeSelectionDuringQuickExport, bool, Model::Flag::basic>
@@ -102,6 +104,7 @@ namespace Application
             , {{}}
             , {true}
             , {ProjectInfo::versionString}
+            , {false}
             , {false}
             , {}
             , {false}

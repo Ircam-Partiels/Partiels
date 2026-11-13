@@ -138,6 +138,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 break;
             }
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::defaultTemplateFile:
             case AttrType::quickExportDirectory:
@@ -674,49 +675,32 @@ void Application::Instance::checkPluginsQuarantine()
 
 void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate)
 {
-    mDownloader->launch({"https://api.github.com/repos/Ircam-Partiels/Partiels/releases/latest"}, {"Accept: application/vnd.github+json\" \"X-GitHub-Api-Version: 2022-11-28\nX-GitHub-Api-Version: 2022-11-28"}, [=](juce::File file)
+    mDownloader->launch({"https://api.github.com/repos/Ircam-Partiels/Partiels/releases?per_page=30"}, {"Accept: application/vnd.github+json\nX-GitHub-Api-Version: 2022-11-28"}, [=](juce::File file)
                         {
-                            static auto const isDevelopmentVersion = juce::String(PARTIELS_BUILD_TAG) != juce::String(ProjectInfo::versionString);
-                            auto const currentVersion = Version::fromString(ProjectInfo::versionString);
-                            auto const checkVersion = Version::fromString(Instance::get().getApplicationAccessor().getAttr<AttrType::lastVersion>());
-                            auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
-                            auto const getVersion = [](juce::String const& content) -> Version
+                            // The current version includes the pre-release suffix of the build tag (for example 3.0.0-beta14)
+                            static auto const currentVersion = []()
                             {
-                                nlohmann::json json;
-                                try
-                                {
-                                    json = nlohmann::json::parse(content.toStdString());
-                                }
-                                catch(...)
-                                {
-                                    return {};
-                                }
-                                if(!json.is_object())
-                                {
-                                    return {};
-                                }
-                                auto const& nameIt = json.find("name");
-                                if(nameIt == json.cend() || !nameIt->is_string())
-                                {
-                                    return {};
-                                }
-                                return Version::fromString(nameIt->get<std::string>());
-                            };
-
-                            auto const upstreamVersion = getVersion(file.loadFileAsString());
-                            Tools::notifyForNewVersion(upstreamVersion, usedVersion, isDevelopmentVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::projectName, [=](int result)
+                                auto const buildVersion = Release::Version::fromString(PARTIELS_BUILD_TAG);
+                                return buildVersion.isValid() ? buildVersion : Release::Version::fromString(ProjectInfo::versionString);
+                            }();
+                            auto& applicationAcsr = Instance::get().getApplicationAccessor();
+                            auto const checkVersion = Release::Version::fromString(applicationAcsr.getAttr<AttrType::lastVersion>());
+                            auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
+                            auto const releases = Release::parseList(file.loadFileAsString(), applicationAcsr.getAttr<AttrType::includePreReleases>());
+                            auto const upstreamRelease = releases.empty() ? Release::Info{} : releases.front();
+                            Tools::notifyForNewVersion(upstreamRelease.version, usedVersion, warnIfUpToDate, ProjectInfo::projectName, ProjectInfo::projectName, [=](int result)
                                                        {
-                                                           if(upstreamVersion == Version())
+                                                           if(!upstreamRelease.version.isValid())
                                                            {
                                                                return;
                                                            }
                                                            if(result != 0)
                                                            {
-                                                               Instance::get().getApplicationAccessor().setAttr<AttrType::lastVersion>(upstreamVersion.toString(), NotificationType::synchronous);
+                                                               Instance::get().getApplicationAccessor().setAttr<AttrType::lastVersion>(upstreamRelease.version.toString(), NotificationType::synchronous);
                                                            }
                                                            if(result == 1)
                                                            {
-                                                               juce::URL("https://github.com/Ircam-Partiels/Partiels/releases").launchInDefaultBrowser();
+                                                               juce::URL(upstreamRelease.pageUrl.isNotEmpty() ? upstreamRelease.pageUrl : juce::String("https://github.com/Ircam-Partiels/Partiels/releases")).launchInDefaultBrowser();
                                                            }
                                                        });
                         });
