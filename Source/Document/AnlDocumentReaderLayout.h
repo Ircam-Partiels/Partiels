@@ -17,7 +17,11 @@ namespace Document
         // juce::Component
         void resized() override;
 
-        void warnBeforeClosing();
+        //! @brief Asks the user to apply or discard the pending changes before closing.
+        //! @details If there are no pending changes, the callback is called immediately with true.
+        //! Otherwise, the user can apply or discard the changes (true) or cancel the closing (false).
+        //! @param callback The function called with true if the content can be closed or false otherwise.
+        void askToClose(std::function<void(bool)> callback);
 
     private:
         Director& mDirector;

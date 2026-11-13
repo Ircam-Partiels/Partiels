@@ -16,11 +16,9 @@ Application::Interface::ReaderLayoutPanel::~ReaderLayoutPanel()
     setContent("", nullptr);
 }
 
-bool Application::Interface::ReaderLayoutPanel::escapeKeyPressed()
+void Application::Interface::ReaderLayoutPanel::askToHide(std::function<void(bool)> callback)
 {
-    mReaderLayoutContent.warnBeforeClosing();
-    hide();
-    return true;
+    mReaderLayoutContent.askToClose(std::move(callback));
 }
 
 Application::Interface::PluginSearchPathPanel::PluginSearchPathPanel()
@@ -34,11 +32,9 @@ Application::Interface::PluginSearchPathPanel::~PluginSearchPathPanel()
     setContent("", nullptr);
 }
 
-bool Application::Interface::PluginSearchPathPanel::escapeKeyPressed()
+void Application::Interface::PluginSearchPathPanel::askToHide(std::function<void(bool)> callback)
 {
-    mPluginSearchPath.warnBeforeClosing();
-    hide();
-    return true;
+    mPluginSearchPath.askToClose(std::move(callback));
 }
 
 Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)
