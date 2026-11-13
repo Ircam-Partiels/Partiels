@@ -34,6 +34,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Files are named `Anl<Module><Class>.h/.cpp` (e.g. `Source/Plugin/AnlPluginListScanner.cpp` declares `PluginList::Scanner`).
 - Wrap file contents in `ANALYSE_FILE_BEGIN` / `ANALYSE_FILE_END` (see [Source/Misc/AnlBase.h](Source/Misc/AnlBase.h)) and put classes in their module namespace (`Track`, `Group`, `PluginList`, ...).
 - Place `const` after the type (`Type const& value`) and prefix members with `m` (`mProcess`).
+- Write enumerators with leading commas and wrap the enum in `// clang-format off` / `// clang-format on`, which clang-format cannot produce (see `AgentBackend` in [AnlApplicationNeuralyzerModel.h](Source/Application/AnlApplicationNeuralyzerModel.h)).
 - Document public declarations with Doxygen comments (`//! @brief`, `//! @param`, `//! @return`).
 - Match the style of the surrounding code rather than introducing new idioms.
 - Code must compile without warnings. Strict warning flags are enabled for `Partiels` and `partiels-vamp-plugins` (`juce::juce_recommended_warning_flags`, plus [XcodeSetupWarnings.cmake](BinaryData/Resource/XcodeSetupWarnings.cmake) with Xcode); do not silence warnings with pragmas or flags.
