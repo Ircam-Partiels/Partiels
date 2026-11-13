@@ -6,5 +6,6 @@
 #include "AnlHideablePanel.h"
 #include "AnlLoadingIcon.h"
 #include "AnlMouseScroller.h"
+#include "AnlRelease.h"
 #include "AnlResizerBar.h"
 #include "AnlSdifConverter.h"
