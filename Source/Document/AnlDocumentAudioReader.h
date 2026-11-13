@@ -22,9 +22,16 @@ namespace Document
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
 
     private:
+        void updateChannelGains();
+
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
         Transport::AudioReader mTransportAudioReader;
+        std::vector<size_t> mLayoutNumChannels;
+
+        audio_spin_mutex mGainsMutex;
+        std::vector<float> mTargetGains;
+        std::vector<float> mCurrentGains;
 
         Accessor::Listener mListener{typeid(*this).name()};
 
