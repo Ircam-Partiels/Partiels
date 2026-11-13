@@ -48,6 +48,13 @@ namespace Document
         std::set<Track::FrameType> getSelectedChannelsFrameTypes(Accessor const& accessor);
         std::set<size_t> getEffectiveSelectedChannelsForTrack(Accessor const& accessor, Track::Accessor const& trackAcsr);
 
+        //! @brief Gets whether a channel of the audio files layout is audible during the playback
+        //! @details The solo takes precedence over the mute: if at least one channel is soloed, only the soloed channels are audible (even if they are muted), otherwise only the channels that are not muted are audible.
+        //! @param accessor The accessor of the document
+        //! @param index The index of the channel in the audio files layout
+        //! @return True if the channel is audible, otherwise false (also if the index is out of range)
+        bool isChannelAudible(Accessor const& accessor, size_t index);
+
         std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& accessor);
     } // namespace Tools
 
