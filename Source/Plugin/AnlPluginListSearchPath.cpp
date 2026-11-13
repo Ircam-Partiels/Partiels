@@ -9,14 +9,14 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     {
 #if JUCE_MAC
         auto const fileSearchPath = mFileSearchPathTable.getFileSearchPath();
-        mApplyButton.setEnabled(mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>() || fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
+        mApplyButton.setEnabled(mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>() || fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
         mResetButton.setEnabled(mApplyButton.isEnabled());
-        mDefaultButton.setEnabled(mUseEnvVariable != true || mQuarantineMode != QuarantineMode::force || fileSearchPath != getDefaultSearchPath());
+        mDefaultButton.setEnabled(mUseEnvVariable != true || mIncludePreReleases != false || mQuarantineMode != QuarantineMode::force || fileSearchPath != getDefaultSearchPath());
 #else
         auto const fileSearchPath = mFileSearchPathTable.getFileSearchPath();
-        mApplyButton.setEnabled(mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
+        mApplyButton.setEnabled(mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>() || fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
         mResetButton.setEnabled(mApplyButton.isEnabled());
-        mDefaultButton.setEnabled(mUseEnvVariable != true || fileSearchPath != getDefaultSearchPath());
+        mDefaultButton.setEnabled(mUseEnvVariable != true || mIncludePreReleases != false || fileSearchPath != getDefaultSearchPath());
 #endif
     };
 
@@ -28,6 +28,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     mApplyButton.onClick = [=, this]()
     {
         mAccessor.setAttr<AttrType::useEnvVariable>(mUseEnvVariable, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::includePreReleases>(mIncludePreReleases, NotificationType::synchronous);
 #if JUCE_MAC
         mAccessor.setAttr<AttrType::quarantineMode>(mQuarantineMode, NotificationType::synchronous);
 #endif
@@ -40,6 +41,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     mResetButton.onClick = [=, this]()
     {
         mUseEnvVariable = mAccessor.getAttr<AttrType::useEnvVariable>();
+        mIncludePreReleases = mAccessor.getAttr<AttrType::includePreReleases>();
 #if JUCE_MAC
         mQuarantineMode = mAccessor.getAttr<AttrType::quarantineMode>();
 #endif
@@ -50,6 +52,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     mDefaultButton.onClick = [=, this]()
     {
         mUseEnvVariable = true;
+        mIncludePreReleases = false;
 #if JUCE_MAC
         mQuarantineMode = QuarantineMode::force;
 #endif
@@ -73,6 +76,15 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
                              return;
                          }
                          mUseEnvVariable = !mUseEnvVariable;
+                         updateButtonsStates();
+                     });
+        menu.addItem(juce::translate("Include pre-release versions of online plugins"), true, mIncludePreReleases, [=, this]()
+                     {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
+                         mIncludePreReleases = !mIncludePreReleases;
                          updateButtonsStates();
                      });
         juce::PopupMenu blacklistSubmenu;
@@ -139,8 +151,10 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
             break;
             case AttrType::quarantineMode:
             case AttrType::useEnvVariable:
+            case AttrType::includePreReleases:
             {
                 mUseEnvVariable = acsr.getAttr<AttrType::useEnvVariable>();
+                mIncludePreReleases = acsr.getAttr<AttrType::includePreReleases>();
 #if JUCE_MAC
                 mQuarantineMode = acsr.getAttr<AttrType::quarantineMode>();
 #endif
@@ -192,9 +206,9 @@ void PluginList::SearchPath::resized()
 void PluginList::SearchPath::warnBeforeClosing()
 {
 #if JUCE_MAC
-    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>())
+    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>())
 #else
-    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>())
+    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>())
 #endif
     {
         auto const options = juce::MessageBoxOptions()

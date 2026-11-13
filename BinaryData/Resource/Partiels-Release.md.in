@@ -6,8 +6,8 @@
 - Linux: [Partiels-Linux.tar.gz](https://github.com/Ircam-Partiels/Partiels/releases/download/@PARTIELS_BUILD_TAG@/Partiels-Linux.tar.gz)
 - Manual: [Partiels-Manual.pdf](https://github.com/Ircam-Partiels/Partiels/releases/download/@PARTIELS_BUILD_TAG@/Partiels-Manual.pdf)
 - Patchs: [Partiels-Patchs.zip](https://github.com/Ircam-Partiels/Partiels/releases/download/@PARTIELS_BUILD_TAG@/Partiels-Patchs.zip)
-### Partiels Vamp Plugins
-- MacOS: [Partiels-Vamp-Plugins-MacOS.pkg](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-MacOS.pkg)
-- Windows: [Partiels-Vamp-Plugins-Windows.exe](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Windows.exe)
-- Linux: [Partiels-Vamp-Plugins-Linux.zip](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Linux.zip)
-- Manuals: [Partiels-Vamp-Plugins-Manuals.zip](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Manuals.zip)
+### Partiels Vamp Plugins @PARTIELS_VAMP_PLUGINS_TAG@
+- MacOS: [Partiels-Vamp-Plugins-MacOS.pkg](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/download/@PARTIELS_VAMP_PLUGINS_TAG@/Partiels-Vamp-Plugins-MacOS.pkg)
+- Windows: [Partiels-Vamp-Plugins-Windows.exe](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/download/@PARTIELS_VAMP_PLUGINS_TAG@/Partiels-Vamp-Plugins-Windows.exe)
+- Linux: [Partiels-Vamp-Plugins-Linux.zip](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/download/@PARTIELS_VAMP_PLUGINS_TAG@/Partiels-Vamp-Plugins-Linux.zip)
+- Manuals: [Partiels-Vamp-Plugins-Manuals.zip](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/download/@PARTIELS_VAMP_PLUGINS_TAG@/Partiels-Vamp-Plugins-Manuals.zip)

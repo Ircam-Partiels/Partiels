@@ -211,7 +211,7 @@ Tracks can be created in two ways, from the analysis of a Vamp plugin or from a 
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface, followed by the plugins available on internet that are not installed, as distributed with the [Partiels Vamp Plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest) and as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/). 
+When you click on the button to add analysis tracks via the interface for starting a new document, the panel for adding analysis plugins is displayed. If you are already working on a document, you can show or hide this window via the main menu `Edit → Show/Hide New Track Panel`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or with the arrow button ([Overview](#2-overview) - **K9**) on the main interface. All plugins installed on your computer are listed in the interface, followed by the plugins available on internet that are not installed, as distributed with the [Partiels Vamp Plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases) and as listed on [https://www.vamp-plugins.org/](https://www.vamp-plugins.org/). Partiels uses the newest release of the Partiels Vamp Plugins that is compatible with its version (the pre-releases are only considered if the option is enabled in the [plugin settings](#13-plugins-settings)). 
 
 <p><img src="Images/section-add-new-plugin-tracks.1-v2.0.3.png" alt="Example" width="110" align="right" style="border-left: 8px solid transparent;"></p> 
 
@@ -1043,6 +1043,8 @@ In the upper section of the Plugin Settings window, each item in the list corres
 - Rescan the plugins: Click on the `Rescan` button (next to the `Default` button) to rescan the list of installed plugins without modifying the settings (e.g. after installing or updating a plugin).
 
 - Use environment variable: Enable or disable the use of the `VAMP_PATH` environment variable to define the extra folders. On MacOS, the option is accessible by clicking on the `Option` button (**P5**). On Windows and Linux, a toggle button replaces the button.
+
+- Include pre-release versions of online plugins: Enable or disable the use of the pre-release versions of the Partiels Vamp Plugins for the list of plugins available on internet. The option is accessible by clicking on the `Option` button (**P5**).
 
 - Quarantine management: Control the quarantine management when plugins are not notarized. Either "Keep the default system mechanism", the system will probably suggest you delete the plugins in question. Or "Attempt to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or "Ignore quarantined libraries", the application will ignore the plugins.
 

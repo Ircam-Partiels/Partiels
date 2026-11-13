@@ -70,6 +70,13 @@ else()
 endif()
 set(PARTIELS_VERSION_STRING "${PARTIELS_VERSION_MAJOR}.${PARTIELS_VERSION_MINOR}.${PARTIELS_VERSION_PATCH}")
 
+# The release of the Partiels Vamp Plugins associated with this version of Partiels: it is linked by the release notes
+# and used by the application unless a newer release compatible with this version of Partiels is available
+if(NOT PARTIELS_VAMP_PLUGINS_TAG OR PARTIELS_VAMP_PLUGINS_TAG STREQUAL "")
+    set(PARTIELS_VAMP_PLUGINS_TAG "2.0.0-dev3")
+endif()
+message(STATUS "Partiels Vamp Plugins: " ${PARTIELS_VAMP_PLUGINS_TAG})
+
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${PARTIELS_BUILD_TAG})
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ChangeLog.txt "v${PARTIELS_BUILD_TAG}")
@@ -175,6 +182,7 @@ target_compile_definitions(Partiels PRIVATE
     MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
     PARTIELS_BUILD_TAG="${PARTIELS_BUILD_TAG}"
     PARTIELS_BUILD_ID="${PARTIELS_BUILD_ID}"
+    PARTIELS_VAMP_PLUGINS_TAG="${PARTIELS_VAMP_PLUGINS_TAG}"
     )
 if(UNIX AND NOT APPLE)
     target_compile_definitions(Partiels PRIVATE 

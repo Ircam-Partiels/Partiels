@@ -789,6 +789,7 @@ countries: fr be
 "Category" = "Catégorie"
 "The category of the plugin" = "La catégorie du plugin"
 "Use environment variable" = "Utiliser la variable d'environnement"
+"Include pre-release versions of online plugins" = "Inclure les versions prereleases des plugins en ligne"
 "Clear FLNAME" = "Effacer FLNAME"
 "Clear all" = "Effacer tout"
 "Show file" = "Afficher le fichier"

@@ -272,10 +272,107 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::parse(juce::String 
     return plugins;
 }
 
-std::vector<Plugin::WebReference> PluginList::WebDownloader::downloadDistribution(std::atomic<bool> const& shouldQuit)
+namespace
+{
+    // The name of the asset of the Partiels Vamp Plugins releases that contains the distribution list
+    static auto constexpr distributionAssetName = "Partiels-Plugins.json";
+
+    // The distribution list of a release of the Partiels Vamp Plugins
+    struct Distribution
+    {
+        Release::Version minimumPartielsVersion; // Invalid if the plugins are compatible with all the versions of Partiels
+        std::vector<Plugin::WebReference> references;
+    };
+
+    // The distribution list is either an object with the minimum version of Partiels required by the plugins
+    // and the list of plugins ({"minimumPartielsVersion": "3.0.0", "plugins": [...]}), or only the list of
+    // plugins (the legacy format that is compatible with all the versions of Partiels)
+    Distribution parseDistribution(juce::String const& content)
+    {
+        nlohmann::json json;
+        try
+        {
+            json = nlohmann::json::parse(content.toStdString());
+        }
+        catch(nlohmann::json::exception const&)
+        {
+            throw std::runtime_error("Unable to parse the plugin distribution list.");
+        }
+        Distribution distribution;
+        auto const* plugins = std::addressof(json);
+        if(json.is_object())
+        {
+            auto const versionIt = json.find("minimumPartielsVersion");
+            if(versionIt != json.cend())
+            {
+                distribution.minimumPartielsVersion = versionIt->is_string() ? Release::Version::fromString(juce::String(versionIt->get<std::string>())) : Release::Version{};
+                if(!distribution.minimumPartielsVersion.isValid())
+                {
+                    throw std::runtime_error("The minimum version of Partiels of the plugin distribution list is invalid.");
+                }
+            }
+            auto const pluginsIt = json.find("plugins");
+            plugins = pluginsIt != json.cend() ? std::addressof(*pluginsIt) : nullptr;
+        }
+        if(plugins == nullptr || !plugins->is_array())
+        {
+            throw std::runtime_error("The plugin distribution list is invalid.");
+        }
+        for(auto const& entry : *plugins)
+        {
+            Plugin::WebReference reference;
+            try
+            {
+                reference = entry.get<Plugin::WebReference>();
+            }
+            catch(nlohmann::json::exception const&)
+            {
+                continue;
+            }
+            if(!reference.valid())
+            {
+                continue;
+            }
+            reference.isCompatible = reference.getDownloadUrl().isNotEmpty();
+#if JUCE_DEBUG
+            MiscDebug("PluginList::WebDownloader", "Distribution plugin: " + reference.name);
+#endif
+            distribution.references.push_back(std::move(reference));
+        }
+        if(distribution.references.empty())
+        {
+            throw std::runtime_error("The plugin distribution list is empty.");
+        }
+        return distribution;
+    }
+
+    // The pre-releases of Partiels are compatible with the plugins that require the version of the pre-release
+    // (Partiels 3.0.0-beta1 is compatible with the plugins that require Partiels 3.0.0)
+    bool isCompatible(Release::Version const& minimumPartielsVersion, Release::Version const& partielsVersion)
+    {
+        return !minimumPartielsVersion.isValid() || partielsVersion.withoutPreRelease() >= minimumPartielsVersion.withoutPreRelease();
+    }
+
+    juce::String downloadContent(juce::URL const& url, juce::String const& headers = {})
+    {
+        auto statusCode = 0;
+        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                                 .withConnectionTimeoutMs(5000)
+                                 .withExtraHeaders(headers)
+                                 .withStatusCode(&statusCode);
+        auto stream = url.createInputStream(options);
+        if(stream == nullptr || statusCode < 200 || statusCode >= 300)
+        {
+            throw std::runtime_error(juce::String("Unable to download URL (STATUS).").replace("URL", url.toString(true)).replace("STATUS", juce::String(statusCode)).toStdString());
+        }
+        MiscDebug("PluginList::WebDownloader", "URL: " + url.toString(true));
+        return stream->readEntireStreamAsString();
+    }
+} // namespace
+
+std::vector<Plugin::WebReference> PluginList::WebDownloader::downloadDistribution(std::atomic<bool> const& shouldQuit, bool includePreReleases)
 {
     // The environment variable replaces the online distribution list by a local file (for example for testing purposes)
-    auto content = juce::String{};
     if(auto const environmentPath = juce::SystemStats::getEnvironmentVariable("PARTIELS_PLUGINS_FILE", {}); environmentPath.isNotEmpty())
     {
         auto const file = juce::File(environmentPath);
@@ -283,57 +380,63 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::downloadDistributio
         {
             throw std::runtime_error("The plugin distribution file does not exist.");
         }
-        content = file.loadFileAsString();
+        return parseDistribution(file.loadFileAsString()).references;
     }
-    else
+
+    // The release of the Partiels Vamp Plugins associated with this version of Partiels when it was built
+    // is used unless a newer release compatible with this version of Partiels is available
+    static juce::String const associatedTag{PARTIELS_VAMP_PLUGINS_TAG};
+    auto const associatedVersion = Release::Version::fromString(associatedTag);
+    auto const partielsVersion = Release::Version::fromString(ProjectInfo::versionString);
+    std::vector<Release::Info> releases;
+    try
     {
-        // The distribution list is provided by the latest release of the Partiels Vamp Plugins
-        juce::URL const fileUrl("https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Plugins.json");
-        auto const options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(5000);
-        auto stream = fileUrl.createInputStream(options);
-        if(stream == nullptr)
+        static juce::String const headers{"Accept: application/vnd.github+json\nX-GitHub-Api-Version: 2022-11-28"};
+        releases = Release::parseList(downloadContent(juce::URL("https://api.github.com/repos/Ircam-Partiels/Partiels-Vamp-Plugins/releases?per_page=30"), headers), includePreReleases);
+    }
+    catch(std::runtime_error const& error)
+    {
+        MiscDebug("PluginList::WebDownloader", juce::String("Plugin release list download failed: ERROR").replace("ERROR", error.what()));
+    }
+    for(auto const& release : releases)
+    {
+        if(shouldQuit)
         {
-            throw std::runtime_error("Unable to download the plugin distribution list.");
+            return {};
         }
-        content = stream->readEntireStreamAsString();
-        MiscDebug("PluginList::WebDownloader", "URL: " + fileUrl.toString(true));
+        // The releases are sorted from the newest to the oldest
+        if(release.version <= associatedVersion)
+        {
+            break;
+        }
+        auto const assetIt = release.assets.find(distributionAssetName);
+        if(assetIt == release.assets.cend())
+        {
+            continue;
+        }
+        try
+        {
+            auto distribution = parseDistribution(downloadContent(juce::URL(assetIt->second)));
+            if(isCompatible(distribution.minimumPartielsVersion, partielsVersion))
+            {
+                MiscDebug("PluginList::WebDownloader", "Plugin distribution: " + release.tag);
+                return std::move(distribution.references);
+            }
+            MiscDebug("PluginList::WebDownloader", juce::String("Plugin distribution TAG requires Partiels VERSION").replace("TAG", release.tag).replace("VERSION", distribution.minimumPartielsVersion.toString()));
+        }
+        catch(std::runtime_error const& error)
+        {
+            MiscDebug("PluginList::WebDownloader", juce::String("Plugin distribution TAG ignored: ERROR").replace("TAG", release.tag).replace("ERROR", error.what()));
+        }
     }
     if(shouldQuit)
     {
         return {};
     }
-    auto json = nlohmann::json{};
-    try
-    {
-        json = nlohmann::json::parse(content.toStdString());
-    }
-    catch(nlohmann::json::exception const&)
-    {
-        throw std::runtime_error("Unable to parse the plugin distribution list.");
-    }
-    if(!json.is_array())
-    {
-        throw std::runtime_error("The plugin distribution list is invalid.");
-    }
-    std::vector<Plugin::WebReference> references;
-    for(auto const& entry : json)
-    {
-        auto reference = entry.get<Plugin::WebReference>();
-        if(!reference.valid())
-        {
-            continue;
-        }
-        reference.isCompatible = reference.getDownloadUrl().isNotEmpty();
-#if JUCE_DEBUG
-        MiscDebug("PluginList::WebDownloader", "Distribution plugin: " + reference.name);
-#endif
-        references.push_back(std::move(reference));
-    }
-    if(references.empty())
-    {
-        throw std::runtime_error("The plugin distribution list is empty.");
-    }
-    return references;
+
+    MiscDebug("PluginList::WebDownloader", "Plugin distribution: " + associatedTag);
+    juce::URL const associatedUrl("https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/download/" + associatedTag + "/" + distributionAssetName);
+    return parseDistribution(downloadContent(associatedUrl)).references;
 }
 
 std::vector<Plugin::WebReference> PluginList::WebDownloader::downloadRdf(std::atomic<bool> const& shouldQuit)
@@ -387,13 +490,13 @@ std::vector<Plugin::WebReference> PluginList::WebDownloader::downloadRdf(std::at
     return allDescriptions;
 }
 
-std::vector<Plugin::WebReference> PluginList::WebDownloader::download(std::atomic<bool> const& shouldQuit)
+std::vector<Plugin::WebReference> PluginList::WebDownloader::download(std::atomic<bool> const& shouldQuit, bool includePreReleases)
 {
     // The plugins of the Partiels distribution have priority over the plugins of the RDF list
     std::vector<Plugin::WebReference> distribution;
     try
     {
-        distribution = downloadDistribution(shouldQuit);
+        distribution = downloadDistribution(shouldQuit, includePreReleases);
     }
     catch(std::runtime_error const& error)
     {
@@ -564,7 +667,7 @@ std::tuple<juce::Result, juce::File> PluginList::WebDownloader::downloadPackage(
     return {juce::Result::ok(), installer};
 }
 
-void PluginList::WebDownloader::download(std::function<void(juce::Result, std::vector<Plugin::WebReference>)> callback)
+void PluginList::WebDownloader::download(bool includePreReleases, std::function<void(juce::Result, std::vector<Plugin::WebReference>)> callback)
 {
     if(mProcess.valid())
     {
@@ -572,14 +675,14 @@ void PluginList::WebDownloader::download(std::function<void(juce::Result, std::v
         return;
     }
     mCallback = callback;
-    mProcess = std::async([this]()
+    mProcess = std::async([this, includePreReleases]()
                           {
                               juce::Thread::setCurrentThreadName("PluginList::WebDownloader");
                               juce::Result result = juce::Result::ok();
                               std::vector<Plugin::WebReference> plugins;
                               try
                               {
-                                  plugins = download(mShouldQuit);
+                                  plugins = download(mShouldQuit, includePreReleases);
                               }
                               catch(std::runtime_error const& error)
                               {
@@ -627,10 +730,11 @@ void PluginList::WebDownloader::handleAsyncUpdate()
     if(mProcess.valid() && mProcess.wait_for(std::chrono::seconds{0}) == std::future_status::ready)
     {
         auto const results = mProcess.get();
-        if(mCallback != nullptr)
+        // The callback is released before being called so that it can start a new download
+        auto const callback = std::exchange(mCallback, nullptr);
+        if(callback != nullptr)
         {
-            mCallback(std::get<0>(results), std::get<1>(results));
-            mCallback = nullptr;
+            callback(std::get<0>(results), std::get<1>(results));
         }
     }
     // The completed downloads are removed before calling the callbacks so that the downloads
@@ -657,5 +761,73 @@ void PluginList::WebDownloader::handleAsyncUpdate()
         }
     }
 }
+
+class WebDownloaderTest
+: public juce::UnitTest
+{
+public:
+    WebDownloaderTest()
+    : juce::UnitTest("WebDownloader", "PluginList")
+    {
+    }
+
+    ~WebDownloaderTest() override = default;
+
+    void runTest() override
+    {
+        auto const plugin = juce::String(R"({"identifier": "supervp", "name": "SuperVP", "downloadUrlLinux": "linux", "downloadUrlMacos": "macos", "downloadUrlWindows": "windows"})");
+
+        beginTest("Distribution Legacy Format");
+        {
+            auto const distribution = parseDistribution("[" + plugin + R"(, {"name": "No identifier"}, {"identifier": 1}])");
+            expect(!distribution.minimumPartielsVersion.isValid());
+            expectEquals(static_cast<int>(distribution.references.size()), 1);
+            if(!distribution.references.empty())
+            {
+                expectEquals(distribution.references.front().identifier, juce::String("supervp"));
+                expect(distribution.references.front().isCompatible);
+            }
+        }
+
+        beginTest("Distribution Format");
+        {
+            auto const distribution = parseDistribution(R"({"minimumPartielsVersion": "3.0.0", "plugins": [)" + plugin + "]}");
+            expectEquals(distribution.minimumPartielsVersion.toString(), juce::String("3.0.0"));
+            expectEquals(static_cast<int>(distribution.references.size()), 1);
+
+            auto const expectFailure = [this](juce::String const& content)
+            {
+                auto failed = false;
+                try
+                {
+                    [[maybe_unused]] auto const result = parseDistribution(content);
+                }
+                catch(std::runtime_error const&)
+                {
+                    failed = true;
+                }
+                expect(failed, content);
+            };
+            expectFailure("not json");
+            expectFailure("[]");
+            expectFailure(R"({"minimumPartielsVersion": "3.0.0"})");
+            expectFailure(R"({"minimumPartielsVersion": "latest", "plugins": [)" + plugin + "]}");
+            expectFailure(R"({"minimumPartielsVersion": 3, "plugins": [)" + plugin + "]}");
+        }
+
+        beginTest("Distribution Compatibility");
+        {
+            using Version = Release::Version;
+            expect(isCompatible(Version{}, Version::fromString("2.6.0")));
+            expect(!isCompatible(Version::fromString("3.0.0"), Version::fromString("2.6.0")));
+            expect(isCompatible(Version::fromString("3.0.0"), Version::fromString("3.0.0")));
+            expect(isCompatible(Version::fromString("3.0.0"), Version::fromString("3.0.0-beta14")));
+            expect(isCompatible(Version::fromString("3.0.0"), Version::fromString("3.1.0")));
+            expect(!isCompatible(Version::fromString("3.1.0"), Version::fromString("3.0.0")));
+        }
+    }
+};
+
+static WebDownloaderTest webDownloaderTest;
 
 ANALYSE_FILE_END

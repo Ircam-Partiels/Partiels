@@ -37,6 +37,10 @@ namespace Application
         void saveToFile(PropertyType type);
         void loadFromFile(PropertyType type);
 
+        //! @brief Download the lists of the plugins available on internet
+        //! @details The lists are downloaded again if the inclusion of the pre-releases changes during the download
+        void downloadWebReferences();
+
         Accessor::Listener mApplicationListener{typeid(*this).name()};
         Osc::Accessor::Listener mOscListener{typeid(*this).name()};
         PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
