@@ -27,31 +27,29 @@ size_t Application::Tools::getNewGroupPosition()
     return 0_z;
 }
 
-std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
+juce::String Application::Tools::getNewTrackGroup()
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const selectedItem = Document::Selection::getFarthestItem(documentAcsr);
     if(!selectedItem.has_value())
     {
-        return std::make_tuple(juce::String{}, 0_z);
+        return {};
     }
     auto const& selectedIdentifier = selectedItem.value();
     if(Document::Tools::hasGroupAcsr(documentAcsr, selectedIdentifier))
     {
-        return std::make_tuple(selectedIdentifier, 0_z);
+        return selectedIdentifier;
     }
     if(Document::Tools::hasTrackAcsr(documentAcsr, selectedIdentifier))
     {
         auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, selectedIdentifier);
-        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        auto const position = Document::Tools::getTrackPosition(documentAcsr, selectedIdentifier);
-        return std::make_tuple(groupIdentifier, position + 1_z);
+        return groupAcsr.getAttr<Group::AttrType::identifier>();
     }
     MiscWeakAssert(false);
-    return std::make_tuple(juce::String{}, 0_z);
+    return {};
 }
 
-std::tuple<juce::Result, juce::String, size_t> Application::Tools::prepareForNewTracks(juce::String const& groupIdentifier, size_t const trackPosition)
+std::tuple<juce::Result, juce::String> Application::Tools::prepareForNewTracks(juce::String const& groupIdentifier)
 {
     auto& documentDir = Instance::get().getDocumentDirector();
     // Sanitize the document to make sure the group identifier is up to date and valid before adding the track to it.
@@ -64,24 +62,20 @@ std::tuple<juce::Result, juce::String, size_t> Application::Tools::prepareForNew
         auto const [result, newIdentifier] = documentDir.addGroup(0, NotificationType::synchronous);
         if(result.failed())
         {
-            return std::make_tuple(result, juce::String(), 0_z);
+            return std::make_tuple(result, juce::String());
         }
         references = documentDir.sanitize(NotificationType::synchronous);
         identifier = references.count(newIdentifier) > 0_z ? references.at(newIdentifier) : newIdentifier;
-        return std::make_tuple(juce::Result::ok(), identifier, 0_z);
+        return std::make_tuple(juce::Result::ok(), identifier);
     }
-    // If the group does not exist, add the track to the first group.
+    // If the group does not exist, add the track to the top group.
     if(!Document::Tools::hasGroupAcsr(documentAcsr, identifier))
     {
-        auto const& groupAcsr = documentAcsr.getAcsr<Document::AcsrType::groups>(0);
-        identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        auto const trackCount = groupAcsr.getAttr<Group::AttrType::layout>().size();
-        return std::make_tuple(juce::Result::ok(), identifier, std::min(trackCount, trackPosition));
+        auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
+        MiscWeakAssert(!layout.empty());
+        identifier = layout.empty() ? documentAcsr.getAcsr<Document::AcsrType::groups>(0).getAttr<Group::AttrType::identifier>() : layout.front();
     }
-    // Use the group and the track position
-    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, identifier);
-    auto const trackCount = groupAcsr.getAttr<Group::AttrType::layout>().size();
-    return std::make_tuple(juce::Result::ok(), identifier, std::min(trackCount, trackPosition));
+    return std::make_tuple(juce::Result::ok(), identifier);
 }
 
 void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentifiers)
@@ -120,7 +114,21 @@ void Application::Tools::revealTracks(std::set<juce::String> const& trackIdentif
                                 });
 }
 
-std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, Plugin::Key const& key, size_t const voiceCount)
+size_t Application::Tools::getNewTrackPosition(Document::Accessor const& documentAcsr, juce::String const& groupIdentifier, std::optional<Track::FrameType> const frameType)
+{
+    // If the frame type is unknown (a plugin output without a fixed number of bins or a file), the track is inserted
+    // at the top of the group. The frame type is only known once the results are loaded asynchronously, and the track
+    // is not moved afterwards: the move would be outside the undoable action that created the track, it could override
+    // a move made in the meantime by the user or by the agent, and it would modify the layout after the agent has
+    // received the result of the creation.
+    if(frameType.has_value() && frameType.value() == Track::FrameType::vector && Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier))
+    {
+        return Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier).getAttr<Group::AttrType::layout>().size();
+    }
+    return 0_z;
+}
+
+std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPluginTrack(Document::Director& documentDir, Track::PresetList::Accessor const& presetListAcsr, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, Plugin::Key const& key, size_t const voiceCount)
 {
     auto const& procPresets = presetListAcsr.getAttr<Track::PresetList::AttrType::processor>();
     auto const procPresetIt = procPresets.find(key);
@@ -170,6 +178,8 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPlugi
     auto const voiceLink = hasVoices ? juce::Uuid().toString() : juce::String{};
     auto const voiceCounts = hasVoices ? Plugin::VoiceCounts{{descriptions.front().voices.front(), descriptions.size()}} : Plugin::VoiceCounts{};
     auto& documentAcsr = documentDir.getAccessor();
+    // The tracks are inserted at the top of the group, except the vector tracks that are inserted at the bottom
+    auto const trackPosition = getNewTrackPosition(documentAcsr, groupIdentifier, Track::Tools::getFrameType(descriptions.front().output));
     std::vector<juce::String> trackIdentifiers;
     for(auto const& description : descriptions)
     {
@@ -258,14 +268,15 @@ std::tuple<juce::Result, std::vector<juce::String>> Application::Tools::addPlugi
     return std::make_tuple(juce::Result::ok(), trackIdentifiers);
 }
 
-std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(Document::Director& documentDir, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, size_t const trackPosition, juce::File const& file)
+std::tuple<juce::Result, juce::String> Application::Tools::addFileTrack(Document::Director& documentDir, Track::GraphicsSettings const& globalGraphicPreset, juce::String const& groupIdentifier, juce::File const& file)
 {
     if(!file.existsAsFile())
     {
         return std::make_tuple(juce::Result::fail(juce::translate("The file \"FILENAME\" doesn't exist!").replace("FILENAME", file.getFullPathName())), juce::String());
     }
 
-    auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
+    // The type of the results is unknown before loading the file so the track is inserted at the top of the group
+    auto const [result, trackIdentifier] = documentDir.addTrack(groupIdentifier, 0_z, NotificationType::synchronous);
     if(result.failed())
     {
         return std::make_tuple(result, juce::String());
@@ -327,11 +338,11 @@ void Application::Tools::addGroups(size_t numGroups, size_t firstGroupPosition)
     documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
 }
 
-static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<Plugin::Key> const& keys, std::map<Plugin::Key, size_t> const& voiceCounts)
+static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, std::vector<Plugin::Key> const& keys, std::map<Plugin::Key, size_t> const& voiceCounts)
 {
     auto& documentDir = Application::Instance::get().getDocumentDirector();
     documentDir.startAction();
-    auto const prepareResult = Application::Tools::prepareForNewTracks(groupIdentifier, trackFirstPosition);
+    auto const prepareResult = Application::Tools::prepareForNewTracks(groupIdentifier);
     if(std::get<0_z>(prepareResult).failed())
     {
         documentDir.endAction(ActionState::abort);
@@ -345,14 +356,13 @@ static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, 
     }
 
     auto const group = std::get<1_z>(prepareResult);
-    auto position = std::get<2_z>(prepareResult);
     std::set<juce::String> trackIdentifiers;
     juce::StringArray failMessages;
     for(auto const& key : keys)
     {
         auto const voiceCountIt = voiceCounts.find(key);
         auto const voiceCount = voiceCountIt != voiceCounts.cend() ? voiceCountIt->second : 0_z;
-        auto const [result, identifiers] = Application::Tools::addPluginTrack(documentDir, Application::Instance::get().getTrackPresetListAccessor(), Application::Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>(), group, position, key, voiceCount);
+        auto const [result, identifiers] = Application::Tools::addPluginTrack(documentDir, Application::Instance::get().getTrackPresetListAccessor(), Application::Instance::get().getApplicationAccessor().getAttr<Application::AttrType::globalGraphicPreset>(), group, key, voiceCount);
         if(result.failed())
         {
             failMessages.add(juce::String(key.identifier + ":" + key.feature) + ": " + result.getErrorMessage());
@@ -360,7 +370,6 @@ static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, 
         else
         {
             trackIdentifiers.insert(identifiers.cbegin(), identifiers.cend());
-            position += identifiers.size();
         }
     }
 
@@ -386,11 +395,11 @@ static void addPluginTracksWithVoiceCounts(juce::String const& groupIdentifier, 
 
 // Requests the numbers of voices of the outputs one after the other with call out boxes at the mouse position, the
 // tracks are created when the numbers of voices of all the outputs are defined (or canceled if a box is dismissed)
-static void requestVoiceCounts(juce::String const& groupIdentifier, size_t const trackFirstPosition, std::vector<Plugin::Key> const& keys, std::vector<std::tuple<Plugin::Key, Plugin::Description>> const& voiceOutputs, std::map<Plugin::Key, size_t> const& voiceCounts, juce::Component& associatedComponent)
+static void requestVoiceCounts(juce::String const& groupIdentifier, std::vector<Plugin::Key> const& keys, std::vector<std::tuple<Plugin::Key, Plugin::Description>> const& voiceOutputs, std::map<Plugin::Key, size_t> const& voiceCounts, juce::Component& associatedComponent)
 {
     if(voiceCounts.size() >= voiceOutputs.size())
     {
-        addPluginTracksWithVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceCounts);
+        addPluginTracksWithVoiceCounts(groupIdentifier, keys, voiceCounts);
         return;
     }
 
@@ -500,13 +509,13 @@ static void requestVoiceCounts(juce::String const& groupIdentifier, size_t const
                                                          }
                                                          auto newVoiceCounts = voiceCounts;
                                                          newVoiceCounts[key] = count;
-                                                         requestVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceOutputs, newVoiceCounts, *safeComponent.getComponent());
+                                                         requestVoiceCounts(groupIdentifier, keys, voiceOutputs, newVoiceCounts, *safeComponent.getComponent());
                                                      });
     auto const mousePosition = juce::Desktop::getMousePosition();
     Tooltip::showCallOutBox(std::move(editor), associatedComponent, juce::Rectangle<int>(mousePosition.x - 2, mousePosition.y - 2, 4, 4));
 }
 
-void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<Plugin::Key> const& keys, juce::Component* associatedComponent)
+void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, std::vector<Plugin::Key> const& keys, juce::Component* associatedComponent)
 {
     // The numbers of voices of the outputs with voices are requested before creating the tracks
     std::vector<std::tuple<Plugin::Key, Plugin::Description>> voiceOutputs;
@@ -529,18 +538,18 @@ void Application::Tools::addPluginTracks(juce::String const& groupIdentifier, si
     }
     if(voiceOutputs.empty())
     {
-        addPluginTracksWithVoiceCounts(groupIdentifier, trackFirstPosition, keys, {});
+        addPluginTracksWithVoiceCounts(groupIdentifier, keys, {});
         return;
     }
 
-    requestVoiceCounts(groupIdentifier, trackFirstPosition, keys, voiceOutputs, {}, *associatedComponent);
+    requestVoiceCounts(groupIdentifier, keys, voiceOutputs, {}, *associatedComponent);
 }
 
-void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size_t const& trackFirstPosition, std::vector<juce::File> const& files)
+void Application::Tools::addFileTracks(juce::String const& groupIdentifier, std::vector<juce::File> const& files)
 {
     auto& documentDir = Instance::get().getDocumentDirector();
     documentDir.startAction();
-    auto const prepareResult = prepareForNewTracks(groupIdentifier, trackFirstPosition);
+    auto const prepareResult = prepareForNewTracks(groupIdentifier);
     if(std::get<0_z>(prepareResult).failed())
     {
         documentDir.endAction(ActionState::abort);
@@ -554,12 +563,11 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
     }
 
     auto const group = std::get<1_z>(prepareResult);
-    auto position = std::get<2_z>(prepareResult);
     std::set<juce::String> trackIdentifiers;
     juce::StringArray failMessages;
     for(auto const& file : files)
     {
-        auto const [result, identifier] = addFileTrack(documentDir, Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>(), group, position, file);
+        auto const [result, identifier] = addFileTrack(documentDir, Instance::get().getApplicationAccessor().getAttr<AttrType::globalGraphicPreset>(), group, file);
         if(result.failed())
         {
             failMessages.add(file.getFullPathName() + ": " + result.getErrorMessage());
@@ -567,7 +575,6 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, size
         else
         {
             trackIdentifiers.insert(identifier);
-            ++position;
         }
     }
 

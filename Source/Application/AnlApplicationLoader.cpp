@@ -449,8 +449,8 @@ void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files
     }
     else if(!std::get<1>(validFiles).empty())
     {
-        auto const position = Tools::getNewTrackPosition();
-        Tools::addFileTracks(std::get<0_z>(position), std::get<1_z>(position), std::get<1>(validFiles));
+        auto const groupIdentifier = Tools::getNewTrackGroup();
+        Tools::addFileTracks(groupIdentifier, std::get<1>(validFiles));
     }
 }
 
