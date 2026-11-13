@@ -15,6 +15,12 @@ public:
 
     void setContent(juce::String const& title, juce::Component* content);
 
+    //! @brief Asks the panel if it can be hidden.
+    //! @details The default implementation accepts immediately. Override it to let the user resolve
+    //! pending changes (apply, discard or cancel) before the panel is hidden.
+    //! @param callback The function to call (possibly asynchronously) with true if the panel can be hidden or false otherwise.
+    virtual void askToHide(std::function<void(bool)> callback);
+
     // juce::Component
     void resized() override;
     void childBoundsChanged(juce::Component* child) override;
@@ -102,10 +108,15 @@ public:
     void mouseDown(juce::MouseEvent const& e) override;
 
 private:
+    void askToHide(std::vector<juce::Component::SafePointer<HideablePanel>> panels, std::function<void(bool)> callback);
+    void performShow(HideablePanel& panel);
+    void performHide();
+
     ComponentListener mComponentListener;
     juce::Component* mBackground = nullptr;
     std::vector<std::reference_wrapper<HideablePanel>> mHideablePanels;
     std::vector<juce::WeakReference<juce::Component>> mWindows;
+    bool mIsAskingToHide = false;
 };
 
 ANALYSE_FILE_END

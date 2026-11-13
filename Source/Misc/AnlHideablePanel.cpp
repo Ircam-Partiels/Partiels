@@ -90,6 +90,14 @@ void HideablePanel::childBoundsChanged([[maybe_unused]] juce::Component* child)
     }
 }
 
+void HideablePanel::askToHide(std::function<void(bool)> callback)
+{
+    if(callback != nullptr)
+    {
+        callback(true);
+    }
+}
+
 void HideablePanel::hide()
 {
     if(auto* parent = dynamic_cast<HideablePanelManager*>(getParentComponent()))
@@ -98,7 +106,14 @@ void HideablePanel::hide()
     }
     else
     {
-        setVisible(false);
+        juce::Component::SafePointer<HideablePanel> safePointer(this);
+        askToHide([=](bool result)
+                  {
+                      if(result && safePointer != nullptr)
+                      {
+                          safePointer->setVisible(false);
+                      }
+                  });
     }
 }
 
@@ -202,13 +217,33 @@ void HideablePanelManager::setContent(juce::Component* background, std::vector<s
 
 void HideablePanelManager::show(HideablePanel& panel)
 {
-    if(std::none_of(mHideablePanels.cbegin(), mHideablePanels.cend(), [&](auto const cpanel)
-                    {
-                        return std::addressof(cpanel.get()) != std::addressof(panel);
-                    }))
+    if(mIsAskingToHide || std::none_of(mHideablePanels.cbegin(), mHideablePanels.cend(), [&](auto const cpanel)
+                                       {
+                                           return std::addressof(cpanel.get()) == std::addressof(panel);
+                                       }))
     {
         return;
     }
+    std::vector<juce::Component::SafePointer<HideablePanel>> panels;
+    for(auto& cpanel : mHideablePanels)
+    {
+        if(std::addressof(cpanel.get()) != std::addressof(panel) && cpanel.get().isVisible())
+        {
+            panels.emplace_back(std::addressof(cpanel.get()));
+        }
+    }
+    juce::Component::SafePointer<HideablePanel> safePanel(std::addressof(panel));
+    askToHide(std::move(panels), [=, this](bool result)
+              {
+                  if(result && safePanel != nullptr)
+                  {
+                      performShow(*safePanel.getComponent());
+                  }
+              });
+}
+
+void HideablePanelManager::performShow(HideablePanel& panel)
+{
     auto& desktop = juce::Desktop::getInstance();
 
     mWindows.clear();
@@ -258,6 +293,67 @@ void HideablePanelManager::show(HideablePanel& panel)
 }
 
 void HideablePanelManager::hide()
+{
+    if(mIsAskingToHide)
+    {
+        return;
+    }
+    std::vector<juce::Component::SafePointer<HideablePanel>> panels;
+    for(auto& cpanel : mHideablePanels)
+    {
+        if(cpanel.get().isVisible())
+        {
+            panels.emplace_back(std::addressof(cpanel.get()));
+        }
+    }
+    askToHide(std::move(panels), [this](bool result)
+              {
+                  if(result)
+                  {
+                      performHide();
+                  }
+              });
+}
+
+void HideablePanelManager::askToHide(std::vector<juce::Component::SafePointer<HideablePanel>> panels, std::function<void(bool)> callback)
+{
+    while(!panels.empty() && panels.back() == nullptr)
+    {
+        panels.pop_back();
+    }
+    if(panels.empty())
+    {
+        mIsAskingToHide = false;
+        if(callback != nullptr)
+        {
+            callback(true);
+        }
+        return;
+    }
+    auto* panel = panels.back().getComponent();
+    panels.pop_back();
+    mIsAskingToHide = true;
+    juce::WeakReference<juce::Component> weakReference(this);
+    panel->askToHide([=, this](bool result)
+                     {
+                         if(weakReference.get() == nullptr)
+                         {
+                             return;
+                         }
+                         if(!result)
+                         {
+                             mIsAskingToHide = false;
+                             if(callback != nullptr)
+                             {
+                                 callback(false);
+                             }
+                             return;
+                         }
+                         askToHide(panels, callback);
+                     });
+}
+
+void HideablePanelManager::performHide()
 {
     auto& animator = juce::Desktop::getInstance().getAnimator();
     if(mBackground != nullptr)

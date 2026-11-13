@@ -203,38 +203,45 @@ void PluginList::SearchPath::resized()
     mFileSearchPathTable.setBounds(bounds);
 }
 
-void PluginList::SearchPath::warnBeforeClosing()
+void PluginList::SearchPath::askToClose(std::function<void(bool)> callback)
 {
-#if JUCE_MAC
-    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>())
-#else
-    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mIncludePreReleases != mAccessor.getAttr<AttrType::includePreReleases>())
-#endif
+    if(!mApplyButton.isEnabled())
     {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::QuestionIcon)
-                                 .withTitle(juce::translate("Apply plugin settings modification?"))
-                                 .withMessage(juce::translate("The plugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                 .withButton(juce::translate("Apply"), 1)
-                                 .withButton(juce::translate("Discard"), 0);
-
-        juce::WeakReference<juce::Component> safePointer(this);
-        juce::AlertWindow::showAsync(options, [=, this](int windowResult)
-                                     {
-                                         if(safePointer.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         if(windowResult == 1)
-                                         {
-                                             mApplyButton.onClick();
-                                         }
-                                         else
-                                         {
-                                             mResetButton.onClick();
-                                         }
-                                     });
+        if(callback != nullptr)
+        {
+            callback(true);
+        }
+        return;
     }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::QuestionIcon)
+                             .withTitle(juce::translate("Apply plugin settings modification?"))
+                             .withMessage(juce::translate("The plugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                             .withButton(juce::translate("Apply"), 1)
+                             .withButton(juce::translate("Discard"), 2)
+                             .withButton(juce::translate("Cancel"), 0);
+
+    juce::WeakReference<juce::Component> safePointer(this);
+    juce::AlertWindow::showAsync(options, [=, this](int windowResult)
+                                 {
+                                     if(safePointer.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(windowResult == 1)
+                                     {
+                                         mApplyButton.onClick();
+                                     }
+                                     else if(windowResult == 2)
+                                     {
+                                         mResetButton.onClick();
+                                     }
+                                     if(callback != nullptr)
+                                     {
+                                         callback(windowResult != 0);
+                                     }
+                                 });
 }
 
 ANALYSE_FILE_END

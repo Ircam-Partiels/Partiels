@@ -58,7 +58,7 @@ namespace Application
             ~ReaderLayoutPanel() override;
 
             // HideablePanel
-            bool escapeKeyPressed() override;
+            void askToHide(std::function<void(bool)> callback) override;
 
         private:
             Document::ReaderLayoutContent mReaderLayoutContent;
@@ -72,7 +72,7 @@ namespace Application
             ~PluginSearchPathPanel() override;
 
             // HideablePanel
-            bool escapeKeyPressed() override;
+            void askToHide(std::function<void(bool)> callback) override;
 
         private:
             PluginList::SearchPath mPluginSearchPath;

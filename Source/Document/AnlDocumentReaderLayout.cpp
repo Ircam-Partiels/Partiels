@@ -96,34 +96,45 @@ void Document::ReaderLayoutContent::resized()
     mAudioFileLayoutTable.setBounds(bounds);
 }
 
-void Document::ReaderLayoutContent::warnBeforeClosing()
+void Document::ReaderLayoutContent::askToClose(std::function<void(bool)> callback)
 {
-    if(mApplyButton.isEnabled())
+    if(!mApplyButton.isEnabled())
     {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::QuestionIcon)
-                                 .withTitle(juce::translate("Apply audio files layout modification?"))
-                                 .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                 .withButton(juce::translate("Apply"), 1)
-                                 .withButton(juce::translate("Discard"), 0);
-
-        juce::WeakReference<juce::Component> weakReference(this);
-        juce::AlertWindow::showAsync(options, [=, this](int result)
-                                     {
-                                         if(weakReference.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         if(result == 0)
-                                         {
-                                             mResetButton.onClick();
-                                         }
-                                         else
-                                         {
-                                             mApplyButton.onClick();
-                                         }
-                                     });
+        if(callback != nullptr)
+        {
+            callback(true);
+        }
+        return;
     }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::QuestionIcon)
+                             .withTitle(juce::translate("Apply audio files layout modification?"))
+                             .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                             .withButton(juce::translate("Apply"), 1)
+                             .withButton(juce::translate("Discard"), 2)
+                             .withButton(juce::translate("Cancel"), 0);
+
+    juce::WeakReference<juce::Component> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(result == 1)
+                                     {
+                                         mApplyButton.onClick();
+                                     }
+                                     else if(result == 2)
+                                     {
+                                         mResetButton.onClick();
+                                     }
+                                     if(callback != nullptr)
+                                     {
+                                         callback(result != 0);
+                                     }
+                                 });
 }
 
 ANALYSE_FILE_END
