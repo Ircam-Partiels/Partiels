@@ -9,6 +9,7 @@
 #include "AnlApplicationBatcher.h"
 #include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
+#include "AnlApplicationGlobalSettings.h"
 #include "AnlApplicationGraphicPreset.h"
 #include "AnlApplicationKeyMappings.h"
 #include "AnlApplicationLoader.h"
@@ -39,6 +40,7 @@ namespace Application
         void showConverterPanel();
         void showExporterPanel();
         void showPluginSearchPathPanel();
+        void showGlobalSettingsPanel();
         void showReaderLayoutPanel();
         void showDocumentFileInfoPanel();
         void showKeyMappingsPanel();
@@ -167,6 +169,7 @@ namespace Application
         ConverterPanel mConverterPanel;
         ExporterPanel mExporterPanel;
         PluginSearchPathPanel mPluginSearchPathPanel;
+        GlobalSettingsPanel mGlobalSettingsPanel;
         ReaderLayoutPanel mReaderLayoutPanel;
         Document::FileInfoPanel mDocumentFileInfoPanel;
         KeyMappingsPanel mKeyMappingsPanel;
