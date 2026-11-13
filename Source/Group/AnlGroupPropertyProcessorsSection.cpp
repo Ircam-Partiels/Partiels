@@ -43,12 +43,14 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
 , mPropertyBlockSize(juce::translate("Block Size"), juce::translate("The block size used by the tracks of the group."), "samples", getBlockSizeNames(), [&](size_t index)
                      {
                          juce::ignoreUnused(index);
-                         setBlockSize(static_cast<size_t>(mPropertyBlockSize.entry.getText().getIntValue()));
+                         auto const newValue = mPropertyBlockSize.entry.getText().getIntValue();
+                         setBlockSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                      })
 , mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the tracks of the group."), "x", {}, [&](size_t index)
                     {
                         juce::ignoreUnused(index);
-                        setStepSize(static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue()));
+                        auto const newValue = mPropertyStepSize.entry.getText().getIntValue();
+                        setStepSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                     })
 , mPropertyUseInputResultsExtraThresholds(juce::translate("Apply Extra Thresholds"), juce::translate("Apply extra threshold filters to input results before preprocessing."), [this](bool state)
                                           {
@@ -381,9 +383,6 @@ void Group::PropertyProcessorsSection::setUseInputResultsExtraThresholds(bool st
 
 void Group::PropertyProcessorsSection::updateContent()
 {
-    updateWindowType();
-    updateBlockSize();
-    updateStepSize();
     updateInputTracks();
     updateParameters();
     updateState();
@@ -479,16 +478,16 @@ void Group::PropertyProcessorsSection::updateStepSize()
                                                }
                                                return blkSize;
                                            });
-    mPropertyStepSize.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The step size used by the tracks of the group."));
+    mPropertyStepSize.setTooltip(juce::translate("Track(s): ") + trackNames.joinIntoString(", ") + " - " + juce::translate("The step size (overlapping) used by the tracks of the group."));
     mPropertyStepSize.setVisible(!stepSizes.empty());
+    mPropertyStepSize.entry.clear(juce::NotificationType::dontSendNotification);
+    for(int i = 1; static_cast<size_t>(i) <= blockSize; i *= 2)
+    {
+        mPropertyStepSize.entry.addItem(juce::String(i) + "samples", i);
+    }
     if(stepSizes.size() == 1_z)
     {
-        mPropertyStepSize.entry.clear(juce::NotificationType::dontSendNotification);
-        for(int i = 1; static_cast<size_t>(i) <= blockSize; i *= 2)
-        {
-            mPropertyStepSize.entry.addItem(juce::String(i) + "samples", i);
-        }
-        mPropertyBlockSize.entry.setText(juce::String(*stepSizes.cbegin()) + "samples", juce::NotificationType::dontSendNotification);
+        mPropertyStepSize.entry.setText(juce::String(*stepSizes.cbegin()) + "samples", juce::NotificationType::dontSendNotification);
     }
     else
     {
@@ -501,9 +500,9 @@ void Group::PropertyProcessorsSection::updateStepSize()
     mPropertyStepSize.setEnabled(hasPlugin);
     auto const isTimeDomainOnly = std::all_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                               {
-                                                  return Track::Tools::supportsBlockSize(trackAcsr.get()) || trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
+                                                  return !Track::Tools::supportsStepSize(trackAcsr.get()) || trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
                                               });
-    mPropertyBlockSize.entry.setEditableText(isTimeDomainOnly);
+    mPropertyStepSize.entry.setEditableText(isTimeDomainOnly);
 }
 
 void Group::PropertyProcessorsSection::updateInputTracks()
@@ -577,7 +576,6 @@ void Group::PropertyProcessorsSection::updateParameters()
                                        {
                                            return Track::Tools::hasPluginKey(trackAcsr.get());
                                        });
-    mPropertyStepSize.setEnabled(hasPlugin);
 
     // The properties are only recreated if their description changed to preserve the keyboard focus
     decltype(mParameterProperties) parameterProperties;
@@ -632,6 +630,10 @@ void Group::PropertyProcessorsSection::updateParameters()
 
 void Group::PropertyProcessorsSection::updateState()
 {
+    updateWindowType();
+    updateBlockSize();
+    updateStepSize();
+
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     juce::StringArray trackNames;
     std::set<bool> inputResultsExtraThresholdStates;
