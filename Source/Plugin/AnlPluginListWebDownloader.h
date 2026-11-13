@@ -20,8 +20,11 @@ namespace PluginList
         static juce::File getInstallerDirectory();
 
         //! @brief Download the plugin lists from vamp-plugins.org and from the Partiels distribution
+        //! @details The Partiels distribution is the newest release of the Partiels Vamp Plugins that is compatible
+        //! with this version of Partiels, or the release associated with this version of Partiels when it was built.
+        //! @param includePreReleases If the pre-releases of the Partiels Vamp Plugins are included
         //! @param callback Called when download completes with result flag
-        void download(std::function<void(juce::Result, std::vector<Plugin::WebReference>)> callback);
+        void download(bool includePreReleases, std::function<void(juce::Result, std::vector<Plugin::WebReference>)> callback);
 
         //! @brief Download the package of an internet-available plugin and extract its installer
         //! @details Several packages can be downloaded at the same time
@@ -59,16 +62,18 @@ namespace PluginList
         };
 
         //! @brief Download the plugin lists from vamp-plugins.org and from the Partiels distribution
+        //! @param includePreReleases If the pre-releases of the Partiels Vamp Plugins are included
         //! @return Vector of internet plugin information
-        static std::vector<Plugin::WebReference> download(std::atomic<bool> const& shouldQuit);
+        static std::vector<Plugin::WebReference> download(std::atomic<bool> const& shouldQuit, bool includePreReleases);
 
         //! @brief Download the plugin list from vamp-plugins.org
         //! @return Vector of internet plugin information
         static std::vector<Plugin::WebReference> downloadRdf(std::atomic<bool> const& shouldQuit);
 
         //! @brief Download the plugin list of the Partiels distribution
+        //! @param includePreReleases If the pre-releases of the Partiels Vamp Plugins are included
         //! @return Vector of internet plugin information
-        static std::vector<Plugin::WebReference> downloadDistribution(std::atomic<bool> const& shouldQuit);
+        static std::vector<Plugin::WebReference> downloadDistribution(std::atomic<bool> const& shouldQuit, bool includePreReleases);
 
         //! @brief Parse an RDF file and extract plugin information
         //! @param rdfContent The content of the RDF file

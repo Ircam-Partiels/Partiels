@@ -8,6 +8,7 @@ PluginList::Accessor::Accessor()
     , {QuarantineMode::force}
     , {getDefaultSearchPath()}
     , {}
+    , {false}
 }))
 // clang-format on
 {

@@ -30,6 +30,7 @@ namespace PluginList
         juce::TextButton mRescanButton{juce::translate("Rescan"), juce::translate("Rescan the list of installed plugins")};
         juce::TextButton mOptionButton{juce::translate("Options"), juce::translate("Change the plugin options")};
         bool mUseEnvVariable = true;
+        bool mIncludePreReleases = false;
 #if JUCE_MAC
         QuarantineMode mQuarantineMode = QuarantineMode::force;
 #endif

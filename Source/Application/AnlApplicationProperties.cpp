@@ -14,9 +14,13 @@ Application::Properties::Properties()
         saveToFile(PropertyType::Application);
     };
 
-    mPluginListListener.onAttrChanged = [this]([[maybe_unused]] PluginList::Accessor const& acsr, [[maybe_unused]] PluginList::AttrType attribute)
+    mPluginListListener.onAttrChanged = [this]([[maybe_unused]] PluginList::Accessor const& acsr, PluginList::AttrType attribute)
     {
         saveToFile(PropertyType::PluginList);
+        if(attribute == PluginList::AttrType::includePreReleases)
+        {
+            downloadWebReferences();
+        }
     };
 
     mTrackPresetsListener.onAttrChanged = [this]([[maybe_unused]] Track::PresetList::Accessor const& acsr, [[maybe_unused]] Track::PresetList::AttrType attribute)
@@ -48,11 +52,22 @@ Application::Properties::Properties()
     saveToFile(PropertyType::AudioSetup);
     saveToFile(PropertyType::TrackPresets);
 
-    mWebDownloader.download([](juce::Result result, std::vector<Plugin::WebReference> const& plugins)
+    downloadWebReferences();
+}
+
+void Application::Properties::downloadWebReferences()
+{
+    auto const includePreReleases = Instance::get().getPluginListAccessor().getAttr<PluginList::AttrType::includePreReleases>();
+    mWebDownloader.download(includePreReleases, [this, includePreReleases](juce::Result result, std::vector<Plugin::WebReference> const& plugins)
                             {
-                                if(result.wasOk())
+                                auto& pluginListAcsr = Instance::get().getPluginListAccessor();
+                                if(pluginListAcsr.getAttr<PluginList::AttrType::includePreReleases>() != includePreReleases)
                                 {
-                                    Instance::get().getPluginListAccessor().setAttr<PluginList::AttrType::webReferences>(plugins, NotificationType::synchronous);
+                                    downloadWebReferences();
+                                }
+                                else if(result.wasOk())
+                                {
+                                    pluginListAcsr.setAttr<PluginList::AttrType::webReferences>(plugins, NotificationType::synchronous);
                                 }
                                 else
                                 {
