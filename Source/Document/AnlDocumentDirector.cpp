@@ -1242,17 +1242,39 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
     transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range(0.0, mDuration).getIntersectionWith(loopRange), notification);
 
+    // The tracks that use the results of tracks that are going to be analyzed with the new audio
+    // format reader are not analyzed now (the results of their inputs are outdated and can have a
+    // different number of channels), they are analyzed when the results of their inputs are updated
+    std::set<juce::String> analyzedTracks;
+    for(auto const& anl : mTracks)
+    {
+        if(anl != nullptr)
+        {
+            auto const& trackAcsr = anl->getAccessor();
+            auto const& key = trackAcsr.getAttr<Track::AttrType::key>();
+            if(trackAcsr.getAttr<Track::AttrType::file>().isEmpty() && !key.identifier.empty() && !key.feature.empty())
+            {
+                analyzedTracks.insert(trackAcsr.getAttr<Track::AttrType::identifier>());
+            }
+        }
+    }
+
     juce::StringArray files;
     for(auto const& anl : mTracks)
     {
         if(anl != nullptr)
         {
-            auto const& trackFile = anl->getAccessor().getAttr<Track::AttrType::file>();
-            if(!trackFile.isEmpty())
+            auto const& trackAcsr = anl->getAccessor();
+            if(!trackAcsr.getAttr<Track::AttrType::file>().isEmpty())
             {
-                files.add(anl->getAccessor().getAttr<Track::AttrType::name>());
+                files.add(trackAcsr.getAttr<Track::AttrType::name>());
             }
-            anl->setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)), notification);
+            auto const inputs = trackAcsr.getAttr<Track::AttrType::inputs>();
+            auto const deferAnalysis = std::any_of(inputs.cbegin(), inputs.cend(), [&](auto const& input)
+                                                   {
+                                                       return analyzedTracks.count(input.second) > 0_z;
+                                                   });
+            anl->setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)), notification, deferAnalysis);
         }
     }
     if(!files.isEmpty() && mAlertCatcher == nullptr)

@@ -43,7 +43,12 @@ namespace Track
 
         void setGlobalValueRange(juce::Range<double> const& range, NotificationType const notification);
 
-        void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
+        //! @brief Sets the audio format reader used to analyze the audio files
+        //! @param audioFormatReader The new audio format reader
+        //! @param notification The type of notification
+        //! @param deferAnalysis If true, the current analysis is stopped but no analysis is launched, the analysis
+        //! is expected to be launched later (for example, when the results of the input tracks are updated)
+        void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification, bool deferAnalysis = false);
         void setBackupDirectory(juce::File const& directory);
         void setSilentResultsFileManagement(bool state);
         void setPreserveFullDurationWhenEditing(bool state);
