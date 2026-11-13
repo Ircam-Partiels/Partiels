@@ -43,6 +43,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - In translated strings, write replaceable tokens (names, indices, etc.) in uppercase, abbreviated when possible (e.g. `FLNAME` for file name), so they stand out as placeholders to substitute.
 - Translation keys are extracted automatically when building `Partiels` (target `PartielsExtractTranslationKeys`).
 - Update the translation files with the targets `PartielsUpdateTranslationFrench` and `PartielsUpdateTranslationPortuguese`, then report the new keys in [BinaryData/Translations](BinaryData/Translations).
+- Check them with the target `PartielsCheckTranslations` (also run by the CI): it fails on missing, obsolete, duplicated or empty translations.
 - Never modify [BinaryData/Translations/English.txt](BinaryData/Translations/English.txt): it must stay empty (English is the source locale).
 
 ## Architecture Pointers
@@ -69,5 +70,5 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 ## Checklist Before Handing Over
 - Build completes without warnings in the modified files.
 - Code formatted (`PartielsCheckFormat` passes).
-- New user-visible strings translated in French and Portuguese.
+- New user-visible strings translated in French and Portuguese (`PartielsCheckTranslations` passes).
 - `ctest` passes.
