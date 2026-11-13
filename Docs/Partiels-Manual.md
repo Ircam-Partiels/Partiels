@@ -226,7 +226,7 @@ Information on the selected plugin is displayed in the section at the bottom of 
 
 When a newer version of an installed plugin is available, a bell 🔔 is displayed next to its name in the list. Select the plugin and click the `Download` button to update the installed version.
 
-You can select one or more installed plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group. If the vertical axis of a new track corresponds to frequencies and all the tracks of the group with frequencies use the logarithmic scale, the logarithmic scale is automatically enabled for the new track (see the [Ranges](#923-ranges) section).
+You can select one or more installed plugins and then press the `Return ⏎` key (or you can simply double click on a plugin) to add a new track for each plugin in your document (**P4**). If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted in the group of the last selected track or in the last selected group (the top group if nothing is selected): at the top of the group, in front of the other tracks, except the tracks of the matrix outputs (e.g. spectrograms) that are inserted at the bottom of the group, behind the other tracks. If the vertical axis of a new track corresponds to frequencies and all the tracks of the group with frequencies use the logarithmic scale, the logarithmic scale is automatically enabled for the new track (see the [Ranges](#923-ranges) section).
 
 > For further information about the plugin management, please refer to the [Plug-ins settings](#13-plugins-settings) section.
 
@@ -258,7 +258,7 @@ When importing markers in CSV format, it is recommended to escape the tags (with
 
 If you are importing a file in JSON format containing an extra description of the track, the information is used to define the default graphical parameters and to give you the possibility to run the analysis using the original plugin if necessary.
 
-If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted at the top of the group of the last selected track or of the last selected group (the top group if nothing is selected).
 
 > ⚠️ **Warning**: The SDIF support may soon become obsolete.
 
