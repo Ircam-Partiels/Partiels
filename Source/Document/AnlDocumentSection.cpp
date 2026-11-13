@@ -260,6 +260,8 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             case AttrType::editMode:
             case AttrType::drawingState:
             case AttrType::description:
+            case AttrType::mutedChannels:
+            case AttrType::soloedChannels:
                 break;
         }
     };

@@ -103,6 +103,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::editMode:
             case AttrType::drawingState:
             case AttrType::description:
+            case AttrType::mutedChannels:
+            case AttrType::soloedChannels:
                 break;
         }
     };

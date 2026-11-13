@@ -196,6 +196,8 @@ Application::ConverterContent::ConverterContent()
             case Document::AttrType::editMode:
             case Document::AttrType::drawingState:
             case Document::AttrType::description:
+            case Document::AttrType::mutedChannels:
+            case Document::AttrType::soloedChannels:
                 break;
         }
     };
