@@ -34,6 +34,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - Files are named `Anl<Module><Class>.h/.cpp` (e.g. `Source/Plugin/AnlPluginListScanner.cpp` declares `PluginList::Scanner`).
 - Wrap file contents in `ANALYSE_FILE_BEGIN` / `ANALYSE_FILE_END` (see [Source/Misc/AnlBase.h](Source/Misc/AnlBase.h)) and put classes in their module namespace (`Track`, `Group`, `PluginList`, ...).
 - Place `const` after the type (`Type const& value`) and prefix members with `m` (`mProcess`).
+- Write enumerators with leading commas and wrap the enum in `// clang-format off` / `// clang-format on`, which clang-format cannot produce (see `AgentBackend` in [AnlApplicationNeuralyzerModel.h](Source/Application/AnlApplicationNeuralyzerModel.h)).
 - Document public declarations with Doxygen comments (`//! @brief`, `//! @param`, `//! @return`).
 - Match the style of the surrounding code rather than introducing new idioms.
 - Code must compile without warnings. Strict warning flags are enabled for `Partiels` and `partiels-vamp-plugins` (`juce::juce_recommended_warning_flags`, plus [XcodeSetupWarnings.cmake](BinaryData/Resource/XcodeSetupWarnings.cmake) with Xcode); do not silence warnings with pragmas or flags.
@@ -57,7 +58,7 @@ All commands below use `build-agent` as the build directory. Do not reuse or del
 - User-facing website in [Website](Website) (Astro Starlight, Node ≥ 22.23.4), deployed to GitHub Pages by [website.yml](.github/workflows/website.yml).
 - `npm ci` then `npm run dev` (local server) or `npm run build` (output in `Website/dist`), from the `Website` directory.
 - The manual and its images are imported from [Docs](Docs) and [BinaryData/Resource](BinaryData/Resource) by [Website/scripts/sync.mjs](Website/scripts/sync.mjs) at each build: edit the sources, not the generated files.
-- The latest version and the list of Vamp plugins are fetched from the GitHub releases at build time.
+- The latest version of Partiels is fetched from the GitHub releases at build time; the Vamp plugins (list and download links) come from the release of the Partiels Vamp Plugins defined by `PARTIELS_VAMP_PLUGINS_TAG` in [CMakeLists.txt](CMakeLists.txt).
 - Keep development-specific content (compilation, CI, code) out of the website, and user-facing content out of the README.
 - Only `main` is deployed (or a branch run manually with the `deploy` input); other runs upload the built website as the `Website` artifact, built at the root (`python3 -m http.server -d <artifact directory>`).
 
