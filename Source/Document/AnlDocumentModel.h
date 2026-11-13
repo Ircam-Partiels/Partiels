@@ -31,6 +31,8 @@ namespace Document
         , editMode
         , drawingState
         , description
+        , mutedChannels
+        , soloedChannels
     };
     
     enum class AcsrType : size_t
@@ -61,6 +63,8 @@ namespace Document
     , Model::Attr<AttrType::editMode, EditMode, Model::Flag::notifying>
     , Model::Attr<AttrType::drawingState, bool, Model::Flag::notifying>
     , Model::Attr<AttrType::description, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::mutedChannels, std::set<size_t>, Model::Flag::saveable | Model::Flag::notifying>
+    , Model::Attr<AttrType::soloedChannels, std::set<size_t>, Model::Flag::saveable | Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -90,6 +94,8 @@ namespace Document
                                  , {0_z}
                                  , {EditMode::items}
                                  , {false}
+                                 , {}
+                                 , {}
                                  , {}
                                  ))
         {
