@@ -782,7 +782,7 @@ void Track::Director::setGlobalValueRange(juce::Range<double> const& range, Noti
     mAccessor.getAcsr<AcsrType::valueZoom>().setAttr<Zoom::AttrType::globalRange>(range, notification);
 }
 
-void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
+void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification, bool deferAnalysis)
 {
     MiscStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
     if(audioFormatReader == mAudioFormatReader)
@@ -791,7 +791,18 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
     std::swap(mAudioFormatReader, audioFormatReader);
     mAccessor.setAttr<AttrType::sampleRate>(mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0, notification);
-    runAnalysis(notification);
+    if(!deferAnalysis)
+    {
+        runAnalysis(notification);
+        return;
+    }
+    // The current analysis uses the previous audio format reader (deleted at the end of the
+    // method) so it must be stopped, the linked analyses are canceled and must be requested again
+    mIsLinkedAnalysisPending = false;
+    mIsRunningLinkedAnalysis = false;
+    mLinkedAnalysisAdvancementFn = nullptr;
+    mProcessor.stopAnalysis();
+    timerCallback();
 }
 
 void Track::Director::setBackupDirectory(juce::File const& directory)
