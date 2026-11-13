@@ -194,6 +194,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpSdifConverter
         , CommandIDs::helpCheckForUpdate
         , CommandIDs::helpOpenKeyMappings
+        , CommandIDs::helpOpenGlobalSettings
     });
     // clang-format on
     Instance::get().getAllCommands(commands);
@@ -728,6 +729,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Key Mappings..."), juce::translate("Shows the key mappings panel"), "Application", 0);
             result.setActive(true);
+            break;
+        }
+        case CommandIDs::helpOpenGlobalSettings:
+        {
+#if JUCE_MAC
+            result.setInfo(juce::translate("Global Settings..."), juce::translate("Shows the global settings panel"), "Application", 0);
+#else
+            result.setInfo(juce::translate("Global Settings..."), juce::translate("Shows the global settings panel"), "Help", 0);
+#endif
             break;
         }
     }
@@ -1645,6 +1655,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(auto* window = Instance::get().getWindow())
             {
                 window->getInterface().showKeyMappingsPanel();
+            }
+            return true;
+        }
+        case CommandIDs::helpOpenGlobalSettings:
+        {
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showGlobalSettingsPanel();
             }
             return true;
         }
