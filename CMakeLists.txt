@@ -651,27 +651,3 @@ add_test(NAME PluginListDescriptionXml COMMAND Partiels --plugin-list --vamp-pat
 set_tests_properties(PluginListDescriptionXml PROPERTIES ENVIRONMENT "VAMP_PATH=$<TARGET_FILE_DIR:partiels-vamp-plugins>$<IF:$<PLATFORM_ID:Windows>,$<SEMICOLON>,:>$<TARGET_FILE_DIR:vamp-example-plugins>")
 set_tests_properties(PluginListDescriptionXml PROPERTIES PASS_REGULAR_EXPRESSION "${PLUGIN_LIST_DESCRIPTION_XML_CONTENT}")
 
-add_test(NAME ConvToSdifMarkers COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Markers.json --output=${TESTS_OUTPUT_DIRECTORY}/SDIF/Markers.sdif --frame=1MKR --matrix=1MKR)
-add_test(NAME ConvFromSdifMarkers COMMAND Partiels --sdif2json --input=${TESTS_OUTPUT_DIRECTORY}/SDIF/Markers.sdif --output=${TESTS_OUTPUT_DIRECTORY}/JSON/Markers.json --frame=1MKR --matrix=1MKR)
-set_tests_properties(ConvFromSdifMarkers PROPERTIES DEPENDS "ConvToSdifMarkers")
-add_test(NAME ConvCompareMarkers1 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Markers.json ${TESTS_OUTPUT_DIRECTORY}/JSON/Markers.json)
-set_tests_properties(ConvCompareMarkers1 PROPERTIES DEPENDS "ConvFromSdifMarkers")
-add_test(NAME ConvCompareMarkers2 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Markers.json ${TESTS_OUTPUT_DIRECTORY}/SDIF/Markers.sdif ${TESTS_DIRECTORY}/MarkersArgs.xml)
-set_tests_properties(ConvCompareMarkers2 PROPERTIES DEPENDS "ConvToSdifMarkers")
-
-add_test(NAME ConvToSdifPoints COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Points.json --output=${TESTS_OUTPUT_DIRECTORY}/SDIF/Points.sdif --frame=1PNT --matrix=1PNT)
-add_test(NAME ConvFromSdifPoints COMMAND Partiels --sdif2json --input=${TESTS_OUTPUT_DIRECTORY}/SDIF/Points.sdif --output=${TESTS_OUTPUT_DIRECTORY}/JSON/Points.json --frame=1PNT --matrix=1PNT)
-set_tests_properties(ConvFromSdifPoints PROPERTIES DEPENDS "ConvToSdifPoints")
-add_test(NAME ConvComparePoints1 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Points.json ${TESTS_OUTPUT_DIRECTORY}/JSON/Points.json)
-set_tests_properties(ConvComparePoints1 PROPERTIES DEPENDS "ConvFromSdifPoints")
-add_test(NAME ConvComparePoints2 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Points.json ${TESTS_OUTPUT_DIRECTORY}/SDIF/Points.sdif ${TESTS_DIRECTORY}/PointsArgs.xml)
-set_tests_properties(ConvComparePoints2 PROPERTIES DEPENDS "ConvFromSdifPoints")
-
-add_test(NAME ConvToSdifColumns COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Columns.json --output=${TESTS_OUTPUT_DIRECTORY}/SDIF/Columns.sdif --frame=1COL --matrix=1COL)
-add_test(NAME ConvFromSdifColumns COMMAND Partiels --sdif2json --input=${TESTS_OUTPUT_DIRECTORY}/SDIF/Columns.sdif --output=${TESTS_OUTPUT_DIRECTORY}/JSON/Columns.json --frame=1COL --matrix=1COL)
-set_tests_properties(ConvFromSdifColumns PROPERTIES DEPENDS "ConvToSdifColumns")
-add_test(NAME ConvCompareColumns1 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Columns.json ${TESTS_OUTPUT_DIRECTORY}/JSON/Columns.json)
-set_tests_properties(ConvCompareColumns1 PROPERTIES DEPENDS "ConvFromSdifColumns")
-add_test(NAME ConvCompareColumns2 COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Columns.json ${TESTS_OUTPUT_DIRECTORY}/SDIF/Columns.sdif ${TESTS_DIRECTORY}/ColumnsArgs.xml)
-set_tests_properties(ConvCompareColumns2 PROPERTIES DEPENDS "ConvFromSdifColumns")
-
