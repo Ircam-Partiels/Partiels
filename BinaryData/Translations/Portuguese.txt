@@ -726,7 +726,6 @@ countries: pt br
 "Change group's step size" = "Alterar tamanho de passo do grupo"
 "Change group's input track" = "Alterar pista de entrada do grupo"
 "Toggle input extra thresholds" = "Ativar/desativar limites adicionais de entrada"
-"The step size used by the tracks of the group." = "O tamanho do passo usado pelas pistas do grupo."
 "Resolve: " = "Resolver: "
 "Processing and rendering..." = "Processando e renderizando..."
 "Processing..." = "Processando..."
