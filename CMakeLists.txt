@@ -408,6 +408,12 @@ add_dependencies(PartielsUpdateTranslationFrench PartielsExtractTranslationKeys)
 add_custom_target(PartielsUpdateTranslationPortuguese COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DTRANS_FILE="${PARTIELS_BINARYDATA_DIRECTORY}/Translations/Portuguese.txt" -DOUT_FILE="${CMAKE_CURRENT_BINARY_DIR}/Translations/Portuguese.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysUpdater.cmake WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_dependencies(PartielsUpdateTranslationPortuguese PartielsExtractTranslationKeys)
 
+add_custom_target(PartielsCheckTranslations
+    COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DTRANS_FILE="${PARTIELS_BINARYDATA_DIRECTORY}/Translations/French.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysChecker.cmake
+    COMMAND ${CMAKE_COMMAND} -DKEYS_FILE="${TRANSLATION_KEYS_FILE}" -DTRANS_FILE="${PARTIELS_BINARYDATA_DIRECTORY}/Translations/Portuguese.txt" -P ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/TranslationKeysChecker.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_dependencies(PartielsCheckTranslations PartielsExtractTranslationKeys)
+
 ### Testing ###
 enable_testing()
 
