@@ -1,4 +1,5 @@
 #include "AnlDocumentAudioReader.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -172,6 +173,30 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
     return std::make_tuple(std::move(reader), errors);
 }
 
+namespace Document
+{
+    //! @brief Gets the number of channels of the audio format reader that each audio file layout provides
+    //! @details The audio files that cannot be read provide no channel (see createAudioFormatReader).
+    static std::vector<size_t> getLayoutNumChannels(std::vector<AudioFileLayout> const& layouts, juce::AudioFormatManager& audioFormatManager)
+    {
+        std::vector<size_t> numChannels;
+        numChannels.reserve(layouts.size());
+        for(auto const& layout : layouts)
+        {
+            auto const audioFormatReader = layout.file.existsAsFile() ? std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(layout.file)) : nullptr;
+            if(audioFormatReader == nullptr)
+            {
+                numChannels.push_back(0_z);
+            }
+            else
+            {
+                numChannels.push_back(layout.channel == AudioFileLayout::ChannelLayout::all ? static_cast<size_t>(audioFormatReader->numChannels) : 1_z);
+            }
+        }
+        return numChannels;
+    }
+} // namespace Document
+
 Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
@@ -184,12 +209,20 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             case AttrType::reader:
             {
                 auto const files = acsr.getAttr<AttrType::reader>();
+                mLayoutNumChannels = getLayoutNumChannels(files, mAudioFormatManager);
+                updateChannelGains();
                 if(files.empty())
                 {
                     mTransportAudioReader.setAudioFormatReader(nullptr);
                     return;
                 }
                 mTransportAudioReader.setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
+            }
+            break;
+            case AttrType::mutedChannels:
+            case AttrType::soloedChannels:
+            {
+                updateChannelGains();
             }
             break;
             case AttrType::layout:
@@ -227,6 +260,46 @@ void Document::AudioReader::releaseResources()
 void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
     mTransportAudioReader.getNextAudioBlock(bufferToFill);
+    auto* buffer = bufferToFill.buffer;
+    if(buffer == nullptr)
+    {
+        return;
+    }
+    std::unique_lock<audio_spin_mutex> lock(mGainsMutex, std::try_to_lock);
+    if(!lock.owns_lock())
+    {
+        // The gains are being updated so the state of the channels is unknown, silence is safer
+        bufferToFill.clearActiveBufferRegion();
+        return;
+    }
+    MiscWeakAssert(mTargetGains.size() == mCurrentGains.size());
+    auto const numChannels = std::min({static_cast<size_t>(buffer->getNumChannels()), mTargetGains.size(), mCurrentGains.size()});
+    for(auto channel = 0_z; channel < numChannels; ++channel)
+    {
+        // The gain is ramped over the block to avoid clicks when a channel is muted or unmuted
+        buffer->applyGainRamp(static_cast<int>(channel), bufferToFill.startSample, bufferToFill.numSamples, mCurrentGains[channel], mTargetGains[channel]);
+        mCurrentGains[channel] = mTargetGains[channel];
+    }
+}
+
+void Document::AudioReader::updateChannelGains()
+{
+    std::vector<float> targetGains;
+    for(auto index = 0_z; index < mLayoutNumChannels.size(); ++index)
+    {
+        auto const gain = Tools::isChannelAudible(mAccessor, index) ? 1.0f : 0.0f;
+        targetGains.insert(targetGains.end(), mLayoutNumChannels[index], gain);
+    }
+    // The vectors are allocated before locking so the audio thread is never blocked by an allocation
+    auto currentGains = targetGains;
+    std::unique_lock<audio_spin_mutex> lock(mGainsMutex);
+    if(mCurrentGains.size() != targetGains.size())
+    {
+        // The audio format reader changed so there is no previous gain to ramp from
+        std::swap(mCurrentGains, currentGains);
+    }
+    std::swap(mTargetGains, targetGains);
+    lock.unlock();
 }
 
 ANALYSE_FILE_END
