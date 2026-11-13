@@ -164,7 +164,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         addGlobalSettingsMenu(menu);
 #endif
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::helpAutoUpdate);
         menu.addCommandItem(&commandManager, CommandIDs::helpCheckForUpdate);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpSdifConverter);
