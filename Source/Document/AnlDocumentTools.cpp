@@ -643,6 +643,26 @@ std::set<size_t> Document::Tools::getEffectiveSelectedChannelsForTrack(Accessor 
     return trackSelectedChannels;
 }
 
+bool Document::Tools::isChannelAudible(Accessor const& accessor, size_t index)
+{
+    auto const numChannels = accessor.getAttr<AttrType::reader>().size();
+    if(index >= numChannels)
+    {
+        return false;
+    }
+    auto const& soloedChannels = accessor.getAttr<AttrType::soloedChannels>();
+    auto const hasSoloedChannel = std::any_of(soloedChannels.cbegin(), soloedChannels.cend(), [&](auto const soloedIndex)
+                                              {
+                                                  return soloedIndex < numChannels;
+                                              });
+    // The solo takes precedence over the mute
+    if(hasSoloedChannel)
+    {
+        return soloedChannels.count(index) > 0_z;
+    }
+    return accessor.getAttr<AttrType::mutedChannels>().count(index) == 0_z;
+}
+
 std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& accessor)
 {
     class RangeEditor
@@ -804,6 +824,8 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::editMode:
             case AttrType::drawingState:
             case AttrType::description:
+            case AttrType::mutedChannels:
+            case AttrType::soloedChannels:
                 break;
             case AttrType::layout:
             {
