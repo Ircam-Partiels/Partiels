@@ -459,11 +459,18 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(juce::
             remainder = channelHeight - std::round(currentHeight);
             fullHeight -= std::round(currentHeight);
             auto region = bounds.removeFromTop(static_cast<int>(std::round(currentHeight)));
-            if(channelCounter != numVisibleChannels)
+            if(!region.isEmpty())
             {
-                region.removeFromBottom(1);
+                if(channelCounter != numVisibleChannels)
+                {
+                    region.removeFromBottom(1);
+                }
+                verticalRanges[channel] = region.getVerticalRange();
             }
-            verticalRanges[channel] = region.getVerticalRange();
+            else
+            {
+                verticalRanges[channel] = {};
+            }
         }
     }
     return verticalRanges;
