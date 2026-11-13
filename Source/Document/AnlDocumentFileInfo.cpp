@@ -79,6 +79,8 @@ Document::FileInfoContent::FileInfoContent(Director& director, juce::Application
             }
             break;
             case AttrType::description:
+            case AttrType::mutedChannels:
+            case AttrType::soloedChannels:
             {
                 auto const description = acsr.getAttr<AttrType::description>();
                 if(mDescriptionEditor.getText() != description)
