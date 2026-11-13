@@ -112,18 +112,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     }
     else if(menuName == juce::translate("View"))
     {
-        juce::PopupMenu colourModeMenu;
-        auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
-        for(auto const& entry : magic_enum::enum_entries<ColourMode>())
-        {
-            auto const name = Format::withFirstCharUpperCase(std::string(entry.second));
-            colourModeMenu.addItem(juce::String(name), true, selectedMode == entry.first, [=]()
-                                   {
-                                       auto& accessor = Instance::get().getApplicationAccessor();
-                                       accessor.setAttr<AttrType::colourMode>(entry.first, NotificationType::synchronous);
-                                   });
-        }
-        menu.addSubMenu(juce::translate("Theme"), colourModeMenu);
         juce::PopupMenu scaleMenu;
         auto const currentScale = Instance::get().getApplicationAccessor().getAttr<AttrType::desktopGlobalScaleFactor>();
         for(auto i = 0; i <= 4; ++i)
@@ -162,7 +150,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenGlobalSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenGraphicPreset);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
-        addGlobalSettingsMenu(menu);
 #endif
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpCheckForUpdate);
@@ -181,115 +168,6 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
     juce::ignoreUnused(menuItemID, topLevelMenuIndex);
 }
 
-void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
-{
-    juce::PopupMenu globalSettingsMenu;
-    auto& accessor = Instance::get().getApplicationAccessor();
-    auto const silentFileManagement = accessor.getAttr<AttrType::silentFileManagement>();
-    globalSettingsMenu.addItem(juce::translate("Silent File Management"), true, silentFileManagement, []()
-                               {
-                                   Instance::get().getApplicationAccessor().setAttr<AttrType::silentFileManagement>(!Instance::get().getApplicationAccessor().getAttr<AttrType::silentFileManagement>(), NotificationType::synchronous);
-                               });
-    auto const ignoreTimeSelection = accessor.getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>();
-    globalSettingsMenu.addItem(juce::translate("Ignore Time Selection During Quick Export"), true, ignoreTimeSelection, []()
-                               {
-                                   Instance::get().getApplicationAccessor().setAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(!Instance::get().getApplicationAccessor().getAttr<AttrType::ignoreTimeSelectionDuringQuickExport>(), NotificationType::synchronous);
-                               });
-    auto const preserveFullDurationWhenEditing = accessor.getAttr<AttrType::preserveFullDurationWhenEditing>();
-    globalSettingsMenu.addItem(juce::translate("Preserve Full Duration When Editing"), true, preserveFullDurationWhenEditing, []()
-                               {
-                                   Instance::get().getApplicationAccessor().setAttr<AttrType::preserveFullDurationWhenEditing>(!Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>(), NotificationType::synchronous);
-                               });
-    auto const includePreReleases = accessor.getAttr<AttrType::includePreReleases>();
-    globalSettingsMenu.addItem(juce::translate("Include Pre-Release Versions in Update Checks"), true, includePreReleases, []()
-                               {
-                                   Instance::get().getApplicationAccessor().setAttr<AttrType::includePreReleases>(!Instance::get().getApplicationAccessor().getAttr<AttrType::includePreReleases>(), NotificationType::synchronous);
-                               });
-    juce::PopupMenu templateMenu;
-    auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
-    templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()
-                         {
-                             Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
-                         });
-    templateMenu.addItem(juce::translate("Factory"), true, templateFile == Accessor::getFactoryTemplateFile(), []()
-                         {
-                             Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(Accessor::getFactoryTemplateFile(), NotificationType::synchronous);
-                         });
-    if(templateFile.existsAsFile() && templateFile != Accessor::getFactoryTemplateFile())
-    {
-        templateMenu.addItem(templateFile.getFileNameWithoutExtension(), false, true, nullptr);
-    }
-    templateMenu.addItem(juce::translate("Select..."), true, false, []()
-                         {
-                             if(auto* window = Instance::get().getWindow())
-                             {
-                                 window->getCommandTarget().selectDefaultTemplateFile();
-                             }
-                         });
-    globalSettingsMenu.addSubMenu(juce::translate("Default Template"), templateMenu);
-    juce::PopupMenu quickExportMenu;
-    auto const quickExportDirectory = accessor.getAttr<AttrType::quickExportDirectory>();
-    auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
-    quickExportMenu.addItem(juce::translate("Desktop"), true, quickExportDirectory == desktop, [=]()
-                            {
-                                Instance::get().getApplicationAccessor().setAttr<AttrType::quickExportDirectory>(desktop, NotificationType::synchronous);
-                            });
-    if(quickExportDirectory.isDirectory() && quickExportDirectory != desktop)
-    {
-        quickExportMenu.addItem(quickExportDirectory.getFileName(), false, true, nullptr);
-    }
-    quickExportMenu.addItem(juce::translate("Select..."), true, false, []()
-                            {
-                                if(auto* window = Instance::get().getWindow())
-                                {
-                                    window->getCommandTarget().selectQuickExportDirectory();
-                                }
-                            });
-    globalSettingsMenu.addSubMenu(juce::translate("Quick Export Directory"), quickExportMenu);
-    addTranslationsMenu(globalSettingsMenu);
-    menu.addSubMenu(juce::translate("Global Settings"), globalSettingsMenu);
-}
-
-void Application::MainMenuModel::addTranslationsMenu(juce::PopupMenu& menu)
-{
-    juce::PopupMenu languagesMenu;
-    auto const& currentTranslationFile = Instance::get().getApplicationAccessor().getAttr<AttrType::currentTranslationFile>();
-    auto const addTranslationsFromDirectory = [&](juce::File const& folder)
-    {
-        auto const files = folder.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.txt", juce::File::FollowSymlinks::no);
-        if(!files.isEmpty())
-        {
-            languagesMenu.addSeparator();
-        }
-
-        for(auto const& file : files)
-        {
-            auto const localisedStrings = juce::LocalisedStrings(file, false);
-            auto const languageName = localisedStrings.getLanguageName();
-            auto const hasDuplicate = std::count_if(files.begin(), files.end(), [&](auto const& f)
-                                                    {
-                                                        return languageName == juce::LocalisedStrings(f, false).getLanguageName();
-                                                    }) > 1l;
-            auto const itemName = languageName + (hasDuplicate ? " (" + file.getFileNameWithoutExtension() + ")" : "");
-            languagesMenu.addItem(itemName, currentTranslationFile != file, currentTranslationFile == file, [=]()
-                                  {
-                                      Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(file, NotificationType::synchronous);
-                                  });
-        }
-    };
-
-    auto const defaultTranslationFile = getSystemDefaultTranslationFile();
-    auto const defaultTranslationLanguage = juce::LocalisedStrings(defaultTranslationFile, false).getLanguageName();
-    auto const defaultItemName = juce::translate("Default (TRLANGUAGE)").replace("TRLANGUAGE", defaultTranslationLanguage.isEmpty() ? +"English" : defaultTranslationLanguage);
-    languagesMenu.addItem(defaultItemName, currentTranslationFile != juce::File(), currentTranslationFile == juce::File(), [=]()
-                          {
-                              Instance::get().getApplicationAccessor().setAttr<AttrType::currentTranslationFile>(juce::File(), NotificationType::synchronous);
-                          });
-    addTranslationsFromDirectory(getEmbeddedTranslationsDirectory());
-    addTranslationsFromDirectory(getUserTranslationsDirectory());
-    menu.addSubMenu(juce::translate("Translations"), languagesMenu);
-}
-
 #ifdef JUCE_MAC
 void Application::MainMenuModel::updateAppleMenuItems()
 {
@@ -304,7 +182,6 @@ void Application::MainMenuModel::updateAppleMenuItems()
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenGlobalSettings);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenGraphicPreset);
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenKeyMappings);
-    addGlobalSettingsMenu(extraAppleMenuItems);
     // This is a hack to update the main menu when the translation changes
     juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);

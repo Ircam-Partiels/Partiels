@@ -26,10 +26,9 @@ namespace Application
         static juce::File getUserTranslationsDirectory();
         static juce::File getSystemDefaultTranslationFile();
 
-    private:
-        void addGlobalSettingsMenu(juce::PopupMenu& menu);
-        void addTranslationsMenu(juce::PopupMenu& menu);
 #ifndef JUCE_MAC
+
+    private:
         juce::DocumentWindow& mWindow;
 #endif
     };
