@@ -160,6 +160,7 @@ Application::ConverterContent::ConverterContent()
             case AttrType::silentFileManagement:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:

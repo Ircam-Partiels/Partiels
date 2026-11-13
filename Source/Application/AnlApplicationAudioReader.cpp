@@ -24,6 +24,7 @@ Application::AudioReader::AudioReader()
             case AttrType::autoLoadConvertedFile:
             case AttrType::silentFileManagement:
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:

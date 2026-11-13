@@ -200,6 +200,11 @@ void Application::MainMenuModel::addGlobalSettingsMenu(juce::PopupMenu& menu)
                                {
                                    Instance::get().getApplicationAccessor().setAttr<AttrType::preserveFullDurationWhenEditing>(!Instance::get().getApplicationAccessor().getAttr<AttrType::preserveFullDurationWhenEditing>(), NotificationType::synchronous);
                                });
+    auto const includePreReleases = accessor.getAttr<AttrType::includePreReleases>();
+    globalSettingsMenu.addItem(juce::translate("Include Pre-Release Versions in Update Checks"), true, includePreReleases, []()
+                               {
+                                   Instance::get().getApplicationAccessor().setAttr<AttrType::includePreReleases>(!Instance::get().getApplicationAccessor().getAttr<AttrType::includePreReleases>(), NotificationType::synchronous);
+                               });
     juce::PopupMenu templateMenu;
     auto const templateFile = accessor.getAttr<AttrType::defaultTemplateFile>();
     templateMenu.addItem(juce::translate("None"), true, !templateFile.existsAsFile(), []()

@@ -33,6 +33,7 @@ Application::LoaderContent::FileTable::FileTable()
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:
@@ -279,6 +280,7 @@ Application::LoaderContent::LoaderContent()
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
+            case AttrType::includePreReleases:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
             case AttrType::globalGraphicPreset:

@@ -106,7 +106,7 @@ Partiels is compatible on MacOS 10.15 and higher (Universal 2 - Intel/Silicon), 
 
 At startup, Partiels checks for the release of a new version on the project page. If a new version has been released, you can either go to the Partiels project page to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
 
-If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`.
+If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. You can manually check for a new version release on the Partiels project page via the main menu `Help → Check for New Version`. By default, only the stable releases are considered; to also be notified of the pre-releases (such as beta versions), toggle the option via the main menu `Partiels → Global Settings → Include Pre-Release Versions in Update Checks` (Mac) or `Help → Global Settings → Include Pre-Release Versions in Update Checks` (Linux/Windows).
 
 <p align="left">
 <strong><a href="https://github.com/Ircam-Partiels/partiels/releases">👉 All versions of Partiels and the plugin collection</a></strong><br>

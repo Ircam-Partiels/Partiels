@@ -418,6 +418,7 @@ countries: pt br
 "Silent File Management" = "Gerenciamento Silencioso de Arquivos"
 "Ignore Time Selection During Quick Export" = "Ignorar seleção de tempo durante a exportação rápida"
 "Preserve Full Duration When Editing" = "Preservar duração total ao editar"
+"Include Pre-Release Versions in Update Checks" = "Incluir versões de pré-lançamento na verificação de atualizações"
 "Default Template" = "Modelo Padrão"
 "Quick Export Directory" = "Diretório de Exportação Rápida"
 "Global Settings" = "Configurações Globais"

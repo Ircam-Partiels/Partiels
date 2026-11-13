@@ -598,9 +598,9 @@ void Application::Tools::addFileTracks(juce::String const& groupIdentifier, std:
     }
 }
 
-void Application::Tools::notifyForNewVersion(Misc::Version const& upstreamVersion, Version const currentVersion, bool isCurrentVersionDev, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback)
+void Application::Tools::notifyForNewVersion(Release::Version const& upstreamVersion, Release::Version const& currentVersion, bool warnIfUpToDate, juce::String const& product, juce::String const& project, std::function<void(int)> callback)
 {
-    if(upstreamVersion > currentVersion || (isCurrentVersionDev && upstreamVersion.tie() >= currentVersion.tie()))
+    if(upstreamVersion > currentVersion)
     {
         auto options = juce::MessageBoxOptions()
                            .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
