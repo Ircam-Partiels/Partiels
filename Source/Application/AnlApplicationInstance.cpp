@@ -124,7 +124,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::windowState:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::routingMatrix:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:

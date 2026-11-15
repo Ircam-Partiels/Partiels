@@ -119,7 +119,6 @@ Application::GraphicPresetContent::GraphicPresetContent()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::silentFileManagement:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:

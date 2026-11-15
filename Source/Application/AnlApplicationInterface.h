@@ -7,7 +7,6 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
-#include "AnlApplicationConverter.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationGlobalSettings.h"
 #include "AnlApplicationGraphicPreset.h"
@@ -37,7 +36,6 @@ namespace Application
         void showOscSettingsPanel();
         void showGraphicPresetPanel();
         void showBatcherPanel();
-        void showConverterPanel();
         void showExporterPanel();
         void showPluginSearchPathPanel();
         void showGlobalSettingsPanel();
@@ -166,7 +164,6 @@ namespace Application
         Osc::SettingsPanel mOscSettingsPanel;
         GraphicPresetPanel mGraphicPresetPanel;
         BatcherPanel mBatcherPanel;
-        ConverterPanel mConverterPanel;
         ExporterPanel mExporterPanel;
         PluginSearchPathPanel mPluginSearchPathPanel;
         GlobalSettingsPanel mGlobalSettingsPanel;

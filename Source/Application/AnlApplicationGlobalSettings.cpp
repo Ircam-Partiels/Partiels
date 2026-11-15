@@ -207,7 +207,6 @@ Application::GlobalSettingsContent::GlobalSettingsContent()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::routingMatrix:
             case AttrType::lastVersion:
             case AttrType::timeZoomAnchorOnPlayhead:
