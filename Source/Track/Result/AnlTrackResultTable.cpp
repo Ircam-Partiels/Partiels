@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
-: FloatingWindowContainer(juce::translate("Results"), table)
+: FloatingWindowContainer(juce::translate("Table Results"), table)
 , mTable(table)
 {
     mFloatingWindow.setResizable(true, false);
@@ -21,7 +21,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
                 break;
             case AttrType::name:
             {
-                mFloatingWindow.setName(juce::translate("ANLNAME RESULTS").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
+                mFloatingWindow.setName(juce::translate("ANLNAME TABLE RESULTS").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
             }
             break;
             case AttrType::file:
