@@ -73,7 +73,7 @@ set(PARTIELS_VERSION_STRING "${PARTIELS_VERSION_MAJOR}.${PARTIELS_VERSION_MINOR}
 # The release of the Partiels Vamp Plugins associated with this version of Partiels: it is linked by the release notes
 # and used by the application unless a newer release compatible with this version of Partiels is available
 if(NOT PARTIELS_VAMP_PLUGINS_TAG OR PARTIELS_VAMP_PLUGINS_TAG STREQUAL "")
-    set(PARTIELS_VAMP_PLUGINS_TAG "2.0.0-dev3")
+    set(PARTIELS_VAMP_PLUGINS_TAG "2.0.0-dev4")
 endif()
 message(STATUS "Partiels Vamp Plugins: " ${PARTIELS_VAMP_PLUGINS_TAG})
 
