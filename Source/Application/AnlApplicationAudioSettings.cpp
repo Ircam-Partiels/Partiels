@@ -165,7 +165,6 @@ Application::AudioSettingsContent::AudioSettingsContent()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::desktopGlobalScaleFactor:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::silentFileManagement:
             case AttrType::autoUpdate:
             case AttrType::includePreReleases:

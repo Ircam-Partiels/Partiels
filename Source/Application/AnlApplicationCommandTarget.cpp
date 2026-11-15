@@ -29,7 +29,6 @@ Application::CommandTarget::CommandTarget()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
             case AttrType::autoUpdate:
@@ -191,7 +190,6 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenGraphicPreset
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
-        , CommandIDs::helpSdifConverter
         , CommandIDs::helpCheckForUpdate
         , CommandIDs::helpOpenKeyMappings
         , CommandIDs::helpOpenGlobalSettings
@@ -710,12 +708,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::helpOpenProjectPage:
         {
             result.setInfo(juce::translate("Proceed to Project Page"), juce::translate("Opens the project page of the Ircam Forum in a web browser"), "Help", 0);
-            result.setActive(true);
-            break;
-        }
-        case CommandIDs::helpSdifConverter:
-        {
-            result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
             result.setActive(true);
             break;
         }
@@ -1634,14 +1626,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(url.isWellFormed())
             {
                 url.launchInDefaultBrowser();
-            }
-            return true;
-        }
-        case CommandIDs::helpSdifConverter:
-        {
-            if(auto* window = Instance::get().getWindow())
-            {
-                window->getInterface().showConverterPanel();
             }
             return true;
         }

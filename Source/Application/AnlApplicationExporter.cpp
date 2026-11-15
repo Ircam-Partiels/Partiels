@@ -47,7 +47,6 @@ Application::ExporterContent::ExporterContent()
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
             case AttrType::silentFileManagement:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:

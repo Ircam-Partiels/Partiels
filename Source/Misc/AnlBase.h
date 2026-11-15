@@ -134,7 +134,6 @@ enum ApplicationCommandIDs : int
     , helpOpenGraphicPreset
     , helpOpenAbout
     , helpOpenProjectPage
-    , helpSdifConverter
     , helpCheckForUpdate
     , helpOpenKeyMappings
     , helpOpenGlobalSettings

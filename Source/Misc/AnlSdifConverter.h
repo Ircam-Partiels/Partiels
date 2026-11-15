@@ -36,48 +36,6 @@ namespace SdifConverter
 
     using matrix_size_t = std::pair<size_t, std::vector<std::string>>;
     std::map<uint32_t, std::map<uint32_t, matrix_size_t>> getEntries(juce::File const& file);
-
-    juce::Result toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::optional<nlohmann::json> const& extraInfo);
-    juce::Result fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName);
-
-    class Panel
-    : public juce::Component
-    {
-    public:
-        Panel();
-        ~Panel() override = default;
-
-        // juce::Component
-        void resized() override;
-
-        void setFile(juce::File const& file);
-        bool hasAnyChangeableOption() const;
-        nlohmann::json getExtraInfo(double sampleRate) const;
-
-        std::function<void(void)> onUpdated = nullptr;
-        std::tuple<uint32_t, uint32_t, std::optional<juce::String>> getToSdifFormat() const;
-        std::tuple<uint32_t, uint32_t, std::optional<size_t>, std::optional<size_t>> getFromSdifFormat() const;
-
-    private:
-        void selectedFrameUpdated();
-        void selectedMatrixUpdated();
-        void selectedRowColumnUpdated();
-        void notify();
-
-        PropertyText mPropertyToSdifFrame;
-        PropertyText mPropertyToSdifMatrix;
-        PropertyText mPropertyToSdifColName;
-
-        PropertyList mPropertyToJsonFrame;
-        PropertyList mPropertyToJsonMatrix;
-        PropertyList mPropertyToJsonRow;
-        PropertyList mPropertyToJsonColumn;
-
-        juce::File mFile;
-        std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> mEntries;
-        std::vector<uint32_t> mFrameSigLinks;
-        std::vector<uint32_t> mMatrixSigLinks;
-    };
 } // namespace SdifConverter
 
 ANALYSE_FILE_END
