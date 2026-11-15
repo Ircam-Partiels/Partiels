@@ -12,14 +12,28 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
 , mPropertyPanel(mDirector, presetListAcsr)
 , mPropertiesButton(ScalableImage::fromSvg(AnlIconsData::Settings_svg, AnlIconsData::Settings_svgSize))
 , mResultsButton(ScalableImage::fromSvg(AnlIconsData::Sheetspread_svg, AnlIconsData::Sheetspread_svgSize))
+, mSliceButton(ScalableImage::fromSvg(AnlIconsData::Slice_svg, AnlIconsData::Slice_svgSize))
 {
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mResultsButton);
+    addAndMakeVisible(mSliceButton);
     addAndMakeVisible(mStateButton);
 
     mPropertiesButton.setWantsKeyboardFocus(false);
     mResultsButton.setWantsKeyboardFocus(false);
+    mSliceButton.setWantsKeyboardFocus(false);
     mStateButton.setWantsKeyboardFocus(false);
+
+    mSliceButton.setTooltip(juce::translate("Show the instant results in a window"));
+    mSliceButton.onClick = [&]()
+    {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
+        auto const center = mSliceButton.getScreenBounds().getCentre();
+        mSliceWindowContainer.showAt(*this, {static_cast<float>(center.x), static_cast<float>(center.y - 40)});
+    };
 
     mResultsButton.setTooltip(juce::translate("Edit the track results"));
     mResultsButton.onClick = [&]()
@@ -53,8 +67,14 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
     {
         switch(attribute)
         {
-            case AttrType::file:
             case AttrType::description:
+            {
+                setTooltip(Tools::getInfoTooltip(acsr));
+                resized();
+                repaint();
+            }
+            break;
+            case AttrType::file:
             case AttrType::name:
             {
                 setTooltip(Tools::getInfoTooltip(acsr));
@@ -68,6 +88,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             break;
             case AttrType::processing:
             case AttrType::warnings:
+            case AttrType::results:
             {
                 resized();
                 repaint();
@@ -80,7 +101,6 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::fileDescription:
             case AttrType::voiceLink:
             case AttrType::voiceCounts:
-            case AttrType::results:
             case AttrType::edit:
             case AttrType::graphics:
             case AttrType::identifier:
@@ -158,6 +178,14 @@ void Track::Thumbnail::resized()
     }
     layoutButton(mPropertiesButton);
     layoutButton(mResultsButton);
+    if(Slice::isSupported(mAccessor))
+    {
+        layoutButton(mSliceButton);
+    }
+    else
+    {
+        mSliceButton.setVisible(false);
+    }
 }
 
 void Track::Thumbnail::paint(juce::Graphics& g)
@@ -171,7 +199,7 @@ void Track::Thumbnail::paint(juce::Graphics& g)
 
     auto const width = getWidth();
     auto const height = getHeight();
-    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mResultsButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
+    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mResultsButton.isVisible()) + static_cast<int>(mSliceButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
     auto const bottom = height - numElements * (width + separator) - (numElements > 0 ? 0 : separator);
     if(bottom <= 0)
     {

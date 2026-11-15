@@ -4,25 +4,46 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Thumbnail::Thumbnail(Director& director)
+Group::Thumbnail::Thumbnail(Director& director, Transport::Accessor& transportAcsr)
 : mDirector(director)
+, mSlice(mAccessor, transportAcsr)
 , mPropertiesButton(ScalableImage::fromSvg(AnlIconsData::Settings_svg, AnlIconsData::Settings_svgSize))
 , mResultsButton(ScalableImage::fromSvg(AnlIconsData::Sheetspread_svg, AnlIconsData::Sheetspread_svgSize))
+, mSliceButton(ScalableImage::fromSvg(AnlIconsData::Slice_svg, AnlIconsData::Slice_svgSize))
 , mExpandButton(ScalableImage::fromSvg(AnlIconsData::Expand_svg, AnlIconsData::Expand_svgSize))
+, mLayoutNotifier(mAccessor, [this]()
+                  {
+                      resized();
+                      repaint();
+                  },
+                  {Track::AttrType::identifier, Track::AttrType::description, Track::AttrType::results, Track::AttrType::showInGroup})
 {
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mResultsButton);
+    addAndMakeVisible(mSliceButton);
     addAndMakeVisible(mStateButton);
     addAndMakeVisible(mExpandButton);
 
     mPropertiesButton.setWantsKeyboardFocus(false);
     mResultsButton.setWantsKeyboardFocus(false);
+    mSliceButton.setWantsKeyboardFocus(false);
     mStateButton.setWantsKeyboardFocus(false);
     mExpandButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
     mResultsButton.setTooltip(juce::translate("Show the track results"));
     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
+    mSliceButton.setTooltip(juce::translate("Show the instant results in a window"));
+
+    mSliceButton.onClick = [&]()
+    {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
+        auto const center = mSliceButton.getScreenBounds().getCentre();
+        mSliceWindowContainer.showAt(*this, {static_cast<float>(center.x), static_cast<float>(center.y - 40)});
+    };
 
     mExpandButton.onClick = [&]()
     {
@@ -218,6 +239,14 @@ void Group::Thumbnail::resized()
     }
     layoutButton(leftBounds, mPropertiesButton);
     layoutButton(leftBounds, mResultsButton);
+    if(Slice::isSupported(mAccessor))
+    {
+        layoutButton(leftBounds, mSliceButton);
+    }
+    else
+    {
+        mSliceButton.setVisible(false);
+    }
 
     auto rightBounds = bounds.withTrimmedLeft(separator);
     layoutButton(rightBounds, mExpandButton);
@@ -237,7 +266,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
     g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
 
-    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mResultsButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
+    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mResultsButton.isVisible()) + static_cast<int>(mSliceButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
     auto const bottom = height - numElements * (width + separator) - (numElements > 0 ? 0 : separator);
     if(bottom <= 0)
     {
