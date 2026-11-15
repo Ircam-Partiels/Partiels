@@ -555,6 +555,10 @@ Enable or disable the magnetize option by clicking the `Magnetize` button in the
 
 Each track and group offers two representations of analysis results. The main representation shows the results over time ([Overview](#2-overview) **V2**) as vertical lines for markers, points (connected into segments) for values, and images for matrices. The secondary display shows an instantaneous value of the results at the playhead position ([Overview](#2-overview) **V1**).
 
+- Click the instant results button in the thumbnail of a track or a group with values or vectors (above the results button) to show the instant results in a resizable floating window. For values, the horizontal axis corresponds to the values. For vectors, the horizontal axis corresponds to the bins, the vertical axis to the values, and the curve uses the color map of the track. The rulers and scroll bars of the window control the same ranges as the vertical ruler and scroll bar of the track or group in the main interface for the horizontal axis and, for vectors, the value range (which is also the range of the color map) for the vertical axis. As on the plots of the main interface, the mouse wheel and the pinch zoom (with `Ctrl` for the vertical axis) and the click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows), `⎇ Option` (Mac) or `Alt` (Linux/Windows), or `⇧ Shift` zoom and move these ranges.
+
+- Right-click on the thumbnail of a track or a group to display a menu giving access to the properties, the table results and the instant results (useful when the track or the group is too small to display the buttons of its thumbnail).
+
 - Enable the info bubble window with the `Info Bubble` button ([Overview](#2-overview) **K7**), via the main menu `View → Info Bubble` or the keyboard shortcut `⌘ Cmd + I` (Mac) or `Ctrl + I` (Linux/Windows) to display the values of the analysis results when hovering over these representations with the mouse.
 
 - Change the display of track and group grids with the `Grid` button ([Overview](#2-overview) **K8**): hidden, ticks, or full.
