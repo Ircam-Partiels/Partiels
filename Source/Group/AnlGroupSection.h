@@ -54,7 +54,7 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
 
-        Thumbnail mThumbnail{mDirector};
+        Thumbnail mThumbnail{mDirector, mTransportAccessor};
         Decorator mThumbnailDecoration{mThumbnail};
 
         Snapshot mSnapshot{mAccessor, mTransportAccessor, mTimeZoomAccessor};

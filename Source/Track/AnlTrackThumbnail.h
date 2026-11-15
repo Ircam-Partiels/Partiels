@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackPropertyPanel.h"
+#include "AnlTrackSlice.h"
 #include "AnlTrackStateButton.h"
 #include "Result/AnlTrackResultTable.h"
 
@@ -44,8 +45,11 @@ namespace Track
         PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
         Result::Table mResultsTable{mDirector, mTimeZoomAccessor, mTransportAccessor};
         Result::Table::WindowContainer mResultsWindowContainer{mResultsTable};
+        Slice mSlice{mAccessor, mTransportAccessor};
+        Slice::WindowContainer mSliceWindowContainer{mSlice};
         Icon mPropertiesButton;
         Icon mResultsButton;
+        Icon mSliceButton;
         StateButton mStateButton{mDirector};
     };
 } // namespace Track

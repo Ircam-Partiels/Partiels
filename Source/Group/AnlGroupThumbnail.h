@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlGroupPropertyPanel.h"
+#include "AnlGroupSlice.h"
 #include "AnlGroupStateButton.h"
 
 ANALYSE_FILE_BEGIN
@@ -20,7 +21,7 @@ namespace Group
         };
         // clang-format on
 
-        Thumbnail(Director& director);
+        Thumbnail(Director& director, Transport::Accessor& transportAcsr);
         ~Thumbnail() override;
 
         // juce::Component
@@ -39,10 +40,14 @@ namespace Group
 
         PropertyPanel mPropertyPanel{mDirector};
         PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
+        Slice mSlice;
+        Slice::WindowContainer mSliceWindowContainer{mSlice};
         Icon mPropertiesButton;
         Icon mResultsButton;
+        Icon mSliceButton;
         StateButton mStateButton{mDirector};
         Icon mExpandButton;
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 

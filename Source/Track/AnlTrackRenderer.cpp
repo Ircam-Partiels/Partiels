@@ -174,7 +174,6 @@ namespace Track
         static constexpr int outsideGridWidth = 72;
 
         juce::String getStringForTime(Zoom::Accessor const& timeZoomAcsr, double time);
-        std::function<juce::String(double)> getGridStringify(Accessor const& accessor);
         void paintInternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, bool showGridLabels);
         void paintExternalGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, std::vector<bool> const& channels, juce::Colour const colour, Zoom::Grid::Justification outsideGridjustification);
 
@@ -261,9 +260,9 @@ std::function<juce::String(double)> Track::Renderer::getGridStringify(Accessor c
         }
         case Track::FrameType::vector:
         {
-            return [&](double value)
+            return [acsr = std::addressof(accessor)](double value)
             {
-                return Tools::binZoomValueToString(accessor, value);
+                return Tools::binZoomValueToString(*acsr, value);
             };
         }
     }
