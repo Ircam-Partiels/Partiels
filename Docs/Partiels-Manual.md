@@ -83,9 +83,8 @@ Partiels allows **analysis** of one or several audio files using Vamp plugins 
 - Organizing and ordering analyses in groups  
 - Exporting results to *PNG*, *JPEG*, *CSV*, *LAB*, *JSON*, *CUE*, *REAPER*, *PUREDATA*, *MAX* & *SDIF* file formats  
 - Loading results from *CSV*, *LAB*, *JSON*, *CUE*, *REAPER*, *PUREDATA*, *MAX* & *SDIF* file formats  
-- Converting results from *SDIF* to *JSON* file formats and inversely  
 - Batch processing (useful to apply the same set of analyses on several audio files)  
-- Command line interface to analyze, export and convert results  
+- Command line interface to analyze and export results  
 - Consolidating documents (useful to share documents/analysis with other users across different platforms)  
 - Audio playback with loop  
 
@@ -1148,7 +1147,7 @@ Follow these steps to create your own language file:
 
 ## 17. Command-line tools
 
-The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
+The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. All the functionality is documented in the help command:
 
 ```
 Usage:
@@ -1181,22 +1180,6 @@ Usage:
         --frame <framesignature> Defines the 4 characters frame signature (required with the sdif format).
         --matrix <matrixsignature> Defines the 4 characters matrix signature (required with the sdif format).
         --colname <string> Defines the name of the column (optional with the sdif format).
- Partiels --sdif2json [options]    Converts a SDIF file to a JSON file.
-        --input|-i <sdiffile> Defines the path to the input SDIF file to convert (required).
-        --output|-o <jsonfile> Defines the path of the output JSON file (required).
-        --frame|-f <framesignature> The 4 characters frame signature (required).
-        --matrix|-m <matrixsignature> The 4 characters matrix signature (required).
-        --row|-r <rowindex> The index of the row (optional - all rows if not defined).
-        --column|-c <columindex> The index of the column (optional - all columns if not defined).
-        --unit <unit> The unit of the results (optional).
-        --min <value> The minimum possible value of the results (required if max defined).
-        --max <value> The maximum possible value of the results (required if min defined).
- Partiels --json2sdif [options]    Converts a JSON file to a SDIF file.
-        --input|-i <jsonfile> Defines the path to the input JSON file to convert (required).
-        --output|-o <sdiffile> Defines the path of the output SDIF file (required).
-        --frame|-f <framesignature> The 4 characters frame signature (required).
-        --matrix|-m <matrixsignature> The 4 characters matrix signature (required).
-        --colname <name> The name of the column (optional).
  Partiels --plugin-list [options]  Prints an exhaustive list of installed plugins.
         --description Includes the descriptions of the plugins (optional).
         --format <fileformat> Defines the output format (json or xml) (optional - default: json).
