@@ -61,32 +61,7 @@ Group::Thumbnail::Thumbnail(Director& director, Transport::Accessor& transportAc
             return;
         }
         juce::PopupMenu menu;
-        juce::WeakReference<juce::Component> safePointer(this);
-        auto const layout = mAccessor.getAttr<AttrType::layout>();
-        for(auto const& identifier : layout)
-        {
-            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-            if(trackAcsr.has_value())
-            {
-                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem(juce::translate("Track results: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
-                             {
-                                 if(safePointer.get() == nullptr)
-                                 {
-                                     return;
-                                 }
-                                 auto var = std::make_unique<juce::DynamicObject>();
-                                 auto const position = juce::Desktop::getInstance().getMousePosition();
-                                 var->setProperty("x", position.x);
-                                 var->setProperty("y", position.y - 40);
-                                 auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
-                                 if(trackAcsrRef.has_value())
-                                 {
-                                     trackAcsrRef.value().get().sendSignal(Track::SignalType::showTable, var.release(), NotificationType::synchronous);
-                                 }
-                             });
-            }
-        }
+        fillResultsMenu(menu);
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mResultsButton));
     };
 
@@ -97,44 +72,7 @@ Group::Thumbnail::Thumbnail(Director& director, Transport::Accessor& transportAc
             return;
         }
         juce::PopupMenu menu;
-        juce::WeakReference<juce::Component> safePointer(this);
-        menu.addItem(juce::translate("Group properties"), [=, this]()
-                     {
-                         if(safePointer.get() == nullptr)
-                         {
-                             return;
-                         }
-                         auto var = std::make_unique<juce::DynamicObject>();
-                         auto const position = juce::Desktop::getInstance().getMousePosition();
-                         var->setProperty("x", position.x);
-                         var->setProperty("y", position.y - 40);
-                         mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
-                     });
-        auto const layout = mAccessor.getAttr<AttrType::layout>();
-        for(auto const& identifier : layout)
-        {
-            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-            if(trackAcsr.has_value())
-            {
-                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem(juce::translate("Track properties: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
-                             {
-                                 if(safePointer.get() == nullptr)
-                                 {
-                                     return;
-                                 }
-                                 auto var = std::make_unique<juce::DynamicObject>();
-                                 auto const position = juce::Desktop::getInstance().getMousePosition();
-                                 var->setProperty("x", position.x);
-                                 var->setProperty("y", position.y - 40);
-                                 auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
-                                 if(trackAcsrRef.has_value())
-                                 {
-                                     trackAcsrRef.value().get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                                 }
-                             });
-            }
-        }
+        fillPropertiesMenu(menu);
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertiesButton));
     };
 
@@ -213,6 +151,105 @@ Group::Thumbnail::~Thumbnail()
     mAccessor.removeListener(mListener);
 }
 
+void Group::Thumbnail::showMenu()
+{
+    juce::PopupMenu propertiesMenu;
+    fillPropertiesMenu(propertiesMenu);
+    juce::PopupMenu resultsMenu;
+    fillResultsMenu(resultsMenu);
+
+    juce::PopupMenu menu;
+    menu.addSectionHeader(mAccessor.getAttr<AttrType::name>());
+    menu.addSubMenu(juce::translate("Properties"), propertiesMenu);
+    menu.addSubMenu(juce::translate("Table Results"), resultsMenu, resultsMenu.getNumItems() > 0);
+    if(Slice::isSupported(mAccessor))
+    {
+        juce::WeakReference<juce::Component> safePointer(this);
+        menu.addItem(juce::translate("Instant Results"), [=, this]()
+                     {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
+                         auto const position = juce::Desktop::getInstance().getMousePosition().toFloat();
+                         mSliceWindowContainer.showAt(*this, {position.x, position.y - 40.0f});
+                     });
+    }
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(this).withMousePosition());
+}
+
+void Group::Thumbnail::fillResultsMenu(juce::PopupMenu& menu)
+{
+    juce::WeakReference<juce::Component> safePointer(this);
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto const& identifier : layout)
+    {
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
+        {
+            auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+            menu.addItem(juce::translate("Track results: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
+                         {
+                             if(safePointer.get() == nullptr)
+                             {
+                                 return;
+                             }
+                             auto var = std::make_unique<juce::DynamicObject>();
+                             auto const position = juce::Desktop::getInstance().getMousePosition();
+                             var->setProperty("x", position.x);
+                             var->setProperty("y", position.y - 40);
+                             auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                             if(trackAcsrRef.has_value())
+                             {
+                                 trackAcsrRef.value().get().sendSignal(Track::SignalType::showTable, var.release(), NotificationType::synchronous);
+                             }
+                         });
+        }
+    }
+}
+
+void Group::Thumbnail::fillPropertiesMenu(juce::PopupMenu& menu)
+{
+    juce::WeakReference<juce::Component> safePointer(this);
+    menu.addItem(juce::translate("Group properties"), [=, this]()
+                 {
+                     if(safePointer.get() == nullptr)
+                     {
+                         return;
+                     }
+                     auto var = std::make_unique<juce::DynamicObject>();
+                     auto const position = juce::Desktop::getInstance().getMousePosition();
+                     var->setProperty("x", position.x);
+                     var->setProperty("y", position.y - 40);
+                     mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
+                 });
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto const& identifier : layout)
+    {
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
+        {
+            auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+            menu.addItem(juce::translate("Track properties: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
+                         {
+                             if(safePointer.get() == nullptr)
+                             {
+                                 return;
+                             }
+                             auto var = std::make_unique<juce::DynamicObject>();
+                             auto const position = juce::Desktop::getInstance().getMousePosition();
+                             var->setProperty("x", position.x);
+                             var->setProperty("y", position.y - 40);
+                             auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                             if(trackAcsrRef.has_value())
+                             {
+                                 trackAcsrRef.value().get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                             }
+                         });
+        }
+    }
+}
+
 void Group::Thumbnail::resized()
 {
     auto constexpr separator = 2;
@@ -285,12 +322,21 @@ void Group::Thumbnail::mouseMove(juce::MouseEvent const& event)
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    if(event.mods.isPopupMenu())
+    {
+        showMenu();
+        return;
+    }
     beginDragAutoRepeat(5);
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    if(event.mods.isPopupMenu())
+    {
+        return;
+    }
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
