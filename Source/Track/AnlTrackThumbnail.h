@@ -34,6 +34,9 @@ namespace Track
         void mouseUp(juce::MouseEvent const& event) override;
 
     private:
+        //! @brief Shows the menu with the name of the track and the actions to show its windows
+        void showMenu();
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
