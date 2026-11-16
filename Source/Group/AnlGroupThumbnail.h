@@ -33,6 +33,11 @@ namespace Group
         void mouseUp(juce::MouseEvent const& event) override;
 
     private:
+        //! @brief Shows the menu with the name of the group and the actions to show its windows and the windows of its tracks
+        void showMenu();
+        void fillPropertiesMenu(juce::PopupMenu& menu);
+        void fillResultsMenu(juce::PopupMenu& menu);
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
