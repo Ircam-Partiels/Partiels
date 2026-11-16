@@ -33,6 +33,14 @@ for (const resource of ['icon.png', 'Partiels-v2.0.0-Sample-v2.gif']) {
 	copyFile(path.join(resourceDir, resource), path.join(assetsDir, resource));
 }
 
+// Release of the Partiels Vamp Plugins associated with this version of Partiels (defined by the CMake project)
+const cmake = fs.readFileSync(path.join(repositoryDir, 'CMakeLists.txt'), 'utf8');
+const vampPluginsTag = cmake.match(/set\(PARTIELS_VAMP_PLUGINS_TAG\s+"([^"]+)"\)/)?.[1];
+if (!vampPluginsTag) {
+	throw new Error('The PARTIELS_VAMP_PLUGINS_TAG variable cannot be found in CMakeLists.txt');
+}
+fs.writeFileSync(path.join(assetsDir, 'vamp-plugins.json'), JSON.stringify({ tag: vampPluginsTag }, null, '\t') + '\n');
+
 // Manual: the title page and the table of contents are replaced by the page title and the sidebar of the website,
 // the page breaks are only meaningful for the PDF, and the image paths are relative to the /manual/ page.
 const manual = fs.readFileSync(path.join(docsDir, 'Partiels-Manual.md'), 'utf8');

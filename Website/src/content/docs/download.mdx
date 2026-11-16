@@ -5,6 +5,7 @@ description: Download Partiels for macOS, Windows and Linux, and the Vamp plugin
 
 import { LinkButton, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
 import LatestRelease from '../../components/LatestRelease.astro';
+import { pluginsDownloadUrl } from '../../lib/github';
 
 Partiels is free software, available for macOS, Windows and Linux.
 
@@ -55,17 +56,17 @@ Partiels uses Vamp plugins to analyse sounds. A collection of plugins based on a
 
 <Tabs syncKey="os">
 	<TabItem label="macOS" icon="apple">
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-MacOS.pkg" icon="download">All plugins (.pkg)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-MacOS.pkg')} icon="download">All plugins (.pkg)</LinkButton>
 	</TabItem>
 	<TabItem label="Windows" icon="seti:windows">
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Windows.exe" icon="download">All plugins (.exe)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Windows.exe')} icon="download">All plugins (.exe)</LinkButton>
 	</TabItem>
 	<TabItem label="Linux" icon="linux">
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Linux.zip" icon="download">All plugins (.zip)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Linux.zip')} icon="download">All plugins (.zip)</LinkButton>
 	</TabItem>
 </Tabs>
 
-The [manuals of the plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Manuals.zip) are also available.
+The <a href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Manuals.zip')}>manuals of the plugins</a> are also available.
 
 ## Previous and development versions
 
