@@ -1,9 +1,11 @@
 ---
 import { Card, CardGrid, Icon } from '@astrojs/starlight/components';
 import type { StarlightIcon } from '@astrojs/starlight/types';
-import { getPlugins, pluginsRepositoryUrl } from '../lib/github';
+import { getPlugins, pluginsReleaseUrl, pluginsTag } from '../lib/github';
 
-const plugins = await getPlugins();
+const distribution = await getPlugins();
+const plugins = distribution?.plugins;
+const minimumPartielsVersion = distribution?.minimumPartielsVersion;
 
 interface Download {
 	icon: StarlightIcon;
@@ -23,6 +25,12 @@ function macosInfo(minVersion?: string, architectures?: string[]): string {
 	return info.join(', ');
 }
 ---
+
+<p>
+	These plugins come from the <a href={pluginsReleaseUrl}>release {pluginsTag}</a> of the Partiels Vamp Plugins{
+		minimumPartielsVersion && <>, which requires Partiels {minimumPartielsVersion} or later</>
+	}.
+</p>
 
 {
 	plugins ? (
@@ -55,7 +63,7 @@ function macosInfo(minVersion?: string, architectures?: string[]): string {
 		</CardGrid>
 	) : (
 		<p>
-			The list of plugins is available on the <a href={`${pluginsRepositoryUrl}/releases/latest`}>latest release page</a>{' '}
+			The list of plugins is available on the <a href={pluginsReleaseUrl}>release page</a>{' '}
 			of the Partiels Vamp Plugins.
 		</p>
 	)

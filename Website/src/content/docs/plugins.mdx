@@ -5,6 +5,7 @@ description: The Vamp plugins developed for Partiels, based on audio engines dev
 
 import { Card, LinkButton } from '@astrojs/starlight/components';
 import PluginList from '../../components/PluginList.astro';
+import { pluginsDownloadUrl } from '../../lib/github';
 
 Partiels uses the [Vamp plugin technology](https://www.vamp-plugins.org/), an audio processing plugin system developed at the Centre for Digital Music, Queen Mary, University of London, to extract descriptive information from audio data.
 
@@ -16,12 +17,12 @@ Alongside Partiels, a wide range of analyses based on audio engines developed at
 	The full bundle contains all the Partiels Vamp plugins in a single installer. This is the easiest way to get all the analyses available in Partiels.
 
 	<div class="sl-flex not-content bundle-buttons">
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-MacOS.pkg" icon="apple" iconPlacement="start">macOS (.pkg)</LinkButton>
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Windows.exe" icon="seti:windows" iconPlacement="start">Windows (.exe)</LinkButton>
-		<LinkButton href="https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Linux.zip" icon="linux" iconPlacement="start">Linux (.zip)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-MacOS.pkg')} icon="apple" iconPlacement="start">macOS (.pkg)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Windows.exe')} icon="seti:windows" iconPlacement="start">Windows (.exe)</LinkButton>
+		<LinkButton href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Linux.zip')} icon="linux" iconPlacement="start">Linux (.zip)</LinkButton>
 	</div>
 
-	See the [download page](../download/#vamp-plugins) to install Partiels and its plugins. The [manuals of the plugins](https://github.com/Ircam-Partiels/Partiels-Vamp-Plugins/releases/latest/download/Partiels-Vamp-Plugins-Manuals.zip) are also available.
+	See the [download page](../download/#vamp-plugins) to install Partiels and its plugins. The <a href={pluginsDownloadUrl('Partiels-Vamp-Plugins-Manuals.zip')}>manuals of the plugins</a> are also available.
 </Card>
 
 ## Individual plugins
@@ -29,6 +30,19 @@ Alongside Partiels, a wide range of analyses based on audio engines developed at
 You can also install only the plugins you need:
 
 <PluginList />
+
+## Basic Pitch
+
+The [Basic Pitch plugin](https://github.com/Ircam-Partiels/basic-pitch-vamp-plugin) ports [Basic Pitch](https://github.com/spotify/basic-pitch), the automatic music transcription library developed by [Spotify's Audio Intelligence Lab](https://research.atspotify.com/audio-intelligence/), to Vamp. Its lightweight neural network is embedded in the plugin and detects the notes of polyphonic recordings. The plugin is included in the full bundle and can also be installed individually from the list above (on macOS, it requires macOS 13.3 or later and an Apple Silicon processor).
+
+The notes are split into monophonic voices ordered from the lowest to the highest, and each voice is returned by a dedicated output: in Partiels, a track is created for each voice, and the tracks share the same analysis and parameters. The pitch of each note is returned as a curve in Hertz, with the amplitude of the note associated with each result, so you can filter the notes according to a threshold.
+
+The analysis is controlled by the following parameters:
+
+- **Frame Threshold** (0.05 to 0.95, 0.3 by default): the amplitude threshold of the frames.
+- **Onset Threshold** (0.05 to 0.95, 0.5 by default): the amplitude threshold of the onsets.
+- **Minimum Note Duration** (0 to 1000 ms, 128 ms by default): the minimum duration of the notes.
+- **Number of Voices** (1 to 24, 4 by default): the number of monophonic voices, and therefore of outputs and tracks.
 
 ## Installation
 
