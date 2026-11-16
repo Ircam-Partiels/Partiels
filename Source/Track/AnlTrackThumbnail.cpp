@@ -153,6 +153,46 @@ Track::Thumbnail::~Thumbnail()
     mAccessor.removeListener(mListener);
 }
 
+void Track::Thumbnail::showMenu()
+{
+    juce::WeakReference<juce::Component> safePointer(this);
+    auto const sendSignal = [=, this](SignalType signal)
+    {
+        if(safePointer.get() == nullptr)
+        {
+            return;
+        }
+        auto var = std::make_unique<juce::DynamicObject>();
+        auto const position = juce::Desktop::getInstance().getMousePosition();
+        var->setProperty("x", position.x);
+        var->setProperty("y", position.y - 40);
+        mAccessor.sendSignal(signal, var.release(), NotificationType::synchronous);
+    };
+    juce::PopupMenu menu;
+    menu.addSectionHeader(mAccessor.getAttr<AttrType::name>());
+    menu.addItem(juce::translate("Properties"), [=]()
+                 {
+                     sendSignal(SignalType::showProperties);
+                 });
+    menu.addItem(juce::translate("Table Results"), [=]()
+                 {
+                     sendSignal(SignalType::showTable);
+                 });
+    if(Slice::isSupported(mAccessor))
+    {
+        menu.addItem(juce::translate("Instant Results"), [=, this]()
+                     {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
+                         auto const position = juce::Desktop::getInstance().getMousePosition().toFloat();
+                         mSliceWindowContainer.showAt(*this, {position.x, position.y - 40.0f});
+                     });
+    }
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(this).withMousePosition());
+}
+
 void Track::Thumbnail::resized()
 {
     auto bounds = getLocalBounds();
@@ -218,12 +258,21 @@ void Track::Thumbnail::mouseMove(juce::MouseEvent const& event)
 void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    if(event.mods.isPopupMenu())
+    {
+        showMenu();
+        return;
+    }
     beginDragAutoRepeat(5);
 }
 
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    if(event.mods.isPopupMenu())
+    {
+        return;
+    }
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
