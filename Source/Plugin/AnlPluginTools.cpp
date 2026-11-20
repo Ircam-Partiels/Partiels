@@ -280,7 +280,9 @@ juce::String Plugin::Tools::getVoicesName(Description const& description)
 
 juce::String Plugin::InputProperty::getInputTooltip(Plugin::Input const& input)
 {
-    return juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name);
+    auto const usage = juce::translate("The track used for the INPUTNAME input to prepare the preprocessing.").replace("INPUTNAME", input.name);
+    auto const description = juce::String(input.description).trim();
+    return description.isEmpty() ? usage : usage + " " + description;
 }
 
 Plugin::InputProperty::InputProperty(Plugin::Input const& input, std::function<void(Plugin::Input const&, juce::String const&)> fn)
