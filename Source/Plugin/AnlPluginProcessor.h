@@ -26,9 +26,18 @@ namespace Plugin
 
         ~Processor() = default;
 
-        juce::Result prepareToAnalyze(Results& results);
-        // [channels[features[results]]]
-        juce::Result setPrecomputingResults(std::vector<std::vector<std::vector<Result>>> const& results);
+        //! @brief The results of the inputs [channels[inputs[results]]]
+        using InputResults = std::vector<std::vector<std::vector<Result>>>;
+
+        //! @brief Prepares the analysis
+        //! @details The plugins are initialized, then the results of the inputs are set as pre-computing features
+        //! before retrieving the output descriptors, because the output descriptors can depend on the inputs (e.g. the
+        //! number of bins and their names) and the Vamp plugin adapter caches them until the next initialization (or
+        //! the next change of a parameter or of the program).
+        //! @param results The results to prepare
+        //! @param inputResults The results of the inputs (one channel for all the plugins or one channel per plugin)
+        //! @return The result of the preparation
+        juce::Result prepareToAnalyze(Results& results, InputResults const& inputResults = {});
         std::tuple<juce::Result, bool> performNextAudioBlock(Results& results);
         float getAdvancement() const;
 
@@ -68,6 +77,8 @@ namespace Plugin
         };
 
         Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, Key const& key, std::vector<std::string> const& features, std::vector<size_t> const& featureIndices, State const& state, VoiceCounts const& voiceCounts);
+
+        juce::Result setPrecomputingResults(InputResults const& inputResults);
 
         std::vector<std::unique_ptr<Ive::PluginWrapper>> mPlugins;
         CircularReader mCircularReader;

@@ -124,7 +124,7 @@ Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::ve
 {
 }
 
-juce::Result Plugin::Processor::prepareToAnalyze(Results& results)
+juce::Result Plugin::Processor::prepareToAnalyze(Results& results, InputResults const& inputResults)
 {
     MiscStrongAssert(!mPlugins.empty());
     if(mPlugins.empty())
@@ -177,6 +177,14 @@ juce::Result Plugin::Processor::prepareToAnalyze(Results& results)
         }
     }
 
+    // The output descriptors can depend on the inputs but the Vamp plugin adapter caches them until the next
+    // initialization, so the inputs must be set before retrieving the output descriptors for the first time.
+    auto const precomputingResult = setPrecomputingResults(inputResults);
+    if(precomputingResult.failed())
+    {
+        return precomputingResult;
+    }
+
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
     MiscStrongAssert(!mFeatureIndices.empty());
     if(mFeatureIndices.empty())
@@ -222,21 +230,8 @@ juce::Result Plugin::Processor::prepareToAnalyze(Results& results)
     return juce::Result::ok();
 }
 
-juce::Result Plugin::Processor::setPrecomputingResults(std::vector<std::vector<std::vector<Result>>> const& results)
+juce::Result Plugin::Processor::setPrecomputingResults(InputResults const& results)
 {
-    MiscStrongAssert(!mPlugins.empty());
-    if(mPlugins.empty())
-    {
-        return juce::Result::fail(juce::translate("The processor has no plugin to process the audio"));
-    }
-    if(std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
-                   {
-                       return plugin == nullptr;
-                   }))
-    {
-        return juce::Result::fail(juce::translate("The processor has a null plugin"));
-    }
-
     MiscWeakAssert(results.empty() || results.size() == 1_z || results.size() == mPlugins.size());
     if(results.size() == 1_z)
     {

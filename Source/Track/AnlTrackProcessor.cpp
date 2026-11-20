@@ -305,19 +305,8 @@ Track::Processor::PluginProcessResult Track::Processor::runPluginAnalysis(Plugin
         return createEmptyPluginProcessResult(createError(juce::translate("Aborted")));
     }
 
-    MiscDebug("Track::Processor", "Preparing analysis...");
-    Plugin::Processor::Results results;
-    auto result = tryProcess([&]()
-                             {
-                                 return processor.prepareToAnalyze(results);
-                             });
-    if(result.failed())
-    {
-        return createEmptyPluginProcessResult(std::move(result));
-    }
-
-    MiscDebug("Track::Processor", "Setting inputs...");
-    std::vector<std::vector<std::vector<Plugin::Result>>> inputData;
+    MiscDebug("Track::Processor", "Converting inputs...");
+    Plugin::Processor::InputResults inputData;
     auto const inputs = processor.getInputs();
     for(auto const& inputState : inputStates)
     {
@@ -344,10 +333,13 @@ Track::Processor::PluginProcessResult Track::Processor::runPluginAnalysis(Plugin
         }
     }
 
-    result = tryProcess([&]()
-                        {
-                            return processor.setPrecomputingResults(inputData);
-                        });
+    // The inputs are set during the preparation because the outputs of the plugin can depend on them
+    MiscDebug("Track::Processor", "Preparing analysis...");
+    Plugin::Processor::Results results;
+    auto result = tryProcess([&]()
+                             {
+                                 return processor.prepareToAnalyze(results, inputData);
+                             });
     if(result.failed())
     {
         return createEmptyPluginProcessResult(std::move(result));
