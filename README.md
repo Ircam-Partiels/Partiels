@@ -87,10 +87,12 @@ Copyright 2026 IRCAM.
 Contributions by Thomas Barbé, Nolan Dupont, and Guilherme Zanchetta.  
 
 ### Dependencies:
-- **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
-- **[Ircam Vamp Extension](https://github.com/Ircam-Partiels/ircam-vamp-extension)** by Pierre Guillot at IRCAM IMR department.  
-- **[JUCE](https://juce.com/)** by Raw Material Software Limited.
-- **[tinycolormap](https://github.com/yuki-koyama/tinycolormap)** by Yuki Koyama.
-- **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann.
-- **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov.
-- **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH.
+- **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London (MIT).
+- **[Ircam Vamp Extension](https://github.com/Ircam-Partiels/ircam-vamp-extension)** by Pierre Guillot at IRCAM IMR department (MIT).
+- **[JUCE](https://juce.com/)** by Raw Material Software Limited (AGPL-3.0), including zlib, libpng, libjpeg, libwebp, FLAC, Ogg Vorbis, Opus, HarfBuzz, SheenBidi, LunaSVG and, on Windows, the **[ASIO SDK](https://www.steinberg.net/developers/)** by Steinberg Media Technologies GmbH (GPL-3.0) and the WebView2 SDK by Microsoft. This software is based in part on the work of the Independent JPEG Group.
+- **[tinycolormap](https://github.com/yuki-koyama/tinycolormap)** by Yuki Koyama (MIT).
+- **[JSON C++](https://github.com/nlohmann/json)** by Niels Lohmann (MIT).
+- **[Magic Enum](https://github.com/Neargye/magic_enum)** by Daniil Goncharov (MIT).
+- **[SDIF](https://sourceforge.net/projects/sdif)** by IRCAM (LGPL-2.1).
+
+The license terms of the dependencies are reproduced in the file `ThirdPartyLicenses.txt` distributed with Partiels.

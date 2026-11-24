@@ -43,6 +43,8 @@ Source: "{#MyBinaryDir}\Translations\*"; DestDir: "{app}\Translations"; Flags: i
 Source: "{#MyBinaryDir}\Scripts\*"; DestDir: "{app}\Scripts"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\About.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinaryDir}\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyBinaryDir}\ThirdPartyLicenses.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
