@@ -192,9 +192,6 @@ if(UNIX AND NOT APPLE)
 endif()
 
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
-if(WIN32)
-target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
-endif()
 
 set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 
@@ -268,6 +265,12 @@ endif()
 add_dependencies(Partiels partiels-vamp-plugins)
 
 ### Packaging ###
+include(${PARTIELS_BINARYDATA_DIRECTORY}/Resource/ThirdPartyLicenses.cmake)
+set(PARTIELS_LICENSES_DIR ${CMAKE_CURRENT_BINARY_DIR}/Licenses)
+file(MAKE_DIRECTORY ${PARTIELS_LICENSES_DIR})
+file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE ${PARTIELS_LICENSES_DIR}/LICENSE.txt ONLY_IF_DIFFERENT)
+partiels_generate_third_party_licenses(${PARTIELS_LICENSES_DIR}/ThirdPartyLicenses.txt)
+
 if(WIN32)
     file(COPY ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/generate-translation-file.ps1 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
 else()
@@ -289,6 +292,7 @@ if(APPLE)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Preset/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Translations/)
     juce_add_bundle_resources_directory(Partiels ${CMAKE_CURRENT_BINARY_DIR}/Scripts/)
+    juce_add_bundle_resources_directory(Partiels ${PARTIELS_LICENSES_DIR})
 else()
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/PlugIns"
@@ -324,6 +328,7 @@ if(WIN32)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Ircam-logo-noir-RS.bmp DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
+    file(COPY ${PARTIELS_LICENSES_DIR}/LICENSE.txt ${PARTIELS_LICENSES_DIR}/ThirdPartyLicenses.txt DESTINATION ${PARTIELS_PACKAGE_TEMPDIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Translations/ DESTINATION ${PARTIELS_PACKAGE_TEMPDIR}/Translations/)
 
     find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6" REQUIRED)
@@ -374,6 +379,8 @@ elseif(UNIX AND NOT APPLE)
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/Partiels.desktop ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${PARTIELS_LICENSES_DIR}/LICENSE.txt ${PARTIELS_PACKAGE_DIR}\n")
+    file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${PARTIELS_LICENSES_DIR}/ThirdPartyLicenses.txt ${PARTIELS_PACKAGE_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cp ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/linux-install.sh ${PARTIELS_PACKAGE_DIR}/Partiels-install.sh\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "cd ${CMAKE_CURRENT_BINARY_DIR}\n")
     file(APPEND ${PARTIELS_PACKAGE_SCRIPT} "tar zcvf Partiels-Linux.tar.gz Partiels\n")
