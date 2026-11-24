@@ -44,6 +44,7 @@ function(partiels_generate_third_party_licenses OUTPUT_FILE)
     file(APPEND ${OUTPUT_FILE} "Partiels includes the following third-party software. Their copyright notices and license terms are reproduced below.\n\n")
 
     set(JUCE_MODULES "JUCE/modules")
+    set(LLAMA_VENDOR "Dependencies/llama.cpp/vendor")
 
     partiels_append_third_party_license(${OUTPUT_FILE} NAME "Vamp Plugin SDK" LICENSE "MIT-style" URL "https://github.com/vamp-plugins/vamp-plugin-sdk"
         FILES "Dependencies/vamp-plugin-sdk/COPYING")
@@ -92,12 +93,33 @@ function(partiels_generate_third_party_licenses OUTPUT_FILE)
             message(WARNING "The license of the WebView2 SDK has not been found and is not included in the third-party licenses")
         endif()
     endif()
-    partiels_append_third_party_license(${OUTPUT_FILE} NAME "JSON for Modern C++" LICENSE "MIT" URL "https://github.com/nlohmann/json"
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "llama.cpp" LICENSE "MIT" URL "https://github.com/ggml-org/llama.cpp"
+        FILES "Dependencies/llama.cpp/LICENSE")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "rotate-bits (included in llama.cpp)" LICENSE "MIT" URL "https://github.com/jb55/rotate-bits.h"
+        FILES "${LLAMA_VENDOR}/hash/rotate-bits/LICENSE.md")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "xxHash (included in llama.cpp)" LICENSE "BSD-2-Clause" URL "https://github.com/Cyan4973/xxHash"
+        FILES "${LLAMA_VENDOR}/hash/xxhash/LICENSE")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "JSON for Modern C++ (included in Partiels and llama.cpp)" LICENSE "MIT" URL "https://github.com/nlohmann/json"
         FILES "Dependencies/Misc/Dependencies/json/LICENSE.MIT")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "md4c" LICENSE "MIT" URL "https://github.com/mity/md4c"
+        FILES "Dependencies/md4c/LICENSE.md")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "hnswlib" LICENSE "Apache-2.0" URL "https://github.com/nmslib/hnswlib"
+        FILES "Dependencies/hnswlib/LICENSE")
     partiels_append_third_party_license(${OUTPUT_FILE} NAME "SDIF library by IRCAM (the source code is included in the source code of Partiels)" LICENSE "LGPL-2.1-or-later" URL "https://sourceforge.net/projects/sdif"
         FILES "Dependencies/sdif/COPYING")
     partiels_append_third_party_license(${OUTPUT_FILE} NAME "tinycolormap" LICENSE "MIT" URL "https://github.com/yuki-koyama/tinycolormap"
         FILES "Dependencies/tinycolormap/LICENSE")
     partiels_append_third_party_license(${OUTPUT_FILE} NAME "Magic Enum C++" LICENSE "MIT" URL "https://github.com/Neargye/magic_enum"
         FILES "Dependencies/Misc/Dependencies/magic_enum/LICENSE")
+    partiels_append_third_party_license(${OUTPUT_FILE} NAME "Mermaid and its bundled dependencies" LICENSE "MIT, ISC, BSD-3-Clause, Apache-2.0, MPL-2.0 OR Apache-2.0, Unlicense" URL "https://mermaid.js.org"
+        FILES "BinaryData/Neuralyzer/Mermaid/ThirdPartyLicenses.txt")
+
+    string(REPEAT "=" 80 PARTIELS_SEPARATOR)
+    file(APPEND ${OUTPUT_FILE} "${PARTIELS_SEPARATOR}\nPublic domain software\n${PARTIELS_SEPARATOR}\n\n")
+    file(APPEND ${OUTPUT_FILE} "The following software included in llama.cpp is released into the public domain (for stb_image and miniaudio, the public domain alternative is used):\n")
+    file(APPEND ${OUTPUT_FILE} "- stb_image by Sean Barrett (https://github.com/nothings/stb)\n")
+    file(APPEND ${OUTPUT_FILE} "- miniaudio by David Reid (https://miniaud.io)\n")
+    file(APPEND ${OUTPUT_FILE} "- subprocess.h by Neil Henning (https://github.com/sheredom/subprocess.h)\n")
+    file(APPEND ${OUTPUT_FILE} "- SHA-1 in C by Steve Reid\n")
+    file(APPEND ${OUTPUT_FILE} "- SHA-256 by Igor Pavlov\n")
 endfunction()
