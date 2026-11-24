@@ -49,7 +49,8 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     auto const& output = accessor.getAttr<AttrType::description>().output;
     auto const height = static_cast<int>(output.hasFixedBinCount ? output.binCount : results.getNumBins().value_or(0_z));
     auto const width = static_cast<int>(results.getNumColumns().value_or(0_z));
-    MiscWeakAssert(width > 0 && height > 0);
+    // A plugin can return no feature (e.g. when an input is missing), but the columns must have bins
+    MiscWeakAssert(width == 0 || height > 0);
     if(width <= 0 || height <= 0)
     {
         if(onRenderingEnded != nullptr)
