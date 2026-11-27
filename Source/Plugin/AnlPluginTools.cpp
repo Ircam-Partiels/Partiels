@@ -17,9 +17,19 @@ juce::String Plugin::Tools::rangeToString(float min, float max, bool quantized, 
     return "[" + juce::String(min, 2) + ":" + juce::String(max, 2) + (quantized ? ("-" + juce::String(step, 2)) : "") + "]";
 }
 
+static bool isToggleRange(float minValue, float maxValue, bool isQuantized, float quantizeStep)
+{
+    return isQuantized && std::abs(quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(minValue) < std::numeric_limits<float>::epsilon() && std::abs(maxValue - 1.0f) < std::numeric_limits<float>::epsilon();
+}
+
 static bool isToggleParameter(Plugin::Parameter const& parameter)
 {
-    return parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon();
+    return isToggleRange(parameter.minValue, parameter.maxValue, parameter.isQuantized, parameter.quantizeStep);
+}
+
+bool Plugin::Tools::isToggleExtraOutput(OutputExtra const& output)
+{
+    return output.hasKnownExtents && isToggleRange(output.minValue, output.maxValue, output.isQuantized, output.quantizeStep);
 }
 
 juce::String Plugin::Tools::getParameterTooltip(Parameter const& parameter)

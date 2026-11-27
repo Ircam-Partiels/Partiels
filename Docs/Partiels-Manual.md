@@ -876,7 +876,7 @@ The value range of point and column results can be adapted to optimize the graph
 <img src="Images/section-track-properties.9-v1.3.2.png" width="196"/>
 </p>
 
-- Extra Output Threshold: Some plugins support additional outputs. For these plugins, it is possible to define a threshold below which results are not displayed. These thresholds can also be managed collectively at the group level via the [group properties](#10-group-properties) window when multiple tracks share the same extra output names.
+- Extra Output Threshold: Some plugins support additional outputs. For these plugins, it is possible to define a threshold below which results are not displayed. If the values of the extra output are quantized, the threshold follows the same quantization step. If the extra output can only be 0 or 1, the threshold is displayed as a toggle button: when enabled, only the results whose extra value is 1 are displayed. These thresholds can also be managed collectively at the group level via the [group properties](#10-group-properties) window when multiple tracks share the same extra output names.
 
 #### 9.2.4. Visibility 
 
@@ -928,7 +928,7 @@ The first entries correspond to exclusive properties of the group:
 
 The following sections Processor, Graphical and OSC contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
-When tracks in the group contain plugins with extra outputs, the Graphical section will automatically display Extra Output Threshold controls. These threshold sliders allow you to set threshold values that apply to all tracks in the group sharing the same extra output names (e.g., "Confidence", "Score"). This provides centralized management of extra thresholds across multiple tracks without having to adjust each track individually. The tooltips indicate which tracks are affected by each threshold setting.
+When tracks in the group contain plugins with extra outputs, the Graphical section will automatically display Extra Output Threshold controls. These threshold sliders (or toggle buttons for the extra outputs that can only be 0 or 1) allow you to set threshold values that apply to all tracks in the group sharing the same extra output names (e.g., "Confidence", "Score"). This provides centralized management of extra thresholds across multiple tracks without having to adjust each track individually. The tooltips indicate which tracks are affected by each threshold setting.
 
 > 💡 **Tip**: The reference track, track visibility, track OSC, and channel layout can also be controlled via the popup menu displayed by right-clicking on the graphical plot.
 

@@ -69,7 +69,7 @@ namespace Group
         bool mChannelLayoutActionStarted{false};
         PropertyTextButton mPropertyTrackVisibility;
         bool mTrackVisibilityActionStarted{false};
-        std::map<Plugin::OutputExtra, std::unique_ptr<PropertySlider>, Plugin::IdentifierComparator> mPropertyExtraThresholds;
+        std::map<Plugin::OutputExtra, std::unique_ptr<PropertyComponentBase>, Plugin::IdentifierComparator> mPropertyExtraThresholds;
 
         LayoutNotifier mLayoutNotifier;
         LayoutNotifier mThresholdsNotifier;

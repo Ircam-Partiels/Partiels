@@ -73,7 +73,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
         PropertyToggle mPropertyValueRangeLogScale;
-        std::vector<std::pair<Plugin::OutputExtra, std::unique_ptr<PropertySlider>>> mPropertyExtraThresholds;
+        std::vector<std::pair<Plugin::OutputExtra, std::unique_ptr<PropertyComponentBase>>> mPropertyExtraThresholds;
         PropertyTextButton mPropertyGrid;
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
