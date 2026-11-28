@@ -1,4 +1,5 @@
 #include "AnlTrackPropertyGraphicalSection.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 #include "AnlTrackTooltip.h"
@@ -705,7 +706,21 @@ void Track::PropertyGraphicalSection::updateExtraThresholdProperties()
             mAccessor.setAttr<AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
         };
         // The range and the tooltip are updated below
-        auto property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
+        std::unique_ptr<PropertyComponentBase> property;
+        if(Plugin::Tools::isToggleExtraOutput(output))
+        {
+            // The threshold of an extra output that can only be 0 or 1 is either disabled or set to 1
+            property = std::make_unique<PropertyToggle>(name, "", [=](bool state)
+                                                        {
+                                                            startChange();
+                                                            applyChange(state ? 1.0f : 0.0f);
+                                                            endChange();
+                                                        });
+        }
+        else
+        {
+            property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
+        }
         addAndMakeVisible(property.get());
         properties.push_back(std::make_pair(output, std::move(property)));
     }
@@ -716,14 +731,17 @@ void Track::PropertyGraphicalSection::updateExtraThresholdProperties()
         auto const& output = mPropertyExtraThresholds.at(index).first;
         auto& property = *mPropertyExtraThresholds.at(index).second.get();
         auto const range = Tools::getExtraRange(mAccessor, index);
-        auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
-        auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
-        auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
-        juce::Range<double> const sliderRange{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
-        property.entry.setRange(sliderRange, step);
-        property.numberField.setRange(sliderRange, step, juce::NotificationType::dontSendNotification);
         property.setTooltip(Tools::getExtraTooltip(mAccessor, index));
         property.setEnabled(range.has_value() && !range.value().isEmpty());
+        if(auto* slider = dynamic_cast<PropertySlider*>(&property))
+        {
+            auto const start = range.has_value() ? static_cast<float>(range.value().getStart()) : 0.0f;
+            auto const end = range.has_value() ? static_cast<float>(range.value().getEnd()) : 0.0f;
+            auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
+            juce::Range<double> const sliderRange{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
+            slider->entry.setRange(sliderRange, step);
+            slider->numberField.setRange(sliderRange, step, juce::NotificationType::dontSendNotification);
+        }
     }
 }
 
@@ -975,10 +993,17 @@ void Track::PropertyGraphicalSection::updateExtraTheshold()
     for(auto index = 0_z; index < mPropertyExtraThresholds.size(); ++index)
     {
         auto const value = index < thresholds.size() ? thresholds.at(index) : std::optional<float>();
-        auto& property = mPropertyExtraThresholds[index].second;
-        auto const effective = value.has_value() ? value.value() : property->entry.getRange().getStart();
-        property->entry.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
-        property->numberField.setValue(static_cast<double>(effective), juce::NotificationType::dontSendNotification);
+        auto* property = mPropertyExtraThresholds[index].second.get();
+        if(auto* toggle = dynamic_cast<PropertyToggle*>(property))
+        {
+            toggle->entry.setToggleState(value.has_value() && value.value() > 0.0f, juce::NotificationType::dontSendNotification);
+        }
+        else if(auto* slider = dynamic_cast<PropertySlider*>(property))
+        {
+            auto const effective = value.has_value() ? static_cast<double>(value.value()) : slider->entry.getRange().getStart();
+            slider->entry.setValue(effective, juce::NotificationType::dontSendNotification);
+            slider->numberField.setValue(effective, juce::NotificationType::dontSendNotification);
+        }
     }
 }
 

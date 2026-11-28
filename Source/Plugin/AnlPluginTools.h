@@ -30,6 +30,11 @@ namespace Plugin
         std::unique_ptr<juce::Component> createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange);
         void setPropertyValue(juce::Component& property, Parameter const& parameter, std::set<float> const& values, juce::NotificationType notification);
 
+        //! @brief Gets if an extra output can only be 0 or 1
+        //! @param output The description of the extra output
+        //! @return true if the extra output has known extents [0, 1] and is quantized with a step of 1
+        bool isToggleExtraOutput(OutputExtra const& output);
+
         //! @brief Creates an instance of a plugin
         //! @details The instance is not initialised. An exception is thrown if the plugin cannot be loaded.
         //! @param key The key of the plugin

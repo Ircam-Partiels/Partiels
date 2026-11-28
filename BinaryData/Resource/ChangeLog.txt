@@ -12,6 +12,7 @@
 - Imp: Update JUCE to version 9.0.3
 - Fix: Fix the names of binaries when creating beta versions
 - Fix: Fix the property panels that block other windows on macOS
+- Imp: Display the extra thresholds as toggle buttons when the extra outputs can only be 0 or 1
 
 v2.5.2
 

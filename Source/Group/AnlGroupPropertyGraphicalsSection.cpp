@@ -1,4 +1,5 @@
 #include "AnlGroupPropertyGraphicalsSection.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "../Track/AnlTrackTools.h"
 #include "../Track/AnlTrackTooltip.h"
 #include "AnlGroupTools.h"
@@ -1098,20 +1099,8 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
                 }
                 mDirector.endAction(true, ActionState::newTransaction, juce::translate("Modify the OUTNAME threshold").replace("OUTNAME", vname));
             };
-            auto const applyChange = [=, this](float newValue)
+            auto const setThresholds = [=, this](std::optional<float> value)
             {
-                if(weakReference.get() == nullptr)
-                {
-                    return;
-                }
-                auto const propertyIt = mPropertyExtraThresholds.find(outputIdentifier);
-                MiscWeakAssert(propertyIt != mPropertyExtraThresholds.end());
-                if(propertyIt == mPropertyExtraThresholds.end())
-                {
-                    return;
-                }
-                auto const& slider = propertyIt->second->entry;
-                auto const value = static_cast<float>(std::clamp(static_cast<double>(newValue), slider.getMinimum(), slider.getMaximum()));
                 for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
                 {
                     if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
@@ -1129,20 +1118,57 @@ void Group::PropertyGraphicalsSection::updateExtraThresholds()
                     trackAcsr.get().setAttr<Track::AttrType::extraThresholds>(thresholds, NotificationType::synchronous);
                 }
             };
-            // The range and the tooltip are updated below
-            property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
+            if(Plugin::Tools::isToggleExtraOutput(output))
+            {
+                // The threshold of an extra output that can only be 0 or 1 is either disabled or set to 1
+                property = std::make_unique<PropertyToggle>(name, "", [=](bool state)
+                                                            {
+                                                                if(weakReference.get() == nullptr)
+                                                                {
+                                                                    return;
+                                                                }
+                                                                startChange();
+                                                                setThresholds(state ? std::optional<float>(1.0f) : std::optional<float>());
+                                                                endChange();
+                                                            });
+            }
+            else
+            {
+                auto const applyChange = [=, this](float newValue)
+                {
+                    if(weakReference.get() == nullptr)
+                    {
+                        return;
+                    }
+                    auto const propertyIt = mPropertyExtraThresholds.find(outputIdentifier);
+                    MiscWeakAssert(propertyIt != mPropertyExtraThresholds.end());
+                    auto const* propertySlider = propertyIt != mPropertyExtraThresholds.end() ? dynamic_cast<PropertySlider const*>(propertyIt->second.get()) : nullptr;
+                    MiscWeakAssert(propertySlider != nullptr);
+                    if(propertySlider == nullptr)
+                    {
+                        return;
+                    }
+                    auto const& slider = propertySlider->entry;
+                    setThresholds(static_cast<float>(std::clamp(static_cast<double>(newValue), slider.getMinimum(), slider.getMaximum())));
+                };
+                // The range and the tooltip are updated below
+                property = std::make_unique<PropertySlider>(name, "", output.unit, juce::Range<float>{0.0f, 1.0f}, step, startChange, applyChange, endChange, true);
+            }
             addAndMakeVisible(property.get());
         }
 
         auto const srange = Track::Tools::getExtraRange(referenceTrackAcsr, outputIndex.value());
-        auto const start = srange.has_value() ? static_cast<float>(srange.value().getStart()) : 0.0f;
-        auto const end = srange.has_value() ? static_cast<float>(srange.value().getEnd()) : 0.0f;
-        auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
-        juce::Range<double> const range{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
-        property->entry.setRange(range, step);
-        property->entry.setDoubleClickReturnValue(true, range.getStart());
-        property->numberField.setRange(range, step, juce::NotificationType::dontSendNotification);
         property->setEnabled(srange.has_value() && !srange.value().isEmpty());
+        if(auto* propertySlider = dynamic_cast<PropertySlider*>(property.get()))
+        {
+            auto const start = srange.has_value() ? static_cast<float>(srange.value().getStart()) : 0.0f;
+            auto const end = srange.has_value() ? static_cast<float>(srange.value().getEnd()) : 0.0f;
+            auto const step = static_cast<double>(output.isQuantized ? output.quantizeStep : 0.0f);
+            juce::Range<double> const range{static_cast<double>(start), static_cast<double>(std::max(end, start + std::numeric_limits<float>::epsilon() * 100.0f))};
+            propertySlider->entry.setRange(range, step);
+            propertySlider->entry.setDoubleClickReturnValue(true, range.getStart());
+            propertySlider->numberField.setRange(range, step, juce::NotificationType::dontSendNotification);
+        }
 
         juce::StringArray trackNames;
         for(auto const& trackAcsr : extraOutputsToTrack.second)
@@ -1167,7 +1193,31 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
         auto const& outputIdentifier = propertyExtraThreshold.first.identifier;
         auto const& property = propertyExtraThreshold.second;
         MiscWeakAssert(property != nullptr);
-        if(property != nullptr)
+        if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(property.get()))
+        {
+            std::set<bool> states;
+            for(auto const& trackAcsr : trackAcsrs)
+            {
+                auto const index = getExtraOutputIndex(trackAcsr.get(), outputIdentifier);
+                if(index.has_value())
+                {
+                    auto const& thresholds = trackAcsr.get().getAttr<Track::AttrType::extraThresholds>();
+                    states.insert(index.value() < thresholds.size() && thresholds.at(index.value()).has_value() && thresholds.at(index.value()).value() > 0.0f);
+                }
+            }
+            if(states.size() > 1_z)
+            {
+                propertyToggle->entry.getProperties().set("Multiple Values", {true});
+                propertyToggle->entry.setToggleState(false, juce::NotificationType::dontSendNotification);
+            }
+            else
+            {
+                propertyToggle->entry.getProperties().remove("Multiple Values");
+                propertyToggle->entry.setToggleState(!states.empty() && *states.cbegin(), juce::NotificationType::dontSendNotification);
+            }
+            propertyToggle->entry.repaint();
+        }
+        else if(auto* propertySlider = dynamic_cast<PropertySlider*>(property.get()))
         {
             std::set<float> thresholdValues;
             for(auto const& trackAcsr : trackAcsrs)
@@ -1185,18 +1235,18 @@ void Group::PropertyGraphicalsSection::updateExtraThresholdStates()
 
             if(!thresholdValues.empty())
             {
-                property->entry.setValue(static_cast<double>(*thresholdValues.cbegin()), juce::NotificationType::dontSendNotification);
-                property->numberField.setValue(static_cast<double>(*thresholdValues.cbegin()), juce::NotificationType::dontSendNotification);
+                propertySlider->entry.setValue(static_cast<double>(*thresholdValues.cbegin()), juce::NotificationType::dontSendNotification);
+                propertySlider->numberField.setValue(static_cast<double>(*thresholdValues.cbegin()), juce::NotificationType::dontSendNotification);
                 if(thresholdValues.size() > 1)
                 {
-                    property->numberField.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+                    propertySlider->numberField.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
                 }
             }
             else
             {
-                auto const defaultValue = property->entry.getDoubleClickReturnValue();
-                property->entry.setValue(defaultValue, juce::NotificationType::dontSendNotification);
-                property->numberField.setValue(defaultValue, juce::NotificationType::dontSendNotification);
+                auto const defaultValue = propertySlider->entry.getDoubleClickReturnValue();
+                propertySlider->entry.setValue(defaultValue, juce::NotificationType::dontSendNotification);
+                propertySlider->numberField.setValue(defaultValue, juce::NotificationType::dontSendNotification);
             }
         }
     }

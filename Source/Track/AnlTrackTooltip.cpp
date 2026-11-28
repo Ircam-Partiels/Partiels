@@ -28,7 +28,7 @@ juce::String Track::Tools::getExtraTooltip(Accessor const& acsr, size_t index)
         return {};
     }
     auto const range = Tools::getExtraRange(acsr, index);
-    if(range.has_value())
+    if(range.has_value() && !Plugin::Tools::isToggleExtraOutput(extraOutputs.at(index)))
     {
         auto const min = static_cast<float>(range.value().getStart());
         auto const max = static_cast<float>(range.value().getEnd());
